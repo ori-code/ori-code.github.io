@@ -7,7 +7,7 @@
 <head>
     
     <meta charset="utf-8" />
-    <title>Holly Grail</title>
+    <title>2021</title>
     <!-- <link rel="stylesheet" href="StyleSheet1.css">-->
 </head>
 <style>
@@ -19,16 +19,18 @@
             }
         }
         body {
-            margin:0px; /* קובע את גודל השוליים: מלמעלה ,למטה ומהצדדים*/
+            margin:10px; /* קובע את גודל השוליים: מלמעלה ,למטה ומהצדדים*/
         }
 
         .container {
             display: flex; /* קובע כי אלמנט זה יהיה מכולה ואפשר יהיה לתת לאיברים תכונות של פריסת פלקס   */
             flex-direction: column; /* כדי שסדר הופעת האיברים במכולה תהיה מלמעלה למטה */
-            height: 95vh; /* viewports height  100vh זהו מימד יחסי.  הכוונה שתופס 100%  מהגובה של הדף כך שכל הרכיבים האופקיים יחד יתפסו את כל גובה הדף בדפדפן */
+            height:97vh; /* viewports height  100vh זהו מימד יחסי.  הכוונה שתופס 100%  מהגובה של הדף כך שכל הרכיבים האופקיים יחד יתפסו את כל גובה הדף בדפדפן */
             color: white;
             text-align:center;
-            font-style: David;
+            font-family: David;
+            font-size: 25px;
+            margin:10px;
         }
 
         .header {
@@ -36,7 +38,8 @@
             background-color: white;
             color: black;
             text-align:center;
-            font-style: David;
+            font-family: David;
+            font-size: 30px;
         }
 
         .footer {
@@ -48,34 +51,59 @@
             display: flex; /* flex אנחנו רוצים ששלושת החלקים: כותרת ראשית , כותרת משנית והחלק המרכזי יהיו מסודרים  אנכית לכן נגדיר חלק זה כמכולה מסוג */
             flex-direction: row; /* זו ברירת המחדל לסידור האיברים במכולה, זה לצד זה בשורה- גם אם לא יופיע - יתקיים*/
             flex: 1; /*   אנחנו רוצים שחלק זה יתפרס על כל החלק האפשרי בדף, אנכית - בגובה. וכעת נאפיין את 3 הרכיבים במכולה זו */
+            color: black;
+            font-size: 15px;
+
+
         }
             .content-body .content {
                 flex: 3 3;  /*החלק המרכזי יגדל ויקטן פי 3 יותר מהר יחסית לעמודות בצדדים*/
                 overflow: auto; /*במידה והתוכן יגלוש מעבר לגודל האלמנט יתווסף פס גלילה לאלמנט זה  */
-                background-color: aquamarine;
+                background-color: white;
             }
 
             .content-body .sidenav {
                 flex: 1 1 100px;  /* אחד - 1, מציין שרוחב אלמנט זה יגדל ביחס זה- אחד, יחסית לאלמנטים האחרים במכולה. כך גם לגבי יחס ההקטנה. כמו כן, הגודל ההתחלתי של חלק זה יהיה 100 פיקסלים. הדבר נכון גם לגבי העמודה הצידית השנייה*/
                 overflow: auto;
-                background-color: burlywood; /* 'חום - בז */
+                background-color: white; /* 'חום - בז */
             }
 
             .content-body .ads {
                 flex: 1 1 100px; 
                 overflow: auto;
-                background-color: cornflowerblue;
+                background-color: white;
             }
 
         
     </style>
 <body>
     <!-- יש כאן שימוש בתגיות סמנטיות המקלות על הבנת התפקידים של חלקי הדף השונים -->
-    <div class="container">
-        <header class="header" dir="rtl">עמוד אישי של אורי</header>
+    <div class="container" dir="rtl">
+        <header class="header" > </br> עמוד אישי של אורי</header>
         <div class="content-body">
-            <nav class="sidenav">Nav</nav>
-            <main class="content">Content</main>
+            <nav class="sidenav"><br> 
+            <br>
+             פסוקים למחשבה וללימוד:
+            <br>
+            <br>
+            "אַתֶּם מֶלַח הָאָרֶץ, וְאִם תֺּאבַד לַמֶּלַח מְלִיחוּתוֹ, <br>כֵּיצַד תֻּחְזַר לוֹ? 
+            הֵן לֹא יִצְלַח עוֹד לְשׁוּם דָּבָר כִּי אִם לְהַשְׁלִיכוֹ<br> הַחוּצָה לִהְיוֹת מִרְמָס לְרַגְלֵי הַבְּרִיּוֹת.
+             מתי ה':13
+             <hr>
+           <!-- <br>
+            <br>
+            "אַתֶּם מֶלַח הָאָרֶץ, וְאִם תֺּאבַד לַמֶּלַח מְלִיחוּתוֹ, <br>כֵּיצַד תֻּחְזַר לוֹ? 
+            הֵן לֹא יִצְלַח עוֹד לְשׁוּם דָּבָר כִּי אִם לְהַשְׁלִיכוֹ<br> הַחוּצָה לִהְיוֹת מִרְמָס לְרַגְלֵי הַבְּרִיּוֹת.
+             מתי ה':13
+             <hr> -->
+            </nav>
+            <main align="right" class="content">
+            <h2> 05.01.2021 </h2>
+
+            הכי כיף שאפשר ממש לכתוב כאן וזה נשמר לתןך הרשת העולמית. אני מודה לאלוהים. איזה אדון ישוע שיש לי אותך אני מודה לך שברכת אותי בכל הברכות הללו. כדי שאוכל להתהלך בצורה הטובה ביותר לתאפרת שלך.
+
+            
+            </main>
             <aside class="ads">Ads</aside>
         </div>
         <footer class="footer">Footer</footer>
