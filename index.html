@@ -19,25 +19,25 @@
             }
         }
         body {
-            margin: 5px; /* קובע את גודל השוליים: מלמעלה ,למטה ומהצדדים*/
+            margin:0px; /* קובע את גודל השוליים: מלמעלה ,למטה ומהצדדים*/
         }
 
         .container {
             display: flex; /* קובע כי אלמנט זה יהיה מכולה ואפשר יהיה לתת לאיברים תכונות של פריסת פלקס   */
             flex-direction: column; /* כדי שסדר הופעת האיברים במכולה תהיה מלמעלה למטה */
-            height: 100vh; /* viewports height  100vh זהו מימד יחסי.  הכוונה שתופס 100%  מהגובה של הדף כך שכל הרכיבים האופקיים יחד יתפסו את כל גובה הדף בדפדפן */
+            height: 90vh; /* viewports height  100vh זהו מימד יחסי.  הכוונה שתופס 100%  מהגובה של הדף כך שכל הרכיבים האופקיים יחד יתפסו את כל גובה הדף בדפדפן */
             color: white;
             text-align:center;
         }
 
         .header {
             flex: 0 0 50px; /* .כאשר משנים את גודל החלון, גודל אלמנט זה לא יגדל ולא יקטןיחסית לאלמנטים האחרים במכולה. כמו כן גודלו הבסיסי יהיה 50 פיקסלים. כך גם לגבי כותרת תחתונה  */
-            background-color: mediumaquamarine;
+            background-color: white;
         }
 
         .footer {
             flex: 0 0 50px;
-            background-color: cadetblue; /* כחול - אפור */
+            background-color: white; /* כחול - אפור */
         }
 
         .content-body {
