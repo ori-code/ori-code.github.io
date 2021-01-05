@@ -25,7 +25,7 @@
         .container {
             display: flex; /* קובע כי אלמנט זה יהיה מכולה ואפשר יהיה לתת לאיברים תכונות של פריסת פלקס   */
             flex-direction: column; /* כדי שסדר הופעת האיברים במכולה תהיה מלמעלה למטה */
-            height: 90vh; /* viewports height  100vh זהו מימד יחסי.  הכוונה שתופס 100%  מהגובה של הדף כך שכל הרכיבים האופקיים יחד יתפסו את כל גובה הדף בדפדפן */
+            height: 95vh; /* viewports height  100vh זהו מימד יחסי.  הכוונה שתופס 100%  מהגובה של הדף כך שכל הרכיבים האופקיים יחד יתפסו את כל גובה הדף בדפדפן */
             color: white;
             text-align:center;
         }
@@ -68,7 +68,7 @@
 <body>
     <!-- יש כאן שימוש בתגיות סמנטיות המקלות על הבנת התפקידים של חלקי הדף השונים -->
     <div class="container">
-        <header class="header">Header</header>
+        <header class="header" dir="rtl">עמוד אישי של אורי</header>
         <div class="content-body">
             <nav class="sidenav">Nav</nav>
             <main class="content">Content</main>
