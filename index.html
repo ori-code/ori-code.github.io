@@ -2,119 +2,14 @@
 <!DOCTYPE html>
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<!-- holy grail פריסת-->
-<!-- פריסה זו בנויה מהחלקים הבאים: כותרת עליונה, כותרת תחתונה והחלק המרכזי שמכיל 3 עמודות -->
-<!--    העמודה המרכזית תכיל את התוכן העיקרי ושתי העמודות הנותרות ישמשו כתפריט צידי וכעמודה המיועדת לפרסומות למשל  -->
 <head>
+<body>    
+<meta charset="utf-8" />
+<link rel="stylesheet" href="StyleSheet1.css">
+    
 
-    <meta charset="utf-8" />
-    <title>30 יום ב 3:30</title>
-    <!-- <link rel="stylesheet" href="StyleSheet1.css">-->
-
-    <script language="javascript" type="text/javascript">function loadFunction()
-      {
-          alert("ברוכים הבאים כאן אני כותב על החיים שלי ואיך לחיות אותם נכון");
-      }</script>
-</head>
-    <style>
-        /* זהו שימוש רספונסיבי: כאשר רוחב המסך יהיה ברוחב 540 פיקסלים, צורת הפריסה של 3 העמודות המרכזיות, תהיה מלמעלה למטה ולא זה לצד זה כפי שהוגדר בהתחלה*/
-        @media  (max-width:540px)
-        {
-            .container .content-body {
-                flex-direction: column;
-            }
-        }
-        body {
-          margin:10px; /* קובע את גודל השוליים: מלמעלה ,למטה ומהצדדים*/
-                 background-color:white;
-        }
-
-        .container {
-            display: flex; /* קובע כי אלמנט זה יהיה מכולה ואפשר יהיה לתת לאיברים תכונות של פריסת פלקס   */
-            flex-direction: column; /* כדי שסדר הופעת האיברים במכולה תהיה מלמעלה למטה */
-            height: 97vh; /* viewports height  100vh זהו מימד יחסי.  הכוונה שתופס 100%  מהגובה של הדף כך שכל הרכיבים האופקיים יחד יתפסו את כל גובה הדף בדפדפן */
-            color: white;
-            text-align:center;
-            font-family: David;
-            font-size:50px;
-            margin:10px;
-
-        }
-
-        .header {
-            flex: 0 0 50px; /* .כאשר משנים את גודל החלון, גודל אלמנט זה לא יגדל ולא יקטןיחסית לאלמנטים האחרים במכולה. כמו כן גודלו הבסיסי יהיה 50 פיקסלים. כך גם לגבי כותרת תחתונה  */
-            background-color: white;
-            color: black;
-            text-align:center;
-            font-family: David;
-            font-size: 30px;
-        }
-
-        .footer {
-            flex: 0 0 50px;
-            background-color: white; /* כחול - אפור */
-        }
-
-        .content-body {
-            display: flex; /* flex אנחנו רוצים ששלושת החלקים: כותרת ראשית , כותרת משנית והחלק המרכזי יהיו מסודרים  אנכית לכן נגדיר חלק זה כמכולה מסוג */
-            flex-direction: row; /* זו ברירת המחדל לסידור האיברים במכולה, זה לצד זה בשורה- גם אם לא יופיע - יתקיים*/
-            flex: 1; /*   אנחנו רוצים שחלק זה יתפרס על כל החלק האפשרי בדף, אנכית - בגובה. וכעת נאפיין את 3 הרכיבים במכולה זו */
-            color: black;
-            font-size: 20px;
-
-
-        }
-            .content-body .content {
-                flex: 3 3;  /*החלק המרכזי יגדל ויקטן פי 3 יותר מהר יחסית לעמודות בצדדים*/
-                overflow: auto; /*במידה והתוכן יגלוש מעבר לגודל האלמנט יתווסף פס גלילה לאלמנט זה  */
-                background-color: white;
-                padding:10px;
-
-
-            }
-
-            .content-body .sidenav {
-                flex: 1 1 30px;  /* אחד - 1, מציין שרוחב אלמנט זה יגדל ביחס זה- אחד, יחסית לאלמנטים האחרים במכולה. כך גם לגבי יחס ההקטנה. כמו כן, הגודל ההתחלתי של חלק זה יהיה 100 פיקסלים. הדבר נכון גם לגבי העמודה הצידית השנייה*/
-                overflow: auto;
-                 background-color: white; /* 'חום - בז */
-            }
-
-            .content-body .ads {
-                flex: 1 1 30px;
-                overflow: auto;
-                 background-color: white;
-            }
-
-
-    </style>
-<body onload="loadFunction()">
-    <!-- יש כאן שימוש בתגיות סמנטיות המקלות על הבנת התפקידים של חלקי הדף השונים -->
-    <div class="container" dir="rtl">
-        <header class="header"> </br> 30 יום של השקמה ב 3:30</header>
-        <div class="content-body">
-
-            <nav class="sidenav">
-
-            </nav>
-            <main align="right" class="content">
-                <h2> 01.03.2021 </h2>
-                <p>
-                    ממש כמו ילד התעוררתי כמעת כל שעתיים כדי לקום היום ב 3:30 זה היה קל כי באמת  רציתי לקום אז קמתי בזמן בלי בעיה. אני מרגיש ממש טוב ורגוע כאילו ככה זה אמור להיות שאני קמתי עכשיו. בחוץ ממש שקט ואני אוהב את השקט הזה.
-
-
-                </p>
-                <h2> 11.03.2021 </h2>
-                <p>
-                    הנה יושב ב 11 בבוקר ומחליט כן בסופו של דבר לחזור למנהג של כתיבה כאן. מרגיש ממש לא מפוקס עקב זה שקמתי מאוחר ב 7:30 בבוקר. 
-
-
-                </p>
-            </main>
-            <aside class="ads"></aside>
-        </div>
-        <footer class="footer" אתה מבורך וברכה </footer>
-    </div>
 </body>
+</head>
 </html>
 
 

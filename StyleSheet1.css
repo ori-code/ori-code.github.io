@@ -1,11 +1,13 @@
-﻿<style>
+﻿
         /* זהו שימוש רספונסיבי: כאשר רוחב המסך יהיה ברוחב 540 פיקסלים, צורת הפריסה של 3 העמודות המרכזיות, תהיה מלמעלה למטה ולא זה לצד זה כפי שהוגדר בהתחלה*/
-        @media  (max-width:540px)
+        /*@media  (max-width:540px)
         {
             .container .content-body {
                 flex-direction: column;
             }
-        }
+        }*/
+        
+        
         body {
             margin: 5px; /* קובע את גודל השוליים: מלמעלה ,למטה ומהצדדים*/
         }
@@ -51,5 +53,3 @@
                 background-color: cornflowerblue;
             }
 
-        
-    </style>
