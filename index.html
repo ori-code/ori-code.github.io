@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script src="https://unpkg.com/feather-icons"></script>
+    
+   <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
 
     <style>
         :root {
@@ -411,19 +413,21 @@
         </section>
 
         <section id="pricing" class="section">
-             <div class="container">
+            <div class="container">
                 <h2 class="section-title reveal">Get Visualizer 1.0 Today</h2>
                 <p class="section-subtitle reveal">A single purchase for a lifetime of creative clarity.</p>
                 <div class="pricing-card reveal">
                     <h3>Professional VST Plugin</h3>
-                    <div class="pricing-price">$29.99 <span>/ one-time purchase</span></div>
+                    <div class="pricing-price">$29.99 <span></span></div>
                     <ul class="pricing-features">
                         <li><i data-feather="check-circle" class="icon"></i><span>Lifetime Updates Included</span></li>
                         <li><i data-feather="check-circle" class="icon"></i><span>Works with all Major DAWs</span></li>
                         <li><i data-feather="check-circle" class="icon"></i><span>30-Day Money-Back Guarantee</span></li>
-                        <li><i data-feather="check-circle" class="icon"></i><span>Instant Digital Download</span></li>
+                        <li><i data-feather="check-circle" class="icon"></i><span>Secure Instant Purchase</span></li>
                     </ul>
-                    <a href="#" class="nav-cta pricing-cta">Purchase Now</a>
+                    
+                    <div id="paypal-button-container" style="margin-top: 30px;"></div>
+
                 </div>
             </div>
         </section>
@@ -453,6 +457,68 @@
         document.querySelectorAll('.reveal').forEach(el => {
             revealObserver.observe(el);
         });
+
+        // --- STEP 2: The PayPal Script is now here, at the end of the body ---
+        // This ensures the #paypal-button-container element exists before the script tries to render to it.
+        paypal.Buttons({
+            // Sets up the transaction when a payment button is clicked
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        description: 'Visualizer 1.0 VST Plugin - Lifetime License',
+                        amount: {
+                            value: '29.99' // The price of your product
+                        }
+                    }]
+                });
+            },
+
+            // Finalize the transaction after payer approval
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(orderDetails) {
+
+                    const paypalContainer = document.getElementById('paypal-button-container');
+                    paypalContainer.innerHTML = '<h3>Processing your order...</h3>';
+
+                    // This is where you call your backend server
+                    fetch('/api/fulfill-purchase', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            orderID: orderDetails.id,
+                            payer: orderDetails.payer
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'success') {
+                            paypalContainer.innerHTML = `
+                                <h3>Thank You!</h3>
+                                <p>Your license key has been sent to ${result.email}.</p>
+                                <p>Order ID: ${result.orderId}</p>
+                            `;
+                        } else {
+                            paypalContainer.innerHTML = `
+                                <h3>Error!</h3>
+                                <p>${result.message || 'There was an issue processing your purchase. Please contact support.'}</p>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        paypalContainer.innerHTML = '<h3>An error occurred. Please contact support.</h3>';
+                    });
+                });
+            },
+
+            onError: function(err) {
+                console.error('An error occurred with the PayPal button:', err);
+                alert('An error occurred during the transaction. Please try again.');
+            }
+        }).render('#paypal-button-container');
+
     </script>
 </body>
 </html>
