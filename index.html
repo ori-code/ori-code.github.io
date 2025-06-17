@@ -472,52 +472,52 @@
                     }]
                 });
             },
+// Sets up the actions to take when the buyer approves the transaction
 
-            // Finalize the transaction after payer approval
             onApprove: function(data, actions) {
-                return actions.order.capture().then(function(orderDetails) {
+                return actions.order.capture().then(orderDetails => {
+                const email = orderDetails.payer.email_address;  // PayPal’s field
 
-                    const paypalContainer = document.getElementById('paypal-button-container');
-                    paypalContainer.innerHTML = '<h3>Processing your order...</h3>';
+                // show processing…
+                const container = document.getElementById('paypal-button-container');
+                container.innerHTML = '<h3>Processing your order…</h3>';
 
-                    // This is where you call your backend server
-                    fetch('/api/fulfill-purchase', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            orderID: orderDetails.id,
-                            payer: orderDetails.payer
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.status === 'success') {
-                            paypalContainer.innerHTML = `
-                                <h3>Thank You!</h3>
-                                <p>Your license key has been sent to ${result.email}.</p>
-                                <p>Order ID: ${result.orderId}</p>
-                            `;
-                        } else {
-                            paypalContainer.innerHTML = `
-                                <h3>Error!</h3>
-                                <p>${result.message || 'There was an issue processing your purchase. Please contact support.'}</p>
-                            `;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        paypalContainer.innerHTML = '<h3>An error occurred. Please contact support.</h3>';
-                    });
+                // Call your Flask /add_user endpoint:
+                fetch('https://api.thefaithsound.com/add_user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contact_email: email })
+                })
+                .then(r => r.json())
+                .then(result => {
+                    if (result.pluginKey) {
+                    container.innerHTML = `
+                        <h3>Thank you!</h3>
+                       <p>Your license key: 
+                        <strong id="licenseKey">${result.pluginKey}</strong>
+                        <button onclick="navigator.clipboard.writeText('${result.pluginKey}')">Copy</button>
+                        </p>
+                        <p>We’ve sent a confirmation email to ${email}.</p>
+                    `;
+                    } else {
+                    container.innerHTML = `
+                        <h3>Oops!</h3>
+                        <p>${result.error || 'Could not create your license. Please contact us.'}</p>
+                    `;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    container.innerHTML = '<h3>An error occurred. Please contact support.</h3>';
+                });
                 });
             },
 
             onError: function(err) {
-                console.error('An error occurred with the PayPal button:', err);
-                alert('An error occurred during the transaction. Please try again.');
+                console.error('PayPal error:', err);
+                alert('Payment error — please try again.');
             }
-        }).render('#paypal-button-container');
+            }).render('#paypal-button-container');
 
     </script>
 </body>
