@@ -418,7 +418,16 @@
                 <p class="section-subtitle reveal">A single purchase for a lifetime of creative clarity.</p>
                 <div class="pricing-card reveal">
                     <h3>Professional VST Plugin</h3>
-                    <div class="pricing-price">$0.01 <span></span></div>
+                    <div class="pricing-price">
+                        <span style="text-decoration: line-through; color: var(--color-text-muted); font-size: 1.5rem; margin-right: 10px;">
+                            $39.99
+                        </span>
+                        <span style="color: var(--color-primary); font-size: 2.0rem; font-weight: bold;">$29.99</span>
+                        <span style="background: var(--color-primary); color: #fff; font-size: 0.8rem; padding: 3px 6px; border-radius: 6px; margin-left: 8px;">
+                            Limited Offer
+                        </span>
+                        </div>
+
                     <ul class="pricing-features">
                         <li><i data-feather="check-circle" class="icon"></i><span>Lifetime Updates Included</span></li>
                         <li><i data-feather="check-circle" class="icon"></i><span>Works with all Major DAWs</span></li>
@@ -467,7 +476,7 @@
                     purchase_units: [{
                         description: 'Visualizer 1.0 VST Plugin - Lifetime License',
                         amount: {
-                            value: '0.01' // The price of your product
+                            value: '29.99' // The price of your product
                         }
                     }]
                 });
