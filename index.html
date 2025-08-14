@@ -344,6 +344,118 @@
 
     </style>
 </head>
+
+<!-- CHAT -->
+
+<div id="chat-widget">
+  <div id="chat-header">💬 Chat with Us</div>
+  <div id="chat-body"></div>
+  <div id="chat-input-container">
+    <input type="text" id="chat-input" placeholder="Type your message..." />
+    <button id="chat-send">Send</button>
+  </div>
+</div>
+
+<style>
+#chat-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  background: #1C1B22;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+#chat-header {
+  background: #FF3B5C;
+  color: white;
+  padding: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+#chat-body {
+  height: 250px;
+  overflow-y: auto;
+  padding: 10px;
+  color: #EAEAEA;
+}
+.chat-msg {
+  margin-bottom: 10px;
+}
+.chat-msg.user {
+  text-align: right;
+}
+#chat-input-container {
+  display: flex;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+#chat-input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  outline: none;
+  background: #1C1B22;
+  color: white;
+}
+#chat-send {
+  background: #FF3B5C;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+</style>
+
+<script>
+const chatBody = document.getElementById('chat-body');
+const chatInput = document.getElementById('chat-input');
+const chatSend = document.getElementById('chat-send');
+
+// ✅ Use your full n8n webhook production URL (with path)
+const N8N_WEBHOOK_URL = "https://80a32868570f.ngrok-free.app/webhook/17e3e146-661c-4043-bc08-08cd3c361780";
+
+function appendMessage(text, sender) {
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg ' + sender;
+  msg.textContent = text;
+  chatBody.appendChild(msg);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+chatSend.addEventListener('click', () => {
+  const message = chatInput.value.trim();
+  if (!message) return;
+
+  // Append the user's message immediately
+  appendMessage(message, 'user');
+  chatInput.value = '';
+
+  // Send message to n8n webhook
+  fetch(N8N_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question: message }),
+    mode: "cors" // ✅ Important for browser requests
+  })
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    return res.json();
+  })
+  .then(data => {
+    appendMessage(data.answer || "No response", 'bot');
+  })
+  .catch(err => {
+    console.error("Chatbot error:", err);
+    appendMessage("⚠ Error connecting to bot", 'bot');
+  });
+});
+</script>
+    
+
+
 <body>
 
     <header class="header">
