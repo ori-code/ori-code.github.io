@@ -600,193 +600,159 @@
 </style>
 
 <script>
-// Enhanced Chat Widget Functionality
+// Chat Widget (GitHub Pages + Local + Cloudflare Tunnel)
 document.addEventListener('DOMContentLoaded', function() {
-    const chatToggle = document.getElementById('chat-toggle');
-    const chatWidget = document.getElementById('chat-widget');
-    const chatClose = document.getElementById('chat-close');
-    const chatBody = document.getElementById('chat-body');
-    const chatInput = document.getElementById('chat-input');
-    const chatSend = document.getElementById('chat-send');
+  const chatToggle = document.getElementById('chat-toggle');
+  const chatWidget = document.getElementById('chat-widget');
+  const chatClose  = document.getElementById('chat-close');
+  const chatBody   = document.getElementById('chat-body');
+  const chatInput  = document.getElementById('chat-input');
+  const chatSend   = document.getElementById('chat-send');
 
-    // Your n8n webhook URL - UPDATE THIS
-    // const N8N_WEBHOOK_URL = "http://localhost:5678/webhook/ai-chat";
-    const N8N_WEBHOOK_URL = "https://validity-session-aggressive-tigers.trycloudflare.com/webhook/ai-chat";
+  // ---- Configure your endpoints here ----
+  const LOCAL_WEBHOOK = "http://localhost:5678/webhook/ai-chat";
+  // Replace with your current tunnel; rotate as needed
+  const PROD_WEBHOOK  = "https://validity-session-aggressive-tigers.trycloudflare.com/webhook/ai-chat";
 
-    let chatOpen = false;
-    let isProcessing = false;
+  // Allow override via query string: ?webhook=https://.../webhook/ai-chat
+  const qsWebhook = new URLSearchParams(location.search).get('webhook');
 
-    // Toggle chat widget
-    chatToggle.addEventListener('click', () => {
-        openChat();
-    });
+  // Decide by host: localhost → local; anything else → prod
+  const byHost = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+    ? LOCAL_WEBHOOK
+    : PROD_WEBHOOK;
 
-    chatClose.addEventListener('click', () => {
-        closeChat();
-    });
+  // Initial pick
+  let N8N_WEBHOOK_URL = qsWebhook || byHost;
 
-    function openChat() {
-        chatOpen = true;
-        chatWidget.classList.add('open');
-        chatToggle.style.display = 'none';
-        
-        // Add welcome message if chat is empty
-        if (chatBody.children.length === 0) {
-            setTimeout(() => {
-                appendMessage("Hello! 👋 I'm here to help you with any questions about Visualizer 1.0. What would you like to know?", 'bot');
-            }, 300);
-        }
-        
-        // Focus input
-        setTimeout(() => {
-            chatInput.focus();
-        }, 100);
-    }
+  // Utility UI
+  function appendMessage(text, sender) {
+    const msg = document.createElement('div');
+    msg.className = 'chat-msg ' + sender;
+    msg.textContent = text;
+    chatBody.appendChild(msg);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+  function showTyping() {
+    const typing = document.createElement('div');
+    typing.className = 'chat-msg typing';
+    typing.id = 'typing-indicator';
+    typing.textContent = 'AI is typing...';
+    chatBody.appendChild(typing);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+  function hideTyping() {
+    const t = document.getElementById('typing-indicator');
+    if (t) t.remove();
+  }
+  function setProcessing(on) {
+    chatSend.disabled = on;
+    chatInput.disabled = on;
+    chatSend.textContent = on ? '...' : 'Send';
+  }
 
-    function closeChat() {
-        chatOpen = false;
-        chatWidget.classList.remove('open');
-        chatToggle.style.display = 'block';
-    }
+  // Send to webhook with auto-fallback (prod<->local) + timeouts
+  async function sendToWebhook(payload) {
+    const candidates = [N8N_WEBHOOK_URL,
+      N8N_WEBHOOK_URL === LOCAL_WEBHOOK ? PROD_WEBHOOK : LOCAL_WEBHOOK
+    ].filter(Boolean);
 
-    // Message functions
-    function appendMessage(text, sender) {
-        const msg = document.createElement('div');
-        msg.className = 'chat-msg ' + sender;
-        msg.textContent = text;
-        chatBody.appendChild(msg);
-        chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    function showTypingIndicator() {
-        const typing = document.createElement('div');
-        typing.className = 'chat-msg typing';
-        typing.textContent = 'AI is typing...';
-        typing.id = 'typing-indicator';
-        chatBody.appendChild(typing);
-        chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    function removeTypingIndicator() {
-        const typing = document.getElementById('typing-indicator');
-        if (typing) {
-            typing.remove();
-        }
-    }
-
-    function setProcessingState(processing) {
-        isProcessing = processing;
-        chatSend.disabled = processing;
-        chatInput.disabled = processing;
-        chatSend.textContent = processing ? '...' : 'Send';
-    }
-
-    function sendMessage() {
-        const message = chatInput.value.trim();
-        if (!message || isProcessing) return;
-
-        // Set processing state
-        setProcessingState(true);
-
-        // Append user message
-        appendMessage(message, 'user');
-        chatInput.value = '';
-
-        // Show typing indicator
-        showTypingIndicator();
-
-        // Create payload matching your n8n workflow expectations
-        const payload = {
-            message: message,           // Primary message field
-            chatInput: message,         // Alternative message field
-            body: {
-                message: message,
-                chatInput: message,
-                timestamp: new Date().toISOString()
-            },
-            timestamp: new Date().toISOString(),
-            user: "website-visitor"     // Identifier for web visitors
-        };
-
-        // Send to n8n webhook
-        fetch(N8N_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'ngrok-skip-browser-warning': 'true' // For ngrok URLs
-            },
-            body: JSON.stringify(payload),
-            mode: "cors"
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            removeTypingIndicator();
-            
-            // Handle different response formats from your n8n workflow
-            let botResponse = '';
-            if (data.response) {
-                botResponse = data.response;
-            } else if (data.answer) {
-                botResponse = data.answer;
-            } else if (data.output) {
-                botResponse = data.output;
-            } else if (data.result) {
-                botResponse = data.result;
-            } else if (typeof data === 'string') {
-                botResponse = data;
-            } else {
-                botResponse = "I received your message, but couldn't generate a proper response. Please try rephrasing your question.";
-            }
-            
-            appendMessage(botResponse, 'bot');
-        })
-        .catch(error => {
-            removeTypingIndicator();
-            console.error("Chat error:", error);
-            
-            let errorMessage = "I'm having trouble connecting right now. ";
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage += "Please check your internet connection and try again.";
-            } else if (error.message.includes('404')) {
-                errorMessage += "The chat service is temporarily unavailable.";
-            } else {
-                errorMessage += "Please try again in a moment.";
-            }
-            
-            appendMessage(errorMessage, 'bot');
-        })
-        .finally(() => {
-            setProcessingState(false);
-            if (chatOpen) {
-                chatInput.focus();
-            }
+    let lastError;
+    for (const url of candidates) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000); // 20s
+        const r = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/plain, */*'
+          },
+          body: JSON.stringify(payload),
+          mode: "cors",
+          signal: controller.signal
         });
+        clearTimeout(timeout);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        N8N_WEBHOOK_URL = url;               // stick to the one that worked
+        const ct = r.headers.get('content-type') || '';
+        return ct.includes('application/json') ? r.json() : r.text();
+      } catch (e) {
+        lastError = e;
+      }
     }
+    throw lastError || new Error('Request failed');
+  }
 
-    // Event listeners
-    chatSend.addEventListener('click', sendMessage);
+  // UI open/close
+  chatToggle.addEventListener('click', () => {
+    chatWidget.classList.add('open');
+    chatToggle.style.display = 'none';
+    if (chatBody.children.length === 0) {
+      setTimeout(() => appendMessage("Hello! 👋 Ask me anything about Visualizer 1.0.", 'bot'), 300);
+    }
+    setTimeout(() => chatInput.focus(), 100);
+  });
+  chatClose.addEventListener('click', () => {
+    chatWidget.classList.remove('open');
+    chatToggle.style.display = 'block';
+  });
 
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
+  async function sendMessage() {
+    const message = chatInput.value.trim();
+    if (!message || chatSend.disabled) return;
 
-    // Close chat when clicking outside (optional)
-    document.addEventListener('click', (e) => {
-        if (chatOpen && !chatWidget.contains(e.target) && !chatToggle.contains(e.target)) {
-            // Uncomment the line below if you want to close chat when clicking outside
-            // closeChat();
-        }
-    });
+    setProcessing(true);
+    appendMessage(message, 'user');
+    chatInput.value = '';
+    showTyping();
+
+    const payload = {
+      message,
+      chatInput: message,
+      body: { message, chatInput: message, timestamp: new Date().toISOString() },
+      timestamp: new Date().toISOString(),
+      user: "website-visitor"
+    };
+
+    try {
+      const data = await sendToWebhook(payload);
+      hideTyping();
+      let reply = '';
+      if (data && typeof data === 'object') {
+        reply = data.response || data.answer || data.output || data.result || JSON.stringify(data, null, 2);
+      } else {
+        reply = String(data ?? '');
+      }
+      appendMessage(reply || "✅ Message received.", 'bot');
+    } catch (err) {
+      hideTyping();
+      console.error('Chat error:', err);
+      const hint =
+        err.name === 'AbortError' ? " (timeout)" :
+        (String(err.message).includes('CORS') ? " (CORS blocked)" : "");
+      appendMessage("I’m having trouble connecting right now" + hint + ". Please try again shortly.", 'bot');
+      // Optional: show quick diagnostics
+      appendMessage(`Diagnostics:
+- Current page origin: ${location.origin}
+- Current webhook: ${N8N_WEBHOOK_URL}
+- Tip: Add your site origin to n8n Webhook → Options → Allowed Origins`, 'bot');
+    } finally {
+      setProcessing(false);
+      chatInput.focus();
+    }
+  }
+
+  chatSend.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
 });
 </script>
+
         
 
 
