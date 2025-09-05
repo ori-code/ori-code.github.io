@@ -599,7 +599,7 @@
 }
 </style>
 
-<script>
+<!-- <script>
 // Enhanced Chat Widget Functionality
 document.addEventListener('DOMContentLoaded', function() {
     const chatToggle = document.getElementById('chat-toggle');
@@ -610,8 +610,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatSend = document.getElementById('chat-send');
 
     // Your n8n webhook URL - UPDATE THIS
-    // const N8N_WEBHOOK_URL = "http://localhost:5678/webhook/ai-chat";
-    const N8N_WEBHOOK_URL = "https://validity-session-aggressive-tigers.trycloudflare.com/webhook/ai-chat";
+    const N8N_WEBHOOK_URL = "http://localhost:5678/webhook/ai-chat";
 
     let chatOpen = false;
     let isProcessing = false;
@@ -786,8 +785,176 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-</script>
+</script> -->
         
+<script>
+// Enhanced Chat Widget Functionality (local + prod aware)
+document.addEventListener('DOMContentLoaded', function() {
+  const chatToggle = document.getElementById('chat-toggle');
+  const chatWidget = document.getElementById('chat-widget');
+  const chatClose  = document.getElementById('chat-close');
+  const chatBody   = document.getElementById('chat-body');
+  const chatInput  = document.getElementById('chat-input');
+  const chatSend   = document.getElementById('chat-send');
+
+  // ----- Webhook resolution -----
+  const LOCAL_WEBHOOK = "http://localhost:5678/webhook/ai-chat";
+  const PROD_WEBHOOK  = "https://validity-session-aggressive-tigers.trycloudflare.com/webhook/ai-chat";
+
+  // 1) allow ?webhook=<url> override
+  const qsWebhook = new URLSearchParams(location.search).get('webhook');
+
+  // 2) decide by hostname (localhost/127.* → local; everything else → prod)
+  const byHost = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+    ? LOCAL_WEBHOOK
+    : PROD_WEBHOOK;
+
+  // 3) pick initial target
+  let N8N_WEBHOOK_URL = qsWebhook || byHost;
+
+  // 4) on first send, if it fails, try the other endpoint automatically
+  async function sendToWebhook(payload) {
+    // try current
+    try {
+      const r = await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/plain, */*'
+        },
+        body: JSON.stringify(payload),
+        mode: "cors",
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json().catch(() => r.text());
+    } catch (e) {
+      // flip to the other candidate and retry once
+      const alt = (N8N_WEBHOOK_URL === LOCAL_WEBHOOK) ? PROD_WEBHOOK : LOCAL_WEBHOOK;
+      if (alt !== N8N_WEBHOOK_URL) {
+        N8N_WEBHOOK_URL = alt;
+        try {
+          const r2 = await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*' },
+            body: JSON.stringify(payload),
+            mode: "cors",
+          });
+          if (!r2.ok) throw new Error(`HTTP ${r2.status}`);
+          return await r2.json().catch(() => r2.text());
+        } catch (e2) {
+          throw e2;
+        }
+      }
+      throw e;
+    }
+  }
+
+  let chatOpen = false;
+  let isProcessing = false;
+
+  // Toggle chat widget
+  chatToggle.addEventListener('click', openChat);
+  chatClose.addEventListener('click', closeChat);
+
+  function openChat() {
+    chatOpen = true;
+    chatWidget.classList.add('open');
+    chatToggle.style.display = 'none';
+    if (chatBody.children.length === 0) {
+      setTimeout(() => {
+        appendMessage("Hello! 👋 I'm here to help you with any questions about Visualizer 1.0. What would you like to know?", 'bot');
+      }, 300);
+    }
+    setTimeout(() => chatInput.focus(), 100);
+  }
+  function closeChat() {
+    chatOpen = false;
+    chatWidget.classList.remove('open');
+    chatToggle.style.display = 'block';
+  }
+
+  // Message helpers
+  function appendMessage(text, sender) {
+    const msg = document.createElement('div');
+    msg.className = 'chat-msg ' + sender;
+    msg.textContent = text;
+    chatBody.appendChild(msg);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+  function showTypingIndicator() {
+    const typing = document.createElement('div');
+    typing.className = 'chat-msg typing';
+    typing.textContent = 'AI is typing...';
+    typing.id = 'typing-indicator';
+    chatBody.appendChild(typing);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+  function removeTypingIndicator() {
+    const typing = document.getElementById('typing-indicator');
+    if (typing) typing.remove();
+  }
+  function setProcessingState(processing) {
+    isProcessing = processing;
+    chatSend.disabled = processing;
+    chatInput.disabled = processing;
+    chatSend.textContent = processing ? '...' : 'Send';
+  }
+
+  async function sendMessage() {
+    const message = chatInput.value.trim();
+    if (!message || isProcessing) return;
+
+    setProcessingState(true);
+    appendMessage(message, 'user');
+    chatInput.value = '';
+    showTypingIndicator();
+
+    const payload = {
+      message,
+      chatInput: message,
+      body: { message, chatInput: message, timestamp: new Date().toISOString() },
+      timestamp: new Date().toISOString(),
+      user: "website-visitor"
+    };
+
+    try {
+      const data = await sendToWebhook(payload);
+      removeTypingIndicator();
+
+      let botResponse = '';
+      if (data && typeof data === 'object') {
+        botResponse = data.response || data.answer || data.output || data.result || JSON.stringify(data, null, 2);
+      } else {
+        botResponse = String(data ?? '');
+      }
+      appendMessage(botResponse || "✅ Message received.", 'bot');
+    } catch (error) {
+      removeTypingIndicator();
+      console.error("Chat error:", error);
+      appendMessage("I'm having trouble connecting right now. Please try again in a moment.", 'bot');
+    } finally {
+      setProcessingState(false);
+      if (chatOpen) chatInput.focus();
+    }
+  }
+
+  // Events
+  chatSend.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // (Optional) click outside to close
+  document.addEventListener('click', (e) => {
+    if (chatOpen && !chatWidget.contains(e.target) && !chatToggle.contains(e.target)) {
+      // closeChat(); // enable if you want auto-close
+    }
+  });
+});
+</script>
 
 
     <body>
