@@ -1,0 +1,301 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-chat",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        32,
+        80
+      ],
+      "id": "fe0af1ba-9e38-4ec2-bf4a-ba743708ce42",
+      "name": "Webhook",
+      "webhookId": "1095e851-18bc-4cb6-8735-9076bf749f77",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.chatInput || $json.body.message || $json.chatInput || $json.message }}",
+        "options": {
+          "systemMessage": "You are a friendly and knowledgeable virtual assistant for \"The Faith Sound\", a website that sells the **Visualizer 1.0** audio plugin. Your purpose is to **help users learn about Visualizer 1.0 and guide them toward purchasing it (or trying the demo)**, while maintaining a **warm, supportive, and creative tone** that reflects the brand’s spiritual energy.\n\n**Your responsibilities:**\n- Greet the user warmly as soon as the conversation begins. (Example: “Hello! Welcome to The Faith Sound 😊 I’m here to help you with any questions about our Visualizer 1.0 plugin.”)\n- Provide a clear, enticing description of what Visualizer 1.0 is and what it does, highlighting its key benefits for musicians and producers.\n- Keep answers **short, natural, and human-like** for general questions. Avoid long technical explanations unless the user specifically asks for details.\n- When the user asks about **buying, price, or how to get the plugin**, give a **precise, clear, and more in-depth response**. Be persuasive but supportive, emphasizing value, guarantees, and easy next steps.\n\n**FAQ guidance:**\n- If asked *“What does it do?”*: Say that Visualizer 1.0 is a VST effect plugin that **visualizes your sound**. It gives **real-time visual feedback** for up to 8 MIDI controls – as they adjust their sound, the plugin’s interface responds with smooth animations. It’s like *seeing your music* while you mix.\n- If asked about **features**: Mention editable labels (rename controls to match DAW parameters), instant graphical feedback, and configurable buttons. Show how this helps workflow and creativity.\n- If asked about **compatibility**: Confirm it works with **all major DAWs** on Windows or Mac (Ableton Live, FL Studio, Logic Pro, Cubase, Reaper, etc.), since it’s in standard plugin formats.\n- If asked about **price or buying**: Be precise and persuasive. State it’s a one-time purchase for **$29.99** (sale, regular $39.99). Includes **lifetime updates** and support. No subscriptions. Highlight the **30-day money-back guarantee** so they can try it risk-free. Invite them to click “Buy Now” and reassure them it’s a quick setup.\n- If asked about a **free trial/demo**: If no demo exists, emphasize the 30-day refund policy as a risk-free way to try it.\n- If asked **how to install/use**: Give a brief overview (download, run installer, open DAW, load plugin, connect MIDI controller to see visuals). Offer a guide or extra help if needed.\n\n**Tone rules:**\n- Always be **friendly, enthusiastic, and supportive**. Avoid being overly salesy. Encourage creativity and confidence.\n- Use emojis lightly (🎶, ✨) to keep the chat engaging.\n- Guide the user toward action when it feels natural. Example: “If you’d like to give Visualizer 1.0 a try, just click ‘Buy Now’—you’ll have it up and running in minutes. Do you want me to show you how?”\n- End answers by inviting further questions. (Example: “✨ Anything else I can help with?”)\n\nRemember: **Keep it human, short, and conversational for most answers**. When talking about **buying or price**, shift into **clearer, more detailed mode** to ensure the user feels confident in making a purchase.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        -48
+      ],
+      "id": "6cb3a64e-c23a-4bd3-ac39-46b3d8e01397",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"response\": {{ JSON.stringify($json.output) }},\n  \"timestamp\": {{ JSON.stringify(new Date().toISOString()) }},\n  \"status\": \"success\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1056,
+        -144
+      ],
+      "id": "da2df713-dbf4-4d58-88fb-28f0f1dbe1fa",
+      "name": "Respond to Webhook",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-3-7-sonnet-20250219",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 3.7"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        304
+      ],
+      "id": "1d6ba2ec-3bc2-4d85-b2ef-4d208127037c",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "viqvSP74mEwQoSjG",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        -128
+      ],
+      "id": "3b1faf02-c8ec-4fea-a8bb-3cd03a1256bb",
+      "name": "When chat message received",
+      "webhookId": "13527431-2e0e-4c96-8e7f-4af97aee1945"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body.sessionId || $json.sessionId || $json.body.userId || $json.userId || $json.body.chatId || $json.chatId || 'default_session' }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        272
+      ],
+      "id": "35ea855a-1658-4283-9d8f-8b9becf460a7",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hooks.zapier.com/hooks/catch/your-webhook-id/",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"timestamp\": {{ JSON.stringify(new Date().toISOString()) }},\n  \"sessionId\": {{ JSON.stringify($('Webhook').item.json.body.sessionId || 'unknown') }},\n  \"userMessage\": {{ JSON.stringify($('Webhook').item.json.body.chatInput || $('Webhook').item.json.body.message) }},\n  \"botResponse\": {{ JSON.stringify($json.output) }}\n}",
+        "options": {}
+      },
+      "id": "log-conversation",
+      "name": "Log Conversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.chatInput || $json.body.message }}",
+              "rightValue": "buy|purchase|price|cost|payment|checkout|order|download|get|want|need|sale|discount",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combineOperation": "any"
+        },
+        "options": {}
+      },
+      "id": "buying-intent-detector",
+      "name": "Detect Buying Intent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@thefaithsound.com",
+        "toEmail": "dobosh.o@gmail.com",
+        "subject": "Potential Buyer - Visualizer Plugin",
+        "options": {}
+      },
+      "id": "email-alert",
+      "name": "Alert Admin (Email)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1536,
+        288
+      ],
+      "webhookId": "43b57246-4ef6-4411-a2ef-af1d533326c9"
+    },
+    {
+      "parameters": {
+        "chatId": "598669708",
+        "text": "🤖 *AI Chat Response*\n\n*User:* {{ $('Webhook').item.json.body.chatInput || $('Webhook').item.json.body.message }}\n\n*Bot:* {{ $json.output }}\n\n*Session:* {{ $('Webhook').item.json.body.sessionId || 'unknown' }}\n*Time:* {{ new Date().toLocaleString() }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "telegram-bot-send",
+      "name": "Send to Telegram Bot",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        -256
+      ],
+      "webhookId": "007faf64-e2e7-48b4-8b39-cf6187d9ea68",
+      "credentials": {
+        "telegramApi": {
+          "id": "Aaepvkx5MQwXQKTH",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Conversation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Detect Buying Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Buying Intent": {
+      "main": [
+        [
+          {
+            "node": "Alert Admin (Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9d90ffb3-7906-43bc-a330-1481258ce0a0",
+  "meta": {
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "bFh4iF4Oc6vJaYDt",
+  "tags": []
+}
