@@ -599,196 +599,10 @@
 }
 </style>
 
-<!-- <script>
-// Enhanced Chat Widget Functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const chatToggle = document.getElementById('chat-toggle');
-    const chatWidget = document.getElementById('chat-widget');
-    const chatClose = document.getElementById('chat-close');
-    const chatBody = document.getElementById('chat-body');
-    const chatInput = document.getElementById('chat-input');
-    const chatSend = document.getElementById('chat-send');
 
-    // Your n8n webhook URL - UPDATE THIS
-    const N8N_WEBHOOK_URL = "http://localhost:5678/webhook/ai-chat";
-
-    let chatOpen = false;
-    let isProcessing = false;
-
-    // Toggle chat widget
-    chatToggle.addEventListener('click', () => {
-        openChat();
-    });
-
-    chatClose.addEventListener('click', () => {
-        closeChat();
-    });
-
-    function openChat() {
-        chatOpen = true;
-        chatWidget.classList.add('open');
-        chatToggle.style.display = 'none';
-        
-        // Add welcome message if chat is empty
-        if (chatBody.children.length === 0) {
-            setTimeout(() => {
-                appendMessage("Hello! 👋 I'm here to help you with any questions about Visualizer 1.0. What would you like to know?", 'bot');
-            }, 300);
-        }
-        
-        // Focus input
-        setTimeout(() => {
-            chatInput.focus();
-        }, 100);
-    }
-
-    function closeChat() {
-        chatOpen = false;
-        chatWidget.classList.remove('open');
-        chatToggle.style.display = 'block';
-    }
-
-    // Message functions
-    function appendMessage(text, sender) {
-        const msg = document.createElement('div');
-        msg.className = 'chat-msg ' + sender;
-        msg.textContent = text;
-        chatBody.appendChild(msg);
-        chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    function showTypingIndicator() {
-        const typing = document.createElement('div');
-        typing.className = 'chat-msg typing';
-        typing.textContent = 'AI is typing...';
-        typing.id = 'typing-indicator';
-        chatBody.appendChild(typing);
-        chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    function removeTypingIndicator() {
-        const typing = document.getElementById('typing-indicator');
-        if (typing) {
-            typing.remove();
-        }
-    }
-
-    function setProcessingState(processing) {
-        isProcessing = processing;
-        chatSend.disabled = processing;
-        chatInput.disabled = processing;
-        chatSend.textContent = processing ? '...' : 'Send';
-    }
-
-    function sendMessage() {
-        const message = chatInput.value.trim();
-        if (!message || isProcessing) return;
-
-        // Set processing state
-        setProcessingState(true);
-
-        // Append user message
-        appendMessage(message, 'user');
-        chatInput.value = '';
-
-        // Show typing indicator
-        showTypingIndicator();
-
-        // Create payload matching your n8n workflow expectations
-        const payload = {
-            message: message,           // Primary message field
-            chatInput: message,         // Alternative message field
-            body: {
-                message: message,
-                chatInput: message,
-                timestamp: new Date().toISOString()
-            },
-            timestamp: new Date().toISOString(),
-            user: "website-visitor"     // Identifier for web visitors
-        };
-
-        // Send to n8n webhook
-        fetch(N8N_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'ngrok-skip-browser-warning': 'true' // For ngrok URLs
-            },
-            body: JSON.stringify(payload),
-            mode: "cors"
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            removeTypingIndicator();
-            
-            // Handle different response formats from your n8n workflow
-            let botResponse = '';
-            if (data.response) {
-                botResponse = data.response;
-            } else if (data.answer) {
-                botResponse = data.answer;
-            } else if (data.output) {
-                botResponse = data.output;
-            } else if (data.result) {
-                botResponse = data.result;
-            } else if (typeof data === 'string') {
-                botResponse = data;
-            } else {
-                botResponse = "I received your message, but couldn't generate a proper response. Please try rephrasing your question.";
-            }
-            
-            appendMessage(botResponse, 'bot');
-        })
-        .catch(error => {
-            removeTypingIndicator();
-            console.error("Chat error:", error);
-            
-            let errorMessage = "I'm having trouble connecting right now. ";
-            if (error.message.includes('Failed to fetch')) {
-                errorMessage += "Please check your internet connection and try again.";
-            } else if (error.message.includes('404')) {
-                errorMessage += "The chat service is temporarily unavailable.";
-            } else {
-                errorMessage += "Please try again in a moment.";
-            }
-            
-            appendMessage(errorMessage, 'bot');
-        })
-        .finally(() => {
-            setProcessingState(false);
-            if (chatOpen) {
-                chatInput.focus();
-            }
-        });
-    }
-
-    // Event listeners
-    chatSend.addEventListener('click', sendMessage);
-
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    // Close chat when clicking outside (optional)
-    document.addEventListener('click', (e) => {
-        if (chatOpen && !chatWidget.contains(e.target) && !chatToggle.contains(e.target)) {
-            // Uncomment the line below if you want to close chat when clicking outside
-            // closeChat();
-        }
-    });
-});
-</script> -->
-        
+<!-- Replace the existing chat script in your HTML with this updated version -->
 <script>
-// Enhanced Chat Widget Functionality (local + prod aware)
+// Chat Widget with Memory Functionality - UPDATED
 document.addEventListener('DOMContentLoaded', function() {
   const chatToggle = document.getElementById('chat-toggle');
   const chatWidget = document.getElementById('chat-widget');
@@ -797,83 +611,49 @@ document.addEventListener('DOMContentLoaded', function() {
   const chatInput  = document.getElementById('chat-input');
   const chatSend   = document.getElementById('chat-send');
 
-  // ----- Webhook resolution -----
-  const LOCAL_WEBHOOK = "http://localhost:5678/webhook/ai-chat";
-  const PROD_WEBHOOK  = "https://validity-session-aggressive-tigers.trycloudflare.com/webhook/ai-chat";
+  // Generate or retrieve persistent session ID for conversation memory
+  let SESSION_ID = localStorage.getItem('chatSessionId');
+  if (!SESSION_ID) {
+    SESSION_ID = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('chatSessionId', SESSION_ID);
+    console.log('New chat session created:', SESSION_ID);
+  } else {
+    console.log('Existing chat session loaded:', SESSION_ID);
+  }
 
-  // 1) allow ?webhook=<url> override
+  // ---- UPDATED WEBHOOK URLS ----
+  const LOCAL_WEBHOOK = "http://localhost:5678/webhook/ai-chat";
+  
+  // 🔥 UPDATE THIS URL to match your actual n8n instance
+  // If using Cloudflare tunnel, replace with your current tunnel URL
+  // If using ngrok, replace with your ngrok URL  
+  // If using direct n8n access, use your n8n instance URL
+  //const PROD_WEBHOOK = "https://get-franchise-deaths-logging.trycloudflare.com/webhook/ai-chat";
+//const PERMANENT_WEBHOOK = "https://18bdd01a-21f6-4191-bd6a-a61c4b1523a2.cfargotunnel.com/webhook/ai-chat";
+
+// Or update the PROD_WEBHOOK:
+//const PROD_WEBHOOK = "https://18bdd01a-21f6-4191-bd6a-a61c4b1523a2.cfargotunnel.com/webhook/ai-chat";
+  
+const PERMANENT_WEBHOOK = "https://chat.thefaithsound.com/webhook/ai-chat";
+const PROD_WEBHOOK = "https://chat.thefaithsound.com/webhook/ai-chat";
+
+  // For example:
+  // const PROD_WEBHOOK = "https://your-domain.com/webhook/ai-chat";
+  // const PROD_WEBHOOK = "https://abc123.ngrok.io/webhook/ai-chat";
+  // const PROD_WEBHOOK = "https://new-tunnel-url.trycloudflare.com/webhook/ai-chat";
+
+  // Allow override via query string: ?webhook=https://.../webhook/ai-chat
   const qsWebhook = new URLSearchParams(location.search).get('webhook');
 
-  // 2) decide by hostname (localhost/127.* → local; everything else → prod)
-  const byHost = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-    ? LOCAL_WEBHOOK
-    : PROD_WEBHOOK;
-
-  // 3) pick initial target
+  // Improved host detection
+  const isLocal = (location.hostname === "localhost" || 
+                   location.hostname === "127.0.0.1" || 
+                   location.protocol === "file:");
+  
+  const byHost = isLocal ? LOCAL_WEBHOOK : PROD_WEBHOOK;
   let N8N_WEBHOOK_URL = qsWebhook || byHost;
 
-  // 4) on first send, if it fails, try the other endpoint automatically
-  async function sendToWebhook(payload) {
-    // try current
-    try {
-      const r = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json, text/plain, */*'
-        },
-        body: JSON.stringify(payload),
-        mode: "cors",
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      return await r.json().catch(() => r.text());
-    } catch (e) {
-      // flip to the other candidate and retry once
-      const alt = (N8N_WEBHOOK_URL === LOCAL_WEBHOOK) ? PROD_WEBHOOK : LOCAL_WEBHOOK;
-      if (alt !== N8N_WEBHOOK_URL) {
-        N8N_WEBHOOK_URL = alt;
-        try {
-          const r2 = await fetch(N8N_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/plain, */*' },
-            body: JSON.stringify(payload),
-            mode: "cors",
-          });
-          if (!r2.ok) throw new Error(`HTTP ${r2.status}`);
-          return await r2.json().catch(() => r2.text());
-        } catch (e2) {
-          throw e2;
-        }
-      }
-      throw e;
-    }
-  }
-
-  let chatOpen = false;
-  let isProcessing = false;
-
-  // Toggle chat widget
-  chatToggle.addEventListener('click', openChat);
-  chatClose.addEventListener('click', closeChat);
-
-  function openChat() {
-    chatOpen = true;
-    chatWidget.classList.add('open');
-    chatToggle.style.display = 'none';
-    if (chatBody.children.length === 0) {
-      setTimeout(() => {
-        appendMessage("Hello! 👋 I'm here to help you with any questions about Visualizer 1.0. What would you like to know?", 'bot');
-      }, 300);
-    }
-    setTimeout(() => chatInput.focus(), 100);
-  }
-  function closeChat() {
-    chatOpen = false;
-    chatWidget.classList.remove('open');
-    chatToggle.style.display = 'block';
-  }
-
-  // Message helpers
+  // Rest of your chat functionality remains the same...
   function appendMessage(text, sender) {
     const msg = document.createElement('div');
     msg.className = 'chat-msg ' + sender;
@@ -881,64 +661,186 @@ document.addEventListener('DOMContentLoaded', function() {
     chatBody.appendChild(msg);
     chatBody.scrollTop = chatBody.scrollHeight;
   }
-  function showTypingIndicator() {
+  
+  function showTyping() {
     const typing = document.createElement('div');
     typing.className = 'chat-msg typing';
-    typing.textContent = 'AI is typing...';
     typing.id = 'typing-indicator';
+    typing.textContent = 'AI is typing...';
     chatBody.appendChild(typing);
     chatBody.scrollTop = chatBody.scrollHeight;
   }
-  function removeTypingIndicator() {
-    const typing = document.getElementById('typing-indicator');
-    if (typing) typing.remove();
+  
+  function hideTyping() {
+    const t = document.getElementById('typing-indicator');
+    if (t) t.remove();
   }
-  function setProcessingState(processing) {
-    isProcessing = processing;
-    chatSend.disabled = processing;
-    chatInput.disabled = processing;
-    chatSend.textContent = processing ? '...' : 'Send';
+  
+  function setProcessing(on) {
+    chatSend.disabled = on;
+    chatInput.disabled = on;
+    chatSend.textContent = on ? '...' : 'Send';
   }
+
+  function loadChatHistory() {
+    const chatHistory = localStorage.getItem('chatHistory_' + SESSION_ID);
+    if (chatHistory) {
+      try {
+        const messages = JSON.parse(chatHistory);
+        messages.forEach(msg => {
+          appendMessage(msg.text, msg.sender);
+        });
+        console.log('Chat history loaded:', messages.length, 'messages');
+      } catch (e) {
+        console.warn('Failed to load chat history:', e);
+      }
+    }
+  }
+
+  function saveMessageToHistory(text, sender) {
+    try {
+      const historyKey = 'chatHistory_' + SESSION_ID;
+      let history = [];
+      const existingHistory = localStorage.getItem(historyKey);
+      if (existingHistory) {
+        history = JSON.parse(existingHistory);
+      }
+      
+      history.push({ text, sender, timestamp: new Date().toISOString() });
+      
+      if (history.length > 50) {
+        history = history.slice(-50);
+      }
+      
+      localStorage.setItem(historyKey, JSON.stringify(history));
+    } catch (e) {
+      console.warn('Failed to save message to history:', e);
+    }
+  }
+
+  async function sendToWebhook(payload) {
+    const candidates = [N8N_WEBHOOK_URL,
+      N8N_WEBHOOK_URL === LOCAL_WEBHOOK ? PROD_WEBHOOK : LOCAL_WEBHOOK
+    ].filter(Boolean);
+
+    let lastError;
+    for (const url of candidates) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+        
+        const fetchOptions = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/plain, */*'
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        };
+
+        if (location.protocol !== "file:") {
+          fetchOptions.mode = "cors";
+        }
+
+        const r = await fetch(url, fetchOptions);
+        clearTimeout(timeout);
+        
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        
+        N8N_WEBHOOK_URL = url;
+        const ct = r.headers.get('content-type') || '';
+        return ct.includes('application/json') ? r.json() : r.text();
+      } catch (e) {
+        lastError = e;
+        console.warn(`Failed to connect to ${url}:`, e.message);
+      }
+    }
+    throw lastError || new Error('Request failed');
+  }
+
+  function appendMessageWithHistory(text, sender) {
+    appendMessage(text, sender);
+    saveMessageToHistory(text, sender);
+  }
+
+  chatToggle.addEventListener('click', () => {
+    chatWidget.classList.add('open');
+    chatToggle.style.display = 'none';
+    
+    if (chatBody.children.length === 0) {
+      loadChatHistory();
+      
+      if (chatBody.children.length === 0) {
+        setTimeout(() => {
+          appendMessageWithHistory("Hello! I'm here to help with Visualizer 1.0. I remember our previous conversations!", 'bot');
+        }, 300);
+      }
+    }
+    setTimeout(() => chatInput.focus(), 100);
+  });
+  
+  chatClose.addEventListener('click', () => {
+    chatWidget.classList.remove('open');
+    chatToggle.style.display = 'block';
+  });
 
   async function sendMessage() {
     const message = chatInput.value.trim();
-    if (!message || isProcessing) return;
+    if (!message || chatSend.disabled) return;
 
-    setProcessingState(true);
-    appendMessage(message, 'user');
+    setProcessing(true);
+    appendMessageWithHistory(message, 'user');
     chatInput.value = '';
-    showTypingIndicator();
+    showTyping();
 
+    // 🔥 CRITICAL: Include sessionId for n8n memory
     const payload = {
       message,
       chatInput: message,
-      body: { message, chatInput: message, timestamp: new Date().toISOString() },
+      sessionId: SESSION_ID, // This enables memory in your n8n workflow
+      userId: SESSION_ID,    // Backup field name
+      chatId: SESSION_ID,    // Another backup field name
+      body: { 
+        message, 
+        chatInput: message, 
+        sessionId: SESSION_ID,
+        timestamp: new Date().toISOString() 
+      },
       timestamp: new Date().toISOString(),
-      user: "website-visitor"
+      user: "website-visitor",
+      origin: location.origin || "file://"
     };
 
     try {
       const data = await sendToWebhook(payload);
-      removeTypingIndicator();
-
-      let botResponse = '';
+      hideTyping();
+      let reply = '';
       if (data && typeof data === 'object') {
-        botResponse = data.response || data.answer || data.output || data.result || JSON.stringify(data, null, 2);
+        reply = data.response || data.answer || data.output || data.result || JSON.stringify(data, null, 2);
       } else {
-        botResponse = String(data ?? '');
+        reply = String(data ?? '');
       }
-      appendMessage(botResponse || "✅ Message received.", 'bot');
-    } catch (error) {
-      removeTypingIndicator();
-      console.error("Chat error:", error);
-      appendMessage("I'm having trouble connecting right now. Please try again in a moment.", 'bot');
+      const finalReply = reply || "Message received.";
+      appendMessageWithHistory(finalReply, 'bot');
+    } catch (err) {
+      hideTyping();
+      console.error('Chat error:', err);
+      
+      let errorMessage = "I'm having trouble connecting right now. Please try again shortly.";
+      appendMessageWithHistory(errorMessage, 'bot');
+      
+      // Debug info
+      console.log('Debug Info:');
+      console.log('- Session ID:', SESSION_ID);
+      console.log('- Webhook URL:', N8N_WEBHOOK_URL);
+      console.log('- Error:', err.message);
     } finally {
-      setProcessingState(false);
-      if (chatOpen) chatInput.focus();
+      setProcessing(false);
+      chatInput.focus();
     }
   }
 
-  // Events
   chatSend.addEventListener('click', sendMessage);
   chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -947,17 +849,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // (Optional) click outside to close
-  document.addEventListener('click', (e) => {
-    if (chatOpen && !chatWidget.contains(e.target) && !chatToggle.contains(e.target)) {
-      // closeChat(); // enable if you want auto-close
-    }
-  });
+  console.log('Chat initialized with memory functionality');
+  console.log('Session ID:', SESSION_ID);
+  console.log('Webhook URL:', N8N_WEBHOOK_URL);
 });
 </script>
 
-
-    <body>
+<body>
 
         <header class="header">
             <nav class="nav container">
@@ -978,7 +876,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h1 class="reveal">Visualize Your Sound.</h1>
                     <p class="reveal" style="transition-delay: 0.1s;">Visualizer 1.0 is a revolutionary FX plugin that provides seamless, real-time visual feedback for your MIDI controller, inspired by the legendary Korg NanoKontrol2.</p>
                     <div class="reveal" style="transition-delay: 0.2s;">
-                        <a href="#pricing" class="nav-cta">Get Your Copy Now</a>
+                        <a href="#pricing" class="nav-cta">Get Your Copy Now of Visualizer 1.0</a>
                     </div>
                 </div>
                 <div class="hero-image-container container reveal" style="transition-delay: 0.3s;">
@@ -1030,13 +928,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h2 class="section-title reveal">Get Visualizer 1.0 Today</h2>
                     <p class="section-subtitle reveal">A single purchase for a lifetime of creative clarity.</p>
                     <div class="pricing-card reveal">
-                        <h3>Professional VST Plugin</h3>
+                        <h3>Our first VST Plugin</h3>
                         <div class="pricing-price">
                             <span style="text-decoration: line-through; color: var(--color-text-muted); font-size: 2.5rem; margin-right: 10px;">
                                 $39.99
                             </span>
                             <span style="color: var(--color-primary); font-size: 3.0rem; font-weight: bold;">$29.99</span>
-                            <span style="background: var(--color-primary); color: #fff; font-size: 0.8rem; padding: 3px 6px; border-radius: 6px; margin-left: 8px;">
+                            <span style="background: var(--color-primary); color: #fff; font-size: 2.0rem; padding: 3px 62px; border-radius: 6px; margin-left: 8px;">
                                 Limited Offer
                             </span>
                             </div>
@@ -1089,7 +987,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         purchase_units: [{
                             description: 'Visualizer 1.0 VST Plugin - Lifetime License',
                             amount: {
-                                value: '29.99' // The price of your product
+                                value: '0.01' // The price of your product
                             }
                         }]
                     });
