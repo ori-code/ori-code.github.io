@@ -151,14 +151,32 @@ Our [Em7]hearts will cry, these bones will [D]sing
         analyzeButton.disabled = true;
 
         try {
-            // Create FormData to send the file
-            const formData = new FormData();
-            formData.append('chart', uploadedFile);
+            // Convert file to base64
+            const reader = new FileReader();
+            const fileData = await new Promise((resolve, reject) => {
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(uploadedFile);
+            });
 
-            // Call the backend API
-            const response = await fetch('http://localhost:3001/api/analyze-chart', {
+            // Extract base64 data and mime type
+            const [metadata, base64Data] = fileData.split(',');
+            const mimeType = metadata.match(/:(.*?);/)[1];
+
+            // Call the Vercel serverless API
+            const API_URL = window.location.hostname === 'localhost'
+                ? 'http://localhost:3001/api/analyze-chart'
+                : 'https://ori-code-github-io.vercel.app/api/analyze-chart';
+
+            const response = await fetch(API_URL, {
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    imageData: base64Data,
+                    mimeType: mimeType
+                })
             });
 
             if (!response.ok) {
