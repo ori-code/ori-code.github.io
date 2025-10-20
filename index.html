@@ -371,6 +371,134 @@
             margin-top: 20px;
         }
 
+        /* --- ChordsApp Promo Section --- */
+        .chordsapp-section {
+            position: relative;
+            background: radial-gradient(circle at top right, rgba(255, 59, 92, 0.18), transparent 45%), var(--color-background);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .chordsapp-grid {
+            display: grid;
+            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            align-items: center;
+        }
+
+        .chordsapp-copy {
+            background: rgba(28, 27, 34, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 48px 40px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        .chordsapp-copy .section-title,
+        .chordsapp-copy .section-subtitle {
+            text-align: left;
+        }
+
+        .chordsapp-copy .section-subtitle {
+            margin-bottom: 32px;
+            max-width: 480px;
+        }
+
+        .chordsapp-list {
+            list-style: none;
+            margin: 0 0 36px;
+            padding: 0;
+            display: grid;
+            gap: 16px;
+        }
+
+        .chordsapp-list li {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: var(--color-text-muted);
+        }
+
+        .chordsapp-list i {
+            width: 22px;
+            height: 22px;
+            color: var(--color-primary);
+        }
+
+        .chordsapp-actions {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .chordsapp-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--color-text-muted);
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .chordsapp-secondary:hover,
+        .chordsapp-secondary:focus {
+            color: var(--color-text);
+        }
+
+        .chordsapp-secondary i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .chordsapp-preview {
+            background: rgba(10, 10, 16, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+        }
+
+        .chordsapp-card {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 18px;
+            padding: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .chordsapp-card header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        .chordsapp-card header span:last-child {
+            color: var(--color-primary);
+        }
+
+        .chordsapp-card-lines {
+            display: grid;
+            gap: 16px;
+        }
+
+        .chordsapp-card-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+        }
+
+        .chordsapp-card-line span:first-child {
+            font-weight: 600;
+            color: var(--color-primary);
+            min-width: 60px;
+        }
+
+        .chordsapp-card-line span:last-child {
+            color: rgba(234, 234, 234, 0.9);
+            padding-left: 14px;
+        }
+
         /* --- Footer --- */
         .footer {
             padding: 50px 0;
@@ -441,6 +569,18 @@
                 font-size: 2.5rem;
             }
             
+            .chordsapp-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chordsapp-copy {
+                padding: 32px 24px;
+            }
+
+            .chordsapp-preview {
+                padding: 28px 24px;
+            }
+            
             .pricing-price span:first-child {
                 font-size: 1.8rem !important;
             }
@@ -489,6 +629,16 @@
             
             .pricing-price {
                 font-size: 2rem;
+            }
+
+            .chordsapp-actions {
+                flex-direction: column;
+            }
+
+            .chordsapp-card-line {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
             }
         }
 
@@ -1115,6 +1265,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <ul class="nav-menu">
                 <li><a href="#features" class="nav-link">Features</a></li>
                 <li><a href="#demo" class="nav-link">Demo</a></li>
+                <li><a href="ChordsApp/index.html" class="nav-link">ChordsApp</a></li>
                 <li><a href="#podcast" class="nav-link">Podcast</a></li>
                 <li><a href="#pricing" class="nav-link">Pricing</a></li>
             </ul>
@@ -1198,6 +1349,53 @@ document.addEventListener('DOMContentLoaded', function() {
                         <span>Listen to our Podcast Episode</span>
                 </div> 
                 </div> -->
+            </div>
+        </section>
+
+
+        <section id="chordsapp" class="section chordsapp-section">
+            <div class="container">
+                <div class="chordsapp-grid">
+                    <div class="chordsapp-copy reveal">
+                        <h2 class="section-title">Meet ChordsApp</h2>
+                        <p class="section-subtitle">A browser-based workspace where you can upload handwritten chord charts, run AI transcription, edit the formatting, transpose, and print in minutes.</p>
+                        <ul class="chordsapp-list">
+                            <li><i data-feather="upload"></i><span>Upload photos or PDFs of your existing charts.</span></li>
+                            <li><i data-feather="cpu"></i><span>Connect your preferred vision + music AI services to auto-detect chords.</span></li>
+                            <li><i data-feather="sliders"></i><span>Refine spacing, transpose instantly, and print performer-ready sheets.</span></li>
+                        </ul>
+                        <div class="chordsapp-actions">
+                            <a href="ChordsApp/index.html" class="nav-cta">Launch ChordsApp (beta)</a>
+                            <a href="ChordsApp/index.html#next" class="chordsapp-secondary"><i data-feather="arrow-right"></i>See integration roadmap</a>
+                        </div>
+                    </div>
+                    <div class="chordsapp-preview reveal" style="transition-delay: 0.1s;">
+                        <div class="chordsapp-card">
+                            <header>
+                                <span>Great Are You Lord</span>
+                                <span>Key: G</span>
+                            </header>
+                            <div class="chordsapp-card-lines">
+                                <div class="chordsapp-card-line">
+                                    <span>G</span>
+                                    <span>You give life, You are love</span>
+                                </div>
+                                <div class="chordsapp-card-line">
+                                    <span>Em7</span>
+                                    <span>You bring light to the darkness</span>
+                                </div>
+                                <div class="chordsapp-card-line">
+                                    <span>C</span>
+                                    <span>You give hope, You restore</span>
+                                </div>
+                                <div class="chordsapp-card-line">
+                                    <span>D/F#</span>
+                                    <span>Every heart that is broken</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 

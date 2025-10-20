@@ -1,0 +1,979 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Visualizer 1.0 | The Faith Sound</title>
+        
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        
+        <script src="https://unpkg.com/feather-icons"></script>
+        
+    <script src="https://www.paypal.com/sdk/js?client-id=AUjr_VTe9_mnojYbrv2wEhvIlYN3nXES7HG2hIfHpNhZchdcNGCh6WeHJtxwXkDBqS09gb2RjX-HAYEK&currency=USD"></script>
+
+        <style>
+            :root {
+                --color-background: #0D0C12;
+                --color-surface: #1C1B22;
+                --color-primary: #FF3B5C;
+                --color-primary-glow: rgba(255, 59, 92, 0.4);
+                --color-text: #EAEAEA;
+                --color-text-muted: #88878D;
+                --font-family: 'Poppins', sans-serif;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                background-color: var(--color-background);
+                color: var(--color-text);
+                font-family: var(--font-family);
+                overflow-x: hidden;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 24px;
+            }
+
+            /* --- Animations --- */
+            .reveal {
+                opacity: 0;
+                transform: translateY(30px);
+                transition: opacity 0.8s ease-out, transform 0.6s ease-out;
+            }
+
+            .reveal.visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            /* --- Header --- */
+            .header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                z-index: 100;
+                padding: 20px 0;
+                background: rgba(13, 12, 18, 0.7);
+                backdrop-filter: blur(10px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .nav {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .nav-logo {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: var(--color-text);
+                text-decoration: none;
+            }
+            .nav-logo span {
+                color: var(--color-primary);
+            }
+
+            .nav-menu {
+                display: flex;
+                align-items: center;
+                gap: 32px;
+                list-style: none;
+            }
+
+            .nav-link {
+                color: var(--color-text-muted);
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.3s ease;
+            }
+            .nav-link:hover {
+                color: var(--color-text);
+            }
+
+            .nav-cta {
+                background: var(--color-primary);
+                color: #FFF;
+                padding: 10px 24px;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px var(--color-primary-glow);
+            }
+            .nav-cta:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px var(--color-primary-glow);
+            }
+
+            /* --- Hero Section --- */
+            .hero {
+                position: relative;
+                padding: 180px 0 100px;
+                text-align: center;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .hero-aurora {
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 800px;
+                height: 600px;
+                background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 60%);
+                z-index: 0;
+                animation: pulse 8s infinite ease-in-out;
+            }
+
+            @keyframes pulse {
+                0% { transform: translateX(-50%) scale(1); opacity: 0.7; }
+                50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+                100% { transform: translateX(-50%) scale(1); opacity: 0.7; }
+            }
+            
+            .hero-content {
+                position: relative;
+                z-index: 1;
+            }
+
+            .hero h1 {
+                font-size: 4.5rem;
+                font-weight: 700;
+                letter-spacing: -2px;
+                line-height: 1.1;
+                background: linear-gradient(120deg, var(--color-primary), #FFF);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 24px;
+            }
+
+            .hero p {
+                font-size: 1.25rem;
+                color: var(--color-text-muted);
+                max-width: 650px;
+                margin: 0 auto 40px;
+                line-height: 1.6;
+            }
+
+            .hero-image-container {
+                margin-top: 60px;
+                position: relative;
+                z-index: 2;
+            }
+
+            .hero-image {
+                width: 100%;
+                max-width: 800px;
+                border-radius: 12px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            /* --- Section --- */
+            .section {
+                padding: 100px 0;
+            }
+
+            .section-title {
+                text-align: center;
+                font-size: 2.5rem;
+                font-weight: 600;
+                margin-bottom: 12px;
+            }
+
+            .section-subtitle {
+                text-align: center;
+                font-size: 1.1rem;
+                color: var(--color-text-muted);
+                margin-bottom: 60px;
+            }
+
+            /* --- Features Section --- */
+            .features-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 30px;
+            }
+
+            .feature-card {
+                background: rgba(28, 27, 34, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(5px);
+                padding: 32px;
+                border-radius: 16px;
+                transition: all 0.3s ease;
+            }
+            .feature-card:hover {
+                transform: translateY(-5px);
+                border-color: rgba(255, 59, 92, 0.5);
+            }
+
+            .feature-icon {
+                width: 48px;
+                height: 48px;
+                color: var(--color-primary);
+                margin-bottom: 24px;
+            }
+            
+            .feature-card h3 {
+                font-size: 1.5rem;
+                margin-bottom: 12px;
+                color: var(--color-text);
+            }
+
+            .feature-card p {
+                color: var(--color-text-muted);
+                line-height: 1.7;
+            }
+            
+            /* --- Demo Section --- */
+            .demo-video-wrapper {
+                position: relative;
+                padding-top: 56.25%; /* 16:9 Aspect Ratio */
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+            .demo-video-wrapper iframe {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border: 0;
+            }
+
+            /* --- Pricing Section --- */
+            .pricing-card {
+                background: linear-gradient(145deg, var(--color-surface), var(--color-background));
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 20px;
+                max-width: 450px;
+                margin: 0 auto;
+                padding: 40px;
+                text-align: center;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            }
+
+            .pricing-card h3 {
+                font-size: 1.75rem;
+                font-weight: 600;
+            }
+            
+            .pricing-price {
+                font-size: 4rem;
+                font-weight: 700;
+                color: var(--color-primary);
+                margin: 20px 0;
+            }
+            .pricing-price span {
+                font-size: 1rem;
+                font-weight: 400;
+                color: var(--color-text-muted);
+            }
+            
+            .pricing-features {
+                list-style: none;
+                margin: 30px 0;
+                text-align: left;
+                display: inline-block;
+            }
+
+            .pricing-features li {
+                margin-bottom: 12px;
+                color: var(--color-text-muted);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .pricing-features .icon {
+                color: var(--color-primary);
+                width: 20px;
+                height: 20px;
+            }
+
+            .pricing-cta {
+                display: block;
+                width: 100%;
+                padding: 16px;
+                margin-top: 20px;
+            }
+
+            /* --- Footer --- */
+            .footer {
+                padding: 50px 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+                text-align: center;
+            }
+            .footer p {
+                color: var(--color-text-muted);
+                font-size: 0.9rem;
+            }
+            
+            /* --- Responsive --- */
+            @media (max-width: 768px) {
+                .nav-menu {
+                    display: none; /* For simplicity, hiding menu. A hamburger menu would be ideal for a real site. */
+                }
+                .hero h1 {
+                    font-size: 3rem;
+                }
+                .hero p {
+                    font-size: 1rem;
+                }
+            }
+
+        </style>
+    </head>
+
+    <!-- CHAT -->
+
+  <!-- Enhanced Chat Widget -->
+<button id="chat-toggle">💬</button>
+<div id="chat-widget">
+    <div id="chat-header">
+        <span>💬 Chat with Us</span>
+        <button id="chat-close">×</button>
+    </div>
+    <div id="chat-body"></div>
+    <div id="chat-input-container">
+        <input type="text" id="chat-input" placeholder="Type your message..." />
+        <button id="chat-send">Send</button>
+    </div>
+</div>
+
+<style>
+/* Enhanced Chat Widget Styles */
+#chat-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: var(--color-primary);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px var(--color-primary-glow);
+    z-index: 1001;
+    transition: all 0.3s ease;
+}
+
+#chat-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px var(--color-primary-glow);
+}
+
+#chat-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    max-width: calc(100vw - 40px);
+    background: #1C1B22;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    z-index: 1000;
+    transform: translateY(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+#chat-widget.open {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+#chat-header {
+    background: var(--color-primary);
+    color: white;
+    padding: 15px;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#chat-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s ease;
+}
+
+#chat-close:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+#chat-body {
+    height: 300px;
+    overflow-y: auto;
+    padding: 15px;
+    color: #EAEAEA;
+    background: var(--color-surface);
+}
+
+#chat-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chat-body::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.1);
+}
+
+#chat-body::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 3px;
+}
+
+.chat-msg {
+    margin-bottom: 15px;
+    padding: 12px 16px;
+    border-radius: 18px;
+    max-width: 85%;
+    word-wrap: break-word;
+    line-height: 1.4;
+    animation: messageSlide 0.3s ease;
+}
+
+@keyframes messageSlide {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chat-msg.user {
+    background: var(--color-primary);
+    color: white;
+    margin-left: auto;
+    text-align: right;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-msg.bot {
+    background: rgba(255,255,255,0.1);
+    color: var(--color-text);
+    border-bottom-left-radius: 4px;
+}
+
+.chat-msg.typing {
+    background: rgba(255,255,255,0.05);
+    color: var(--color-text-muted);
+    font-style: italic;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+#chat-input-container {
+    display: flex;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    background: var(--color-surface);
+}
+
+#chat-input {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: white;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+#chat-input::placeholder {
+    color: var(--color-text-muted);
+}
+
+#chat-input:disabled {
+    opacity: 0.6;
+}
+
+#chat-send {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    min-width: 60px;
+}
+
+#chat-send:hover:not(:disabled) {
+    background: #e6345a;
+    transform: translateX(-2px);
+}
+
+#chat-send:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    #chat-widget {
+        width: calc(100vw - 20px);
+        right: 10px;
+        left: 10px;
+        bottom: 10px;
+    }
+    
+    #chat-toggle {
+        right: 20px;
+        bottom: 20px;
+        width: 55px;
+        height: 55px;
+        font-size: 1.3rem;
+    }
+    
+    #chat-body {
+        height: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    #chat-header {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    #chat-input {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    #chat-send {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+    
+    .chat-msg {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+}
+</style>
+
+<script>
+// Enhanced Chat Widget Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const chatToggle = document.getElementById('chat-toggle');
+    const chatWidget = document.getElementById('chat-widget');
+    const chatClose = document.getElementById('chat-close');
+    const chatBody = document.getElementById('chat-body');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+
+    // Your n8n webhook URL - UPDATE THIS
+    // const N8N_WEBHOOK_URL = "http://localhost:5678/webhook/ai-chat";
+    const N8N_WEBHOOK_URL = "https://validity-session-aggressive-tigers.trycloudflare.com/webhook/ai-chat";
+
+    let chatOpen = false;
+    let isProcessing = false;
+
+    // Toggle chat widget
+    chatToggle.addEventListener('click', () => {
+        openChat();
+    });
+
+    chatClose.addEventListener('click', () => {
+        closeChat();
+    });
+
+    function openChat() {
+        chatOpen = true;
+        chatWidget.classList.add('open');
+        chatToggle.style.display = 'none';
+        
+        // Add welcome message if chat is empty
+        if (chatBody.children.length === 0) {
+            setTimeout(() => {
+                appendMessage("Hello! 👋 I'm here to help you with any questions about Visualizer 1.0. What would you like to know?", 'bot');
+            }, 300);
+        }
+        
+        // Focus input
+        setTimeout(() => {
+            chatInput.focus();
+        }, 100);
+    }
+
+    function closeChat() {
+        chatOpen = false;
+        chatWidget.classList.remove('open');
+        chatToggle.style.display = 'block';
+    }
+
+    // Message functions
+    function appendMessage(text, sender) {
+        const msg = document.createElement('div');
+        msg.className = 'chat-msg ' + sender;
+        msg.textContent = text;
+        chatBody.appendChild(msg);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        const typing = document.createElement('div');
+        typing.className = 'chat-msg typing';
+        typing.textContent = 'AI is typing...';
+        typing.id = 'typing-indicator';
+        chatBody.appendChild(typing);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const typing = document.getElementById('typing-indicator');
+        if (typing) {
+            typing.remove();
+        }
+    }
+
+    function setProcessingState(processing) {
+        isProcessing = processing;
+        chatSend.disabled = processing;
+        chatInput.disabled = processing;
+        chatSend.textContent = processing ? '...' : 'Send';
+    }
+
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message || isProcessing) return;
+
+        // Set processing state
+        setProcessingState(true);
+
+        // Append user message
+        appendMessage(message, 'user');
+        chatInput.value = '';
+
+        // Show typing indicator
+        showTypingIndicator();
+
+        // Create payload matching your n8n workflow expectations
+        const payload = {
+            message: message,           // Primary message field
+            chatInput: message,         // Alternative message field
+            body: {
+                message: message,
+                chatInput: message,
+                timestamp: new Date().toISOString()
+            },
+            timestamp: new Date().toISOString(),
+            user: "website-visitor"     // Identifier for web visitors
+        };
+
+        // Send to n8n webhook
+        fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true' // For ngrok URLs
+            },
+            body: JSON.stringify(payload),
+            mode: "cors"
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            removeTypingIndicator();
+            
+            // Handle different response formats from your n8n workflow
+            let botResponse = '';
+            if (data.response) {
+                botResponse = data.response;
+            } else if (data.answer) {
+                botResponse = data.answer;
+            } else if (data.output) {
+                botResponse = data.output;
+            } else if (data.result) {
+                botResponse = data.result;
+            } else if (typeof data === 'string') {
+                botResponse = data;
+            } else {
+                botResponse = "I received your message, but couldn't generate a proper response. Please try rephrasing your question.";
+            }
+            
+            appendMessage(botResponse, 'bot');
+        })
+        .catch(error => {
+            removeTypingIndicator();
+            console.error("Chat error:", error);
+            
+            let errorMessage = "I'm having trouble connecting right now. ";
+            if (error.message.includes('Failed to fetch')) {
+                errorMessage += "Please check your internet connection and try again.";
+            } else if (error.message.includes('404')) {
+                errorMessage += "The chat service is temporarily unavailable.";
+            } else {
+                errorMessage += "Please try again in a moment.";
+            }
+            
+            appendMessage(errorMessage, 'bot');
+        })
+        .finally(() => {
+            setProcessingState(false);
+            if (chatOpen) {
+                chatInput.focus();
+            }
+        });
+    }
+
+    // Event listeners
+    chatSend.addEventListener('click', sendMessage);
+
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Close chat when clicking outside (optional)
+    document.addEventListener('click', (e) => {
+        if (chatOpen && !chatWidget.contains(e.target) && !chatToggle.contains(e.target)) {
+            // Uncomment the line below if you want to close chat when clicking outside
+            // closeChat();
+        }
+    });
+});
+</script>
+        
+
+
+    <body>
+
+        <header class="header">
+            <nav class="nav container">
+                <a href="#" class="nav-logo">THE FAITH <span>SOUND</span></a>
+                <ul class="nav-menu">
+                    <li><a href="#features" class="nav-link">Features</a></li>
+                    <li><a href="#demo" class="nav-link">Demo</a></li>
+                    <li><a href="#pricing" class="nav-link">Pricing</a></li>
+                </ul>
+                <a href="#pricing" class="nav-cta">Buy Now</a>
+            </nav>
+        </header>
+
+        <main>
+            <section id="home" class="hero">
+                <div class="hero-aurora"></div>
+                <div class="hero-content container">
+                    <h1 class="reveal">Visualize Your Sound.</h1>
+                    <p class="reveal" style="transition-delay: 0.1s;">Visualizer 1.0 is a revolutionary FX plugin that provides seamless, real-time visual feedback for your MIDI controller, inspired by the legendary Korg NanoKontrol2.</p>
+                    <div class="reveal" style="transition-delay: 0.2s;">
+                        <a href="#pricing" class="nav-cta">Get Your Copy Now</a>
+                    </div>
+                </div>
+                <div class="hero-image-container container reveal" style="transition-delay: 0.3s;">
+                    <img src="https://res.cloudinary.com/dmylbfztz/image/upload/v1748356162/Photo_With_Plugin_Small_Size_w5kmri.jpg" alt="Visualizer 1.0 Plugin Interface" class="hero-image">
+                </div>
+            </section>
+
+            <section id="features" class="section">
+                <div class="container">
+                    <h2 class="section-title reveal">Unparalleled Control & Clarity</h2>
+                    <p class="section-subtitle reveal">Everything you need for an intuitive and efficient production workflow.</p>
+                    <div class="features-grid">
+                        <div class="feature-card reveal">
+                            <i data-feather="edit" class="feature-icon"></i>
+                            <h3>Editable Labels</h3>
+                            <p>Rename all 8 sliders and knobs to perfectly match your DAW's parameters. Eliminate guesswork and stay in your creative flow.</p>
+                        </div>
+                        <div class="feature-card reveal" style="transition-delay: 0.1s;">
+                            <i data-feather="bar-chart-2" class="feature-icon"></i>
+                            <h3>Responsive Graphics</h3>
+                            <p>Get instant, buttery-smooth visual feedback for every tweak. See your sound change in real time with our dynamic interface.</p>
+                        </div>
+                        <div class="feature-card reveal" style="transition-delay: 0.2s;">
+                            <i data-feather="toggle-right" class="feature-icon"></i>
+                            <h3>Configurable Buttons</h3>
+                            <p>Map complex functions and trigger actions with fully customizable buttons. Your workflow, your rules.</p>
+                        </div>
+                        <!-- <div class="feature-card reveal" style="transition-delay: 0.3s;">
+                            <i data-feather="layers" class="feature-icon"></i>
+                            <h3>DAW Integration</h3>
+                            <p>Works as an FX plugin in any major DAW. Drop it anywhere in your chain for maximum flexibility and convenience.</p>
+                        </div> -->
+                    </div>
+                </div>
+            </section>
+
+            <section id="demo" class="section">
+                <div class="container">
+                    <h2 class="section-title reveal">See It In Action</h2>
+                    <p class="section-subtitle reveal">Watch how Visualizer 1.0 can transform your music production experience.</p>
+                    <div class="demo-video-wrapper reveal">
+                        <iframe src="https://www.youtube.com/embed/9_nSaM-X2J0?si=2ayp3910K0EPGPoh" title="Visualizer 1.0 Demo Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pricing" class="section">
+                <div class="container">
+                    <h2 class="section-title reveal">Get Visualizer 1.0 Today</h2>
+                    <p class="section-subtitle reveal">A single purchase for a lifetime of creative clarity.</p>
+                    <div class="pricing-card reveal">
+                        <h3>Professional VST Plugin</h3>
+                        <div class="pricing-price">
+                            <span style="text-decoration: line-through; color: var(--color-text-muted); font-size: 2.5rem; margin-right: 10px;">
+                                $39.99
+                            </span>
+                            <span style="color: var(--color-primary); font-size: 3.0rem; font-weight: bold;">$29.99</span>
+                            <span style="background: var(--color-primary); color: #fff; font-size: 0.8rem; padding: 3px 6px; border-radius: 6px; margin-left: 8px;">
+                                Limited Offer
+                            </span>
+                            </div>
+
+                        <ul class="pricing-features">
+                            <li><i data-feather="check-circle" class="icon"></i><span>Lifetime Updates Included</span></li>
+                            <li><i data-feather="check-circle" class="icon"></i><span>Works with all Major DAWs</span></li>
+                            <li><i data-feather="check-circle" class="icon"></i><span>30-Day Money-Back Guarantee</span></li>
+                            <li><i data-feather="check-circle" class="icon"></i><span>Secure Instant Purchase</span></li>
+                        </ul>
+                        
+                        <div id="paypal-button-container" style="margin-top: 30px;"></div>
+
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>© 2025 The Faith Sound. All Rights Reserved.</p>
+            </div>
+        </footer>
+
+        <script>
+            // Initialize Feather Icons
+            feather.replace();
+
+            // Reveal on scroll animation
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1
+            });
+
+            document.querySelectorAll('.reveal').forEach(el => {
+                revealObserver.observe(el);
+            });
+
+            // --- STEP 2: The PayPal Script is now here, at the end of the body ---
+            // This ensures the #paypal-button-container element exists before the script tries to render to it.
+            paypal.Buttons({
+                // Sets up the transaction when a payment button is clicked
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            description: 'Visualizer 1.0 VST Plugin - Lifetime License',
+                            amount: {
+                                value: '29.99' // The price of your product
+                            }
+                        }]
+                    });
+                },
+    // Sets up the actions to take when the buyer approves the transaction
+
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(orderDetails => {
+                    const email = orderDetails.payer.email_address;  // PayPal’s field
+
+                    // show processing…
+                    const container = document.getElementById('paypal-button-container');
+                    container.innerHTML = '<h3>Processing your order…</h3>';
+
+                    // Call your Flask /add_user endpoint:
+                    fetch('https://api.thefaithsound.com/add_user', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contact_email: email })
+                    })
+                    .then(r => r.json())
+                    .then(result => {
+                        if (result.pluginKey) {
+                        container.innerHTML = `
+                            <h3>Thank you!</h3>
+                        <p>Your license key: 
+                            <strong id="licenseKey">${result.pluginKey}</strong>
+                            <button onclick="navigator.clipboard.writeText('${result.pluginKey}')">Copy</button>
+                            </p>
+                            <p>We’ve sent a confirmation email to ${email}.</p>
+                        `;
+                        } else {
+                        container.innerHTML = `
+                            <h3>Oops!</h3>
+                            <p>${result.error || 'Could not create your license. Please contact us.'}</p>
+                        `;
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        container.innerHTML = '<h3>An error occurred. Please contact support.</h3>';
+                    });
+                    });
+                },
+
+                onError: function(err) {
+                    console.error('PayPal error:', err);
+                    alert('Payment error — please try again.');
+                }
+                }).render('#paypal-button-container');
+
+        </script>
+    </body>
+    </html>

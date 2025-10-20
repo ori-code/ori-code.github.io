@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChordsApp | The Faith Sound</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-mark">♪</span>
+            <div>
+                <span class="brand-title">ChordsApp</span>
+                <span class="brand-subtitle">beta workspace</span>
+            </div>
+        </div>
+        <nav class="app-nav">
+            <a href="../index.html" class="nav-link">Back to main site</a>
+            <a href="#workflow" class="nav-link">Workflow</a>
+            <a href="#editor" class="nav-link">Editor</a>
+            <a href="#next" class="nav-link">Next steps</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="hero" id="top">
+            <div class="hero-text">
+                <h1>Turn any chord sheet into a clean, printable chart.</h1>
+                <p>Upload a handwritten sheet or photo, let AI extract the music, refine the result, transpose to any key, then print with confidence.</p>
+                <div class="hero-actions">
+                    <label class="primary-action" for="chartFileInput">Start with an upload</label>
+                    <a class="secondary-action" href="#workflow">See the workflow</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="workflow" id="workflow">
+            <h2>Three simple steps</h2>
+            <div class="workflow-grid">
+                <article class="step-card">
+                    <span class="step-number">1</span>
+                    <h3>Upload your chart</h3>
+                    <p>Accepts images (JPG, PNG, HEIC) and PDFs. High contrast photos deliver the best recognition results.</p>
+                    <label class="upload-tile" for="chartFileInput">
+                        <span class="upload-icon">⬆︎</span>
+                        <span class="upload-label">Choose a file</span>
+                        <span class="upload-note">Drag &amp; drop coming soon</span>
+                    </label>
+                    <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
+                    <div class="preview-panel" id="uploadPreview">
+                        <img id="previewImage" alt="Uploaded chart preview">
+                        <p class="preview-placeholder">No file selected yet. Supported: JPG, PNG, HEIC, PDF.</p>
+                    </div>
+                </article>
+                <article class="step-card">
+                    <span class="step-number">2</span>
+                    <h3>Run AI transcription</h3>
+                    <p>Connect the Vision + Music model of your choice. Right now this demo simulates the response so you can design the experience.</p>
+                    <button id="analyzeButton" class="primary-action" disabled>Analyze with AI</button>
+                    <div class="status-panel" id="analysisStatus" role="status" aria-live="polite">
+                        <span class="status-dot idle"></span>
+                        <span class="status-text">Waiting for an upload…</span>
+                    </div>
+                    <small class="status-hint">We’ll swap this simulation with a real API call (Azure Vision, Google, etc.) during integration.</small>
+                </article>
+                <article class="step-card">
+                    <span class="step-number">3</span>
+                    <h3>Refine, transpose &amp; print</h3>
+                    <p>Edit chords visually on the left panel. The SongBook format (middle) updates automatically. AI original stays on the right for reference.</p>
+                    <ul class="feature-list">
+                        <li>Visual editing - move chords with spaces</li>
+                        <li>Transpose to any key</li>
+                        <li>Auto-converts to SongBook format</li>
+                        <li>Print or export as PDF</li>
+                    </ul>
+                    <div class="ai-reference-preview" id="aiReferencePreview">
+                        <h4>AI Original (reference)</h4>
+                        <p class="reference-subtitle">Original AI extraction</p>
+                        <div class="reference-content" id="aiReferenceContent">
+                            <p class="preview-placeholder">AI transcription will appear here after analysis.</p>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="editor" id="editor">
+            <div class="editor-header">
+                <h2>Chord workspace</h2>
+                <div class="transpose-controls">
+                    <span>Transpose:</span>
+                    <button class="ghost-button" data-shift="-1">–1</button>
+                    <button class="ghost-button" data-shift="1">+1</button>
+                    <label class="transpose-label">
+                        Steps
+                        <input type="number" id="transposeStepInput" value="0" min="-11" max="11">
+                    </label>
+                    <button class="ghost-button" id="applyTranspose">Apply</button>
+                    <button class="ghost-button" id="resetTranspose">Reset</button>
+                </div>
+                <div class="editor-actions">
+                    <button class="ghost-button" id="copyToClipboard">Copy text</button>
+                    <button class="primary-action" id="printButton">Print chart</button>
+                </div>
+            </div>
+            <div class="editor-columns">
+                <div class="editor-panel">
+                    <header>
+                        <h3>Visual Editor (edit here)</h3>
+                        <small>Chords above lyrics - adjust spacing freely</small>
+                    </header>
+                    <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
+                </div>
+                <div class="editor-panel">
+                    <header>
+                        <h3>SongBook Format (auto-updated)</h3>
+                        <small>Copy this to SongBook app</small>
+                    </header>
+                    <textarea id="songbookOutput" readonly placeholder="SongBook format with [C] brackets will appear here..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <section class="preview-section" id="previewSection">
+            <div class="preview-header">
+                <h2>Print Preview</h2>
+                <div class="preview-controls">
+                    <label class="font-size-control">
+                        Font Size: <span id="fontSizeValue">10</span>pt
+                        <input type="range" id="fontSizeSlider" min="8" max="14" value="10" step="0.5">
+                    </label>
+                    <label class="line-height-control">
+                        Line Spacing: <span id="lineHeightValue">1.3</span>
+                        <input type="range" id="lineHeightSlider" min="1.0" max="2.0" value="1.3" step="0.1">
+                    </label>
+                </div>
+            </div>
+            <div class="preview-container">
+                <div id="livePreview" class="live-preview"></div>
+            </div>
+        </section>
+
+        <section class="next-steps" id="next">
+            <h2>Hook it up to your AI workflow</h2>
+            <div class="next-grid">
+                <article class="next-card">
+                    <h3>1. Vision OCR</h3>
+                    <p>Use Azure Cognitive Services, Google Document AI, or another vision API to convert handwritten charts into structured text.</p>
+                </article>
+                <article class="next-card">
+                    <h3>2. Chord parsing</h3>
+                    <p>Map chords and lyrics into a JSON schema (sections, lines, chords, lyrics) so you can render them in any layout.</p>
+                </article>
+                <article class="next-card">
+                    <h3>3. Rendering</h3>
+                    <p>Feed the schema into this editor or a canvas/PDF renderer to deliver beautiful, transposable chord sheets.</p>
+                </article>
+            </div>
+            <p class="next-footer">Need help connecting the dots? Reach out at <a href="mailto:support@thefaithsound.com">support@thefaithsound.com</a>.</p>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; <span id="year"></span> The Faith Sound. Built with love for worship leaders and musicians.</p>
+    </footer>
+
+    <!-- Hidden print-only formatted version -->
+    <div id="printPreview" class="print-only" style="display: none;"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
