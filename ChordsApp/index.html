@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://www.paypal.com/sdk/js?client-id=AUjr_VTe9_mnojYbrv2wEhvIlYN3nXES7HG2hIfHpNhZchdcNGCh6WeHJtxwXkDBqS09gb2RjX-HAYEK&currency=USD"></script>
 </head>
 <body>
     <header class="app-header">
@@ -58,14 +59,14 @@
                 </article>
                 <article class="step-card">
                     <span class="step-number">2</span>
-                    <h3>Run AI transcription</h3>
-                    <p>Connect the Vision + Music model of your choice. Right now this demo simulates the response so you can design the experience.</p>
-                    <button id="analyzeButton" class="primary-action" disabled>Analyze with AI</button>
+                    <h3>Run transcription</h3>
+                    <!-- <p>Connect the Vision + Music model of your choice. Right now this demo simulates the response so you can design the experience.</p> -->
+                    <button id="analyzeButton" class="primary-action" disabled>Analyze</button>
                     <div class="status-panel" id="analysisStatus" role="status" aria-live="polite">
                         <span class="status-dot idle"></span>
                         <span class="status-text">Waiting for an upload…</span>
                     </div>
-                    <small class="status-hint">We’ll swap this simulation with a real API call (Azure Vision, Google, etc.) during integration.</small>
+                    <small class="status-hint">Analysis typically takes 3-5 seconds. Supports English and Hebrew text.</small>
                 </article>
                 <article class="step-card">
                     <span class="step-number">3</span>
@@ -162,6 +163,14 @@
             </div>
             <p class="next-footer">Need help connecting the dots? Reach out at <a href="mailto:support@thefaithsound.com">support@thefaithsound.com</a>.</p>
         </section>
+
+        <section class="support-section" style="max-width: 600px; margin: 80px auto; padding: 40px 20px; text-align: center;">
+            <h2 style="font-size: 2rem; margin-bottom: 20px;">Support ChordsApp</h2>
+            <p style="font-size: 1.1rem; color: var(--text-muted, #999); margin-bottom: 30px;">
+                This app is free to use. If you find it helpful, consider supporting its development with any amount you choose.
+            </p>
+            <div id="paypal-button-container" style="max-width: 400px; margin: 0 auto;"></div>
+        </section>
     </main>
 
     <footer class="app-footer">
@@ -172,5 +181,39 @@
     <div id="printPreview" class="print-only" style="display: none;"></div>
 
     <script src="app.js"></script>
+
+    <script>
+        // PayPal Donate Button
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                // Prompt user for donation amount
+                const amount = prompt("Enter donation amount (USD):", "10");
+                if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+                    alert("Please enter a valid amount.");
+                    return null;
+                }
+
+                return actions.order.create({
+                    purchase_units: [{
+                        description: 'Support ChordsApp Development',
+                        amount: {
+                            currency_code: 'USD',
+                            value: parseFloat(amount).toFixed(2)
+                        }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(orderDetails) {
+                    alert('Thank you for your generous support! Your contribution helps keep ChordsApp free for everyone.');
+                    console.log('Donation completed:', orderDetails);
+                });
+            },
+            onError: function(err) {
+                console.error('PayPal error:', err);
+                alert('There was an error processing your donation. Please try again.');
+            }
+        }).render('#paypal-button-container');
+    </script>
 </body>
 </html>
