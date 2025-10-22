@@ -98,6 +98,20 @@ a {
     background: rgba(255, 255, 255, 0.06);
 }
 
+.nav-link[href="#support"] {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+.nav-link[href="#support"]:hover,
+.nav-link[href="#support"]:focus-visible {
+    background: var(--primary);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 59, 92, 0.3);
+}
+
 .hero {
     display: grid;
     gap: 48px;
