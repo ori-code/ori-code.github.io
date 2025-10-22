@@ -608,6 +608,43 @@ a {
     color: var(--primary);
 }
 
+/* Donation Section Styles */
+.donation-amount-container {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.donation-label {
+    display: block;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.donation-input {
+    width: 100%;
+    background: rgba(10, 10, 18, 0.8);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: center;
+    transition: border-color 0.2s ease, outline 0.2s ease;
+}
+
+.donation-input:focus {
+    outline: 2px solid rgba(255, 59, 92, 0.35);
+    border-color: var(--primary);
+}
+
+.donation-input::placeholder {
+    color: var(--text-muted);
+}
+
 .app-footer {
     text-align: center;
     padding: 32px;

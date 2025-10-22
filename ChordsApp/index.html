@@ -169,7 +169,13 @@
             <p style="font-size: 1.1rem; color: var(--text-muted, #999); margin-bottom: 30px;">
                 This app is free to use. If you find it helpful, consider supporting its development with any amount you choose.
             </p>
-            <div id="paypal-button-container" style="max-width: 400px; margin: 0 auto;"></div>
+            <div style="max-width: 400px; margin: 0 auto;">
+                <div class="donation-amount-container">
+                    <label for="donationAmount" class="donation-label">Donation Amount (USD)</label>
+                    <input type="number" id="donationAmount" class="donation-input" placeholder="10" min="1" step="0.01" value="10">
+                </div>
+                <div id="paypal-button-container"></div>
+            </div>
         </section>
     </main>
 
@@ -267,15 +273,20 @@
         };
 
         // PayPal Donate Button
-        paypal.Buttons({
-            createOrder: async function(data, actions) {
-                const amount = await modal.show(
-                    'Support ChordsApp',
-                    'Enter your donation amount (USD):',
-                    true
-                );
+        const donationInput = document.getElementById('donationAmount');
 
-                if (!amount) return null;
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                const amount = parseFloat(donationInput.value);
+
+                if (!amount || amount <= 0) {
+                    donationInput.style.borderColor = 'var(--primary)';
+                    donationInput.focus();
+                    setTimeout(() => {
+                        donationInput.style.borderColor = '';
+                    }, 1000);
+                    return null;
+                }
 
                 return actions.order.create({
                     purchase_units: [{
