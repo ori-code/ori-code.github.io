@@ -105,6 +105,20 @@
             color: var(--color-text);
         }
 
+        .donate-link {
+            background: var(--color-primary);
+            color: #FFF !important;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--color-primary-glow);
+        }
+        .donate-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--color-primary-glow);
+        }
+
         .nav-cta {
             background: var(--color-primary);
             color: #FFF;
@@ -1268,6 +1282,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <li><a href="ChordsApp/index.html" class="nav-link">ChordsApp</a></li>
                 <li><a href="#podcast" class="nav-link">Podcast</a></li>
                 <li><a href="#pricing" class="nav-link">Pricing</a></li>
+                <li><a href="ChordsApp/index.html#support" class="nav-link donate-link">Donate</a></li>
             </ul>
             <a href="#pricing" class="nav-cta">Buy Now</a>
         </nav>
@@ -1362,52 +1377,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="section-subtitle reveal">Watch how Visualizer 1.0 can transform your music production experience.</p>
                 <div class="demo-video-wrapper reveal">
                     <iframe src="https://www.youtube.com/embed/9_nSaM-X2J0?si=2ayp3910K0EPGPoh" title="Visualizer 1.0 Demo Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                </div>
-            </div>
-        </section>
-
-         <section id="chordsapp" class="section chordsapp-section">
-            <div class="container">
-                <div class="chordsapp-grid">
-                    <div class="chordsapp-copy reveal">
-                        <h2 class="section-title">Meet ChordsApp</h2>
-                        <p class="section-subtitle">A browser-based workspace where you can upload handwritten chord charts, run AI transcription, edit the formatting, transpose, and print in minutes.</p>
-                        <ul class="chordsapp-list">
-                            <li><i data-feather="upload"></i><span>Upload photos or PDFs of your existing charts.</span></li>
-                            <li><i data-feather="cpu"></i><span>Connect your preferred vision + music AI services to auto-detect chords.</span></li>
-                            <li><i data-feather="sliders"></i><span>Refine spacing, transpose instantly, and print performer-ready sheets.</span></li>
-                        </ul>
-                        <div class="chordsapp-actions">
-                            <a href="ChordsApp/index.html" class="nav-cta">Launch ChordsApp (free beta)</a>
-                            <a href="ChordsApp/index.html#next" class="chordsapp-secondary"><i data-feather="arrow-right"></i>See integration roadmap</a>
-                        </div>
-                    </div>
-                    <!-- <div class="chordsapp-preview reveal" style="transition-delay: 0.1s;">
-                        <div class="chordsapp-card">
-                            <header>
-                                <span>Great Are You Lord</span>
-                                <span>Key: G</span>
-                            </header>
-                            <div class="chordsapp-card-lines">
-                                <div class="chordsapp-card-line">
-                                    <span>G</span>
-                                    <span>You give life, You are love</span>
-                                </div>
-                                <div class="chordsapp-card-line">
-                                    <span>Em7</span>
-                                    <span>You bring light to the darkness</span>
-                                </div>
-                                <div class="chordsapp-card-line">
-                                    <span>C</span>
-                                    <span>You give hope, You restore</span>
-                                </div>
-                                <div class="chordsapp-card-line">
-                                    <span>D/F#</span>
-                                    <span>Every heart that is broken</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
                 </div>
             </div>
         </section>
