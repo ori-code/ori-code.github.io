@@ -287,12 +287,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
     };
 
     const applyTranspose = (steps) => {
-        if (!songbookOutput.value.trim()) {
+        if (!visualEditor.value.trim() && !songbookOutput.value.trim()) {
             setStatus('error', 'Nothing to transpose yet. Run the AI analysis first.');
             return;
         }
         if (!Number.isInteger(steps) || steps === 0) {
             return;
+        }
+
+        // Make sure songbookOutput is in sync with visual editor
+        if (visualEditor.value.trim()) {
+            updateSongBookFromVisual();
         }
 
         // Transpose the SongBook format (with brackets)
@@ -454,8 +459,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                             // Move past the bracket
                             i = endBracket + 1;
 
-                            // Add spaces to lyric line to match chord length
-                            lyricLine += ' '.repeat(chord.length);
+                            // Don't add spaces to lyric line - chord takes no space in lyrics
                             continue;
                         }
                     }
@@ -472,7 +476,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 if (!hasLyrics) {
                     // Chord-only line - just show chords with spacing
-                    formatted.push(chordLine.trim());
+                    formatted.push(chordLine.trimEnd());
                 } else {
                     // Both chords and lyrics
                     const trimmedChords = chordLine.trimEnd();
