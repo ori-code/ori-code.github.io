@@ -119,6 +119,12 @@
             box-shadow: 0 6px 20px var(--color-primary-glow);
         }
 
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
         .nav-cta {
             background: var(--color-primary);
             color: #FFF;
@@ -1279,12 +1285,13 @@ document.addEventListener('DOMContentLoaded', function() {
             <ul class="nav-menu">
                 <li><a href="#features" class="nav-link">Features</a></li>
                 <li><a href="#demo" class="nav-link">Demo</a></li>
-                <li><a href="ChordsApp/index.html" class="nav-link">ChordsApp</a></li>
                 <li><a href="#podcast" class="nav-link">Podcast</a></li>
                 <li><a href="#pricing" class="nav-link">Pricing</a></li>
-                <li><a href="ChordsApp/index.html#support" class="nav-link donate-link">Donate</a></li>
             </ul>
-            <a href="#pricing" class="nav-cta">Buy Now</a>
+            <div class="nav-buttons">
+                <a href="ChordsApp/index.html" class="nav-cta">ChordsApp</a>
+                <a href="#pricing" class="nav-cta">Buy Now</a>
+            </div>
         </nav>
     </header>
 
