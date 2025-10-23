@@ -52,6 +52,12 @@ a {
     justify-content: space-between;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 .nav-logo {
     font-size: 1.5rem;
     font-weight: 600;
@@ -697,14 +703,19 @@ a {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 12px;
 }
 
 .preview-header h2 {
     margin: 0;
     font-size: 1.8rem;
+}
+
+.preview-controls-row {
+    width: 100%;
+    margin-bottom: 32px;
 }
 
 .preview-controls {
@@ -884,10 +895,13 @@ a {
         font-size: 1.2rem;
     }
 
-    .nav-donate {
-        padding: 8px 16px;
-        font-size: 0.85rem;
-        white-space: nowrap;
+    .preview-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .preview-header .primary-action {
+        width: 100%;
     }
 
     .nav-menu {
@@ -967,19 +981,24 @@ a {
         margin: 0;
         padding: 20px;
         font-family: 'Courier New', monospace;
-        font-size: 12pt;
-        line-height: 1.4;
     }
 
-    /* Hide everything except the print preview */
+    /* Hide everything except the live preview */
     .app-header,
     .hero,
     .workflow,
     .next-steps,
     .app-footer,
     .editor,
-    .preview-section,
-    button {
+    .editor-workspace,
+    .support-section,
+    .visualizer-promo,
+    .preview-header,
+    .preview-controls-row,
+    .preview-controls,
+    button,
+    input,
+    label {
         display: none !important;
     }
 
@@ -989,16 +1008,37 @@ a {
         margin: 0;
     }
 
-    /* Show only the print preview div */
-    #printPreview {
+    /* Show only preview section for printing */
+    .preview-section {
         display: block !important;
-        padding: 15px;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .preview-container {
+        background: white !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: auto !important;
+    }
+
+    /* Show the live preview content */
+    #livePreview {
+        display: block !important;
+        padding: 0;
         font-family: 'Courier New', monospace;
-        font-size: inherit; /* Use the font size from live preview */
-        line-height: inherit; /* Use the line height from live preview */
-        color: black;
+        color: black !important;
         white-space: pre-wrap;
-        /* Direction will be set dynamically by JavaScript */
+        background: white !important;
+    }
+
+    /* Hide the hidden print preview div - we use livePreview instead */
+    #printPreview {
+        display: none !important;
     }
 
     /* Format the printed chord chart */

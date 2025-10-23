@@ -150,6 +150,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return;
         }
 
+        // STRICT RESET: Clear everything before new analysis
+        baselineChart = '';
+        currentTransposeSteps = 0;
+        visualEditor.value = '';
+        songbookOutput.value = '';
+        transposeStepInput.value = 0;
+        if (livePreview) {
+            livePreview.textContent = '';
+        }
+
         setStatus('processing', 'Analyzing chart with AI…');
         analyzeButton.disabled = true;
 
@@ -242,7 +252,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
     };
 
     const transposeChart = (source, semitoneShift) => {
-        if (!source || !semitoneShift) {
+        if (!source) {
+            return source;
+        }
+
+        if (semitoneShift === 0) {
             return source;
         }
 
@@ -362,25 +376,35 @@ Our [Em7]hearts will cry, these bones will [D]sing
     }
 
     transposeButtons.forEach((button) => {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Transpose button clicked:', button.dataset.shift);
             const shift = Number.parseInt(button.dataset.shift, 10);
             applyTranspose(shift);
-        });
+        }, { passive: false });
     });
 
     if (applyTransposeButton) {
-        applyTransposeButton.addEventListener('click', () => {
+        applyTransposeButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Apply transpose clicked');
             const steps = Number.parseInt(transposeStepInput.value, 10);
             if (!Number.isNaN(steps)) {
                 applyTranspose(steps);
                 transposeStepInput.value = 0;
             }
-        });
+        }, { passive: false });
     }
 
     if (resetTransposeButton) {
-        resetTransposeButton.addEventListener('click', () => {
+        resetTransposeButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Reset transpose clicked');
             if (!baselineChart) {
+                console.log('No baseline chart to reset');
                 return;
             }
 
@@ -609,7 +633,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
     };
 
     const updateLivePreview = () => {
-        if (!livePreview) return;
+        if (!livePreview) {
+            console.error('livePreview element not found!');
+            return;
+        }
+
+        console.log('Updating live preview with content length:', visualEditor.value.length);
 
         // Use visual editor content for preview
         livePreview.textContent = visualEditor.value;
@@ -618,6 +647,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const isRTL = detectRTL(visualEditor.value);
         livePreview.style.direction = isRTL ? 'rtl' : 'ltr';
         livePreview.style.textAlign = isRTL ? 'right' : 'left';
+
+        console.log('Live preview updated successfully');
     };
 
     // Font size control
