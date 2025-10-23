@@ -43,38 +43,38 @@ a {
     padding: 18px 32px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-}
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
-.brand-mark {
-    width: 44px;
-    height: 44px;
-    display: inline-flex;
-    align-items: center;
     justify-content: center;
-    background: var(--primary-soft);
-    color: var(--primary);
-    border-radius: 12px;
-    font-size: 22px;
+    gap: 40px;
 }
 
-.brand-title {
+.nav-logo {
+    font-size: 1.5rem;
     font-weight: 600;
-    font-size: 1.15rem;
+    color: var(--text);
+    text-decoration: none;
 }
 
-.brand-subtitle {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-top: -4px;
+.nav-logo span {
+    color: var(--primary);
+}
+
+.nav-donate {
+    background: transparent;
+    color: var(--text);
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: 2px solid var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(255, 59, 92, 0.3);
+}
+
+.nav-donate:hover {
+    background: var(--primary);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(255, 59, 92, 0.5);
 }
 
 .app-nav {

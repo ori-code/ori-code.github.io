@@ -61,12 +61,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
         'E#': 'F',
         'B#': 'C'
     };
-    // Match chords in brackets [C] [Em] [D/F#] etc.
+    // Match chords in brackets [C] [Em] [D/F#] [C2] [Gsus4] etc.
+    // Comprehensive regex to match all chord patterns
     const CHORD_REGEX = /\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G](?:#|b)?)?)\]/g;
 
     let uploadedFile = null;
     let previewObjectURL = null;
     let baselineChart = '';
+    let currentTransposeSteps = 0;
 
     const statusDot = analysisStatus.querySelector('.status-dot');
     const statusText = analysisStatus.querySelector('.status-text');
@@ -117,6 +119,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         analyzeButton.disabled = false;
 
         baselineChart = '';
+        currentTransposeSteps = 0;
         visualEditor.value = '';
         songbookOutput.value = '';
         if (aiReferenceContent) {
@@ -187,6 +190,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             if (result.success && result.transcription) {
                 baselineChart = result.transcription;
+                currentTransposeSteps = 0;
 
                 // Convert to visual format (above-line) for editing
                 const visualFormat = convertToAboveLineFormat(result.transcription, true);
@@ -216,6 +220,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Fallback to demo mode if API fails
             console.log('Falling back to demo mode...');
             baselineChart = SAMPLE_CHART;
+            currentTransposeSteps = 0;
 
             // Convert to visual format for editing
             const visualFormat = convertToAboveLineFormat(SAMPLE_CHART, true);
@@ -287,31 +292,44 @@ Our [Em7]hearts will cry, these bones will [D]sing
     };
 
     const applyTranspose = (steps) => {
-        if (!visualEditor.value.trim() && !songbookOutput.value.trim()) {
+        console.log('applyTranspose called with steps:', steps);
+        console.log('baselineChart:', baselineChart ? 'exists' : 'empty');
+        console.log('songbookOutput.value:', songbookOutput.value ? 'exists' : 'empty');
+
+        if (!baselineChart && !songbookOutput.value.trim()) {
+            console.log('No content to transpose');
             setStatus('error', 'Nothing to transpose yet. Run the AI analysis first.');
             return;
         }
         if (!Number.isInteger(steps) || steps === 0) {
+            console.log('Invalid steps:', steps);
             return;
         }
 
-        // Make sure songbookOutput is in sync with visual editor
-        if (visualEditor.value.trim()) {
-            updateSongBookFromVisual();
-        }
+        console.log('Before transpose - currentTransposeSteps:', currentTransposeSteps);
+        // Update cumulative transpose steps
+        currentTransposeSteps += steps;
+        console.log('After transpose - currentTransposeSteps:', currentTransposeSteps);
 
-        // Transpose the SongBook format (with brackets)
-        const transposedSongbook = transposeChart(songbookOutput.value, steps);
+        // Always transpose from the original baseline to avoid accumulating spacing errors
+        const sourceChart = baselineChart || songbookOutput.value;
+        console.log('Source chart length:', sourceChart.length);
+
+        // Transpose the SongBook format (with brackets) using cumulative steps
+        const transposedSongbook = transposeChart(sourceChart, currentTransposeSteps);
+        console.log('Transposed songbook length:', transposedSongbook.length);
         songbookOutput.value = transposedSongbook;
 
         // Convert transposed version to visual format
         const transposedVisual = convertToAboveLineFormat(transposedSongbook, true);
+        console.log('Visual format length:', transposedVisual.length);
         visualEditor.value = transposedVisual;
 
-        setStatus('success', `Transposed ${steps > 0 ? '+' : ''}${steps} semitone${Math.abs(steps) === 1 ? '' : 's'}.`);
+        setStatus('success', `Transposed ${currentTransposeSteps > 0 ? '+' : ''}${currentTransposeSteps} semitone${Math.abs(currentTransposeSteps) === 1 ? '' : 's'}.`);
 
         // Update the live preview
         updateLivePreview();
+        console.log('Transpose complete');
     };
 
     const handleCopyToClipboard = async () => {
@@ -365,6 +383,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (!baselineChart) {
                 return;
             }
+
+            // Reset cumulative transpose steps
+            currentTransposeSteps = 0;
 
             // Reset SongBook format to original
             songbookOutput.value = baselineChart;

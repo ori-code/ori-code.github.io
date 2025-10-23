@@ -12,20 +12,8 @@
 </head>
 <body>
     <header class="app-header">
-        <div class="brand">
-            <span class="brand-mark">♪</span>
-            <div>
-                <span class="brand-title">ChordsApp</span>
-                <span class="brand-subtitle">beta workspace</span>
-            </div>
-        </div>
-        <nav class="app-nav">
-            <ul class="nav-menu">
-                <li><a href="../index.html" class="nav-link">Home</a></li>
-                <li><a href="#editor" class="nav-link">Editor</a></li>
-            </ul>
-            <a href="#support" class="nav-cta">Donate</a>
-        </nav>
+        <a href="../index.html" class="nav-logo">THE FAITH <span>SOUND</span></a>
+        <a href="#support" class="nav-donate">Donate</a>
     </header>
 
     <main class="container">
@@ -35,7 +23,6 @@
                 <p>Upload a handwritten sheet or photo, let AI extract the music, refine the result, transpose to any key, then print with confidence.</p>
                 <div class="hero-actions">
                     <label class="primary-action" for="chartFileInput">Start with an upload</label>
-                    <a class="secondary-action" href="#support">Donate for Us to continue to run this project</a>
                 </div>
             </div>
         </section>
@@ -67,7 +54,7 @@
                         <span class="status-dot idle"></span>
                         <span class="status-text">Waiting for an upload…</span>
                     </div>
-                    <small class="status-hint">Analysis typically takes 15-60 seconds. Supports all languages texts. If the result is not good, try to run analyze again.</small>
+                    <small class="status-hint">Analysis typically takes 15-60 seconds. Supports all languages texts. If the result is not good, try to run analyze again. AI processing costs us money - please consider <a href="#support" style="color: var(--primary); text-decoration: underline;">donating</a> to keep this free tool running.</small>
                 </article>
                 <article class="step-card">
                     <span class="step-number">3</span>
@@ -93,37 +80,17 @@
         <section class="editor" id="editor">
             <div class="editor-header">
                 <h2>Chord workspace</h2>
-                <div class="transpose-controls">
-                    <span>Transpose:</span>
-                    <button class="ghost-button" data-shift="-1">–1</button>
-                    <button class="ghost-button" data-shift="1">+1</button>
-                    <label class="transpose-label">
-                        Steps
-                        <input type="number" id="transposeStepInput" value="0" min="-11" max="11">
-                    </label>
-                    <button class="ghost-button" id="applyTranspose">Apply</button>
-                    <button class="ghost-button" id="resetTranspose">Reset</button>
-                </div>
                 <div class="editor-actions">
                     <button class="ghost-button" id="copyToClipboard">Copy text</button>
                     <button class="primary-action" id="printButton">Print chart</button>
                 </div>
             </div>
-            <div class="editor-columns">
-                <div class="editor-panel">
-                    <header>
-                        <h3>Visual Editor (edit here)</h3>
-                        <small>Chords above lyrics - adjust spacing freely</small>
-                    </header>
-                    <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
-                </div>
-                <div class="editor-panel">
-                    <header>
-                        <h3>SongBook Format (auto-updated)</h3>
-                        <small>Copy this to SongBook app</small>
-                    </header>
-                    <textarea id="songbookOutput" readonly placeholder="SongBook format with [C] brackets will appear here..."></textarea>
-                </div>
+            <div class="editor-panel">
+                <header>
+                    <h3>Visual Editor (edit here)</h3>
+                    <small>Chords above lyrics - adjust spacing freely</small>
+                </header>
+                <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
             </div>
         </section>
 
@@ -139,6 +106,17 @@
                         Line Spacing: <span id="lineHeightValue">1.3</span>
                         <input type="range" id="lineHeightSlider" min="1.0" max="2.0" value="1.3" step="0.1">
                     </label>
+                    <div class="transpose-controls">
+                        <span>Transpose:</span>
+                        <button class="ghost-button" data-shift="-1">–1</button>
+                        <button class="ghost-button" data-shift="1">+1</button>
+                        <label class="transpose-label">
+                            Steps
+                            <input type="number" id="transposeStepInput" value="0" min="-11" max="11">
+                        </label>
+                        <button class="ghost-button" id="applyTranspose">Apply</button>
+                        <button class="ghost-button" id="resetTranspose">Reset</button>
+                    </div>
                 </div>
             </div>
             <div class="preview-container">
@@ -146,10 +124,20 @@
             </div>
         </section>
 
+        <section class="editor-workspace">
+            <div class="editor-panel">
+                <header>
+                    <h3>SongBook Format (auto-updated)</h3>
+                    <small>Copy this to SongBook app</small>
+                </header>
+                <textarea id="songbookOutput" readonly placeholder="SongBook format with [C] brackets will appear here..."></textarea>
+            </div>
+        </section>
+
         <section class="support-section" id="support" style="max-width: 600px; margin: 60px auto 80px; padding: 30px 20px; text-align: center;">
             <h2 style="font-size: 2rem; margin-bottom: 20px;">Support ChordsApp</h2>
-            <p style="font-size: 1rem; color: var(--text-muted, #999); margin-bottom: 30px;">
-                This app is free to use. If you find it helpful, consider supporting its development.
+            <p style="font-size: 1.1rem; color: var(--text-muted, #999); margin-bottom: 30px; line-height: 1.6;">
+                ChordsApp is completely free to use. If you find it helpful for your music ministry or personal practice, please consider supporting us with a donation to help keep this project running and continually improving.
             </p>
             <div style="max-width: 400px; margin: 0 auto;">
                 <div class="donation-amount-container">
@@ -186,7 +174,7 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=12"></script>
 
     <script>
         // Custom Modal System
