@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewPanel = document.getElementById('uploadPreview');
     const previewImage = document.getElementById('previewImage');
     const previewPlaceholder = previewPanel ? previewPanel.querySelector('.preview-placeholder') : null;
+    const miniPreview = document.getElementById('miniWorkspacePreview');
+    const miniPreviewImage = document.getElementById('miniWorkspacePreviewImage');
+    const miniPreviewPlaceholder = miniPreview ? miniPreview.querySelector('.mini-preview-placeholder') : null;
     const analyzeButton = document.getElementById('analyzeButton');
     const analysisStatus = document.getElementById('analysisStatus');
     const aiReferenceContent = document.getElementById('aiReferenceContent');
@@ -13,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyTransposeButton = document.getElementById('applyTranspose');
     const resetTransposeButton = document.getElementById('resetTranspose');
     const copyButton = document.getElementById('copyToClipboard');
+    const reanalyzeButton = document.getElementById('reanalyzeButton');
+    const reanalyzeFeedback = document.getElementById('reanalyzeFeedback');
     const printButton = document.getElementById('printButton');
     const printPreview = document.getElementById('printPreview');
     const livePreview = document.getElementById('livePreview');
@@ -21,6 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const lineHeightSlider = document.getElementById('lineHeightSlider');
     const lineHeightValue = document.getElementById('lineHeightValue');
     const yearSpan = document.getElementById('year');
+    const keyDetectionDiv = document.getElementById('keyDetection');
+    const detectedKeySpan = document.getElementById('detectedKey');
+    const keyAnalysisDiv = document.getElementById('keyAnalysis');
+    const keyAnalysisText = document.getElementById('keyAnalysisText');
 
     if (yearSpan) {
         yearSpan.textContent = new Date().getFullYear();
@@ -30,7 +39,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const SAMPLE_CHART = `[Intro]
+    const API_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:3002/api/analyze-chart'
+        : 'https://ori-code-github-io.vercel.app/api/analyze-chart';
+
+    // Initialize directional layout defaults
+    setDirectionalLayout(visualEditor, '');
+    setDirectionalLayout(songbookOutput, '');
+    setDirectionalLayout(livePreview, '');
+    if (printPreview) {
+        setDirectionalLayout(printPreview, '');
+    }
+
+    const SAMPLE_CHART = `Title: Great Are You Lord
+Artist: All Sons & Daughters
+Key: G Major
+
+[Intro]
 [G]    [D/F#]    [Em7]    [C2]
 
 Verse 1:
@@ -69,6 +94,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
     let previewObjectURL = null;
     let baselineChart = '';
     let currentTransposeSteps = 0;
+    let lastUploadPayload = null;
+    let lastRawTranscription = '';
 
     const statusDot = analysisStatus.querySelector('.status-dot');
     const statusText = analysisStatus.querySelector('.status-text');
@@ -93,8 +120,82 @@ Our [Em7]hearts will cry, these bones will [D]sing
             previewImage.style.display = 'none';
         }
 
+        if (miniPreviewImage) {
+            miniPreviewImage.src = '';
+            miniPreviewImage.style.display = 'none';
+        }
+
         if (previewPlaceholder) {
             previewPlaceholder.textContent = message;
+            previewPlaceholder.style.display = 'block';
+        }
+
+        if (miniPreviewPlaceholder) {
+            miniPreviewPlaceholder.textContent = message;
+            miniPreviewPlaceholder.style.display = 'block';
+        }
+
+        if (reanalyzeButton) {
+            reanalyzeButton.disabled = true;
+        }
+
+        if (reanalyzeFeedback) {
+            reanalyzeFeedback.value = '';
+        }
+
+        lastUploadPayload = null;
+        lastRawTranscription = '';
+    };
+
+    const removeAnalysisLines = (text) => {
+        if (!text) {
+            return '';
+        }
+        return text
+            .replace(/^Analysis:.*$/gim, '')
+            .replace(/^Number:.*$/gim, '')
+            .replace(/\n{3,}/g, '\n\n')
+            .trimEnd();
+    };
+
+    const extractAndDisplayKey = (transcription) => {
+        if (!keyDetectionDiv || !detectedKeySpan) return;
+
+        console.log('=== EXTRACTING KEY FROM TRANSCRIPTION 1===');
+        console.log('Transcription:', transcription.substring(0, 500));
+
+        // Remove markdown code blocks if present (Claude sometimes wraps in ```)
+        let cleanedTranscription = transcription.replace(/```[a-z]*\n?/g, '').replace(/```$/g, '');
+
+        // Look for "Key:" line in the transcription - more flexible regex
+        const keyMatch = cleanedTranscription.match(/Key:\s*([^\n\r]+)/i);
+
+        if (keyMatch && keyMatch[1]) {
+            const detectedKey = keyMatch[1].trim();
+            console.log('✅ Key detected:', detectedKey);
+            detectedKeySpan.textContent = detectedKey;
+            keyDetectionDiv.style.display = 'block';
+        } else {
+            // Show "not detected" message if no key found
+            console.log('❌ No key found in transcription');
+            detectedKeySpan.textContent = 'Key is not detected successfully';
+            keyDetectionDiv.style.display = 'block';
+        }
+
+        // Look for "Analysis:" section in the transcription - grab everything after "Analysis:"
+        if (keyAnalysisDiv && keyAnalysisText) {
+            const analysisMatch = cleanedTranscription.match(/Analysis:\s*([^\n\r]+(?:\n[^\n\r]+)*)/i);
+
+            if (analysisMatch && analysisMatch[1]) {
+                const analysis = analysisMatch[1].trim();
+                console.log('✅ Analysis found:', analysis.substring(0, 200));
+                keyAnalysisText.textContent = analysis;
+                keyAnalysisDiv.style.display = 'block';
+            } else {
+                // Hide analysis section if not found
+                console.log('❌ No analysis found in transcription');
+                keyAnalysisDiv.style.display = 'none';
+            }
         }
     };
 
@@ -106,22 +207,38 @@ Our [Em7]hearts will cry, these bones will [D]sing
             baselineChart = '';
             visualEditor.value = '';
             songbookOutput.value = '';
+            setDirectionalLayout(visualEditor, '');
+            setDirectionalLayout(songbookOutput, '');
+            setDirectionalLayout(livePreview, '');
             if (aiReferenceContent) {
                 aiReferenceContent.innerHTML = '<p class="preview-placeholder">AI transcription will appear here after analysis.</p>';
+                aiReferenceContent.removeAttribute('dir');
+                aiReferenceContent.style.direction = '';
+                aiReferenceContent.style.textAlign = '';
+                aiReferenceContent.style.unicodeBidi = '';
             }
             transposeStepInput.value = 0;
             setStatus('idle', 'Waiting for an upload…');
             resetPreview();
+            if (reanalyzeButton) {
+                reanalyzeButton.disabled = true;
+            }
             return;
         }
 
         setStatus('idle', `Ready to analyze "${uploadedFile.name}".`);
         analyzeButton.disabled = false;
+        if (reanalyzeButton) {
+            const hasFeedback = reanalyzeFeedback && reanalyzeFeedback.value.trim();
+            reanalyzeButton.disabled = !lastUploadPayload || !hasFeedback;
+        }
 
         baselineChart = '';
         currentTransposeSteps = 0;
         visualEditor.value = '';
         songbookOutput.value = '';
+        lastUploadPayload = null;
+        lastRawTranscription = '';
         if (aiReferenceContent) {
             aiReferenceContent.innerHTML = '<p class="preview-placeholder">AI transcription will appear here after analysis.</p>';
         }
@@ -139,6 +256,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (previewPlaceholder) {
                 previewPlaceholder.style.display = 'none'; // Hide the placeholder text when image is shown
             }
+            if (miniPreviewImage) {
+                miniPreviewImage.src = previewObjectURL;
+                miniPreviewImage.style.display = 'block';
+            }
+            if (miniPreviewPlaceholder) {
+                miniPreviewPlaceholder.style.display = 'none';
+            }
+            if (reanalyzeButton) {
+                const hasFeedback = reanalyzeFeedback && reanalyzeFeedback.value.trim();
+                reanalyzeButton.disabled = !lastUploadPayload || !hasFeedback;
+            }
         } else {
             resetPreview('Preview not available for this file type, but it is ready for analysis.');
         }
@@ -155,9 +283,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
         currentTransposeSteps = 0;
         visualEditor.value = '';
         songbookOutput.value = '';
+        setDirectionalLayout(visualEditor, '');
+        setDirectionalLayout(songbookOutput, '');
+        setDirectionalLayout(livePreview, '');
         transposeStepInput.value = 0;
         if (livePreview) {
             livePreview.textContent = '';
+        }
+        if (reanalyzeButton) {
+            reanalyzeButton.disabled = true;
         }
 
         setStatus('processing', 'Analyzing chart with AI…');
@@ -176,11 +310,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const [metadata, base64Data] = fileData.split(',');
             const mimeType = metadata.match(/:(.*?);/)[1];
 
-            // Call the Vercel serverless API
-            const API_URL = window.location.hostname === 'localhost'
-                ? 'http://localhost:3001/api/analyze-chart'
-                : 'https://ori-code-github-io.vercel.app/api/analyze-chart';
+            lastUploadPayload = {
+                base64Data,
+                mimeType
+            };
 
+            // Call the Vercel serverless API
             const response = await fetch(API_URL, {
                 method: 'POST',
                 headers: {
@@ -199,20 +334,27 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const result = await response.json();
 
             if (result.success && result.transcription) {
-                baselineChart = result.transcription;
+                baselineChart = removeAnalysisLines(result.transcription);
                 currentTransposeSteps = 0;
 
                 // Convert to visual format (above-line) for editing
-                const visualFormat = convertToAboveLineFormat(result.transcription, true);
+                const visualFormat = convertToAboveLineFormat(baselineChart, true);
                 visualEditor.value = visualFormat;
 
                 // Keep SongBook format
-                songbookOutput.value = result.transcription;
+                songbookOutput.value = baselineChart;
+                setDirectionalLayout(songbookOutput, baselineChart);
 
                 // Update AI reference preview in Step 3
                 if (aiReferenceContent) {
-                    aiReferenceContent.textContent = result.transcription;
+                    aiReferenceContent.textContent = baselineChart;
+                    setDirectionalLayout(aiReferenceContent, baselineChart);
                 }
+
+                // Extract and display detected key
+                extractAndDisplayKey(result.transcription);
+
+                lastRawTranscription = result.transcription;
 
                 transposeStepInput.value = 0;
                 setStatus('success', 'AI transcription ready! Edit visually on the left.');
@@ -229,20 +371,27 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Fallback to demo mode if API fails
             console.log('Falling back to demo mode...');
-            baselineChart = SAMPLE_CHART;
+            baselineChart = removeAnalysisLines(SAMPLE_CHART);
             currentTransposeSteps = 0;
 
             // Convert to visual format for editing
-            const visualFormat = convertToAboveLineFormat(SAMPLE_CHART, true);
+            const visualFormat = convertToAboveLineFormat(baselineChart, true);
             visualEditor.value = visualFormat;
 
             // Keep SongBook format
-            songbookOutput.value = SAMPLE_CHART;
+            songbookOutput.value = baselineChart;
+            setDirectionalLayout(songbookOutput, baselineChart);
 
             // Update AI reference preview in Step 3
             if (aiReferenceContent) {
-                aiReferenceContent.textContent = SAMPLE_CHART;
+                aiReferenceContent.textContent = baselineChart;
+                setDirectionalLayout(aiReferenceContent, baselineChart);
             }
+
+            // Extract and display detected key
+            extractAndDisplayKey(SAMPLE_CHART);
+
+            lastRawTranscription = SAMPLE_CHART;
 
             transposeStepInput.value = 0;
             updateLivePreview();
@@ -430,6 +579,94 @@ Our [Em7]hearts will cry, these bones will [D]sing
         copyButton.addEventListener('click', handleCopyToClipboard);
     }
 
+    if (reanalyzeFeedback) {
+        reanalyzeFeedback.addEventListener('input', () => {
+            if (!reanalyzeButton) return;
+            const hasFeedback = Boolean(reanalyzeFeedback.value.trim());
+            reanalyzeButton.disabled = !lastUploadPayload || !hasFeedback;
+        });
+    }
+
+    if (reanalyzeButton) {
+        reanalyzeButton.addEventListener('click', () => {
+            if (reanalyzeButton.disabled) {
+                return;
+            }
+
+            if (!lastUploadPayload) {
+                console.warn('Re-analysis requested without stored upload payload.');
+                setStatus('error', 'Please upload and analyze a chart before sending feedback.');
+                return;
+            }
+
+            const feedback = reanalyzeFeedback ? reanalyzeFeedback.value.trim() : '';
+            if (!feedback) {
+                setStatus('error', 'Enter feedback describing what to fix.');
+                return;
+            }
+
+            setStatus('processing', 'Re-analyzing with your feedback…');
+            reanalyzeButton.disabled = true;
+
+            fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    imageData: lastUploadPayload.base64Data,
+                    mimeType: lastUploadPayload.mimeType,
+                    feedback,
+                    previousTranscription: lastRawTranscription
+                })
+            })
+                .then(async (response) => {
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then((result) => {
+                    if (result.success && result.transcription) {
+                        baselineChart = removeAnalysisLines(result.transcription);
+                        currentTransposeSteps = 0;
+
+                        const visualFormat = convertToAboveLineFormat(baselineChart, true);
+                        visualEditor.value = visualFormat;
+
+                        songbookOutput.value = baselineChart;
+                        setDirectionalLayout(songbookOutput, baselineChart);
+
+                        if (aiReferenceContent) {
+                            aiReferenceContent.textContent = baselineChart;
+                            setDirectionalLayout(aiReferenceContent, baselineChart);
+                        }
+
+                        extractAndDisplayKey(result.transcription);
+
+                        transposeStepInput.value = 0;
+                        setStatus('success', 'Re-analysis applied! Review the updated chart.');
+
+                        updateLivePreview();
+
+                        lastRawTranscription = result.transcription;
+                    } else {
+                        throw new Error('Invalid response from API');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Re-analysis error:', error);
+                    setStatus('error', `Failed to re-analyze: ${error.message}`);
+                })
+                .finally(() => {
+                    if (reanalyzeButton) {
+                        const hasFeedback = Boolean(reanalyzeFeedback.value.trim());
+                        reanalyzeButton.disabled = !lastUploadPayload || !hasFeedback;
+                    }
+                });
+        });
+    }
+
     const convertToAboveLineFormat = (text, compact = true) => {
         if (!text.trim()) {
             return '';
@@ -438,6 +675,20 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Convert inline [C] format to above-line format
         const lines = text.split('\n');
         const formatted = [];
+        let extractedTitle = null;
+        let extractedKey = null;
+        const bpmPlaceholder = 'BPM: [Enter the BPM]';
+        let combinedTitleInserted = false;
+
+        // Pre-scan for title and key values
+        for (const rawLine of lines) {
+            if (!extractedTitle && rawLine.match(/^\{?Title:/i)) {
+                extractedTitle = rawLine.replace(/^\{?Title:\s*/i, '').replace(/\}$/, '').trim();
+            }
+            if (!extractedKey && rawLine.match(/^\{?Key:/i)) {
+                extractedKey = rawLine.replace(/^\{?Key:\s*/i, '').replace(/\}$/, '').trim();
+            }
+        }
 
         for (let line of lines) {
             // Remove {soc} {eoc} markers
@@ -447,14 +698,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Format metadata lines
             if (line.match(/^\{?Title:/i)) {
-                const title = line.replace(/^\{?Title:\s*/i, '').replace(/\}$/, '');
-                if (compact) {
-                    formatted.push(title);
-                    formatted.push('');
-                } else {
-                    formatted.push(title);
-                    formatted.push('');
-                }
+                const title = line.replace(/^\{?Title:\s*/i, '').replace(/\}$/, '').trim();
+                const keyDisplay = extractedKey ? extractedKey : 'Unknown';
+                const combinedLine = `${title}${title ? ' | ' : ''}Key: ${keyDisplay} | ${bpmPlaceholder}`;
+                formatted.push(combinedLine.trim());
+                formatted.push('');
+                combinedTitleInserted = true;
                 continue;
             }
 
@@ -469,7 +718,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            if (line.match(/^\{?(Key|Tempo|Time):/i)) {
+            if (line.match(/^\{?Key:/i)) {
+                // Key already merged with title line above
+                continue;
+            }
+
+            if (line.match(/^Number:/i)) {
+                // Drop number line from visual template
+                continue;
+            }
+
+            if (line.match(/^\{?(Tempo|Time):/i)) {
                 const meta = line.replace(/^\{?/, '').replace(/\}$/, '');
                 formatted.push(meta);
                 continue;
@@ -536,6 +795,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 }
             } else {
                 // No chords, just add the line (but skip excessive blank lines in compact mode)
+                if (line.match(/^Analysis:/i)) {
+                    continue;
+                }
                 if (compact && line.trim() === '' && formatted.length > 0 && formatted[formatted.length - 1] === '') {
                     continue; // Skip double blank lines
                 }
@@ -543,14 +805,35 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
         }
 
+        // If there was a key but no title to attach it to, add it at the top with BPM placeholder
+        if (!combinedTitleInserted && extractedKey) {
+            formatted.unshift(`Key: ${extractedKey} | ${bpmPlaceholder}`);
+        }
+
         return formatted.join('\n');
     };
 
-    const detectRTL = (text) => {
+    function detectRTL(text) {
         // Check if text contains Hebrew, Arabic, or other RTL characters
         const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
         return rtlChars.test(text);
-    };
+    }
+
+    function setDirectionalLayout(element, content) {
+        if (!element) {
+            return;
+        }
+
+        const isRTL = detectRTL(content || '');
+        const direction = isRTL ? 'rtl' : 'ltr';
+
+        element.setAttribute('dir', direction);
+        element.style.direction = direction;
+        element.style.textAlign = isRTL ? 'right' : 'left';
+
+        // Ensure mixed-language content renders in natural order
+        element.style.unicodeBidi = 'plaintext';
+    }
 
     const convertVisualToSongBook = (visualText) => {
         // Convert above-line format back to inline [C] format
@@ -564,7 +847,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const line = lines[i];
 
             // Skip metadata and section markers
-            if (line.match(/^(Title:|Artist:|Key:|Tempo:|Time:|\{.*\}|.*:$|^\s*$)/)) {
+            if (line.match(/^(Title:|Artist:|Key:|Tempo:|Time:|Number:|\{.*\}|.*:$|^\s*$)/)) {
                 result.push(line);
                 i++;
                 continue;
@@ -630,6 +913,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Convert visual editor (above-line) to SongBook format (inline brackets)
         const songbookFormat = convertVisualToSongBook(visualEditor.value);
         songbookOutput.value = songbookFormat;
+        setDirectionalLayout(songbookOutput, songbookOutput.value);
     };
 
     const updateLivePreview = () => {
@@ -638,15 +922,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return;
         }
 
-        console.log('Updating live preview with content length:', visualEditor.value.length);
+        const visualContent = visualEditor.value;
+        console.log('Updating live preview with content length:', visualContent.length);
 
         // Use visual editor content for preview
-        livePreview.textContent = visualEditor.value;
+        livePreview.textContent = visualContent;
 
-        // Auto-detect and set direction
-        const isRTL = detectRTL(visualEditor.value);
-        livePreview.style.direction = isRTL ? 'rtl' : 'ltr';
-        livePreview.style.textAlign = isRTL ? 'right' : 'left';
+        // Apply direction to all editing surfaces based on content
+        setDirectionalLayout(livePreview, visualContent);
+        setDirectionalLayout(visualEditor, visualContent);
+        setDirectionalLayout(songbookOutput, songbookOutput.value);
 
         console.log('Live preview updated successfully');
     };
@@ -681,15 +966,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
         printButton.addEventListener('click', () => {
             // Use visual editor content for printing (already in above-line format)
             if (printPreview) {
-                printPreview.textContent = visualEditor.value;
+                const visualContent = visualEditor.value;
+                printPreview.textContent = visualContent;
                 // Apply the same font size and line height as live preview
                 printPreview.style.fontSize = livePreview.style.fontSize || '10pt';
                 printPreview.style.lineHeight = livePreview.style.lineHeight || '1.3';
 
                 // Auto-detect and apply direction
-                const isRTL = detectRTL(visualEditor.value);
-                printPreview.style.direction = isRTL ? 'rtl' : 'ltr';
-                printPreview.style.textAlign = isRTL ? 'right' : 'left';
+                setDirectionalLayout(printPreview, visualContent);
             }
 
             // Trigger print

@@ -9,7 +9,23 @@
     --text: #f5f5f5;
     --text-muted: #a6a6b7;
     --shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+    --surface: #1b1a22;
     font-family: 'Poppins', sans-serif;
+}
+
+/* Light Theme */
+[data-theme="light"] {
+    --bg: #f8f9fa;
+    --bg-soft: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.95);
+    --border: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.15);
+    --primary: #ff3b5c;
+    --primary-soft: rgba(255, 59, 92, 0.08);
+    --text: #1a1a1a;
+    --text-muted: #6b6b7b;
+    --shadow: 0 24px 48px rgba(0, 0, 0, 0.08);
+    --surface: #ffffff;
 }
 
 * {
@@ -21,6 +37,139 @@ body {
     background: radial-gradient(circle at top right, rgba(255, 59, 92, 0.12), transparent 40%), var(--bg);
     color: var(--text);
     min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light theme specific adjustments */
+[data-theme="light"] body {
+    background: radial-gradient(circle at top right, rgba(255, 59, 92, 0.06), transparent 40%), var(--bg);
+}
+
+[data-theme="light"] .app-header {
+    background: rgba(248, 249, 250, 0.9);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Light theme - text inputs and textareas */
+[data-theme="light"] input,
+[data-theme="light"] textarea {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.15);
+    color: var(--text);
+}
+
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus {
+    background: #ffffff;
+    border-color: rgba(255, 59, 92, 0.5);
+    box-shadow: 0 0 0 3px rgba(255, 59, 92, 0.08);
+}
+
+/* Light theme - editor panel textareas specifically */
+[data-theme="light"] .editor-panel textarea {
+    background: #ffffff;
+    color: var(--text);
+}
+
+[data-theme="light"] .editor-panel textarea:focus {
+    background: #ffffff;
+}
+
+/* Light theme - cards and panels */
+[data-theme="light"] .step-card,
+[data-theme="light"] .editor-panel,
+[data-theme="light"] .preview-panel,
+[data-theme="light"] .ai-reference-preview,
+[data-theme="light"] .preview-container {
+    background: var(--bg-card);
+    border-color: var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Light theme - buttons */
+[data-theme="light"] .ghost-button {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--text);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .ghost-button:hover {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .primary-action {
+    box-shadow: 0 4px 12px rgba(255, 59, 92, 0.25);
+}
+
+/* Light theme - status and messages */
+[data-theme="light"] .status-panel {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: var(--border);
+}
+
+/* Light theme - preview and print areas */
+[data-theme="light"] .live-preview {
+    background: #ffffff;
+    color: #1a1a1a;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Light theme - Visualizer promo section */
+[data-theme="light"] .visualizer-promo {
+    background: rgba(255, 255, 255, 0.6);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Light theme - modal overlays */
+[data-theme="light"] .modal-overlay {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .modal-container {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+/* Light theme - donation input */
+[data-theme="light"] .donation-input {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.15);
+    color: var(--text);
+}
+
+/* Light theme - mini preview */
+[data-theme="light"] .mini-preview {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Light theme - profile menu */
+[data-theme="light"] #profileMenu {
+    background: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Theme toggle button styling */
+#themeToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+#themeToggle:hover {
+    transform: rotate(20deg);
+}
+
+#themeToggle svg {
+    transition: all 0.3s ease;
 }
 
 a {
@@ -585,6 +734,76 @@ a {
     font-size: 0.85rem;
 }
 
+
+.visual-editor-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+}
+
+.visual-editor-subtitle {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.mini-preview {
+    width: 100%;
+    max-width: 720px;
+    min-height: 480px;
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    background: rgba(20, 20, 28, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.mini-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+    display: none;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.mini-preview .mini-preview-placeholder {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.reanalyze-block {
+    display: none; /* Temporarily hidden until feedback flow is ready */
+}
+
+.reanalyze-block label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.reanalyze-block textarea {
+    width: 100%;
+    min-height: 80px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(20, 20, 28, 0.7);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.reanalyze-block textarea:focus {
+    outline: none;
+    border-color: rgba(255, 59, 92, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 59, 92, 0.1);
+}
+
 .editor-panel textarea {
     min-height: 340px;
     resize: vertical;
@@ -599,7 +818,9 @@ a {
 }
 
 .editor-panel textarea:focus {
-    outline: 2px solid rgba(255, 59, 92, 0.35);
+    outline: none;
+    border-color: rgba(255, 59, 92, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 59, 92, 0.1);
 }
 
 /* Visual Editor - make it taller for better editing */
@@ -749,7 +970,7 @@ a {
 .preview-container {
     background: white;
     border-radius: 12px;
-    padding: 48px;
+    padding: 64px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     min-height: 800px;
     max-width: 210mm; /* A4 width */
@@ -763,6 +984,7 @@ a {
     color: black;
     white-space: pre-wrap;
     word-wrap: break-word;
+    padding: 0 20px;
     /* Direction will be set dynamically by JavaScript based on content */
 }
 
@@ -952,6 +1174,11 @@ a {
 
     .transpose-label input {
         width: 100%;
+    }
+
+    .mini-preview {
+        max-width: 100%;
+        min-height: 240px;
     }
 
     .modal-container {
