@@ -357,7 +357,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 lastRawTranscription = result.transcription;
 
                 transposeStepInput.value = 0;
-                setStatus('success', 'AI transcription ready! Edit visually on the left.');
+                setStatus('success', 'Transcription ready! Edit visually on the left.');
 
                 // Update the live preview
                 updateLivePreview();
