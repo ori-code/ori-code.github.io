@@ -14,6 +14,13 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://www.paypal.com/sdk/js?client-id=AUjr_VTe9_mnojYbrv2wEhvIlYN3nXES7HG2hIfHpNhZchdcNGCh6WeHJtxwXkDBqS09gb2RjX-HAYEK&currency=USD"></script>
 
+    <!-- PDF.js for PDF preview -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Set PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -45,7 +52,7 @@
         <section class="hero" id="top">
             <div class="hero-text">
                 <h1>Turn any chord sheet into a clean, printable chart.</h1>
-                <p>Upload a handwritten sheet or photo, extract the music automatically, refine the result, transpose to any key, then print with confidence.</p>
+                <p>Upload a handwritten sheet or photo, let AI extract the music, refine the result, transpose to any key, then print with confidence.</p>
                 <div class="hero-actions">
                     <label class="primary-action" for="chartFileInput">Start with an upload</label>
                 </div>
@@ -72,19 +79,19 @@
                 </article>
                 <article class="step-card">
                     <span class="step-number">2</span>
-                    <h3>Automatic transcription ready!</h3>
+                    <h3>AI transcription ready!</h3>
                     <p>Edit visually in the bottom Editor.</p>
                     <button id="analyzeButton" class="primary-action" disabled>Analyze</button>
                     <div class="status-panel" id="analysisStatus" role="status" aria-live="polite">
                         <span class="status-dot idle"></span>
                         <span class="status-text">Waiting for an upload…</span>
                     </div>
-                    <small class="status-hint">Analysis typically takes 15-60 seconds. Supports all languages texts. If the result is not good, try to run analyze again. Processing costs us money - please consider <a href="#support" style="color: var(--primary); text-decoration: underline;">donating</a> to keep this free tool running.</small>
+                    <small class="status-hint">Analysis typically takes 15-60 seconds. Supports all languages texts. If the result is not good, try to run analyze again. AI processing costs us money - please consider <a href="#support" style="color: var(--primary); text-decoration: underline;">donating</a> to keep this free tool running.</small>
                 </article>
                 <article class="step-card">
                     <span class="step-number">3</span>
                     <h3>Refine, transpose &amp; print</h3>
-                    <p>Edit chords visually in the editor. The SongBook format (under the editor) updates automatically. Original extraction stays on the right for reference.</p>
+                    <p>Edit chords visually in the editor. The SongBook format (under the editor) updates automatically. AI original stays on the right for reference.</p>
                     <ul class="feature-list">
                         <li>Visual editing - move chords with spaces</li>
                         <li>Transpose to any key</li>
@@ -92,10 +99,10 @@
                         <li>Print or export as PDF</li>
                     </ul>
                     <div class="ai-reference-preview" id="aiReferencePreview">
-                        <h4>Original (reference)</h4>
-                        <p class="reference-subtitle">Original extraction</p>
+                        <h4>AI Original (reference)</h4>
+                        <p class="reference-subtitle">Original AI extraction</p>
                         <div class="reference-content" id="aiReferenceContent">
-                            <p class="preview-placeholder">Transcription will appear here after analysis.</p>
+                            <p class="preview-placeholder">AI transcription will appear here after analysis.</p>
                         </div>
                     </div>
                 </article>
@@ -105,16 +112,6 @@
         <section class="editor" id="editor">
             <div class="editor-header">
                 <h2>Chord workspace</h2>
-                <div class="editor-actions">
-                    <div id="keyDetection" style="margin-right: 20px; padding: 8px 16px; background: rgba(255, 59, 92, 0.1); border: 1px solid rgba(255, 59, 92, 0.3); border-radius: 8px; display: none;">
-                        <span style="color: var(--text-muted); font-size: 0.9rem;">Detected Key:</span>
-                        <strong id="detectedKey" style="color: var(--primary); margin-left: 8px; font-size: 1rem;">-</strong>
-                    </div>
-                    <button class="ghost-button" id="saveSongButton">💾 Save</button>
-                    <button class="ghost-button" id="loadSongButton">📂 Load</button>
-                    <button class="ghost-button" id="updateSongButton">🔄 Update</button>
-                    <button class="ghost-button" id="copyToClipboard">Copy text</button>
-                </div>
             </div>
             <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
                 <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
@@ -128,13 +125,61 @@
                         <span class="mini-preview-placeholder">Preview appears here after upload.</span>
                     </div>
                     <div class="reanalyze-block">
-                        <label for="reanalyzeFeedback">Need a better pass? Provide feedback to improve the result.</label>
+                        <label for="reanalyzeFeedback">Need a better pass? Tell the AI what to fix.</label>
                         <textarea id="reanalyzeFeedback" placeholder="Example: Verse 1 chords drift left; please align with lyrics and double-check key."></textarea>
                         <button class="ghost-button" id="reanalyzeButton" disabled>Re-analyze with feedback</button>
                     </div>
                     <small class="visual-editor-subtitle">Chords above lyrics - adjust spacing freely</small>
                 </header>
                 <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
+            </div>
+
+            <!-- Editor actions moved below textarea -->
+            <div class="editor-actions" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+                <button class="ghost-button" id="nashvilleToggle">🔢 Nashville Numbers: ON</button>
+                <div id="keyDetection" style="padding: 8px 16px; background: rgba(255, 59, 92, 0.1); border: 1px solid rgba(255, 59, 92, 0.3); border-radius: 8px;">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Key:</span>
+                    <select id="keySelector" style="margin-left: 8px; padding: 4px 8px; background: var(--surface); color: var(--primary); border: 1px solid rgba(255, 59, 92, 0.3); border-radius: 4px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">
+                        <optgroup label="Major Keys">
+                            <option value="C Major" selected>C Major</option>
+                            <option value="C# Major">C# Major</option>
+                            <option value="D Major">D Major</option>
+                            <option value="D# Major">D# Major</option>
+                            <option value="E Major">E Major</option>
+                            <option value="F Major">F Major</option>
+                            <option value="F# Major">F# Major</option>
+                            <option value="G Major">G Major</option>
+                            <option value="G# Major">G# Major</option>
+                            <option value="A Major">A Major</option>
+                            <option value="A# Major">A# Major</option>
+                            <option value="B Major">B Major</option>
+                        </optgroup>
+                        <optgroup label="Minor Keys">
+                            <option value="C Minor">C Minor</option>
+                            <option value="C# Minor">C# Minor</option>
+                            <option value="D Minor">D Minor</option>
+                            <option value="D# Minor">D# Minor</option>
+                            <option value="E Minor">E Minor</option>
+                            <option value="F Minor">F Minor</option>
+                            <option value="F# Minor">F# Minor</option>
+                            <option value="G Minor">G Minor</option>
+                            <option value="G# Minor">G# Minor</option>
+                            <option value="A Minor">A Minor</option>
+                            <option value="A# Minor">A# Minor</option>
+                            <option value="B Minor">B Minor</option>
+                        </optgroup>
+                    </select>
+                    <span id="detectedKey" style="display: none;"></span>
+                </div>
+                <button class="ghost-button" id="nashvilleToggle" style="display: none;">🔢 Nashville Numbers: OFF</button>
+                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                    <label for="bpmInput" style="color: var(--text-muted); font-size: 0.9rem; white-space: nowrap;">BPM:</label>
+                    <input type="number" id="bpmInput" placeholder="120" min="40" max="240" style="width: 80px; padding: 6px 10px; background: var(--surface); color: var(--text); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; font-size: 0.95rem; text-align: center;">
+                </div>
+                <button class="ghost-button" id="saveSongButton">💾 Save</button>
+                <button class="ghost-button" id="loadSongButton">📂 Load</button>
+                <button class="ghost-button" id="updateSongButton">🔄 Update</button>
+                <button class="ghost-button" id="copyToClipboard" style="display: none;">Copy text</button>
             </div>
         </section>
 
@@ -206,7 +251,7 @@
     </main>
 
     <footer class="app-footer">
-        <p>&copy; <span id="year"></span> The Faith Sound. Built with love for worship leaders and musicians.</p>
+        <p>&copy; <span id="year"></span> The Faith Sound. Built with love for worship leaders and musicians. <span style="opacity: 0.7;">| v1.2</span></p>
     </footer>
 
     <!-- Hidden print-only formatted version -->
@@ -343,13 +388,49 @@
 
     <!-- Load Song Modal -->
     <div id="loadSongModal" class="modal-overlay">
-        <div class="modal-container" style="max-width: 600px;">
+        <div class="modal-container" style="max-width: 700px;">
             <div class="modal-header">
                 <h3>📂 Load Song from Library</h3>
                 <button class="modal-close" id="loadSongClose">&times;</button>
             </div>
             <div class="modal-body">
                 <p>Select a song from your library:</p>
+
+                <!-- Search and Filters -->
+                <div style="display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;">
+                    <input type="text" id="songSearchInput" class="modal-input" placeholder="🔍 Search songs..." style="flex: 1; min-width: 200px;">
+                    <select id="songKeyFilter" class="modal-input" style="flex: 0 0 auto; min-width: 120px;">
+                        <option value="">All Keys</option>
+                        <option value="C">C Major</option>
+                        <option value="C#">C# Major</option>
+                        <option value="Db">Db Major</option>
+                        <option value="D">D Major</option>
+                        <option value="Eb">Eb Major</option>
+                        <option value="E">E Major</option>
+                        <option value="F">F Major</option>
+                        <option value="F#">F# Major</option>
+                        <option value="Gb">Gb Major</option>
+                        <option value="G">G Major</option>
+                        <option value="Ab">Ab Major</option>
+                        <option value="A">A Major</option>
+                        <option value="Bb">Bb Major</option>
+                        <option value="B">B Major</option>
+                        <option value="Am">A Minor</option>
+                        <option value="Bm">B Minor</option>
+                        <option value="Cm">C Minor</option>
+                        <option value="Dm">D Minor</option>
+                        <option value="Em">E Minor</option>
+                        <option value="Fm">F Minor</option>
+                        <option value="Gm">G Minor</option>
+                    </select>
+                    <select id="songSortBy" class="modal-input" style="flex: 0 0 auto; min-width: 120px;">
+                        <option value="date">Latest First</option>
+                        <option value="name">A-Z</option>
+                        <option value="bpm">BPM</option>
+                        <option value="key">Key</option>
+                    </select>
+                </div>
+
                 <div id="songList" style="max-height: 400px; overflow-y: auto; margin-top: 16px;">
                     <!-- Songs will be loaded here -->
                 </div>
@@ -369,6 +450,7 @@
 
     <!-- Song Library -->
     <script src="song-library.js"></script>
+    <script src="song-search-filter.js"></script>
 
     <script src="app.js?v=37"></script>
 

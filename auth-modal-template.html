@@ -1,0 +1,138 @@
+<!-- Firebase Authentication Modal and UI Components -->
+<!-- Add these scripts in your <head> section, before closing </head> tag -->
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+<!-- Auth CSS -->
+<link rel="stylesheet" href="css/auth.css">
+
+<!-- Add these in the <head> or before closing </body> tag -->
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+
+<!-- ============================= -->
+<!-- Auth Buttons in Navigation -->
+<!-- Replace your existing nav menu or add these buttons to your header -->
+<!-- ============================= -->
+
+<div id="authButtons">
+    <button id="loginBtn">Log In</button>
+    <button id="signupBtn">Sign Up</button>
+</div>
+
+<div id="userProfile">
+    <span id="userName">User</span>
+    <button id="signOutBtn">Sign Out</button>
+</div>
+
+<!-- ============================= -->
+<!-- Authentication Modal -->
+<!-- Add this before closing </body> tag -->
+<!-- ============================= -->
+
+<!-- Global Message Display -->
+<div id="authMessage" class="auth-message"></div>
+
+<!-- Authentication Modal -->
+<div id="authModal">
+    <div class="auth-modal-content">
+        <button id="closeAuthModal">&times;</button>
+
+        <!-- Login Form -->
+        <div id="loginForm" style="display: none;">
+            <h2>Welcome Back</h2>
+            <p>Sign in to continue to The Faith Sound</p>
+
+            <form>
+                <div class="auth-form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="you@example.com" required>
+                </div>
+
+                <div class="auth-form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="auth-submit-btn">Sign In</button>
+
+                <button type="button" class="google-signin-btn">
+                    <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><path d="M17.6 9.2l-.1-1.8H9v3.4h4.8C13.6 12 13 13 12 13.6v2.2h3a8.8 8.8 0 0 0 2.6-6.6z" fill="#4285F4" fill-rule="nonzero"/><path d="M9 18c2.4 0 4.5-.8 6-2.2l-3-2.2a5.4 5.4 0 0 1-8-2.9H1V13a9 9 0 0 0 8 5z" fill="#34A853" fill-rule="nonzero"/><path d="M4 10.7a5.4 5.4 0 0 1 0-3.4V5H1a9 9 0 0 0 0 8l3-2.3z" fill="#FBBC05" fill-rule="nonzero"/><path d="M9 3.6c1.3 0 2.5.4 3.4 1.3L15 2.3A9 9 0 0 0 1 5l3 2.4a5.4 5.4 0 0 1 5-3.7z" fill="#EA4335" fill-rule="nonzero"/></g></svg>
+                    Continue with Google
+                </button>
+
+                <div class="auth-switch">
+                    Don't have an account? <a href="#" id="switchToSignup">Sign up</a>
+                    <br><a href="#" id="switchToReset">Forgot password?</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signupForm" style="display: none;">
+            <h2>Create Account</h2>
+            <p>Join The Faith Sound community</p>
+
+            <form>
+                <div class="auth-form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" placeholder="John Doe" required>
+                </div>
+
+                <div class="auth-form-group">
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" placeholder="you@example.com" required>
+                </div>
+
+                <div class="auth-form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="At least 6 characters" required>
+                </div>
+
+                <button type="submit" class="auth-submit-btn">Create Account</button>
+
+                <button type="button" class="google-signin-btn">
+                    <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><path d="M17.6 9.2l-.1-1.8H9v3.4h4.8C13.6 12 13 13 12 13.6v2.2h3a8.8 8.8 0 0 0 2.6-6.6z" fill="#4285F4" fill-rule="nonzero"/><path d="M9 18c2.4 0 4.5-.8 6-2.2l-3-2.2a5.4 5.4 0 0 1-8-2.9H1V13a9 9 0 0 0 8 5z" fill="#34A853" fill-rule="nonzero"/><path d="M4 10.7a5.4 5.4 0 0 1 0-3.4V5H1a9 9 0 0 0 0 8l3-2.3z" fill="#FBBC05" fill-rule="nonzero"/><path d="M9 3.6c1.3 0 2.5.4 3.4 1.3L15 2.3A9 9 0 0 0 1 5l3 2.4a5.4 5.4 0 0 1 5-3.7z" fill="#EA4335" fill-rule="nonzero"/></g></svg>
+                    Sign up with Google
+                </button>
+
+                <div class="auth-switch">
+                    Already have an account? <a href="#" id="switchToLogin">Sign in</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Password Reset Form -->
+        <div id="resetForm" style="display: none;">
+            <h2>Reset Password</h2>
+            <p>Enter your email to receive a password reset link</p>
+
+            <form>
+                <div class="auth-form-group">
+                    <label for="resetEmail">Email Address</label>
+                    <input type="email" id="resetEmail" placeholder="you@example.com" required>
+                </div>
+
+                <button type="submit" class="auth-submit-btn">Send Reset Link</button>
+
+                <div class="auth-switch">
+                    Remember your password? <a href="#" id="switchToLogin">Sign in</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============================= -->
+<!-- Example: Protected Content -->
+<!-- Add class="protected-content" to any element that should only be visible to logged-in users -->
+<!-- ============================= -->
+
+<!--
+<div class="protected-content">
+    <h2>Members Only Content</h2>
+    <p>This content is only visible to authenticated users.</p>
+</div>
+-->

@@ -193,11 +193,8 @@ app.post('/api/analyze-chart', async (req, res) => {
             });
         }
 
-        // Determine content type based on mime type
-        const contentType = mimeType === 'application/pdf' ? 'document' : 'image';
-
         instructionContent.push({
-            type: contentType,
+            type: 'image',
             source: {
                 type: 'base64',
                 media_type: mimeType,
