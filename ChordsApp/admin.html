@@ -344,6 +344,27 @@
         </div>
     </div>
 
+    <!-- Upgrade User Modal -->
+    <div id="upgradeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Upgrade User Tier</div>
+            <div class="modal-body">
+                <p style="margin-bottom: 12px; color: #666;">User ID: <strong id="upgradeModalUserId"></strong></p>
+                <p style="margin-bottom: 12px; color: #666;">Current Tier: <strong id="currentTier"></strong></p>
+                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600;">Select New Tier:</label>
+                <select id="tierSelect" style="width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                    <option value="FREE">FREE - $0 (3 analyses/month)</option>
+                    <option value="BASIC">BASIC - $0.99/mo (20 analyses/month, Save songs)</option>
+                    <option value="PRO">PRO - $1.99/mo (Unlimited analyses, Nashville Numbers)</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeUpgradeModal()">Cancel</button>
+                <button onclick="upgradeUser()" style="background: #10b981;">Upgrade</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentAdminKey = '';
         let currentUserId = '';
@@ -431,6 +452,9 @@
                             <button class="action-btn" onclick="openBonusModal('${user.userId}')">
                                 🎁 Give Bonus
                             </button>
+                            <button class="action-btn" onclick="openUpgradeModal('${user.userId}', '${tier}')" style="background: #10b981; margin-left: 8px;">
+                                ⬆️ Upgrade
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -486,6 +510,56 @@
             }
         }
 
+        function openUpgradeModal(userId, currentTier) {
+            currentUserId = userId;
+            document.getElementById('upgradeModalUserId').textContent = userId.substring(0, 20) + '...';
+            document.getElementById('currentTier').textContent = currentTier;
+            document.getElementById('tierSelect').value = currentTier;
+            document.getElementById('upgradeModal').classList.add('visible');
+        }
+
+        function closeUpgradeModal() {
+            document.getElementById('upgradeModal').classList.remove('visible');
+            currentUserId = '';
+        }
+
+        async function upgradeUser() {
+            const tier = document.getElementById('tierSelect').value;
+
+            if (!tier) {
+                alert('Please select a tier');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3002/api/admin/upgrade-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        tier: tier,
+                        adminKey: currentAdminKey
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to upgrade user');
+                }
+
+                const result = await response.json();
+                alert(`✅ Successfully upgraded user!\n\nPrevious: ${result.previousTier}\nNew Tier: ${result.newTier}`);
+
+                closeUpgradeModal();
+                loadDashboard(); // Refresh data
+
+            } catch (error) {
+                console.error('Error upgrading user:', error);
+                alert('❌ Failed to upgrade user');
+            }
+        }
+
         // Allow Enter key to login
         document.getElementById('adminKeyInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -493,10 +567,16 @@
             }
         });
 
-        // Close modal when clicking outside
+        // Close modals when clicking outside
         document.getElementById('bonusModal').addEventListener('click', (e) => {
             if (e.target.id === 'bonusModal') {
                 closeBonusModal();
+            }
+        });
+
+        document.getElementById('upgradeModal').addEventListener('click', (e) => {
+            if (e.target.id === 'upgradeModal') {
+                closeUpgradeModal();
             }
         });
     </script>

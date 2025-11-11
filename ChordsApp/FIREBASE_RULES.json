@@ -2,16 +2,16 @@
   "rules": {
     "users": {
       "$uid": {
-        // Subscription data - READ ONLY for users, server updates via Admin SDK
+        // Subscription data - Can CREATE if doesn't exist, but can't UPDATE
         "subscription": {
           ".read": "$uid === auth.uid",
-          ".write": false
+          ".write": "$uid === auth.uid && !data.exists()"
         },
 
-        // Usage data - READ ONLY for users, server updates via Admin SDK
+        // Usage data - Can CREATE if doesn't exist, but can't UPDATE
         "usage": {
           ".read": "$uid === auth.uid",
-          ".write": false
+          ".write": "$uid === auth.uid && !data.exists()"
         },
 
         // Bonus analyses - Server only (for giving away free analyses)

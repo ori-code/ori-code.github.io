@@ -63,15 +63,30 @@ class SubscriptionManager {
 
         return new Promise((resolve) => {
             const subRef = firebase.database().ref(`users/${this.currentUser.uid}/subscription`);
-            subRef.once('value', (snapshot) => {
+            subRef.once('value', async (snapshot) => {
                 const data = snapshot.val();
-                this.userSubscription = data || {
-                    tier: 'FREE',
-                    status: 'active',
-                    startDate: new Date().toISOString(),
-                    paypalSubscriptionId: null,
-                    endDate: null
-                };
+
+                if (!data) {
+                    // Create initial subscription structure for new user
+                    this.userSubscription = {
+                        tier: 'FREE',
+                        status: 'active',
+                        startDate: new Date().toISOString(),
+                        paypalSubscriptionId: null,
+                        endDate: null
+                    };
+
+                    // Write to Firebase
+                    try {
+                        await subRef.set(this.userSubscription);
+                        console.log('✅ Created initial subscription structure for new user');
+                    } catch (error) {
+                        console.error('❌ Error creating subscription structure:', error);
+                    }
+                } else {
+                    this.userSubscription = data;
+                }
+
                 resolve();
             });
         });
@@ -85,12 +100,27 @@ class SubscriptionManager {
 
         return new Promise((resolve) => {
             const usageRef = firebase.database().ref(`users/${this.currentUser.uid}/usage`);
-            usageRef.once('value', (snapshot) => {
+            usageRef.once('value', async (snapshot) => {
                 const data = snapshot.val();
-                this.userUsage = data || {
-                    analysesThisMonth: 0,
-                    monthStartDate: new Date().toISOString()
-                };
+
+                if (!data) {
+                    // Create initial usage structure for new user
+                    this.userUsage = {
+                        analysesThisMonth: 0,
+                        monthStartDate: new Date().toISOString()
+                    };
+
+                    // Write to Firebase
+                    try {
+                        await usageRef.set(this.userUsage);
+                        console.log('✅ Created initial usage structure for new user');
+                    } catch (error) {
+                        console.error('❌ Error creating usage structure:', error);
+                    }
+                } else {
+                    this.userUsage = data;
+                }
+
                 resolve();
             });
         });

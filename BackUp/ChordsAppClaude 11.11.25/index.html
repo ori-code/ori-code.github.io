@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="https://www.paypal.com/sdk/js?client-id=AUjr_VTe9_mnojYbrv2wEhvIlYN3nXES7HG2hIfHpNhZchdcNGCh6WeHJtxwXkDBqS09gb2RjX-HAYEK&vault=true&intent=subscription&currency=USD"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AUjr_VTe9_mnojYbrv2wEhvIlYN3nXES7HG2hIfHpNhZchdcNGCh6WeHJtxwXkDBqS09gb2RjX-HAYEK&currency=USD"></script>
 
     <!-- PDF.js for PDF preview -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -31,23 +31,13 @@
         <div class="header-container">
             <a href="../index.html" class="nav-logo">THE FAITH <span>SOUND</span></a>
             <div class="header-actions">
-                <!-- Usage Indicator -->
-                <div id="headerUsageIndicator" style="display: none; margin-right: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.15); border-radius: 6px; font-size: 13px; color: #3b82f6; white-space: nowrap;">
-                    <span id="headerUsageText">Loading...</span>
-                </div>
-
-                <!-- Upgrade Button (for free/basic users) -->
-                <button class="ghost-button" id="upgradeButton" type="button" style="display: none; background: linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%); color: white; font-weight: 600; border: none;">
-                    ⭐ Upgrade
-                </button>
-
                 <div style="position: relative;">
                     <button class="ghost-button" id="signInButton" type="button">Sign In</button>
                     <div id="profileMenu" style="display: none; position: absolute; top: 45px; right: 0; background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; min-width: 150px; z-index: 1000;">
-                        <button id="mySubscriptionBtn" style="width: 100%; padding: 8px 12px; background: transparent; color: var(--text); border: none; text-align: left; cursor: pointer; border-radius: 4px; transition: background 0.2s;">My Subscription</button>
                         <button id="signOutBtn" style="width: 100%; padding: 8px 12px; background: transparent; color: var(--text); border: none; text-align: left; cursor: pointer; border-radius: 4px; transition: background 0.2s;">Sign Out</button>
                     </div>
                 </div>
+                <a href="#support" class="nav-donate">Donate & Support Us</a>
                 <button class="ghost-button" id="themeToggle" type="button" title="Toggle theme">
                     <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <!-- Moon icon (for dark mode) -->
@@ -238,11 +228,15 @@
         <section class="support-section" id="support" style="max-width: 600px; margin: 60px auto 80px; padding: 30px 20px; text-align: center;">
             <h2 style="font-size: 2rem; margin-bottom: 20px;">Support ChordsApp</h2>
             <p style="font-size: 1.1rem; color: var(--text-muted, #999); margin-bottom: 30px; line-height: 1.6;">
-                Love ChordsApp? Upgrade to Basic ($0.99/mo) or Pro ($1.99/mo) to unlock more features and support ongoing development!
+                ChordsApp is completely free to use. If you find it helpful for your music ministry or personal practice, please consider supporting us with a donation to help keep this project running and continually improving.
             </p>
-            <button class="primary-action" onclick="document.getElementById('subscriptionModal').style.display='flex'" style="padding: 14px 32px; font-size: 1.1rem;">
-                ⭐ View Plans
-            </button>
+            <div style="max-width: 400px; margin: 0 auto;">
+                <div class="donation-amount-container">
+                    <label for="donationAmount" class="donation-label">Donation Amount (USD)</label>
+                    <input type="number" id="donationAmount" class="donation-input" placeholder="10" min="1" step="0.01" value="10">
+                </div>
+                <div id="paypal-button-container"></div>
+            </div>
         </section>
         <section class="visualizer-promo" style="max-width: 800px; margin: 80px auto 60px; padding: 40px 30px; background: rgba(28, 27, 34, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; text-align: center;">
             <h2 style="font-size: 2rem; margin-bottom: 16px; color: var(--text);">Check Out Visualizer 1.0</h2>
@@ -447,84 +441,12 @@
         </div>
     </div>
 
-    <!-- Subscription Modal -->
-    <div id="subscriptionModal" class="modal-overlay">
-        <div class="modal-container" style="max-width: 800px;">
-            <div class="modal-header">
-                <h3>Choose Your Plan</h3>
-                <button class="modal-close" id="subscriptionModalClose">&times;</button>
-            </div>
-            <div class="modal-body">
-                <!-- Usage Indicator (for logged-in users) -->
-                <div id="usageIndicator" style="display: none; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
-                    <p id="usageText" style="margin: 0; color: #3b82f6; font-size: 14px;"></p>
-                </div>
-
-                <!-- Pricing Tiers -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
-                    <!-- Free Tier -->
-                    <div class="pricing-card" style="border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px; background: var(--surface);">
-                        <h3 style="margin: 0 0 8px 0; color: var(--text);">Free</h3>
-                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 16px;">$0</div>
-                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8;">
-                            <li>✓ 3 AI analyses/month</li>
-                            <li>✓ Transpose</li>
-                            <li>✓ Print/Export</li>
-                            <li style="opacity: 0.5;">✗ Save to Library</li>
-                            <li style="opacity: 0.5;">✗ Nashville Numbers</li>
-                        </ul>
-                        <button class="ghost-button" style="width: 100%; opacity: 0.5;" disabled>Current Plan</button>
-                    </div>
-
-                    <!-- Basic Tier -->
-                    <div class="pricing-card" style="border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 12px; padding: 24px; background: var(--surface);">
-                        <h3 style="margin: 0 0 8px 0; color: #3b82f6;">Basic</h3>
-                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$0.99<span style="font-size: 16px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">3-day free trial</div>
-                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8;">
-                            <li>✓ 20 AI analyses/month</li>
-                            <li>✓ Save to Library</li>
-                            <li>✓ Transpose</li>
-                            <li>✓ Print/Export</li>
-                            <li style="opacity: 0.5;">✗ Nashville Numbers</li>
-                        </ul>
-                        <div id="paypal-basic-button" style="min-height: 45px;"></div>
-                    </div>
-
-                    <!-- Pro Tier -->
-                    <div class="pricing-card" style="border: 2px solid var(--primary); border-radius: 12px; padding: 24px; background: var(--surface); position: relative;">
-                        <div style="position: absolute; top: -12px; right: 20px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">POPULAR</div>
-                        <h3 style="margin: 0 0 8px 0; color: var(--primary);">Pro</h3>
-                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$1.99<span style="font-size: 16px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">3-day free trial</div>
-                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8;">
-                            <li>✓ Unlimited AI analyses</li>
-                            <li>✓ Save to Library</li>
-                            <li>✓ Nashville Numbers</li>
-                            <li>✓ Transpose</li>
-                            <li>✓ Print/Export</li>
-                        </ul>
-                        <div id="paypal-pro-button" style="min-height: 45px;"></div>
-                    </div>
-                </div>
-
-                <div style="text-align: center; font-size: 12px; color: var(--text-secondary);">
-                    <p>All plans include 3-day free trial. Cancel anytime. Secure payment via PayPal.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Theme Toggle -->
     <script src="theme.js"></script>
 
     <!-- Firebase Configuration and Auth -->
     <script src="firebase-config.js"></script>
     <script src="auth.js"></script>
-
-    <!-- Subscription System -->
-    <script src="subscription.js"></script>
-    <script src="paypal-subscription.js"></script>
 
     <!-- Song Library -->
     <script src="song-library.js"></script>
@@ -619,6 +541,49 @@
             }
         };
 
+        // PayPal Donate Button
+        const donationInput = document.getElementById('donationAmount');
+
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                const amount = parseFloat(donationInput.value);
+
+                if (!amount || amount <= 0) {
+                    donationInput.style.borderColor = 'var(--primary)';
+                    donationInput.focus();
+                    setTimeout(() => {
+                        donationInput.style.borderColor = '';
+                    }, 1000);
+                    return null;
+                }
+
+                return actions.order.create({
+                    purchase_units: [{
+                        description: 'Support ChordsApp Development',
+                        amount: {
+                            currency_code: 'USD',
+                            value: amount.toFixed(2)
+                        }
+                    }]
+                });
+            },
+            onApprove: async function(data, actions) {
+                return actions.order.capture().then(async function(orderDetails) {
+                    await modal.show(
+                        'Thank You!',
+                        'Thank you for your generous support! Your contribution helps keep ChordsApp free for everyone.'
+                    );
+                    console.log('Donation completed:', orderDetails);
+                });
+            },
+            onError: async function(err) {
+                console.error('PayPal error:', err);
+                await modal.show(
+                    'Error',
+                    'There was an error processing your donation. Please try again.'
+                );
+            }
+        }).render('#paypal-button-container');
     </script>
 </body>
 </html>

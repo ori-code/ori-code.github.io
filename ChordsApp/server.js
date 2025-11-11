@@ -461,6 +461,61 @@ app.post('/api/admin/give-bonus-analyses', async (req, res) => {
 });
 
 /**
+ * Upgrade user tier (ADMIN ONLY)
+ * POST /api/admin/upgrade-user
+ * Body: { userId: string, tier: 'FREE'|'BASIC'|'PRO', adminKey: string }
+ */
+app.post('/api/admin/upgrade-user', async (req, res) => {
+    try {
+        const { userId, tier, adminKey } = req.body;
+
+        // Verify admin key
+        if (adminKey !== process.env.ADMIN_KEY) {
+            return res.status(403).json({ error: 'Forbidden - Invalid admin key' });
+        }
+
+        // Validate tier
+        const validTiers = ['FREE', 'BASIC', 'PRO'];
+        if (!validTiers.includes(tier)) {
+            return res.status(400).json({ error: 'Invalid tier - must be FREE, BASIC, or PRO' });
+        }
+
+        if (!userId) {
+            return res.status(400).json({ error: 'Invalid request - userId required' });
+        }
+
+        // Get current subscription
+        const subRef = db.ref(`users/${userId}/subscription`);
+        const subSnap = await subRef.once('value');
+        const currentSub = subSnap.val() || {};
+
+        // Update tier
+        const updatedSub = {
+            ...currentSub,
+            tier: tier,
+            status: 'active',
+            startDate: currentSub.startDate || new Date().toISOString(),
+            paypalSubscriptionId: tier === 'FREE' ? null : (currentSub.paypalSubscriptionId || null),
+            endDate: null
+        };
+
+        await subRef.set(updatedSub);
+
+        res.json({
+            success: true,
+            userId,
+            previousTier: currentSub.tier || 'FREE',
+            newTier: tier,
+            subscription: updatedSub
+        });
+
+    } catch (error) {
+        console.error('Error upgrading user:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+/**
  * Get user usage stats (ADMIN ONLY)
  * GET /api/admin/user-stats/:userId?adminKey=xxx
  */
