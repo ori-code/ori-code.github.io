@@ -1183,6 +1183,7 @@ a {
 
     .modal-container {
         margin: 0 16px;
+        max-width: calc(100% - 32px) !important;
     }
 
     .modal-footer {
@@ -1192,6 +1193,36 @@ a {
     .modal-footer .ghost-button,
     .modal-footer .primary-action {
         width: 100%;
+    }
+
+    /* Subscription modal mobile fixes */
+    #subscriptionModal .modal-container {
+        max-width: calc(100vw - 32px) !important;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
+
+    #subscriptionModal .modal-body {
+        padding: 16px !important;
+    }
+
+    #subscriptionModal .pricing-card {
+        min-width: 100% !important;
+        padding: 20px !important;
+    }
+
+    #subscriptionModal .modal-body > div[style*="grid"] {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    /* Make pricing cards stack on mobile */
+    .pricing-card h3 {
+        font-size: 1.2rem !important;
+    }
+
+    .pricing-card ul {
+        font-size: 13px !important;
     }
 }
 

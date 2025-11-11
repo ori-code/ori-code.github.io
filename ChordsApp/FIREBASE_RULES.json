@@ -1,0 +1,34 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        // Subscription data - READ ONLY for users, server updates via Admin SDK
+        "subscription": {
+          ".read": "$uid === auth.uid",
+          ".write": false
+        },
+
+        // Usage data - READ ONLY for users, server updates via Admin SDK
+        "usage": {
+          ".read": "$uid === auth.uid",
+          ".write": false
+        },
+
+        // Bonus analyses - Server only (for giving away free analyses)
+        "bonusAnalyses": {
+          ".read": "$uid === auth.uid",
+          ".write": false
+        },
+
+        // Songs - Users can read/write their own songs
+        "songs": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid",
+          "$songId": {
+            ".validate": "newData.hasChildren(['name', 'content', 'createdAt'])"
+          }
+        }
+      }
+    }
+  }
+}

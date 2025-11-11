@@ -71,6 +71,20 @@
                 return;
             }
 
+            // Check subscription - only Basic and Pro can save
+            if (window.subscriptionManager && !window.subscriptionManager.canSaveSongs()) {
+                showMessage('Error', 'Saving songs requires Basic ($0.99/mo) or Pro ($1.99/mo) subscription', 'error');
+
+                // Show subscription modal
+                setTimeout(() => {
+                    const modal = document.getElementById('subscriptionModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                    }
+                }, 500);
+                return;
+            }
+
             const content = visualEditor.value.trim();
             if (!content) {
                 showMessage('Error', 'No content to save. Please add chords and lyrics first.', 'error');
@@ -170,6 +184,20 @@
             const user = firebase.auth().currentUser;
             if (!user) {
                 showMessage('Error', 'Please sign in to update songs', 'error');
+                return;
+            }
+
+            // Check subscription - only Basic and Pro can update
+            if (window.subscriptionManager && !window.subscriptionManager.canSaveSongs()) {
+                showMessage('Error', 'Updating songs requires Basic ($0.99/mo) or Pro ($1.99/mo) subscription', 'error');
+
+                // Show subscription modal
+                setTimeout(() => {
+                    const modal = document.getElementById('subscriptionModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                    }
+                }, 500);
                 return;
             }
 
@@ -406,6 +434,20 @@
             const user = firebase.auth().currentUser;
             if (!user) {
                 showMessage('Error', 'Please sign in to load songs', 'error');
+                return;
+            }
+
+            // Check subscription - only Basic and Pro can load
+            if (window.subscriptionManager && !window.subscriptionManager.canSaveSongs()) {
+                showMessage('Error', 'Loading songs requires Basic ($0.99/mo) or Pro ($1.99/mo) subscription', 'error');
+
+                // Show subscription modal
+                setTimeout(() => {
+                    const modal = document.getElementById('subscriptionModal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                    }
+                }, 500);
                 return;
             }
 

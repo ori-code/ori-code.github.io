@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChordsApp Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .auth-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        input[type="password"], input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .users-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .users-section.visible {
+            display: block;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f5f5f5;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .tier-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tier-FREE {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .tier-BASIC {
+            background: #bbdefb;
+            color: #1976d2;
+        }
+
+        .tier-PRO {
+            background: #c8e6c9;
+            color: #388e3c;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: #5568d3;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal.visible {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔐 ChordsApp Admin Dashboard</h1>
+            <p class="subtitle">Manage users, subscriptions, and usage analytics</p>
+        </div>
+
+        <!-- Authentication -->
+        <div class="auth-section">
+            <div class="input-group">
+                <input type="password" id="adminKeyInput" placeholder="Enter admin key...">
+                <button id="loginBtn" onclick="loadDashboard()">Login</button>
+            </div>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats" id="statsSection" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="freeUsers">0</div>
+                <div class="stat-label">Free Tier</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="basicUsers">0</div>
+                <div class="stat-label">Basic Tier</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="proUsers">0</div>
+                <div class="stat-label">Pro Tier</div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="users-section" id="usersSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2>All Users</h2>
+                <button onclick="loadDashboard()">🔄 Refresh</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Tier</th>
+                            <th>Status</th>
+                            <th>Analyses Used</th>
+                            <th>Bonus</th>
+                            <th>Songs</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="7" class="loading">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Give Bonus Modal -->
+    <div id="bonusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Give Bonus Analyses</div>
+            <div class="modal-body">
+                <p style="margin-bottom: 12px; color: #666;">User ID: <strong id="modalUserId"></strong></p>
+                <input type="number" id="bonusCount" placeholder="Number of bonus analyses" min="1" style="width: 100%;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeBonusModal()">Cancel</button>
+                <button onclick="giveBonusAnalyses()">Give Bonus</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAdminKey = '';
+        let currentUserId = '';
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.add('visible');
+            setTimeout(() => errorEl.classList.remove('visible'), 5000);
+        }
+
+        async function loadDashboard() {
+            const adminKey = document.getElementById('adminKeyInput').value;
+
+            if (!adminKey) {
+                showError('Please enter admin key');
+                return;
+            }
+
+            currentAdminKey = adminKey;
+
+            try {
+                const response = await fetch(`http://localhost:3002/api/admin/list-all-users?adminKey=${adminKey}`);
+
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        showError('Invalid admin key');
+                        return;
+                    }
+                    throw new Error('Failed to fetch users');
+                }
+
+                const data = await response.json();
+                displayUsers(data.users);
+                updateStats(data.users);
+
+                document.getElementById('statsSection').style.display = 'grid';
+                document.getElementById('usersSection').classList.add('visible');
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showError('Failed to load dashboard data');
+            }
+        }
+
+        function updateStats(users) {
+            const stats = {
+                total: users.length,
+                free: users.filter(u => u.subscription.tier === 'FREE').length,
+                basic: users.filter(u => u.subscription.tier === 'BASIC').length,
+                pro: users.filter(u => u.subscription.tier === 'PRO').length
+            };
+
+            document.getElementById('totalUsers').textContent = stats.total;
+            document.getElementById('freeUsers').textContent = stats.free;
+            document.getElementById('basicUsers').textContent = stats.basic;
+            document.getElementById('proUsers').textContent = stats.pro;
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('usersTableBody');
+
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #666;">No users found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => {
+                const tier = user.subscription.tier || 'FREE';
+                const status = user.subscription.status || 'active';
+                const analysesUsed = user.usage.analysesThisMonth || 0;
+                const bonus = user.bonusAnalyses || 0;
+                const songs = user.songCount || 0;
+                const userId = user.userId.substring(0, 8) + '...';
+
+                return `
+                    <tr>
+                        <td title="${user.userId}">${userId}</td>
+                        <td><span class="tier-badge tier-${tier}">${tier}</span></td>
+                        <td>${status}</td>
+                        <td>${analysesUsed}</td>
+                        <td>${bonus}</td>
+                        <td>${songs}</td>
+                        <td>
+                            <button class="action-btn" onclick="openBonusModal('${user.userId}')">
+                                🎁 Give Bonus
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openBonusModal(userId) {
+            currentUserId = userId;
+            document.getElementById('modalUserId').textContent = userId.substring(0, 20) + '...';
+            document.getElementById('bonusCount').value = '';
+            document.getElementById('bonusModal').classList.add('visible');
+        }
+
+        function closeBonusModal() {
+            document.getElementById('bonusModal').classList.remove('visible');
+            currentUserId = '';
+        }
+
+        async function giveBonusAnalyses() {
+            const count = parseInt(document.getElementById('bonusCount').value);
+
+            if (!count || count < 1) {
+                alert('Please enter a valid number');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3002/api/admin/give-bonus-analyses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        count: count,
+                        adminKey: currentAdminKey
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to give bonus analyses');
+                }
+
+                const result = await response.json();
+                alert(`✅ Successfully gave ${count} bonus analyses!\nTotal bonus: ${result.totalBonus}`);
+
+                closeBonusModal();
+                loadDashboard(); // Refresh data
+
+            } catch (error) {
+                console.error('Error giving bonus:', error);
+                alert('❌ Failed to give bonus analyses');
+            }
+        }
+
+        // Allow Enter key to login
+        document.getElementById('adminKeyInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadDashboard();
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('bonusModal').addEventListener('click', (e) => {
+            if (e.target.id === 'bonusModal') {
+                closeBonusModal();
+            }
+        });
+    </script>
+</body>
+</html>

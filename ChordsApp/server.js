@@ -2,10 +2,50 @@ const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
+const admin = require('firebase-admin');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3002;
+
+// Initialize Firebase Admin SDK
+// For local development, use service account key
+// For production, use environment variables or default credentials
+const fs = require('fs');
+const path = require('path');
+
+try {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        // Production: Load from environment variable
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: "https://chordsapp-e10e7-default-rtdb.firebaseio.com"
+        });
+        console.log('Firebase Admin initialized successfully (from env)');
+    } else if (fs.existsSync(path.join(__dirname, 'firebase-admin-key.json'))) {
+        // Development: Load from local file
+        const serviceAccount = require('./firebase-admin-key.json');
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: "https://chordsapp-e10e7-default-rtdb.firebaseio.com"
+        });
+        console.log('Firebase Admin initialized successfully (from file)');
+    } else {
+        // Fallback: Try default credentials
+        admin.initializeApp({
+            credential: admin.credential.applicationDefault(),
+            databaseURL: "https://chordsapp-e10e7-default-rtdb.firebaseio.com"
+        });
+        console.log('Firebase Admin initialized successfully (default credentials)');
+    }
+} catch (error) {
+    console.warn('Firebase Admin not initialized:', error.message);
+    console.warn('Usage tracking will not work without Firebase Admin SDK');
+    console.warn('Please download firebase-admin-key.json from Firebase Console');
+}
+
+const db = admin.database();
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -254,8 +294,249 @@ app.post('/api/analyze-chart', async (req, res) => {
         });
     }
 });
+// ============= USAGE TRACKING ENDPOINTS =============
+
+/**
+ * Verify Firebase ID token from client
+ */
+async function verifyUser(req, res) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.status(401).json({ error: 'Unauthorized - No token provided' });
+        return null;
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        return decodedToken.uid;
+    } catch (error) {
+        console.error('Token verification error:', error);
+        res.status(401).json({ error: 'Unauthorized - Invalid token' });
+        return null;
+    }
+}
+
+/**
+ * Check if user can perform analysis
+ * GET /api/can-analyze
+ */
+app.get('/api/can-analyze', async (req, res) => {
+    try {
+        const uid = await verifyUser(req, res);
+        if (!uid) return;
+
+        // Get user subscription and usage
+        const subscriptionRef = db.ref(`users/${uid}/subscription`);
+        const usageRef = db.ref(`users/${uid}/usage`);
+        const bonusRef = db.ref(`users/${uid}/bonusAnalyses`);
+
+        const [subscriptionSnap, usageSnap, bonusSnap] = await Promise.all([
+            subscriptionRef.once('value'),
+            usageRef.once('value'),
+            bonusRef.once('value')
+        ]);
+
+        const subscription = subscriptionSnap.val() || { tier: 'FREE' };
+        const usage = usageSnap.val() || { analysesThisMonth: 0, monthStartDate: new Date().toISOString() };
+        const bonusAnalyses = bonusSnap.val() || 0;
+
+        // Check if month has changed (reset usage)
+        const monthStart = new Date(usage.monthStartDate);
+        const now = new Date();
+        if (monthStart.getMonth() !== now.getMonth() || monthStart.getFullYear() !== now.getFullYear()) {
+            usage.analysesThisMonth = 0;
+            usage.monthStartDate = now.toISOString();
+            await usageRef.set(usage);
+        }
+
+        // Define tier limits
+        const tierLimits = {
+            FREE: 3,
+            BASIC: 20,
+            PRO: -1 // unlimited
+        };
+
+        const limit = tierLimits[subscription.tier] || 3;
+        const used = usage.analysesThisMonth || 0;
+
+        // Check if can analyze (unlimited OR under limit OR has bonus)
+        const canAnalyze = limit === -1 || used < limit || bonusAnalyses > 0;
+
+        res.json({
+            canAnalyze,
+            tier: subscription.tier,
+            limit: limit === -1 ? 'unlimited' : limit,
+            used,
+            remaining: limit === -1 ? 'unlimited' : Math.max(0, limit - used),
+            bonusAnalyses
+        });
+
+    } catch (error) {
+        console.error('Error checking analysis permission:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+/**
+ * Increment analysis count after successful analysis
+ * POST /api/increment-analysis
+ */
+app.post('/api/increment-analysis', async (req, res) => {
+    try {
+        const uid = await verifyUser(req, res);
+        if (!uid) return;
+
+        const usageRef = db.ref(`users/${uid}/usage`);
+        const bonusRef = db.ref(`users/${uid}/bonusAnalyses`);
+
+        const [usageSnap, bonusSnap] = await Promise.all([
+            usageRef.once('value'),
+            bonusRef.once('value')
+        ]);
+
+        const usage = usageSnap.val() || { analysesThisMonth: 0, monthStartDate: new Date().toISOString() };
+        const bonusAnalyses = bonusSnap.val() || 0;
+
+        // If user has bonus analyses, use those first
+        if (bonusAnalyses > 0) {
+            await bonusRef.set(bonusAnalyses - 1);
+            res.json({
+                success: true,
+                usedBonus: true,
+                bonusRemaining: bonusAnalyses - 1
+            });
+        } else {
+            // Otherwise increment monthly count
+            usage.analysesThisMonth += 1;
+            await usageRef.set(usage);
+            res.json({
+                success: true,
+                usedBonus: false,
+                analysesThisMonth: usage.analysesThisMonth
+            });
+        }
+
+    } catch (error) {
+        console.error('Error incrementing analysis count:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+/**
+ * Give bonus analyses to a user (ADMIN ONLY)
+ * POST /api/admin/give-bonus-analyses
+ * Body: { userId: string, count: number, adminKey: string }
+ */
+app.post('/api/admin/give-bonus-analyses', async (req, res) => {
+    try {
+        const { userId, count, adminKey } = req.body;
+
+        // Verify admin key (set in .env)
+        if (adminKey !== process.env.ADMIN_KEY) {
+            return res.status(403).json({ error: 'Forbidden - Invalid admin key' });
+        }
+
+        if (!userId || !count || count <= 0) {
+            return res.status(400).json({ error: 'Invalid request - userId and positive count required' });
+        }
+
+        const bonusRef = db.ref(`users/${userId}/bonusAnalyses`);
+        const bonusSnap = await bonusRef.once('value');
+        const currentBonus = bonusSnap.val() || 0;
+
+        await bonusRef.set(currentBonus + count);
+
+        res.json({
+            success: true,
+            userId,
+            bonusAdded: count,
+            totalBonus: currentBonus + count
+        });
+
+    } catch (error) {
+        console.error('Error giving bonus analyses:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+/**
+ * Get user usage stats (ADMIN ONLY)
+ * GET /api/admin/user-stats/:userId?adminKey=xxx
+ */
+app.get('/api/admin/user-stats/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { adminKey } = req.query;
+
+        // Verify admin key
+        if (adminKey !== process.env.ADMIN_KEY) {
+            return res.status(403).json({ error: 'Forbidden - Invalid admin key' });
+        }
+
+        const [subscriptionSnap, usageSnap, bonusSnap] = await Promise.all([
+            db.ref(`users/${userId}/subscription`).once('value'),
+            db.ref(`users/${userId}/usage`).once('value'),
+            db.ref(`users/${userId}/bonusAnalyses`).once('value')
+        ]);
+
+        res.json({
+            userId,
+            subscription: subscriptionSnap.val() || { tier: 'FREE' },
+            usage: usageSnap.val() || { analysesThisMonth: 0 },
+            bonusAnalyses: bonusSnap.val() || 0
+        });
+
+    } catch (error) {
+        console.error('Error fetching user stats:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+/**
+ * Get all users' usage stats (ADMIN ONLY)
+ * GET /api/admin/list-all-users?adminKey=xxx
+ */
+app.get('/api/admin/list-all-users', async (req, res) => {
+    try {
+        const { adminKey } = req.query;
+
+        // Verify admin key
+        if (adminKey !== process.env.ADMIN_KEY) {
+            return res.status(403).json({ error: 'Forbidden - Invalid admin key' });
+        }
+
+        // Get all users from Firebase
+        const usersSnapshot = await db.ref('users').once('value');
+        const usersData = usersSnapshot.val();
+
+        if (!usersData) {
+            return res.json({ users: [] });
+        }
+
+        // Transform data into array
+        const users = Object.keys(usersData).map(userId => {
+            const userData = usersData[userId];
+            return {
+                userId,
+                subscription: userData.subscription || { tier: 'FREE', status: 'active' },
+                usage: userData.usage || { analysesThisMonth: 0, monthStartDate: new Date().toISOString() },
+                bonusAnalyses: userData.bonusAnalyses || 0,
+                songCount: userData.songs ? Object.keys(userData.songs).length : 0
+            };
+        });
+
+        res.json({ users });
+
+    } catch (error) {
+        console.error('Error fetching all users:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`ChordsAppClaude API server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
+    console.log(`Usage tracking: http://localhost:${PORT}/api/can-analyze`);
 });

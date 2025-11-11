@@ -511,6 +511,20 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return;
         }
 
+        // Check subscription limits
+        if (window.subscriptionManager) {
+            if (!window.subscriptionManager.canAnalyze()) {
+                const summary = window.subscriptionManager.getUsageSummary();
+                setStatus('error', `You've used all ${summary.analysesLimit} analyses this month. Upgrade to continue!`);
+
+                // Show subscription modal
+                if (document.getElementById('subscriptionModal')) {
+                    document.getElementById('subscriptionModal').style.display = 'flex';
+                }
+                return;
+            }
+        }
+
         // STRICT RESET: Clear everything before new analysis
         baselineChart = '';
         currentTransposeSteps = 0;
@@ -591,6 +605,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 transposeStepInput.value = 0;
                 setStatus('success', 'AI transcription ready! Edit visually on the left.');
+
+                // Increment analysis counter
+                if (window.subscriptionManager) {
+                    await window.subscriptionManager.incrementAnalysisCount();
+                    updateUsageDisplay();
+                }
 
                 // Update the live preview
                 updateLivePreview();
@@ -1482,9 +1502,20 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
-    // Handle Nashville numbers toggle
+    // Handle Nashville numbers toggle (with subscription check)
     if (nashvilleToggle) {
         nashvilleToggle.addEventListener('click', () => {
+            // Check if user has Pro subscription for Nashville Numbers
+            if (window.subscriptionManager && !window.subscriptionManager.canUseNashvilleNumbers()) {
+                alert('🔢 Nashville Numbers is a Pro feature!\n\nUpgrade to Pro for $1.99/month to unlock Nashville Number System and unlimited AI analyses.');
+
+                // Show subscription modal
+                if (document.getElementById('subscriptionModal')) {
+                    document.getElementById('subscriptionModal').style.display = 'flex';
+                }
+                return;
+            }
+
             showNashvilleNumbers = !showNashvilleNumbers;
             nashvilleToggle.textContent = showNashvilleNumbers
                 ? '🔢 Nashville Numbers: ON'
@@ -1538,4 +1569,189 @@ Our [Em7]hearts will cry, these bones will [D]sing
             window.print();
         });
     }
+
+    // ============= SUBSCRIPTION SYSTEM INTEGRATION =============
+
+    /**
+     * Update usage display in header and subscription modal
+     */
+    function updateUsageDisplay() {
+        if (!window.subscriptionManager) return;
+
+        const summary = window.subscriptionManager.getUsageSummary();
+
+        // Update header usage indicator
+        const headerIndicator = document.getElementById('headerUsageIndicator');
+        const headerText = document.getElementById('headerUsageText');
+
+        if (headerIndicator && headerText) {
+            if (summary.tier === 'FREE' || summary.tier === 'BASIC') {
+                headerIndicator.style.display = 'block';
+                const remaining = summary.analysesRemaining;
+                if (remaining === 'Unlimited') {
+                    headerText.textContent = '∞ Analyses';
+                } else {
+                    headerText.textContent = `${remaining}/${summary.analysesLimit} analyses left`;
+
+                    // Change color if running low
+                    if (remaining <= 1) {
+                        headerIndicator.style.background = 'rgba(255, 59, 92, 0.15)';
+                        headerText.style.color = 'var(--primary)';
+                    } else {
+                        headerIndicator.style.background = 'rgba(59, 130, 246, 0.15)';
+                        headerText.style.color = '#3b82f6';
+                    }
+                }
+            } else {
+                headerIndicator.style.display = 'block';
+                headerText.textContent = '✨ Pro Member';
+                headerIndicator.style.background = 'linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%)';
+                headerText.style.color = 'white';
+            }
+        }
+
+        // Update usage text in subscription modal
+        const usageIndicator = document.getElementById('usageIndicator');
+        const usageText = document.getElementById('usageText');
+
+        if (usageIndicator && usageText) {
+            usageIndicator.style.display = 'block';
+            usageText.textContent = `Current: ${summary.tierName} Plan | Analyses used this month: ${summary.analysesUsed}/${summary.analysesLimit === -1 ? '∞' : summary.analysesLimit}`;
+        }
+
+        // Show/hide upgrade button
+        const upgradeButton = document.getElementById('upgradeButton');
+        if (upgradeButton) {
+            if (summary.tier === 'FREE' || summary.tier === 'BASIC') {
+                upgradeButton.style.display = 'block';
+            } else {
+                upgradeButton.style.display = 'none';
+            }
+        }
+
+        // Update Nashville Numbers toggle UI
+        if (nashvilleToggle && !summary.canUseNashville) {
+            nashvilleToggle.style.opacity = '0.5';
+            nashvilleToggle.title = 'Pro feature - Upgrade to unlock';
+        } else if (nashvilleToggle) {
+            nashvilleToggle.style.opacity = '1';
+            nashvilleToggle.title = 'Toggle Nashville Number System';
+        }
+    }
+
+    /**
+     * Initialize subscription buttons and modals
+     */
+    function initSubscriptionUI() {
+        // Upgrade button click
+        const upgradeButton = document.getElementById('upgradeButton');
+        if (upgradeButton) {
+            upgradeButton.addEventListener('click', () => {
+                const modal = document.getElementById('subscriptionModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                }
+            });
+        }
+
+        // My Subscription button click
+        const mySubscriptionBtn = document.getElementById('mySubscriptionBtn');
+        if (mySubscriptionBtn) {
+            mySubscriptionBtn.addEventListener('click', () => {
+                const modal = document.getElementById('subscriptionModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                }
+            });
+        }
+
+        // Close subscription modal
+        const subscriptionModalClose = document.getElementById('subscriptionModalClose');
+        if (subscriptionModalClose) {
+            subscriptionModalClose.addEventListener('click', () => {
+                const modal = document.getElementById('subscriptionModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Close modal on background click
+        const subscriptionModal = document.getElementById('subscriptionModal');
+        if (subscriptionModal) {
+            subscriptionModal.addEventListener('click', (e) => {
+                if (e.target === subscriptionModal) {
+                    subscriptionModal.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    /**
+     * Initialize PayPal subscription buttons
+     */
+    async function initPayPalButtons() {
+        if (!window.paypalSubscriptionManager) {
+            console.error('PayPal subscription manager not loaded');
+            return;
+        }
+
+        try {
+            await window.paypalSubscriptionManager.init();
+
+            // Create Basic subscription button
+            window.paypalSubscriptionManager.createSubscriptionButton('BASIC', 'paypal-basic-button');
+
+            // Create Pro subscription button
+            window.paypalSubscriptionManager.createSubscriptionButton('PRO', 'paypal-pro-button');
+
+        } catch (error) {
+            console.error('Failed to initialize PayPal buttons:', error);
+        }
+    }
+
+    /**
+     * Handle subscription changes
+     */
+    function handleSubscriptionChange(data) {
+        console.log('Subscription changed:', data);
+        updateUsageDisplay();
+
+        // Update save button state based on new subscription
+        if (window.updateSaveButtonState) {
+            window.updateSaveButtonState();
+        }
+    }
+
+    // Initialize subscription system
+    if (window.subscriptionManager) {
+        // Listen for auth state changes from auth.js
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                // User is signed in, initialize subscription
+                await window.subscriptionManager.init(user);
+                updateUsageDisplay();
+
+                // Initialize PayPal buttons
+                await initPayPalButtons();
+            } else {
+                // User is signed out
+                await window.subscriptionManager.init(null);
+                const headerIndicator = document.getElementById('headerUsageIndicator');
+                if (headerIndicator) {
+                    headerIndicator.style.display = 'none';
+                }
+                const upgradeButton = document.getElementById('upgradeButton');
+                if (upgradeButton) {
+                    upgradeButton.style.display = 'none';
+                }
+            }
+        });
+
+        // Register subscription change callback
+        window.subscriptionManager.onSubscriptionChange(handleSubscriptionChange);
+    }
+
+    // Initialize subscription UI
+    initSubscriptionUI();
 });
