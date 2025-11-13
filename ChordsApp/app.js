@@ -614,6 +614,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 // Update the live preview
                 updateLivePreview();
+
+                // Broadcast to session if leader
+                if (window.sessionManager && window.sessionManager.isLeader && window.sessionManager.activeSession) {
+                    await broadcastCurrentSong();
+                    await addCurrentSongToPlaylist();
+                }
             } else {
                 throw new Error('Invalid response from API');
             }
@@ -1732,11 +1738,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 await window.subscriptionManager.init(user);
                 updateUsageDisplay();
 
+                // Initialize session manager
+                await window.sessionManager.init(user);
+                updateSessionButtonsVisibility();
+
                 // Initialize PayPal buttons
                 await initPayPalButtons();
             } else {
                 // User is signed out
                 await window.subscriptionManager.init(null);
+                await window.sessionManager.init(null);
+
                 const headerIndicator = document.getElementById('headerUsageIndicator');
                 if (headerIndicator) {
                     headerIndicator.style.display = 'none';
@@ -1745,12 +1757,232 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 if (upgradeButton) {
                     upgradeButton.style.display = 'none';
                 }
+
+                // Hide session buttons
+                hideAllSessionButtons();
             }
         });
 
         // Register subscription change callback
         window.subscriptionManager.onSubscriptionChange(handleSubscriptionChange);
     }
+
+    // ============= LIVE SESSION INTEGRATION =============
+
+    /**
+     * Update session buttons visibility based on user tier
+     */
+    function updateSessionButtonsVisibility() {
+        const createBtn = document.getElementById('createSessionBtn');
+        const joinBtn = document.getElementById('joinSessionBtn');
+        const mySessionsBtn = document.getElementById('mySessionsBtn');
+
+        if (!window.subscriptionManager || !window.subscriptionManager.currentUser) {
+            hideAllSessionButtons();
+            return;
+        }
+
+        // Show/hide based on tier
+        const canCreate = window.subscriptionManager.canCreateSession();
+        const canJoin = window.subscriptionManager.canJoinSession();
+
+        if (createBtn) createBtn.style.display = canCreate ? 'block' : 'none';
+        if (joinBtn) joinBtn.style.display = canJoin ? 'block' : 'none';
+        if (mySessionsBtn) mySessionsBtn.style.display = (canCreate || canJoin) ? 'block' : 'none';
+    }
+
+    /**
+     * Hide all session buttons
+     */
+    function hideAllSessionButtons() {
+        const buttons = ['createSessionBtn', 'joinSessionBtn', 'mySessionsBtn'];
+        buttons.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.style.display = 'none';
+        });
+    }
+
+    /**
+     * Broadcast current song to session (LEADER only)
+     */
+    async function broadcastCurrentSong() {
+        if (!window.sessionManager || !window.sessionManager.isLeader || !window.sessionManager.activeSession) {
+            return; // Not in a session or not a leader
+        }
+
+        const visualEditor = document.getElementById('visualEditor');
+        const keySelector = document.getElementById('keySelector');
+        const bpmInput = document.getElementById('bpmInput');
+
+        if (!visualEditor || !keySelector) return;
+
+        const songData = {
+            id: `song_${Date.now()}`,
+            name: currentSongName || 'Untitled',
+            content: visualEditor.value,
+            originalKey: keySelector.value,
+            transposeSteps: globalTransposeSteps || 0,
+            bpm: bpmInput ? parseInt(bpmInput.value) || null : null
+        };
+
+        try {
+            await window.sessionManager.updateCurrentSong(songData);
+            console.log('📡 Broadcasted song to session');
+        } catch (error) {
+            console.error('Error broadcasting song:', error);
+        }
+    }
+
+    /**
+     * Handle incoming song updates from leader (PLAYER only)
+     */
+    function handleSongUpdateFromLeader(songData) {
+        if (window.sessionManager.isLeader) return; // Leaders don't receive updates
+
+        console.log('📻 Received song from leader:', songData.name);
+
+        // Update visual editor
+        const visualEditor = document.getElementById('visualEditor');
+        if (visualEditor) {
+            visualEditor.value = songData.content;
+        }
+
+        // Update key selector
+        const keySelector = document.getElementById('keySelector');
+        if (keySelector) {
+            keySelector.value = songData.originalKey;
+        }
+
+        // Update BPM
+        const bpmInput = document.getElementById('bpmInput');
+        if (bpmInput && songData.bpm) {
+            bpmInput.value = songData.bpm;
+        }
+
+        // Update song name
+        currentSongName = songData.name;
+
+        // Apply transpose if leader has transposed
+        if (songData.transposeSteps && songData.transposeSteps !== 0) {
+            globalTransposeSteps = songData.transposeSteps;
+        }
+
+        // Regenerate preview
+        generateSongbookFormat();
+    }
+
+    /**
+     * Add current song to session playlist (LEADER only)
+     */
+    async function addCurrentSongToPlaylist() {
+        if (!window.sessionManager || !window.sessionManager.isLeader || !window.sessionManager.activeSession) {
+            return;
+        }
+
+        const visualEditor = document.getElementById('visualEditor');
+        const keySelector = document.getElementById('keySelector');
+        const bpmInput = document.getElementById('bpmInput');
+
+        if (!visualEditor || !keySelector) return;
+
+        const songData = {
+            id: `song_${Date.now()}`,
+            name: currentSongName || 'Untitled',
+            content: visualEditor.value,
+            originalKey: keySelector.value,
+            bpm: bpmInput ? parseInt(bpmInput.value) || null : null
+        };
+
+        try {
+            await window.sessionManager.addSongToPlaylist(songData);
+            console.log('➕ Added current song to session playlist');
+        } catch (error) {
+            console.error('Error adding song to playlist:', error);
+        }
+    }
+
+    // Set up session manager callbacks
+    if (window.sessionManager) {
+        // Override the onSongUpdate callback to handle received songs
+        window.sessionManager.onSongUpdate = handleSongUpdateFromLeader;
+
+        // Override onPlaylistUpdate to refresh UI
+        window.sessionManager.onPlaylistUpdate = (playlist) => {
+            if (window.sessionUI) {
+                window.sessionUI.loadPlaylist();
+            }
+        };
+
+        // Override onParticipantsUpdate to refresh UI
+        window.sessionManager.onParticipantsUpdate = (participants) => {
+            if (window.sessionUI) {
+                window.sessionUI.loadParticipants();
+            }
+        };
+    }
+
+    // Add event listeners for session buttons
+    const createSessionBtn = document.getElementById('createSessionBtn');
+    if (createSessionBtn) {
+        createSessionBtn.addEventListener('click', () => {
+            if (!window.subscriptionManager || !window.subscriptionManager.canCreateSession()) {
+                alert('Creating sessions requires a PRO subscription ($1.99/mo)');
+                document.getElementById('subscriptionModal').style.display = 'flex';
+                return;
+            }
+            window.sessionUI.showCreateSessionModal();
+        });
+    }
+
+    const joinSessionBtn = document.getElementById('joinSessionBtn');
+    if (joinSessionBtn) {
+        joinSessionBtn.addEventListener('click', () => {
+            if (!window.subscriptionManager || !window.subscriptionManager.canJoinSession()) {
+                alert('Joining sessions requires at least a BASIC subscription ($0.99/mo)');
+                document.getElementById('subscriptionModal').style.display = 'flex';
+                return;
+            }
+            window.sessionUI.showJoinSessionModal();
+        });
+    }
+
+    const mySessionsBtn = document.getElementById('mySessionsBtn');
+    if (mySessionsBtn) {
+        mySessionsBtn.addEventListener('click', () => {
+            window.sessionUI.showMySessionsModal();
+        });
+    }
+
+    // Callback for loading song from playlist (called from session-ui.js)
+    window.onLoadSongFromPlaylist = async (songId) => {
+        // If leader, broadcast this song
+        if (window.sessionManager && window.sessionManager.isLeader) {
+            // Get song from playlist
+            const playlist = await window.sessionManager.getPlaylist();
+            const song = playlist.find(s => s.id === songId);
+
+            if (song) {
+                // Load the full song data from user's library if available
+                // For now, just show a message
+                alert(`Loading: ${song.name}\n\nNote: This will load from your song library once integrated.`);
+            }
+        }
+
+        // Close the session controls modal
+        window.sessionUI.hideSessionControls();
+    };
+
+    // Listen for song loaded from library and broadcast if leader
+    window.addEventListener('songLoaded', async (event) => {
+        // Wait a bit for the song to fully load into the editor
+        setTimeout(async () => {
+            if (window.sessionManager && window.sessionManager.isLeader && window.sessionManager.activeSession) {
+                await broadcastCurrentSong();
+            }
+        }, 500);
+    });
+
+    // ============= END LIVE SESSION INTEGRATION =============
 
     // Initialize subscription UI
     initSubscriptionUI();

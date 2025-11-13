@@ -27,6 +27,37 @@
           "$songId": {
             ".validate": "newData.hasChildren(['name', 'content', 'createdAt'])"
           }
+        },
+
+        // User's saved sessions - Users can read/write their own session list
+        "sessions": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        }
+      }
+    },
+
+    // Live Sessions - Public read for participants, leader can write
+    "sessions": {
+      "$sessionId": {
+        ".read": "auth != null",
+
+        "metadata": {
+          ".write": "auth.uid === data.child('leaderId').val() || !data.exists()"
+        },
+
+        "currentSong": {
+          ".write": "root.child('sessions').child($sessionId).child('metadata').child('leaderId').val() === auth.uid"
+        },
+
+        "playlist": {
+          ".write": "root.child('sessions').child($sessionId).child('metadata').child('leaderId').val() === auth.uid"
+        },
+
+        "participants": {
+          "$participantUid": {
+            ".write": "$participantUid === auth.uid"
+          }
         }
       }
     }

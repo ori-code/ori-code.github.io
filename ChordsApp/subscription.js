@@ -261,6 +261,23 @@ class SubscriptionManager {
     }
 
     /**
+     * Check if user can create live sessions (PRO only)
+     */
+    canCreateSession() {
+        if (!this.currentUser) return false;
+        return this.getCurrentTier() === 'PRO';
+    }
+
+    /**
+     * Check if user can join live sessions (BASIC or PRO)
+     */
+    canJoinSession() {
+        if (!this.currentUser) return false;
+        const tier = this.getCurrentTier();
+        return tier === 'BASIC' || tier === 'PRO';
+    }
+
+    /**
      * Update user subscription tier
      */
     async updateSubscription(tier, paypalSubscriptionId = null) {

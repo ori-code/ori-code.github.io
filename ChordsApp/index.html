@@ -191,6 +191,25 @@
                 <button class="ghost-button" id="updateSongButton">🔄 Update</button>
                 <button class="ghost-button" id="copyToClipboard" style="display: none;">Copy text</button>
             </div>
+
+            <!-- Live Session Controls -->
+            <div class="session-controls" style="margin: 20px 0; padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px;">
+                <!-- Session Status Indicator (shown when in session) -->
+                <div id="sessionStatusIndicator" style="display: none; margin-bottom: 12px;"></div>
+
+                <!-- Session Action Buttons (shown when not in session) -->
+                <div id="sessionActionButtons" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+                    <button class="ghost-button" id="createSessionBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; display: none;">
+                        📡 Create Live Session (PRO)
+                    </button>
+                    <button class="ghost-button" id="joinSessionBtn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; display: none;">
+                        📻 Join Session (BASIC+)
+                    </button>
+                    <button class="ghost-button" id="mySessionsBtn" style="display: none;">
+                        📋 My Sessions
+                    </button>
+                </div>
+            </div>
         </section>
 
         <section class="preview-section" id="previewSection">
@@ -515,6 +534,124 @@
         </div>
     </div>
 
+    <!-- Create Session Modal -->
+    <div id="createSessionModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📡 Create Live Session</h3>
+                <button class="modal-close" onclick="sessionUI.hideCreateSessionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--text-muted);">Create a live session to broadcast songs to your band in real-time.</p>
+                <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600;">Session Title</label>
+                <input type="text" id="sessionTitleInput" class="modal-input" placeholder="e.g., Sunday Worship Set 14.11.25" style="display: block; margin-bottom: 16px;">
+                <p style="font-size: 13px; color: var(--text-muted);">💡 Tip: Share the session code with your band members so they can join and follow along.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" onclick="sessionUI.hideCreateSessionModal()">Cancel</button>
+                <button class="primary-action" onclick="sessionUI.handleCreateSession()">Create Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Session Modal -->
+    <div id="joinSessionModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📻 Join Session</h3>
+                <button class="modal-close" onclick="sessionUI.hideJoinSessionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--text-muted);">Enter the session code provided by your worship leader.</p>
+                <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600;">Session Code</label>
+                <input type="text" id="sessionCodeInput" class="modal-input" placeholder="e.g., A3F-7K2" maxlength="7" style="display: block; margin-bottom: 16px; text-transform: uppercase; font-family: monospace; font-size: 18px; letter-spacing: 2px; text-align: center;">
+                <p style="font-size: 13px; color: var(--text-muted);">💡 Tip: You'll be able to adjust font size and transpose locally while following the leader's song selection.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" onclick="sessionUI.hideJoinSessionModal()">Cancel</button>
+                <button class="primary-action" onclick="sessionUI.handleJoinSession()">Join Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Sessions Modal -->
+    <div id="mySessionsModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>📋 My Sessions</h3>
+                <button class="modal-close" onclick="sessionUI.hideMySessionsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--text-muted);">Your saved and recent sessions</p>
+                <div id="sessionsList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Sessions will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" onclick="sessionUI.hideMySessionsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Controls Modal -->
+    <div id="sessionControlsModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Session Controls</h3>
+                <button class="modal-close" onclick="sessionUI.hideSessionControls()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <!-- Participants Panel -->
+                    <div>
+                        <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            👥 Participants
+                        </h4>
+                        <div id="participantsList" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Participants will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Playlist Panel -->
+                    <div>
+                        <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            🎵 Playlist
+                        </h4>
+                        <div id="sessionPlaylist" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Playlist will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player Controls (BASIC users) -->
+                <div class="player-only" style="padding: 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; margin-bottom: 12px; display: none;">
+                    <button class="ghost-button" id="toggleLiveModeBtn" onclick="sessionUI.toggleLiveMode()" style="width: 100%;">
+                        📻 Live Mode: ON
+                    </button>
+                    <p style="margin: 8px 0 0 0; font-size: 12px; color: var(--text-muted); text-align: center;">
+                        Toggle to browse freely or follow the leader
+                    </p>
+                </div>
+
+                <!-- Leader Controls (PRO users) -->
+                <div class="leader-only" style="padding: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; display: none;">
+                    <p style="margin: 0; font-size: 13px; color: var(--text-muted); text-align: center;">
+                        💡 Change songs in the editor to broadcast to all participants
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between;">
+                <button class="ghost-button leader-only" onclick="sessionUI.endSession()" style="background: var(--primary); color: white; display: none;">
+                    🛑 End Session
+                </button>
+                <button class="ghost-button player-only" onclick="sessionUI.leaveSession()" style="display: none;">
+                    👋 Leave Session
+                </button>
+                <button class="ghost-button" onclick="sessionUI.hideSessionControls()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Theme Toggle -->
     <script src="theme.js"></script>
 
@@ -529,6 +666,10 @@
     <!-- Song Library -->
     <script src="song-library.js"></script>
     <script src="song-search-filter.js"></script>
+
+    <!-- Live Sessions -->
+    <script src="session-manager.js"></script>
+    <script src="session-ui.js"></script>
 
     <script src="app.js?v=37"></script>
 
