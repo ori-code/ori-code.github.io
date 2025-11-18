@@ -41,18 +41,7 @@
     "sessions": {
       "$sessionId": {
         ".read": "auth != null",
-
-        "metadata": {
-          ".write": "auth.uid === data.child('leaderId').val() || !data.exists()"
-        },
-
-        "currentSong": {
-          ".write": "root.child('sessions').child($sessionId).child('metadata').child('leaderId').val() === auth.uid"
-        },
-
-        "playlist": {
-          ".write": "root.child('sessions').child($sessionId).child('metadata').child('leaderId').val() === auth.uid"
-        },
+        ".write": "auth != null && (!data.exists() || data.child('metadata').child('leaderId').val() === auth.uid)",
 
         "participants": {
           "$participantUid": {

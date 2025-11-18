@@ -95,22 +95,28 @@ class SessionUI {
                 return `
                     <div class="session-item" style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 12px;">
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                            <div>
+                            <div style="flex: 1;">
                                 <h4 style="margin: 0 0 4px 0; color: var(--text); font-size: 16px;">${session.title}</h4>
                                 <p style="margin: 0; font-size: 13px; color: var(--text-muted);">${role} • Created ${date}</p>
                                 <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--primary); font-family: monospace;">Code: ${session.sessionCode}</p>
                             </div>
-                            ${session.isOwner ? `
-                                <button onclick="sessionUI.reactivateSession('${session.id}')"
-                                        style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
-                                    Reactivate
-                                </button>
-                            ` : `
-                                <button onclick="sessionUI.joinSessionById('${session.id}')"
-                                        style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
-                                    Rejoin
-                                </button>
-                            `}
+                            <div style="display: flex; gap: 8px; flex-direction: column;">
+                                ${session.isOwner ? `
+                                    <button onclick="sessionUI.addCurrentSongToSession('${session.id}')"
+                                            style="padding: 6px 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                                        ➕ Add Current Song
+                                    </button>
+                                    <button onclick="sessionUI.reactivateSession('${session.id}')"
+                                            style="padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                        🔄 Reactivate
+                                    </button>
+                                ` : `
+                                    <button onclick="sessionUI.joinSessionById('${session.id}')"
+                                            style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                                        Rejoin
+                                    </button>
+                                `}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -219,6 +225,62 @@ class SessionUI {
 
         } catch (error) {
             console.error('Error joining session:', error);
+            alert('❌ ' + error.message);
+        }
+    }
+
+    /**
+     * Add current song to a session's playlist
+     */
+    async addCurrentSongToSession(sessionId) {
+        try {
+            // Get current song data from the editor
+            const visualEditor = document.getElementById('visualEditor');
+            const keySelector = document.getElementById('keySelector');
+            const bpmInput = document.getElementById('bpmInput');
+
+            // Check if there's a song loaded
+            if (!visualEditor || !visualEditor.value.trim()) {
+                alert('⚠️ No song loaded. Please analyze or load a song first.');
+                return;
+            }
+
+            // Get song name from global variable or prompt user
+            let songName = window.currentSongName || '';
+            if (!songName) {
+                songName = prompt('Enter song name:');
+                if (!songName) return;
+            }
+
+            // Prepare song data
+            const songData = {
+                id: `song_${Date.now()}`,
+                name: songName,
+                content: visualEditor.value,
+                originalKey: keySelector ? keySelector.value : 'Unknown',
+                bpm: bpmInput ? parseInt(bpmInput.value) || null : null
+            };
+
+            // Add to session playlist
+            const playlistRef = firebase.database().ref(`sessions/${sessionId}/playlist/${songData.id}`);
+
+            // Get current playlist to determine order
+            const playlistSnapshot = await firebase.database().ref(`sessions/${sessionId}/playlist`).once('value');
+            const playlist = playlistSnapshot.val() || {};
+            const order = Object.keys(playlist).length;
+
+            await playlistRef.set({
+                name: songData.name,
+                originalKey: songData.originalKey,
+                bpm: songData.bpm,
+                addedAt: Date.now(),
+                order: order
+            });
+
+            this.showToast(`✅ "${songName}" added to session playlist`);
+
+        } catch (error) {
+            console.error('Error adding song to session:', error);
             alert('❌ ' + error.message);
         }
     }

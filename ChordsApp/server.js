@@ -569,17 +569,31 @@ app.get('/api/admin/list-all-users', async (req, res) => {
             return res.json({ users: [] });
         }
 
-        // Transform data into array
-        const users = Object.keys(usersData).map(userId => {
+        // Transform data into array and fetch user details from Firebase Auth
+        const users = await Promise.all(Object.keys(usersData).map(async (userId) => {
             const userData = usersData[userId];
+
+            // Get user email and displayName from Firebase Auth
+            let email = 'N/A';
+            let displayName = 'N/A';
+            try {
+                const userRecord = await admin.auth().getUser(userId);
+                email = userRecord.email || 'N/A';
+                displayName = userRecord.displayName || email.split('@')[0] || 'N/A';
+            } catch (error) {
+                console.error(`Error fetching auth data for user ${userId}:`, error.message);
+            }
+
             return {
                 userId,
+                email,
+                displayName,
                 subscription: userData.subscription || { tier: 'FREE', status: 'active' },
                 usage: userData.usage || { analysesThisMonth: 0, monthStartDate: new Date().toISOString() },
                 bonusAnalyses: userData.bonusAnalyses || 0,
                 songCount: userData.songs ? Object.keys(userData.songs).length : 0
             };
-        });
+        }));
 
         res.json({ users });
 
