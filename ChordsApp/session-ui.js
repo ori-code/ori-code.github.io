@@ -128,16 +128,14 @@ class SessionUI {
                                 `}
                             </div>
                         </div>
-                        ${session.isOwner ? `
-                            <div style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
-                                <button onclick="sessionUI.toggleSessionPlaylist('${session.id}', this)"
-                                        style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 4px 0; width: 100%; text-align: left;">
-                                    ▶ Show Playlist
-                                </button>
-                                <div id="playlist-${session.id}" style="display: none; margin-top: 8px; max-height: 300px; overflow-y: auto;">
-                                </div>
+                        <div style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+                            <button onclick="sessionUI.toggleSessionPlaylist('${session.id}', this, ${session.isOwner})"
+                                    style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 4px 0; width: 100%; text-align: left;">
+                                ▶ Show Playlist
+                            </button>
+                            <div id="playlist-${session.id}" style="display: none; margin-top: 8px; max-height: 300px; overflow-y: auto;">
                             </div>
-                        ` : ''}
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -192,7 +190,7 @@ class SessionUI {
     /**
      * Toggle session playlist visibility
      */
-    async toggleSessionPlaylist(sessionId, button) {
+    async toggleSessionPlaylist(sessionId, button, isOwner = false) {
         const playlistEl = document.getElementById(`playlist-${sessionId}`);
         if (!playlistEl) return;
 
@@ -201,7 +199,7 @@ class SessionUI {
         if (isHidden) {
             playlistEl.style.display = 'block';
             button.textContent = '▼ Hide Playlist';
-            await this.loadSessionPlaylistInline(sessionId);
+            await this.loadSessionPlaylistInline(sessionId, isOwner);
         } else {
             playlistEl.style.display = 'none';
             button.textContent = '▶ Show Playlist';
@@ -211,7 +209,7 @@ class SessionUI {
     /**
      * Load session playlist inline (in My Sessions modal)
      */
-    async loadSessionPlaylistInline(sessionId) {
+    async loadSessionPlaylistInline(sessionId, isOwner = false) {
         const playlistEl = document.getElementById(`playlist-${sessionId}`);
         if (!playlistEl) return;
 
@@ -235,12 +233,14 @@ class SessionUI {
                     <span style="color: var(--text-muted); min-width: 20px;">${index + 1}.</span>
                     <span style="flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${song.name}</span>
                     <span style="color: var(--text-muted); font-size: 10px;">${song.originalKey || ''}</span>
-                    <div style="display: flex; gap: 2px;">
-                        ${index > 0 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', -1)" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: var(--text-muted); cursor: pointer; font-size: 10px;" title="Move up">↑</button>` : ''}
-                        ${index < playlist.length - 1 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', 1)" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: var(--text-muted); cursor: pointer; font-size: 10px;" title="Move down">↓</button>` : ''}
-                        <button onclick="sessionUI.editSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: rgba(59, 130, 246, 0.2); border: none; border-radius: 2px; color: #3b82f6; cursor: pointer; font-size: 10px;" title="Edit">✏️</button>
-                        <button onclick="sessionUI.deleteSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: rgba(239, 68, 68, 0.2); border: none; border-radius: 2px; color: #ef4444; cursor: pointer; font-size: 10px;" title="Delete">🗑️</button>
-                    </div>
+                    ${isOwner ? `
+                        <div style="display: flex; gap: 2px;">
+                            ${index > 0 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', -1)" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: var(--text-muted); cursor: pointer; font-size: 10px;" title="Move up">↑</button>` : ''}
+                            ${index < playlist.length - 1 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', 1)" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: var(--text-muted); cursor: pointer; font-size: 10px;" title="Move down">↓</button>` : ''}
+                            <button onclick="sessionUI.editSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: rgba(59, 130, 246, 0.2); border: none; border-radius: 2px; color: #3b82f6; cursor: pointer; font-size: 10px;" title="Edit">✏️</button>
+                            <button onclick="sessionUI.deleteSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: rgba(239, 68, 68, 0.2); border: none; border-radius: 2px; color: #ef4444; cursor: pointer; font-size: 10px;" title="Delete">🗑️</button>
+                        </div>
+                    ` : ''}
                 </div>
             `).join('');
 
