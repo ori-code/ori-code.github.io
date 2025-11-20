@@ -551,6 +551,9 @@ class SessionUI {
 
         modal.style.display = 'flex';
 
+        // Update controls visibility based on role (leader vs player)
+        this.updateControlsForRole();
+
         // Load participants
         await this.loadParticipants();
 
