@@ -430,15 +430,26 @@ class SessionUI {
 
         const button = document.getElementById('toggleLiveModeBtn');
         if (button) {
-            button.textContent = inLiveMode ? '📻 Live Mode: ON' : '📴 Live Mode: OFF';
+            button.textContent = inLiveMode ? '📻 Follow Leader: ON' : '📴 Follow Leader: OFF';
             button.style.background = inLiveMode ? '#10b981' : 'rgba(255,255,255,0.1)';
         }
 
+        // Update Return to Live button visibility
+        const returnBtn = document.getElementById('returnToLiveBtn');
+        if (returnBtn) {
+            returnBtn.style.display = inLiveMode ? 'none' : 'inline-block';
+        }
+
         const message = inLiveMode
-            ? '📻 Live mode ON - Following leader'
-            : '📴 Live mode OFF - Browse freely';
+            ? '📻 Following leader - Your key preferences are saved'
+            : '📴 Browse freely - Click "Return to Live" to sync';
 
         this.showToast(message);
+
+        // If turning ON live mode, load the leader's current song
+        if (inLiveMode && window.returnToLeaderSong) {
+            window.returnToLeaderSong();
+        }
     }
 
     /**
@@ -451,10 +462,21 @@ class SessionUI {
             await window.sessionManager.leaveSession();
             this.hideSessionActive();
             this.hideSessionControls();
+            this.hideLiveSessionBanner();
             this.showToast('👋 Left session');
 
         } catch (error) {
             console.error('Error leaving session:', error);
+        }
+    }
+
+    /**
+     * Hide the live session banner
+     */
+    hideLiveSessionBanner() {
+        const banner = document.getElementById('liveSessionBanner');
+        if (banner) {
+            banner.style.display = 'none';
         }
     }
 
@@ -468,6 +490,7 @@ class SessionUI {
             await window.sessionManager.endSession();
             this.hideSessionActive();
             this.hideSessionControls();
+            this.hideLiveSessionBanner();
             this.showToast('🛑 Session ended');
 
         } catch (error) {

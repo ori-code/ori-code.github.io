@@ -170,6 +170,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     let lastUploadPayload = null;
     let lastRawTranscription = '';
 
+    // Session live mode state
+    let currentSessionSongId = null; // ID of the song currently being displayed
+    let isFollowingLeader = true; // Whether user is following the leader's song
+
     // Expose function to set original key from song library
     window.setOriginalKey = (key) => {
         originalDetectedKey = key;
@@ -914,6 +918,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Update the live preview
         updateLivePreview();
 
+        // Save local transpose preference if in a session
+        if (window.sessionManager && window.sessionManager.activeSession && currentSessionSongId) {
+            window.sessionManager.setLocalTranspose(currentSessionSongId, currentTransposeSteps);
+            console.log(`🎵 Saved local transpose for session: ${currentTransposeSteps} steps`);
+        }
+
         console.log('═══════════════════════════════════════');
         console.log('✅ TRANSPOSE COMPLETE');
         console.log('═══════════════════════════════════════\n');
@@ -1005,6 +1015,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Update the live preview
             updateLivePreview();
+
+            // Save reset to local transpose preference if in a session
+            if (window.sessionManager && window.sessionManager.activeSession && currentSessionSongId) {
+                window.sessionManager.setLocalTranspose(currentSessionSongId, 0);
+                console.log('🎵 Reset local transpose for session');
+            }
         });
     }
 
@@ -1835,19 +1851,34 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     /**
      * Handle incoming song updates from leader (PLAYER only)
+     * @param {object} songData - Song data from leader
+     * @param {boolean} shouldDisplay - Whether to display the song (based on inLiveMode)
      */
-    function handleSongUpdateFromLeader(songData) {
+    function handleSongUpdateFromLeader(songData, shouldDisplay) {
         if (window.sessionManager.isLeader) return; // Leaders don't receive updates
 
-        console.log('📻 Received song from leader:', songData.name);
+        console.log('📻 Received song from leader:', songData.name, 'shouldDisplay:', shouldDisplay);
 
-        // Update visual editor
+        // Always update the "Now Playing" banner
+        updateNowPlayingBanner(songData.name, !shouldDisplay);
+
+        // If not in live mode, just update the banner but don't change the content
+        if (!shouldDisplay) {
+            console.log('📴 Not following leader - content unchanged');
+            return;
+        }
+
+        // We're in live mode - display the leader's song
+        isFollowingLeader = true;
+        currentSessionSongId = songData.songId;
+
+        // Update visual editor with original content (before any transpose)
         const visualEditor = document.getElementById('visualEditor');
         if (visualEditor) {
             visualEditor.value = songData.content;
         }
 
-        // Update key selector
+        // Update key selector with original key
         const keySelector = document.getElementById('keySelector');
         if (keySelector) {
             keySelector.value = songData.originalKey;
@@ -1862,14 +1893,66 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Update song name
         currentSongName = songData.name;
 
-        // Apply transpose if leader has transposed
-        if (songData.transposeSteps && songData.transposeSteps !== 0) {
-            globalTransposeSteps = songData.transposeSteps;
+        // Set baseline for transposition (always use original content)
+        baselineChart = songData.content;
+        baselineVisualContent = songData.content;
+        originalDetectedKey = songData.originalKey;
+        currentTransposeSteps = 0;
+
+        // Regenerate preview first
+        generateSongbookFormat();
+
+        // Apply user's local transpose preference for this song (if any)
+        const localTranspose = window.sessionManager.getLocalTranspose(songData.songId);
+        if (localTranspose !== 0) {
+            console.log(`🎵 Applying user's local transpose: ${localTranspose} steps`);
+            applyTranspose(localTranspose);
+        }
+    }
+
+    /**
+     * Update the "Now Playing" banner
+     * @param {string} songName - Name of the current song
+     * @param {boolean} showReturnButton - Whether to show the "Return to Live" button
+     */
+    function updateNowPlayingBanner(songName, showReturnButton) {
+        const nowPlayingBanner = document.getElementById('liveSessionBanner');
+        const nowPlayingSong = document.getElementById('nowPlayingSong');
+        const returnToLiveBtn = document.getElementById('returnToLiveBtn');
+
+        if (!nowPlayingBanner) return;
+
+        if (songName) {
+            nowPlayingBanner.style.display = 'flex';
+            if (nowPlayingSong) nowPlayingSong.textContent = songName;
+            if (returnToLiveBtn) returnToLiveBtn.style.display = showReturnButton ? 'inline-block' : 'none';
+        } else {
+            nowPlayingBanner.style.display = 'none';
+        }
+    }
+
+    /**
+     * Return to leader's current song (for "Return to Live" feature)
+     */
+    function returnToLeaderSong() {
+        const leaderSong = window.sessionManager.getLeaderCurrentSong();
+        if (!leaderSong) {
+            console.log('⚠️ No leader song available');
+            return;
         }
 
-        // Regenerate preview
-        generateSongbookFormat();
+        // Enable live mode
+        window.sessionManager.setLiveMode(true);
+        isFollowingLeader = true;
+
+        // Load the leader's song
+        handleSongUpdateFromLeader(leaderSong, true);
+
+        console.log('↩️ Returned to leader song:', leaderSong.name);
     }
+
+    // Expose returnToLeaderSong globally for UI access
+    window.returnToLeaderSong = returnToLeaderSong;
 
     /**
      * Add current song to session playlist (LEADER only)

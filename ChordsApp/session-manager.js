@@ -8,7 +8,8 @@ class SessionManager {
         this.isLeader = false;
         this.listeners = [];
         this.inLiveMode = true; // Players follow leader by default
-        this.localTranspose = 0; // Player's local transpose
+        this.localTransposeMap = {}; // { songId: transposeSteps } - user's transpose per song
+        this.leaderCurrentSong = null; // Cache of leader's current song
         this.database = firebase.database();
     }
 
@@ -172,9 +173,12 @@ class SessionManager {
         const songListener = songRef.on('value', (snapshot) => {
             const songData = snapshot.val();
 
-            if (songData && this.inLiveMode && !this.isLeader) {
+            if (songData && !this.isLeader) {
+                // Always cache the leader's current song
+                this.leaderCurrentSong = songData;
                 console.log('📻 Received song update from leader:', songData.name);
-                this.onSongUpdate(songData);
+                // Always notify - let app.js decide whether to display based on inLiveMode
+                this.onSongUpdate(songData, this.inLiveMode);
             }
         });
 
@@ -306,6 +310,44 @@ class SessionManager {
     }
 
     /**
+     * Set local transpose for a specific song
+     * @param {string} songId - Song identifier
+     * @param {number} steps - Transpose steps
+     */
+    setLocalTranspose(songId, steps) {
+        this.localTransposeMap[songId] = steps;
+        console.log(`🎵 Set local transpose for ${songId}: ${steps} steps`);
+    }
+
+    /**
+     * Get local transpose for a specific song
+     * @param {string} songId - Song identifier
+     * @returns {number} Transpose steps (0 if not set)
+     */
+    getLocalTranspose(songId) {
+        return this.localTransposeMap[songId] || 0;
+    }
+
+    /**
+     * Get the leader's current song (for "Return to Live" feature)
+     * @returns {object|null} Current song data or null
+     */
+    getLeaderCurrentSong() {
+        return this.leaderCurrentSong;
+    }
+
+    /**
+     * Set live mode directly (for "Return to Live" feature)
+     * @param {boolean} enabled - Whether to enable live mode
+     */
+    setLiveMode(enabled) {
+        if (this.isLeader) return;
+        this.inLiveMode = enabled;
+        console.log(`${this.inLiveMode ? '📻 Entered' : '📴 Exited'} live mode`);
+        return this.inLiveMode;
+    }
+
+    /**
      * Leave session
      */
     async leaveSession() {
@@ -406,14 +448,17 @@ class SessionManager {
         this.activeSession = null;
         this.isLeader = false;
         this.inLiveMode = true;
-        this.localTranspose = 0;
+        this.localTransposeMap = {};
+        this.leaderCurrentSong = null;
     }
 
     /**
      * Callback when song is updated (override in implementation)
+     * @param {object} songData - Song data from leader
+     * @param {boolean} shouldDisplay - Whether to display the song (based on inLiveMode)
      */
-    onSongUpdate(songData) {
-        console.log('Song update received:', songData);
+    onSongUpdate(songData, shouldDisplay) {
+        console.log('Song update received:', songData, 'shouldDisplay:', shouldDisplay);
         // Override this in app.js to update the UI
     }
 
