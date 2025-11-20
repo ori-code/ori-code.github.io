@@ -39,10 +39,10 @@
 
     // Live Sessions - Public read for participants, leader can write
     "sessions": {
+      ".read": "auth != null",
       ".indexOn": ["metadata/sessionCode"],
 
       "$sessionId": {
-        ".read": "auth != null",
         // Allow creating new sessions OR leader updating their session
         ".write": "auth != null && (!data.exists() || data.child('metadata/leaderId').val() === auth.uid)",
 
