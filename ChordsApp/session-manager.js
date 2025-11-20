@@ -247,6 +247,7 @@ class SessionManager {
 
         await playlistRef.set({
             name: songData.name,
+            content: songData.content || '',
             originalKey: songData.originalKey || 'Unknown',
             bpm: songData.bpm || null,
             addedAt: Date.now(),

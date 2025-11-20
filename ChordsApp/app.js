@@ -2038,17 +2038,46 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Callback for loading song from playlist (called from session-ui.js)
     window.onLoadSongFromPlaylist = async (songId) => {
+        // Get song from playlist
+        const playlist = await window.sessionManager.getPlaylist();
+        const song = playlist.find(s => s.id === songId);
+
+        if (!song || !song.content) {
+            alert('Song content not available');
+            return;
+        }
+
+        // Load the song into the editor
+        const visualEditor = document.getElementById('visualEditor');
+        const keySelector = document.getElementById('keySelector');
+        const bpmInput = document.getElementById('bpmInput');
+
+        if (visualEditor) {
+            visualEditor.value = song.content;
+        }
+
+        if (keySelector && song.originalKey) {
+            keySelector.value = song.originalKey;
+        }
+
+        if (bpmInput && song.bpm) {
+            bpmInput.value = song.bpm;
+        }
+
+        // Update state
+        currentSongName = song.name;
+        baselineChart = song.content;
+        baselineVisualContent = song.content;
+        originalDetectedKey = song.originalKey || '';
+        currentTransposeSteps = 0;
+
+        // Regenerate preview
+        generateSongbookFormat();
+
         // If leader, broadcast this song
         if (window.sessionManager && window.sessionManager.isLeader) {
-            // Get song from playlist
-            const playlist = await window.sessionManager.getPlaylist();
-            const song = playlist.find(s => s.id === songId);
-
-            if (song) {
-                // Load the full song data from user's library if available
-                // For now, just show a message
-                alert(`Loading: ${song.name}\n\nNote: This will load from your song library once integrated.`);
-            }
+            await broadcastCurrentSong();
+            console.log(`📡 Loaded and broadcast: ${song.name}`);
         }
 
         // Close the session controls modal
