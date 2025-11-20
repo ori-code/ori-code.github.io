@@ -39,13 +39,17 @@
 
     // Live Sessions - Public read for participants, leader can write
     "sessions": {
+      ".indexOn": ["metadata/sessionCode"],
+
       "$sessionId": {
         ".read": "auth != null",
-        ".write": "auth != null && (!data.exists() || data.child('metadata').child('leaderId').val() === auth.uid)",
+        // Allow creating new sessions OR leader updating their session
+        ".write": "auth != null && (!data.exists() || data.child('metadata/leaderId').val() === auth.uid)",
 
+        // Participants - anyone can write their own entry (overrides parent rule)
         "participants": {
           "$participantUid": {
-            ".write": "$participantUid === auth.uid"
+            ".write": "auth != null && $participantUid === auth.uid"
           }
         }
       }
