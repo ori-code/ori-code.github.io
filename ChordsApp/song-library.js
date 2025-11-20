@@ -280,6 +280,54 @@
                 songInfo.appendChild(songKey);
             }
 
+            // Add to Session button
+            const addToSessionBtn = document.createElement('button');
+            addToSessionBtn.textContent = '➕';
+            addToSessionBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease; margin-right: 4px;';
+            addToSessionBtn.title = 'Add to session playlist';
+
+            addToSessionBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                // Check if user has an active session or is PRO
+                if (!window.sessionManager) {
+                    showMessage('Error', 'Session manager not available', 'error');
+                    return;
+                }
+
+                // Store song data globally for session-ui to use
+                window.pendingSongToAdd = {
+                    name: song.name,
+                    content: song.baselineChart || song.songbookFormat || song.content,
+                    originalKey: song.originalKey || 'Unknown',
+                    bpm: song.bpm || null
+                };
+
+                // Close load song modal
+                loadSongModal.style.display = 'none';
+
+                // Open My Sessions modal
+                const mySessionsModal = document.getElementById('mySessionsModal');
+                if (mySessionsModal) {
+                    mySessionsModal.style.display = 'flex';
+                    // Trigger loading sessions if function exists
+                    if (window.loadMySessions) {
+                        window.loadMySessions();
+                    }
+                    showMessage('Info', `Select a session to add "${song.name}"`, 'info');
+                } else {
+                    showMessage('Error', 'Sessions modal not found', 'error');
+                }
+            });
+
+            addToSessionBtn.addEventListener('mouseenter', () => {
+                addToSessionBtn.style.background = 'rgba(79, 209, 139, 0.2)';
+            });
+
+            addToSessionBtn.addEventListener('mouseleave', () => {
+                addToSessionBtn.style.background = 'transparent';
+            });
+
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = '🗑️';
             deleteBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease;';
@@ -315,6 +363,7 @@
             });
 
             songItem.appendChild(songInfo);
+            songItem.appendChild(addToSessionBtn);
             songItem.appendChild(deleteBtn);
 
             // Load song on click
@@ -334,6 +383,9 @@
                     id: song.id,
                     name: song.name
                 };
+
+                // Set global song name for session-ui
+                window.currentSongName = song.name;
 
                 if (baseline) {
                     // Dispatch custom event - app.js will use ANALYZE logic

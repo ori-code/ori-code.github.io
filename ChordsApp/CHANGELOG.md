@@ -1,5 +1,19 @@
 # ChordsApp Changelog
 
+## v1.5 - 2025-01-20
+### Added
+- **Add to Session from Library:**
+  - New "➕" button on each song in Load Song modal
+  - Add songs directly to session playlist without loading into editor
+  - Opens My Sessions modal with song pre-selected
+  - Automatically pre-fills song name for quick adding
+
+### Improved
+- **Session Song Management:**
+  - Song content now saved with playlist items
+  - Playlist refresh after adding new songs
+  - Better handling of pending song data
+
 ## v1.4 - 2025-01-20
 ### Added
 - **Independent Transpose for Live Sessions:**

@@ -169,10 +169,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
     let originalDetectedKey = ''; // Store the original key before any transposition
     let lastUploadPayload = null;
     let lastRawTranscription = '';
+    let currentSongName = ''; // Current song name - also exposed to window
 
     // Session live mode state
     let currentSessionSongId = null; // ID of the song currently being displayed
     let isFollowingLeader = true; // Whether user is following the leader's song
+
+    // Expose currentSongName to window for session-ui.js
+    Object.defineProperty(window, 'currentSongName', {
+        get: () => currentSongName,
+        set: (value) => { currentSongName = value; }
+    });
 
     // Expose function to set original key from song library
     window.setOriginalKey = (key) => {

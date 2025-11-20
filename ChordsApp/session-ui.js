@@ -69,6 +69,8 @@ class SessionUI {
         if (modal) {
             modal.style.display = 'none';
         }
+        // Clear any pending song to add
+        window.pendingSongToAdd = null;
     }
 
     /**
@@ -110,6 +112,14 @@ class SessionUI {
                                             style="padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
                                         🔄 Reactivate
                                     </button>
+                                    <div style="display: flex; gap: 4px;">
+                                        <button onclick="sessionUI.editSession('${session.id}', '${session.title.replace(/'/g, "\\'")}')"
+                                                style="flex: 1; padding: 6px 8px; background: rgba(59, 130, 246, 0.2); border: none; border-radius: 4px; color: #3b82f6; cursor: pointer; font-size: 11px;"
+                                                title="Rename">✏️</button>
+                                        <button onclick="sessionUI.deleteSession('${session.id}', '${session.title.replace(/'/g, "\\'")}')"
+                                                style="flex: 1; padding: 6px 8px; background: rgba(239, 68, 68, 0.2); border: none; border-radius: 4px; color: #ef4444; cursor: pointer; font-size: 11px;"
+                                                title="Delete">🗑️</button>
+                                    </div>
                                 ` : `
                                     <button onclick="sessionUI.joinSessionById('${session.id}')"
                                             style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
@@ -118,6 +128,16 @@ class SessionUI {
                                 `}
                             </div>
                         </div>
+                        ${session.isOwner ? `
+                            <div style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+                                <button onclick="sessionUI.toggleSessionPlaylist('${session.id}', this)"
+                                        style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 4px 0; width: 100%; text-align: left;">
+                                    ▶ Show Playlist
+                                </button>
+                                <div id="playlist-${session.id}" style="display: none; margin-top: 8px; max-height: 300px; overflow-y: auto;">
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
@@ -125,6 +145,175 @@ class SessionUI {
         } catch (error) {
             console.error('Error loading sessions:', error);
             sessionsList.innerHTML = '<p style="text-align: center; color: var(--primary);">Error loading sessions</p>';
+        }
+    }
+
+    /**
+     * Edit session title
+     */
+    async editSession(sessionId, currentTitle) {
+        const newTitle = prompt('Edit session name:', currentTitle);
+        if (!newTitle || newTitle === currentTitle) return;
+
+        try {
+            // Update in both places: the session itself and user's session list
+            await firebase.database().ref(`sessions/${sessionId}/metadata/title`).set(newTitle);
+            await firebase.database().ref(`users/${firebase.auth().currentUser.uid}/sessions/${sessionId}/title`).set(newTitle);
+
+            this.showToast(`✅ Renamed to "${newTitle}"`);
+            await this.loadUserSessions();
+        } catch (error) {
+            console.error('Error editing session:', error);
+            alert('❌ Failed to rename session');
+        }
+    }
+
+    /**
+     * Delete session
+     */
+    async deleteSession(sessionId, sessionTitle) {
+        if (!confirm(`Delete "${sessionTitle}"?\n\nThis will permanently remove the session and all its data.`)) return;
+
+        try {
+            // Delete from user's session list
+            await firebase.database().ref(`users/${firebase.auth().currentUser.uid}/sessions/${sessionId}`).remove();
+
+            // Delete the session itself (only if user is the leader)
+            await firebase.database().ref(`sessions/${sessionId}`).remove();
+
+            this.showToast(`🗑️ "${sessionTitle}" deleted`);
+            await this.loadUserSessions();
+        } catch (error) {
+            console.error('Error deleting session:', error);
+            alert('❌ Failed to delete session');
+        }
+    }
+
+    /**
+     * Toggle session playlist visibility
+     */
+    async toggleSessionPlaylist(sessionId, button) {
+        const playlistEl = document.getElementById(`playlist-${sessionId}`);
+        if (!playlistEl) return;
+
+        const isHidden = playlistEl.style.display === 'none';
+
+        if (isHidden) {
+            playlistEl.style.display = 'block';
+            button.textContent = '▼ Hide Playlist';
+            await this.loadSessionPlaylistInline(sessionId);
+        } else {
+            playlistEl.style.display = 'none';
+            button.textContent = '▶ Show Playlist';
+        }
+    }
+
+    /**
+     * Load session playlist inline (in My Sessions modal)
+     */
+    async loadSessionPlaylistInline(sessionId) {
+        const playlistEl = document.getElementById(`playlist-${sessionId}`);
+        if (!playlistEl) return;
+
+        playlistEl.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 12px;">Loading...</p>';
+
+        try {
+            const snapshot = await firebase.database().ref(`sessions/${sessionId}/playlist`).once('value');
+            const playlistData = snapshot.val() || {};
+
+            const playlist = Object.entries(playlistData)
+                .map(([id, data]) => ({ id, ...data }))
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            if (playlist.length === 0) {
+                playlistEl.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 12px;">No songs yet</p>';
+                return;
+            }
+
+            playlistEl.innerHTML = playlist.map((song, index) => `
+                <div style="display: flex; align-items: center; gap: 6px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; margin-bottom: 4px; font-size: 12px;">
+                    <span style="color: var(--text-muted); min-width: 20px;">${index + 1}.</span>
+                    <span style="flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${song.name}</span>
+                    <span style="color: var(--text-muted); font-size: 10px;">${song.originalKey || ''}</span>
+                    <div style="display: flex; gap: 2px;">
+                        ${index > 0 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', -1)" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: var(--text-muted); cursor: pointer; font-size: 10px;" title="Move up">↑</button>` : ''}
+                        ${index < playlist.length - 1 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', 1)" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: var(--text-muted); cursor: pointer; font-size: 10px;" title="Move down">↓</button>` : ''}
+                        <button onclick="sessionUI.editSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: rgba(59, 130, 246, 0.2); border: none; border-radius: 2px; color: #3b82f6; cursor: pointer; font-size: 10px;" title="Edit">✏️</button>
+                        <button onclick="sessionUI.deleteSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: rgba(239, 68, 68, 0.2); border: none; border-radius: 2px; color: #ef4444; cursor: pointer; font-size: 10px;" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (error) {
+            console.error('Error loading session playlist:', error);
+            playlistEl.innerHTML = '<p style="text-align: center; color: #ef4444; font-size: 12px;">Error loading playlist</p>';
+        }
+    }
+
+    /**
+     * Edit song in session playlist
+     */
+    async editSessionSong(sessionId, songId, currentName) {
+        const newName = prompt('Edit song name:', currentName);
+        if (!newName || newName === currentName) return;
+
+        try {
+            await firebase.database().ref(`sessions/${sessionId}/playlist/${songId}/name`).set(newName);
+            this.showToast(`✅ Renamed to "${newName}"`);
+            await this.loadSessionPlaylistInline(sessionId);
+        } catch (error) {
+            console.error('Error editing song:', error);
+            alert('❌ Failed to edit song');
+        }
+    }
+
+    /**
+     * Delete song from session playlist
+     */
+    async deleteSessionSong(sessionId, songId, songName) {
+        if (!confirm(`Delete "${songName}" from playlist?`)) return;
+
+        try {
+            await firebase.database().ref(`sessions/${sessionId}/playlist/${songId}`).remove();
+            this.showToast(`🗑️ "${songName}" removed`);
+            await this.loadSessionPlaylistInline(sessionId);
+        } catch (error) {
+            console.error('Error deleting song:', error);
+            alert('❌ Failed to delete song');
+        }
+    }
+
+    /**
+     * Move song up or down in session playlist
+     */
+    async moveSessionSong(sessionId, songId, direction) {
+        try {
+            // Get current playlist
+            const snapshot = await firebase.database().ref(`sessions/${sessionId}/playlist`).once('value');
+            const playlistData = snapshot.val() || {};
+
+            const playlist = Object.entries(playlistData)
+                .map(([id, data]) => ({ id, ...data }))
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            // Find current index
+            const currentIndex = playlist.findIndex(s => s.id === songId);
+            if (currentIndex === -1) return;
+
+            const newIndex = currentIndex + direction;
+            if (newIndex < 0 || newIndex >= playlist.length) return;
+
+            // Swap orders
+            const currentOrder = playlist[currentIndex].order || currentIndex;
+            const swapOrder = playlist[newIndex].order || newIndex;
+
+            await firebase.database().ref(`sessions/${sessionId}/playlist/${songId}/order`).set(swapOrder);
+            await firebase.database().ref(`sessions/${sessionId}/playlist/${playlist[newIndex].id}/order`).set(currentOrder);
+
+            await this.loadSessionPlaylistInline(sessionId);
+        } catch (error) {
+            console.error('Error moving song:', error);
+            alert('❌ Failed to move song');
         }
     }
 
@@ -234,32 +423,55 @@ class SessionUI {
      */
     async addCurrentSongToSession(sessionId) {
         try {
-            // Get current song data from the editor
-            const visualEditor = document.getElementById('visualEditor');
-            const keySelector = document.getElementById('keySelector');
-            const bpmInput = document.getElementById('bpmInput');
+            let songData;
+            let defaultName = '';
 
-            // Check if there's a song loaded
-            if (!visualEditor || !visualEditor.value.trim()) {
-                alert('⚠️ No song loaded. Please analyze or load a song first.');
-                return;
-            }
+            // Check if there's a pending song from library
+            if (window.pendingSongToAdd) {
+                // Use the pending song data
+                defaultName = window.pendingSongToAdd.name || '';
+                const songName = prompt('Enter song name:', defaultName);
+                if (!songName) {
+                    window.pendingSongToAdd = null; // Clear pending
+                    return;
+                }
 
-            // Get song name from global variable or prompt user
-            let songName = window.currentSongName || '';
-            if (!songName) {
-                songName = prompt('Enter song name:');
+                songData = {
+                    id: `song_${Date.now()}`,
+                    name: songName,
+                    content: window.pendingSongToAdd.content || '',
+                    originalKey: window.pendingSongToAdd.originalKey || 'Unknown',
+                    bpm: window.pendingSongToAdd.bpm || null
+                };
+
+                // Clear pending song after use
+                window.pendingSongToAdd = null;
+            } else {
+                // Get current song data from the editor
+                const visualEditor = document.getElementById('visualEditor');
+                const keySelector = document.getElementById('keySelector');
+                const bpmInput = document.getElementById('bpmInput');
+
+                // Check if there's a song loaded
+                if (!visualEditor || !visualEditor.value.trim()) {
+                    alert('⚠️ No song loaded. Please analyze or load a song first.');
+                    return;
+                }
+
+                // Get song name - pre-fill with current name but allow editing
+                defaultName = window.currentSongName || '';
+                const songName = prompt('Enter song name:', defaultName);
                 if (!songName) return;
-            }
 
-            // Prepare song data
-            const songData = {
-                id: `song_${Date.now()}`,
-                name: songName,
-                content: visualEditor.value,
-                originalKey: keySelector ? keySelector.value : 'Unknown',
-                bpm: bpmInput ? parseInt(bpmInput.value) || null : null
-            };
+                // Prepare song data
+                songData = {
+                    id: `song_${Date.now()}`,
+                    name: songName,
+                    content: visualEditor.value,
+                    originalKey: keySelector ? keySelector.value : 'Unknown',
+                    bpm: bpmInput ? parseInt(bpmInput.value) || null : null
+                };
+            }
 
             // Add to session playlist
             const playlistRef = firebase.database().ref(`sessions/${sessionId}/playlist/${songData.id}`);
@@ -271,13 +483,20 @@ class SessionUI {
 
             await playlistRef.set({
                 name: songData.name,
+                content: songData.content,
                 originalKey: songData.originalKey,
                 bpm: songData.bpm,
                 addedAt: Date.now(),
                 order: order
             });
 
-            this.showToast(`✅ "${songName}" added to session playlist`);
+            this.showToast(`✅ "${songData.name}" added to session playlist`);
+
+            // Refresh playlist if visible
+            const playlistEl = document.getElementById(`playlist-${sessionId}`);
+            if (playlistEl && playlistEl.style.display !== 'none') {
+                await this.loadSessionPlaylistInline(sessionId);
+            }
 
         } catch (error) {
             console.error('Error adding song to session:', error);
@@ -392,17 +611,26 @@ class SessionUI {
                 return;
             }
 
+            const isLeader = window.sessionManager && window.sessionManager.isLeader;
+
             playlistEl.innerHTML = playlist.map((song, index) => {
                 return `
-                    <div class="playlist-song-item" style="display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 8px; cursor: pointer;"
-                         onclick="sessionUI.loadSongFromPlaylist('${song.id}')">
+                    <div class="playlist-song-item" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 8px;">
                         <div style="min-width: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">
                             ${index + 1}
                         </div>
-                        <div style="flex: 1;">
+                        <div style="flex: 1; cursor: pointer;" onclick="sessionUI.loadSongFromPlaylist('${song.id}')">
                             <div style="color: var(--text); font-size: 14px; font-weight: 500;">${song.name}</div>
                             <div style="color: var(--text-muted); font-size: 12px;">${song.originalKey}${song.bpm ? ` • ${song.bpm} BPM` : ''}</div>
                         </div>
+                        ${isLeader ? `
+                            <button onclick="event.stopPropagation(); sessionUI.editPlaylistSong('${song.id}', '${song.name.replace(/'/g, "\\'")}');"
+                                    style="padding: 6px 8px; background: rgba(59, 130, 246, 0.2); border: none; border-radius: 4px; color: #3b82f6; cursor: pointer; font-size: 12px;"
+                                    title="Edit name">✏️</button>
+                            <button onclick="event.stopPropagation(); sessionUI.deletePlaylistSong('${song.id}', '${song.name.replace(/'/g, "\\'")}');"
+                                    style="padding: 6px 8px; background: rgba(239, 68, 68, 0.2); border: none; border-radius: 4px; color: #ef4444; cursor: pointer; font-size: 12px;"
+                                    title="Delete">🗑️</button>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
@@ -419,6 +647,44 @@ class SessionUI {
         // This will be handled in app.js
         if (window.onLoadSongFromPlaylist) {
             window.onLoadSongFromPlaylist(songId);
+        }
+    }
+
+    /**
+     * Edit song name in playlist (LEADER only)
+     */
+    async editPlaylistSong(songId, currentName) {
+        if (!window.sessionManager || !window.sessionManager.isLeader) return;
+
+        const newName = prompt('Edit song name:', currentName);
+        if (!newName || newName === currentName) return;
+
+        try {
+            const sessionId = window.sessionManager.activeSession;
+            await firebase.database().ref(`sessions/${sessionId}/playlist/${songId}/name`).set(newName);
+            this.showToast(`✅ Renamed to "${newName}"`);
+            await this.loadPlaylist();
+        } catch (error) {
+            console.error('Error editing song:', error);
+            alert('❌ Failed to edit song');
+        }
+    }
+
+    /**
+     * Delete song from playlist (LEADER only)
+     */
+    async deletePlaylistSong(songId, songName) {
+        if (!window.sessionManager || !window.sessionManager.isLeader) return;
+
+        if (!confirm(`Delete "${songName}" from playlist?`)) return;
+
+        try {
+            await window.sessionManager.removeSongFromPlaylist(songId);
+            this.showToast(`🗑️ "${songName}" removed`);
+            await this.loadPlaylist();
+        } catch (error) {
+            console.error('Error deleting song:', error);
+            alert('❌ Failed to delete song');
         }
     }
 
@@ -541,5 +807,10 @@ class SessionUI {
 // Initialize and expose globally
 const sessionUI = new SessionUI();
 window.sessionUI = sessionUI;
+
+// Expose loadUserSessions for song-library.js to call
+window.loadMySessions = async function() {
+    await sessionUI.loadUserSessions();
+};
 
 console.log('✅ Session UI initialized');
