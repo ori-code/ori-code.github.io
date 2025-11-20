@@ -1,5 +1,17 @@
 # ChordsApp Changelog
 
+## v1.4 - 2025-01-20
+### Added
+- **Independent Transpose for Live Sessions:**
+  - Each participant can transpose songs to their preferred key
+  - Transpose preferences saved per song during session
+  - "Now Playing" banner shows leader's current song
+  - "Return to Live" button to sync back to leader
+  - "Follow Leader" toggle for browse/sync control
+
+### Fixed
+- Firebase rules for session participant joining
+
 ## v1.3 - 2025-01-07
 ### Added
 - **Search and Filter for Song Library:**
