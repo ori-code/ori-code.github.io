@@ -106,6 +106,14 @@ const liveMode = {
     },
 
     /**
+     * Detect if text contains RTL characters (Hebrew, Arabic, etc.)
+     */
+    detectRTL(text) {
+        const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+        return rtlChars.test(text);
+    },
+
+    /**
      * Update the song display
      */
     updateDisplay() {
@@ -116,6 +124,13 @@ const liveMode = {
 
         if (chartDisplay) {
             chartDisplay.textContent = this.currentSongContent;
+
+            // Apply RTL/LTR direction based on content
+            const isRTL = this.detectRTL(this.currentSongContent);
+            const direction = isRTL ? 'rtl' : 'ltr';
+            chartDisplay.setAttribute('dir', direction);
+            chartDisplay.style.direction = direction;
+            chartDisplay.style.textAlign = isRTL ? 'right' : 'left';
         }
 
         if (songNameEl) {
