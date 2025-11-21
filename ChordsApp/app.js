@@ -596,6 +596,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 mimeType
             };
 
+            // Check if intense mode is enabled (Pro users only)
+            const intenseScanCheckbox = document.getElementById('intenseScanCheckbox');
+            const intenseMode = intenseScanCheckbox ? intenseScanCheckbox.checked : false;
+
             // Call the Vercel serverless API
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -604,7 +608,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 },
                 body: JSON.stringify({
                     imageData: base64Data,
-                    mimeType: mimeType
+                    mimeType: mimeType,
+                    intenseMode: intenseMode
                 })
             });
 
@@ -1110,6 +1115,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
             setStatus('processing', 'Re-analyzing with your feedback…');
             reanalyzeButton.disabled = true;
 
+            // Check if intense mode is enabled
+            const intenseScanCheckbox = document.getElementById('intenseScanCheckbox');
+            const intenseMode = intenseScanCheckbox ? intenseScanCheckbox.checked : false;
+
             fetch(API_URL, {
                 method: 'POST',
                 headers: {
@@ -1119,7 +1128,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     imageData: lastUploadPayload.base64Data,
                     mimeType: lastUploadPayload.mimeType,
                     feedback,
-                    previousTranscription: lastRawTranscription
+                    previousTranscription: lastRawTranscription,
+                    intenseMode: intenseMode
                 })
             })
                 .then(async (response) => {
@@ -1807,6 +1817,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
         if (window.updateSaveButtonState) {
             window.updateSaveButtonState();
         }
+
+        // Update intense scan option visibility
+        const intenseScanOption = document.getElementById('intenseScanOption');
+        if (intenseScanOption && window.subscriptionManager) {
+            const isPro = window.subscriptionManager.getCurrentTier() === 'PRO';
+            intenseScanOption.style.display = isPro ? 'block' : 'none';
+        }
     }
 
     // Initialize subscription system
@@ -1822,6 +1839,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 await window.sessionManager.init(user);
                 updateSessionButtonsVisibility();
 
+                // Show intense scan option for Pro users
+                const intenseScanOption = document.getElementById('intenseScanOption');
+                if (intenseScanOption) {
+                    const isPro = window.subscriptionManager.getCurrentTier() === 'PRO';
+                    intenseScanOption.style.display = isPro ? 'block' : 'none';
+                }
+
                 // Initialize PayPal buttons
                 await initPayPalButtons();
             } else {
@@ -1836,6 +1860,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const upgradeButton = document.getElementById('upgradeButton');
                 if (upgradeButton) {
                     upgradeButton.style.display = 'none';
+                }
+
+                // Hide intense scan option
+                const intenseScanOption = document.getElementById('intenseScanOption');
+                if (intenseScanOption) {
+                    intenseScanOption.style.display = 'none';
                 }
 
                 // Hide session buttons

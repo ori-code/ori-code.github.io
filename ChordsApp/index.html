@@ -92,6 +92,10 @@
                     <h3>AI transcription ready!</h3>
                     <p>Edit visually in the bottom Editor.</p>
                     <button id="analyzeButton" class="primary-action" disabled>Analyze</button>
+                    <label id="intenseScanOption" style="display: none; margin-top: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="intenseScanCheckbox" style="margin-right: 6px; cursor: pointer;">
+                        <span style="color: #f59e0b;">⚡</span> Intense Scan <span style="color: var(--text-muted); font-size: 0.75rem;">(Pro - better for hard scans)</span>
+                    </label>
                     <div class="status-panel" id="analysisStatus" role="status" aria-live="polite">
                         <span class="status-dot idle"></span>
                         <span class="status-text">Waiting for an upload…</span>

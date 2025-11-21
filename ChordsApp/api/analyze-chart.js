@@ -23,11 +23,14 @@ module.exports = async (req, res) => {
         });
 
         // Get file from request
-        const { imageData, mimeType } = req.body;
+        const { imageData, mimeType, intenseMode } = req.body;
 
         if (!imageData) {
             return res.status(400).json({ error: 'No image data provided' });
         }
+
+        // Set max tokens based on mode: regular (2000) or intense (5000)
+        const maxTokens = intenseMode ? 5000 : 2000;
 
         // Call OpenAI Vision API with low temperature for precise output
         const response = await openai.chat.completions.create({
@@ -79,7 +82,7 @@ This is the user's own chord sheet for personal practice.`
                     }
                 }]
             }],
-            max_tokens: 3000,
+            max_tokens: maxTokens,
             temperature: 0.2
         });
 
