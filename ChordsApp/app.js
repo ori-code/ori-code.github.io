@@ -702,11 +702,21 @@ Our [Em7]hearts will cry, these bones will [D]sing
             console.log('🔄 Transposing plain chord format (line-by-line)');
             const lines = source.split('\n');
             const transposedLines = lines.map((line, index) => {
-                // Check if this line looks like a chord line (contains chord patterns)
-                // Chord pattern: starts with chords like B, C#m, Dm, F#, etc.
-                const hasOnlyChords = /^[\s]*([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?[\s()]*)+[\s]*$/;
+                // Check if this line looks like a chord line
+                // More flexible detection: line with mostly chords and whitespace
 
-                if (hasOnlyChords.test(line)) {
+                // Strict pattern for pure chord lines
+                const hasOnlyChords = /^[\s]*([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?[\s()|\-\.]*)+[\s]*$/;
+
+                // Also check: if line has multiple chord patterns and is mostly uppercase/symbols
+                const chordPattern = /[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?/g;
+                const chords = line.match(chordPattern) || [];
+                const hasMultipleChords = chords.length >= 2;
+                const isShortLine = line.trim().length < 50;
+                const hasFewLowercase = (line.match(/[a-z]/g) || []).length < 5;
+                const looksLikeChordLine = hasMultipleChords && isShortLine && hasFewLowercase;
+
+                if (hasOnlyChords.test(line) || looksLikeChordLine) {
                     console.log(`  📝 Line ${index} is chord line:`, line.substring(0, 60));
                     // This is a chord line - transpose each chord
                     const transposed = line.replace(/([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g, (match, chord) => {
@@ -727,6 +737,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return result;
         }
     };
+
+    // Expose transposeChart globally for live-mode.js
+    window.transposeChart = transposeChart;
 
     const transposeChord = (symbol, semitoneShift) => {
         if (!symbol) {
@@ -1291,6 +1304,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
         element.style.unicodeBidi = 'plaintext';
     }
 
+    // Expose setDirectionalLayout globally for live-mode.js
+    window.setDirectionalLayout = setDirectionalLayout;
+
     const convertVisualToSongBook = (visualText) => {
         // Convert above-line format back to inline [C] format
         if (!visualText.trim()) return '';
@@ -1434,11 +1450,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
         return result.join('\n');
     };
 
-    // Add Nashville numbers after bold chords (e.g., <b>E1</b>)
+    // Add Nashville numbers after bold chords (e.g., <b>C | 1</b> for LTR, <b>1 | C</b> for RTL)
     const addNashvilleNumbers = (content, key) => {
         console.log('addNashvilleNumbers called with key:', key);
         const lines = content.split('\n');
         const result = [];
+
+        // Detect if content is RTL (Hebrew, Arabic, etc.)
+        const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+        const isRTL = rtlChars.test(content);
 
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
@@ -1452,12 +1472,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Pattern to find bold chords: <b>ChordName</b>
             const boldChordPattern = /<b>([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)<\/b>/g;
 
-            // Add Nashville numbers inside the bold tags
+            // Add Nashville numbers inside the bold tags with pipe separator
             line = line.replace(boldChordPattern, (match, chord) => {
                 const number = chordToNashville(chord, key);
                 if (number) {
                     console.log(`Chord: ${chord} -> Number: ${number}`);
-                    return `<b>${chord}${number}</b>`;
+                    // Format based on text direction: LTR = "C | 1", RTL = "1 | C"
+                    if (isRTL) {
+                        return `<b>${number} | ${chord}</b>`;
+                    } else {
+                        return `<b>${chord} | ${number}</b>`;
+                    }
                 }
                 return match;
             });
@@ -1514,11 +1539,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const titleIndex = lines.findIndex(line => line.match(/^.*\|/));
                 if (titleIndex >= 0) {
                     // Insert key into the title line
-                    lines[titleIndex] = lines[titleIndex].replace(/\|.*$/, `| Key: ${newKey} | BPM: ___ | Capo: ___`);
+                    lines[titleIndex] = lines[titleIndex].replace(/\|.*$/, `| Key: ${newKey}`);
                 } else {
                     // Add key as first line
-                    lines.unshift(`Key: ${newKey} | BPM: ___ | Capo: ___`);
-                    lines.unshift('');
+                    lines.unshift(`Key: ${newKey}`);
                 }
                 content = lines.join('\n');
             }
@@ -1569,7 +1593,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     // If no BPM line exists, try to add it to the first line with Key
                     const keyLineRegex = /^(.*Key:[^|\n]*)\|?\s*(.*)$/m;
                     if (keyLineRegex.test(content)) {
-                        content = content.replace(keyLineRegex, `$1| BPM: ${bpm} | Capo: ___ $2`);
+                        content = content.replace(keyLineRegex, `$1 | BPM: ${bpm} $2`);
                     }
                 }
 
@@ -1799,6 +1823,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const createBtn = document.getElementById('createSessionBtn');
         const joinBtn = document.getElementById('joinSessionBtn');
         const mySessionsBtn = document.getElementById('mySessionsBtn');
+        const goLiveBtn = document.getElementById('goLiveButton');
 
         if (!window.subscriptionManager || !window.subscriptionManager.currentUser) {
             hideAllSessionButtons();
@@ -1812,13 +1837,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
         if (createBtn) createBtn.style.display = canCreate ? 'block' : 'none';
         if (joinBtn) joinBtn.style.display = canJoin ? 'block' : 'none';
         if (mySessionsBtn) mySessionsBtn.style.display = (canCreate || canJoin) ? 'block' : 'none';
+        if (goLiveBtn) goLiveBtn.style.display = (canCreate || canJoin) ? 'block' : 'none';
     }
 
     /**
      * Hide all session buttons
      */
     function hideAllSessionButtons() {
-        const buttons = ['createSessionBtn', 'joinSessionBtn', 'mySessionsBtn'];
+        const buttons = ['createSessionBtn', 'joinSessionBtn', 'mySessionsBtn', 'goLiveButton'];
         buttons.forEach(id => {
             const btn = document.getElementById(id);
             if (btn) btn.style.display = 'none';
@@ -1881,8 +1907,21 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Update visual editor with original content (before any transpose)
         const visualEditor = document.getElementById('visualEditor');
+        const songbookOutput = document.getElementById('songbookOutput');
+        const livePreview = document.getElementById('livePreview');
+
         if (visualEditor) {
             visualEditor.value = songData.content;
+            // Apply RTL/LTR direction based on new song content
+            setDirectionalLayout(visualEditor, songData.content);
+        }
+
+        // Also reset direction for songbook output and live preview
+        if (songbookOutput) {
+            setDirectionalLayout(songbookOutput, songData.content);
+        }
+        if (livePreview) {
+            setDirectionalLayout(livePreview, songData.content);
         }
 
         // Update key selector with original key

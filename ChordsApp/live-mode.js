@@ -254,6 +254,14 @@ const liveMode = {
      */
     calculateNewKey(currentKey, steps) {
         const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+        // Handle unknown or invalid keys
+        if (!currentKey || currentKey === 'Unknown' || currentKey === 'Unknown key') {
+            // Default to C Major and calculate from there
+            const newIndex = ((0 + steps) % 12 + 12) % 12;
+            return `${notes[newIndex]} Major`;
+        }
+
         const parts = currentKey.split(' ');
         const note = parts[0];
         const mode = parts.slice(1).join(' ') || 'Major';
@@ -265,7 +273,11 @@ const liveMode = {
             noteIndex = notes.indexOf(flatToSharp[note] || note);
         }
 
-        if (noteIndex === -1) return currentKey;
+        if (noteIndex === -1) {
+            // Still can't find it, default to C Major
+            const newIndex = ((0 + steps) % 12 + 12) % 12;
+            return `${notes[newIndex]} Major`;
+        }
 
         const newIndex = ((noteIndex + steps) % 12 + 12) % 12;
         return `${notes[newIndex]} ${mode}`;
@@ -455,9 +467,23 @@ const liveMode = {
             // Load into editor
             const visualEditor = document.getElementById('visualEditor');
             const keySelector = document.getElementById('keySelector');
+            const songbookOutput = document.getElementById('songbookOutput');
+            const livePreview = document.getElementById('livePreview');
 
             if (visualEditor) {
                 visualEditor.value = songData.content || '';
+                // Apply RTL/LTR direction based on content
+                if (window.setDirectionalLayout) {
+                    window.setDirectionalLayout(visualEditor, songData.content);
+                }
+            }
+
+            // Also reset direction for songbook output and live preview
+            if (songbookOutput && window.setDirectionalLayout) {
+                window.setDirectionalLayout(songbookOutput, songData.content);
+            }
+            if (livePreview && window.setDirectionalLayout) {
+                window.setDirectionalLayout(livePreview, songData.content);
             }
 
             if (keySelector && songData.originalKey) {
@@ -561,7 +587,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Go Live button
     const goLiveBtn = document.getElementById('goLiveButton');
     if (goLiveBtn) {
-        goLiveBtn.addEventListener('click', () => liveMode.enter());
+        goLiveBtn.addEventListener('click', () => {
+            // If not in a session, show My Sessions modal first
+            if (!window.sessionManager || !window.sessionManager.activeSession) {
+                const mySessionsModal = document.getElementById('mySessionsModal');
+                if (mySessionsModal) {
+                    mySessionsModal.style.display = 'flex';
+                    // Load sessions if function exists
+                    if (window.loadMySessions) {
+                        window.loadMySessions();
+                    }
+                }
+            } else {
+                // Already in a session, enter Live Mode
+                liveMode.enter();
+            }
+        });
     }
 
     // Tap to show controls and toggle sidebar (if in session)

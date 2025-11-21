@@ -91,16 +91,38 @@
                 return;
             }
 
+            // Check required fields: Key and BPM
+            const keySelector = document.getElementById('keySelector');
+            const bpmInput = document.getElementById('bpmInput');
+            const bpmValue = bpmInput ? parseInt(bpmInput.value) : 0;
+
+            if (!bpmValue || bpmValue < 40 || bpmValue > 240) {
+                showMessage('Error', 'Please enter a valid BPM (40-240) before saving', 'error');
+                // Highlight the BPM field
+                if (bpmInput) {
+                    bpmInput.style.border = '2px solid #ef4444';
+                    bpmInput.focus();
+                    setTimeout(() => {
+                        bpmInput.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                    }, 3000);
+                }
+                return;
+            }
+
             // Reset to new song mode
             resetToNewSongMode();
 
-            // Auto-fill with extracted title
+            // Auto-fill with extracted title + Key + BPM format
             const extractedTitle = extractTitleFromContent(content);
-            songNameInput.value = extractedTitle;
+            const keyValue = keySelector ? keySelector.value : 'C Major';
+
+            // Build formatted name: "Title | Key: E Major | BPM: 120"
+            const formattedName = `${extractedTitle} | Key: ${keyValue} | BPM: ${bpmValue}`;
+            songNameInput.value = formattedName;
             saveSongModal.style.display = 'flex';
 
             // Focus and select the text for easy editing
-            if (extractedTitle) {
+            if (formattedName) {
                 setTimeout(() => {
                     songNameInput.focus();
                     songNameInput.select();
@@ -147,9 +169,13 @@
             const transposeStepsInput = document.getElementById('transposeSteps');
             const currentTransposeSteps = transposeStepsInput ? parseInt(transposeStepsInput.value) || 0 : 0;
 
-            // Get detected key if available
-            const detectedKeyElement = document.getElementById('detectedKey');
-            const detectedKey = detectedKeyElement ? detectedKeyElement.textContent : '';
+            // Get key from keySelector (required field)
+            const keySelector = document.getElementById('keySelector');
+            const originalKey = keySelector ? keySelector.value : 'C Major';
+
+            // Get BPM (required field - already validated)
+            const bpmInput = document.getElementById('bpmInput');
+            const bpm = bpmInput ? parseInt(bpmInput.value) : null;
 
             // Get ORIGINAL baseline (untransposed) SongBook format for proper transpose on load
             const baselineChart = window.getBaselineChart ? window.getBaselineChart() : '';
@@ -166,7 +192,8 @@
                     baselineChart: baselineChart, // ORIGINAL untransposed chart for transpose reference
                     printPreview: printPreviewText, // Formatted preview text
                     transposeSteps: actualTransposeSteps, // Current transpose state
-                    originalKey: detectedKey,
+                    originalKey: originalKey, // Key from selector (required)
+                    bpm: bpm, // BPM (required)
                     createdAt: firebase.database.ServerValue.TIMESTAMP,
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
@@ -212,6 +239,23 @@
                 return;
             }
 
+            // Check required fields: BPM
+            const bpmInput = document.getElementById('bpmInput');
+            const bpmValue = bpmInput ? parseInt(bpmInput.value) : 0;
+
+            if (!bpmValue || bpmValue < 40 || bpmValue > 240) {
+                showMessage('Error', 'Please enter a valid BPM (40-240) before updating', 'error');
+                // Highlight the BPM field
+                if (bpmInput) {
+                    bpmInput.style.border = '2px solid #ef4444';
+                    bpmInput.focus();
+                    setTimeout(() => {
+                        bpmInput.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                    }, 3000);
+                }
+                return;
+            }
+
             // Get print preview content (the formatted text from livePreview)
             const livePreview = document.getElementById('livePreview');
             const printPreviewText = livePreview ? livePreview.textContent : content;
@@ -220,9 +264,9 @@
             const transposeStepsInput = document.getElementById('transposeSteps');
             const currentTransposeSteps = transposeStepsInput ? parseInt(transposeStepsInput.value) || 0 : 0;
 
-            // Get detected key if available
-            const detectedKeyElement = document.getElementById('detectedKey');
-            const detectedKey = detectedKeyElement ? detectedKeyElement.textContent : '';
+            // Get key from keySelector (required field)
+            const keySelector = document.getElementById('keySelector');
+            const originalKey = keySelector ? keySelector.value : 'C Major';
 
             // Get ORIGINAL baseline (untransposed) SongBook format for proper transpose on load
             const baselineChart = window.getBaselineChart ? window.getBaselineChart() : '';
@@ -238,7 +282,8 @@
                     baselineChart: baselineChart,
                     printPreview: printPreviewText,
                     transposeSteps: actualTransposeSteps,
-                    originalKey: detectedKey,
+                    originalKey: originalKey,
+                    bpm: bpmValue,
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
 
