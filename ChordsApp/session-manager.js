@@ -122,16 +122,16 @@ class SessionManager {
             throw new Error('This session has ended');
         }
 
-        // Set as active session
+        // Start listening to session updates (must be before setting activeSession, as it calls cleanup())
+        this.listenToSessionUpdates(sessionId);
+
+        // Set as active session (after listenToSessionUpdates which calls cleanup())
         this.activeSession = sessionId;
         this.isLeader = (session.metadata.leaderId === this.currentUser.uid);
         this.inLiveMode = true; // Start in live mode
 
         // Add as participant
         await this.joinAsParticipant(sessionId);
-
-        // Start listening to session updates
-        this.listenToSessionUpdates(sessionId);
 
         // Save to user's joined sessions
         await this.database.ref(`users/${this.currentUser.uid}/sessions/${sessionId}`).set({
