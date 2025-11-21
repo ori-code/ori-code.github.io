@@ -284,24 +284,55 @@ const liveMode = {
                     return;
                 }
 
-                // Get current song ID to highlight
+                // Get current song ID (what player is viewing)
                 const currentSongId = this.currentSongId;
+
+                // Get leader's current song ID (what leader is broadcasting)
+                const leaderSong = window.sessionManager.leaderCurrentSong;
+                const leaderSongId = leaderSong ? leaderSong.songId : null;
+                const isLeader = window.sessionManager.isLeader;
 
                 playlistContent.innerHTML = playlist.map((song, index) => {
                     const isCurrent = song.id === currentSongId;
-                    const bgColor = isCurrent ? 'rgba(139, 92, 246, 0.3)' : 'rgba(255,255,255,0.05)';
-                    const borderColor = isCurrent ? 'rgba(139, 92, 246, 0.5)' : 'rgba(255,255,255,0.1)';
+                    const isLeaderPlaying = song.id === leaderSongId && !isLeader;
+
+                    // Different colors: purple for your current, green for leader's current
+                    let bgColor = 'rgba(255,255,255,0.05)';
+                    let borderColor = 'rgba(255,255,255,0.1)';
+                    let numberColor = 'rgba(255,255,255,0.5)';
+                    let fontWeight = '400';
+                    let indicator = '';
+
+                    if (isCurrent && isLeaderPlaying) {
+                        bgColor = 'rgba(139, 92, 246, 0.3)';
+                        borderColor = 'rgba(139, 92, 246, 0.5)';
+                        numberColor = '#8b5cf6';
+                        fontWeight = '600';
+                        indicator = '<span style="color: #10b981; font-size: 12px; margin-right: 4px;">👑</span><span style="color: #8b5cf6; font-size: 14px;">▶</span>';
+                    } else if (isCurrent) {
+                        bgColor = 'rgba(139, 92, 246, 0.3)';
+                        borderColor = 'rgba(139, 92, 246, 0.5)';
+                        numberColor = '#8b5cf6';
+                        fontWeight = '600';
+                        indicator = '<span style="color: #8b5cf6; font-size: 14px;">▶</span>';
+                    } else if (isLeaderPlaying) {
+                        bgColor = 'rgba(16, 185, 129, 0.2)';
+                        borderColor = 'rgba(16, 185, 129, 0.4)';
+                        numberColor = '#10b981';
+                        fontWeight = '500';
+                        indicator = '<span style="color: #10b981; font-size: 12px;">👑 Leader</span>';
+                    }
 
                     return `
                         <div onclick="liveMode.loadSongFromPlaylist('${song.id}')"
                              style="padding: 12px 16px; background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s ease;">
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <span style="color: ${isCurrent ? '#8b5cf6' : 'rgba(255,255,255,0.5)'}; font-weight: 600; min-width: 24px;">${index + 1}</span>
+                                <span style="color: ${numberColor}; font-weight: 600; min-width: 24px;">${index + 1}</span>
                                 <div style="flex: 1;">
-                                    <div style="color: white; font-weight: ${isCurrent ? '600' : '400'};">${song.name}</div>
+                                    <div style="color: white; font-weight: ${fontWeight};">${song.name}</div>
                                     <div style="color: rgba(255,255,255,0.5); font-size: 12px;">${song.originalKey || 'Unknown key'}${song.bpm ? ` • ${song.bpm} BPM` : ''}</div>
                                 </div>
-                                ${isCurrent ? '<span style="color: #8b5cf6; font-size: 14px;">▶</span>' : ''}
+                                ${indicator}
                             </div>
                         </div>
                     `;
@@ -443,13 +474,18 @@ document.addEventListener('DOMContentLoaded', () => {
         goLiveBtn.addEventListener('click', () => liveMode.enter());
     }
 
-    // Tap to toggle controls
+    // Tap to show playlist (if in session) or toggle controls
     const liveModeContent = document.getElementById('liveModeContent');
     if (liveModeContent) {
         liveModeContent.addEventListener('click', (e) => {
             // Don't toggle if clicking on a button
             if (e.target.tagName !== 'BUTTON') {
-                liveMode.toggleControls();
+                // If in session, show playlist; otherwise toggle controls
+                if (window.sessionManager && window.sessionManager.activeSession) {
+                    liveMode.showPlaylist();
+                } else {
+                    liveMode.toggleControls();
+                }
             }
         });
     }
