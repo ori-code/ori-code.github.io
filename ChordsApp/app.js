@@ -99,14 +99,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const chordRoot = chordMatch[1];
 
+        // Enharmonic equivalents for keys not in the table
+        const keyEnharmonics = {
+            'G#': 'Ab', 'A#': 'Bb', 'D#': 'Eb',
+            'Cb': 'B', 'Fb': 'E'
+        };
+
         // Check major key first
-        const majorRoot = key.replace(' Major', '').trim();
-        if (NASHVILLE_MAJOR[majorRoot] && NASHVILLE_MAJOR[majorRoot][chordRoot]) {
-            return NASHVILLE_MAJOR[majorRoot][chordRoot];
+        let majorRoot = key.replace(' Major', '').trim();
+        // Convert to enharmonic if needed
+        if (keyEnharmonics[majorRoot]) {
+            majorRoot = keyEnharmonics[majorRoot];
+        }
+        if (NASHVILLE_MAJOR[majorRoot]) {
+            // Try the chord directly
+            if (NASHVILLE_MAJOR[majorRoot][chordRoot]) {
+                return NASHVILLE_MAJOR[majorRoot][chordRoot];
+            }
+            // Try enharmonic equivalent of the chord
+            const chordEnharmonic = keyEnharmonics[chordRoot] || keyEnharmonics[chordRoot.replace('m', '')] + (chordRoot.includes('m') ? 'm' : '');
+            if (chordEnharmonic && NASHVILLE_MAJOR[majorRoot][chordEnharmonic]) {
+                return NASHVILLE_MAJOR[majorRoot][chordEnharmonic];
+            }
         }
 
         // Check minor key
-        const minorRoot = key.replace(' Minor', '').trim() + 'm';
+        let minorRoot = key.replace(' Minor', '').trim() + 'm';
+        // Convert to enharmonic if needed
+        const minorBase = minorRoot.replace('m', '');
+        if (keyEnharmonics[minorBase]) {
+            minorRoot = keyEnharmonics[minorBase] + 'm';
+        }
         if (NASHVILLE_MINOR[minorRoot] && NASHVILLE_MINOR[minorRoot][chordRoot]) {
             return NASHVILLE_MINOR[minorRoot][chordRoot];
         }
