@@ -530,6 +530,11 @@ const liveMode = {
         // Update display
         this.updateDisplay();
 
+        // Refresh playlist sidebar if visible (to update Leader indicator)
+        if (this.sidebarVisible) {
+            this.showPlaylist();
+        }
+
         console.log(`📺 Live Mode updated: ${songData.name}`);
     }
 };
