@@ -531,7 +531,9 @@ const liveMode = {
         this.updateDisplay();
 
         // Refresh playlist sidebar if visible (to update Leader indicator)
+        console.log('📺 Checking playlist refresh, sidebarVisible:', this.sidebarVisible);
         if (this.sidebarVisible) {
+            console.log('📺 Refreshing playlist sidebar');
             this.showPlaylist();
         }
 
