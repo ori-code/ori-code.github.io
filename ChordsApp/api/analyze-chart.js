@@ -36,21 +36,34 @@ module.exports = async (req, res) => {
                 role: "user",
                 content: [{
                     type: "text",
-                    text: `You are an OCR assistant specialized in extracting chord charts from images. Transcribe this chord chart image exactly as it appears.
+                    text: `You are an expert music OCR assistant specialized in extracting chord charts from images. Your task is to transcribe chord charts with PRECISE chord placement.
 
-IMPORTANT FORMATTING RULES:
-1. Use INLINE BRACKET FORMAT for chords: [C] [G] [Em] [D]
-2. Place chord brackets directly where they appear in the lyrics
-3. Example: "Amazing[C] grace how [G]sweet the[Em] sound[D]"
-4. For intro sections with only chords, list them with brackets and spaces: [Intro] [Em] [D] [C] [G] [A] [G]
-5. Preserve all text exactly as written (even if handwritten)
-6. Keep original language (Hebrew, English, etc.)
-7. Maintain song structure (Verse, Chorus, Bridge, etc.)
-8. If you see metadata like Title or Artist, include it
+CRITICAL: CHORD PLACEMENT ACCURACY
+- Each chord must be placed EXACTLY at the syllable/word it appears above in the image
+- Count character positions carefully - chords align with specific syllables
+- If a chord is above "ha" in "hazeh", place it as "ha[C]zeh", not at the start of the line
 
-Return ONLY the transcribed chord chart text. Do not add explanations or comments.
+KEY DETECTION:
+- Look for key signature in title (e.g., [F], [G], [Am]) or marked as "Key: X"
+- Include "Key: [detected key]" at the start of output
 
-This is the user's own handwritten chord sheet for personal practice and study purposes.`
+FORMATTING RULES:
+1. Use INLINE BRACKET FORMAT: Insert [chord] directly BEFORE the syllable it's above
+2. WRONG: "[F] [Gm] [Dm] en la'olam hazeh davar echad lehatsia"
+3. CORRECT: "en la'[F]olam ha[Gm]zeh davar e[Dm]chad lehatsia"
+4. For chord-only sections (Intro/Outro): [Intro] [Em] [D] [C] [G]
+5. Preserve exact text, spelling, and language (Hebrew, Arabic, English, etc.)
+6. Maintain structure labels (Verse 1, Chorus, Bridge, etc.)
+7. If title contains key like "[F]", extract it: "Key: F Major"
+
+EXAMPLES:
+- Image shows "F" above "en": Output "[F]en la'olam..."
+- Image shows "Gm" above "zeh": Output "...ha[Gm]zeh..."
+- Image shows chords above specific words, NOT at line start
+
+Return ONLY the transcribed chord chart with accurate inline chord placement. No explanations.
+
+This is the user's own chord sheet for personal practice.`
                 }, {
                     type: "image_url",
                     image_url: {
