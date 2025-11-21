@@ -1690,7 +1690,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 }
             } else {
                 headerIndicator.style.display = 'block';
-                headerText.textContent = '✨ Pro Member';
+                headerText.textContent = '✨ Pro';
                 headerIndicator.style.background = 'linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%)';
                 headerText.style.color = 'white';
             }
