@@ -702,6 +702,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
             console.log('🔄 Transposing plain chord format (line-by-line)');
             const lines = source.split('\n');
             const transposedLines = lines.map((line, index) => {
+                // Skip metadata/title lines - they contain pipe-separated info or key/bpm labels
+                const isMetadataLine = /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line) ||
+                                       /^(Key|Title|Artist|BPM|Tempo|Capo):/i.test(line) ||
+                                       /\|\s*Key:/i.test(line);
+                if (isMetadataLine) {
+                    console.log(`  ⏭️ Line ${index} is metadata, skipping:`, line.substring(0, 60));
+                    return line;
+                }
+
                 // Check if this line looks like a chord line
                 // More flexible detection: line with mostly chords and whitespace
 
@@ -926,7 +935,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Update the key in the visual editor content
             let content = visualEditor.value;
-            const keyLineRegex = /^(.*Key:\s*)([^\n\r|]+)/m;
+            // Match key value precisely without trailing spaces (handles "Key: D Major | BPM: 75" format)
+            const keyLineRegex = /^(.*Key:\s*)([A-G][#b]?\s*(?:Major|Minor|major|minor)?)/m;
             if (keyLineRegex.test(content)) {
                 content = content.replace(keyLineRegex, `$1${newKey}`);
                 visualEditor.value = content;

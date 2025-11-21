@@ -433,10 +433,33 @@
                 window.currentSongName = song.name;
 
                 if (baseline) {
+                    // Set up app.js state for proper transposition
+                    if (window.setBaselineChart) {
+                        window.setBaselineChart(baseline);
+                    }
+                    if (window.setOriginalKey && song.originalKey) {
+                        window.setOriginalKey(song.originalKey);
+                    }
+
+                    // Set key selector to song's original key
+                    const keySelector = document.getElementById('keySelector');
+                    if (keySelector && song.originalKey) {
+                        keySelector.value = song.originalKey;
+                    }
+
+                    // Set BPM input
+                    const bpmInput = document.getElementById('bpmInput');
+                    if (bpmInput && song.bpm) {
+                        bpmInput.value = song.bpm;
+                    }
+
                     // Dispatch custom event - app.js will use ANALYZE logic
                     window.dispatchEvent(new CustomEvent('songLoaded', {
                         detail: {
-                            baselineChart: baseline
+                            baselineChart: baseline,
+                            originalKey: song.originalKey || '',
+                            bpm: song.bpm || null,
+                            songName: song.name
                         }
                     }));
                 } else {
