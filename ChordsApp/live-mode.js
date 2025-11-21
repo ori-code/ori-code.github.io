@@ -500,7 +500,11 @@ const liveMode = {
      * @param {object} songData - Song data from leader
      */
     updateFromBroadcast(songData) {
-        if (!this.isActive) return;
+        console.log('📺 updateFromBroadcast called, isActive:', this.isActive, 'songData:', songData?.name);
+        if (!this.isActive) {
+            console.log('📺 Live Mode not active, skipping update');
+            return;
+        }
 
         // Update state
         this.currentSongContent = songData.content || '';
@@ -508,6 +512,7 @@ const liveMode = {
         this.currentSongName = songData.name;
         this.currentSongId = songData.songId;
         this.currentTransposeSteps = 0;
+        console.log('📺 Content length:', this.currentSongContent.length);
 
         // Check for local transpose preference
         if (window.sessionManager && !window.sessionManager.isLeader) {

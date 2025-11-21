@@ -1917,8 +1917,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }
 
         // If Live Mode is active, also update it
+        console.log('📺 Checking Live Mode - exists:', !!window.liveMode, 'isActive:', window.liveMode?.isActive);
         if (window.liveMode && window.liveMode.isActive) {
-            console.log('📺 Also updating Live Mode display');
+            console.log('📺 Updating Live Mode display with:', songData.name);
             window.liveMode.updateFromBroadcast(songData);
         }
     }
