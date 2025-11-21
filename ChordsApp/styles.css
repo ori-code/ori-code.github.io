@@ -132,6 +132,16 @@ body {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
+/* Light theme - modal inputs */
+[data-theme="light"] .modal-input {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .modal-input:focus {
+    outline: 2px solid rgba(255, 59, 92, 0.25);
+}
+
 /* Light theme - donation input */
 [data-theme="light"] .donation-input {
     background: rgba(0, 0, 0, 0.03);
