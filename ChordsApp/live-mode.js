@@ -18,17 +18,32 @@ const liveMode = {
         const visualEditor = document.getElementById('visualEditor');
         const keySelector = document.getElementById('keySelector');
 
-        if (!visualEditor || !visualEditor.value.trim()) {
+        // Check if we have content in the editor
+        const hasEditorContent = visualEditor && visualEditor.value.trim();
+
+        // Check if we're in a session with a playlist
+        const inSession = window.sessionManager && window.sessionManager.activeSession;
+
+        if (!hasEditorContent && !inSession) {
             alert('No song loaded. Please analyze or load a song first.');
             return;
         }
 
-        // Get current song data
-        this.currentSongContent = visualEditor.value;
-        this.currentKey = keySelector ? keySelector.value : 'C Major';
-        this.currentTransposeSteps = window.currentTransposeSteps || 0;
-        this.currentSongName = window.currentSongName || 'Untitled';
-        this.currentSongId = window.currentSongId || null;
+        // Get current song data from editor (if available)
+        if (hasEditorContent) {
+            this.currentSongContent = visualEditor.value;
+            this.currentKey = keySelector ? keySelector.value : 'C Major';
+            this.currentTransposeSteps = window.currentTransposeSteps || 0;
+            this.currentSongName = window.currentSongName || 'Untitled';
+            this.currentSongId = window.currentSongId || null;
+        } else {
+            // No editor content but in session - show empty state, user will tap to see playlist
+            this.currentSongContent = '\n\n\n        Tap to view playlist\n        and select a song';
+            this.currentKey = '';
+            this.currentTransposeSteps = 0;
+            this.currentSongName = 'Select a Song';
+            this.currentSongId = null;
+        }
 
         // Update display
         this.updateDisplay();
@@ -49,6 +64,11 @@ const liveMode = {
 
         // Update session controls visibility
         this.updateSessionControls();
+
+        // If in session but no song loaded, show playlist immediately
+        if (!hasEditorContent && inSession) {
+            setTimeout(() => this.showPlaylist(), 500);
+        }
 
         console.log('📺 Entered Live Mode:', this.currentSongName);
     },
