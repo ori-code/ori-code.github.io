@@ -327,7 +327,7 @@ const liveMode = {
             toggleBtn.textContent = 'Hide Playlist';
         }
 
-        playlistContent.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center;">Loading playlist...</p>';
+        playlistContent.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Loading playlist...</p>';
 
         try {
             // Get playlist from session manager
@@ -335,7 +335,7 @@ const liveMode = {
                 const playlist = await window.sessionManager.getPlaylist();
 
                 if (playlist.length === 0) {
-                    playlistContent.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center;">No songs in playlist</p>';
+                    playlistContent.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No songs in playlist</p>';
                     return;
                 }
 
@@ -352,9 +352,9 @@ const liveMode = {
                     const isLeaderPlaying = song.id === leaderSongId && !isLeader;
 
                     // Different colors: purple for your current, green for leader's current
-                    let bgColor = 'rgba(255,255,255,0.05)';
-                    let borderColor = 'rgba(255,255,255,0.1)';
-                    let numberColor = 'rgba(255,255,255,0.5)';
+                    let bgColor = 'var(--button-bg)';
+                    let borderColor = 'var(--border)';
+                    let numberColor = 'var(--text-muted)';
                     let fontWeight = '400';
                     let indicator = '';
 
@@ -384,8 +384,8 @@ const liveMode = {
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <span style="color: ${numberColor}; font-weight: 600; min-width: 24px;">${index + 1}</span>
                                 <div style="flex: 1;">
-                                    <div style="color: white; font-weight: ${fontWeight};">${song.name}</div>
-                                    <div style="color: rgba(255,255,255,0.5); font-size: 12px;">${song.originalKey || 'Unknown key'}${song.bpm ? ` • ${song.bpm} BPM` : ''}</div>
+                                    <div style="color: var(--text); font-weight: ${fontWeight};">${song.name}</div>
+                                    <div style="color: var(--text-muted); font-size: 12px;">${song.originalKey || 'Unknown key'}${song.bpm ? ` • ${song.bpm} BPM` : ''}</div>
                                 </div>
                                 ${indicator}
                             </div>
@@ -393,7 +393,7 @@ const liveMode = {
                     `;
                 }).join('');
             } else {
-                playlistContent.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center;">Not in a session</p>';
+                playlistContent.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Not in a session</p>';
             }
         } catch (error) {
             console.error('Error loading playlist:', error);

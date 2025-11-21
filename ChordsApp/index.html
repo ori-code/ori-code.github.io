@@ -665,19 +665,19 @@
     </div>
 
     <!-- Live Mode Full-Screen Overlay -->
-    <div id="liveModeOverlay" style="display: none; position: fixed; inset: 0; background: #000000; z-index: 10000; overflow: hidden;">
+    <div id="liveModeOverlay" style="display: none; position: fixed; inset: 0; background: var(--background); z-index: 10000; overflow: hidden;">
         <!-- Main Container with Sidebar Layout -->
         <div style="display: flex; height: 100%; width: 100%;">
             <!-- Song Display Area (tap to toggle sidebar) -->
             <div id="liveModeContent" style="flex: 1; height: 100%; overflow-y: auto; padding: 60px 20px 140px 20px; box-sizing: border-box; cursor: pointer; display: flex; justify-content: center; transition: margin-right 0.3s ease;">
-                <pre id="liveModeChartDisplay" style="font-family: 'Courier New', monospace; font-size: 18px; line-height: 1.8; white-space: pre-wrap; color: #ffffff; margin: 0; max-width: 800px; text-align: left;"></pre>
+                <pre id="liveModeChartDisplay" style="font-family: 'Courier New', monospace; font-size: 18px; line-height: 1.8; white-space: pre-wrap; color: var(--text); margin: 0; max-width: 800px; text-align: left;"></pre>
             </div>
 
             <!-- Playlist Sidebar (slide in from right) -->
-            <div id="liveModePlaylistSidebar" style="position: absolute; top: 0; right: -380px; width: 380px; height: 100%; background: rgba(20,20,20,0.98); border-left: 1px solid rgba(255,255,255,0.1); overflow-y: auto; padding: 60px 16px 140px 16px; box-sizing: border-box; transition: right 0.3s ease; z-index: 10002;">
+            <div id="liveModePlaylistSidebar" style="position: absolute; top: 0; right: -380px; width: 380px; height: 100%; background: var(--card-bg); border-left: 1px solid var(--border); overflow-y: auto; padding: 60px 16px 140px 16px; box-sizing: border-box; transition: right 0.3s ease; z-index: 10002;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <h3 style="margin: 0; color: white; font-size: 18px;">Playlist</h3>
-                    <button onclick="liveMode.hidePlaylist()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 18px;">&times;</button>
+                    <h3 style="margin: 0; color: var(--text); font-size: 18px;">Playlist</h3>
+                    <button onclick="liveMode.hidePlaylist()" style="background: var(--button-bg); border: none; color: var(--text); width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 18px;">&times;</button>
                 </div>
                 <div id="liveModePlaylistContent">
                     <!-- Playlist items will be loaded here -->
@@ -686,10 +686,10 @@
         </div>
 
         <!-- Top Bar (song info) - auto-hides -->
-        <div id="liveModeTopBar" style="position: absolute; top: 0; left: 0; right: 0; padding: 12px 20px; background: rgba(0,0,0,0.9); display: flex; justify-content: space-between; align-items: center; z-index: 10003; border-bottom: 1px solid rgba(255,255,255,0.1); transition: opacity 0.3s ease;">
+        <div id="liveModeTopBar" style="position: absolute; top: 0; left: 0; right: 0; padding: 12px 20px; background: var(--card-bg); display: flex; justify-content: space-between; align-items: center; z-index: 10003; border-bottom: 1px solid var(--border); transition: opacity 0.3s ease;">
             <div>
-                <div id="liveModeSongName" style="font-size: 18px; font-weight: 600; color: white;"></div>
-                <div id="liveModeSongKey" style="font-size: 14px; color: rgba(255,255,255,0.7);"></div>
+                <div id="liveModeSongName" style="font-size: 18px; font-weight: 600; color: var(--text);"></div>
+                <div id="liveModeSongKey" style="font-size: 14px; color: var(--text-muted);"></div>
             </div>
             <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="background: rgba(239, 68, 68, 0.9); border: none; color: white; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
                 Exit
@@ -697,16 +697,16 @@
         </div>
 
         <!-- Bottom Controls Bar - auto-hides -->
-        <div id="liveModeBottomBar" style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); z-index: 10003; transition: opacity 0.3s ease;">
+        <div id="liveModeBottomBar" style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; background: var(--card-bg); z-index: 10003; transition: opacity 0.3s ease;">
             <!-- Transpose Controls -->
             <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 12px;">
-                <button onclick="liveMode.transpose(-1)" style="padding: 12px 24px; background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                <button onclick="liveMode.transpose(-1)" style="padding: 12px 24px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
                     - Transpose
                 </button>
                 <div id="liveModeCurrentKey" style="padding: 12px 20px; background: var(--primary); color: white; border-radius: 8px; font-weight: 600; min-width: 60px; text-align: center;">
                     C
                 </div>
-                <button onclick="liveMode.transpose(1)" style="padding: 12px 24px; background: rgba(255,255,255,0.15); border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                <button onclick="liveMode.transpose(1)" style="padding: 12px 24px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
                     Transpose +
                 </button>
             </div>
@@ -714,16 +714,16 @@
             <!-- Session Info & Playlist Button (if in session) -->
             <div id="liveModeSessionControls" style="display: none; text-align: center;">
                 <div style="display: flex; justify-content: center; gap: 12px; align-items: center;">
-                    <button id="liveModePlaylistToggle" onclick="liveMode.togglePlaylist()" style="padding: 10px 20px; background: rgba(59, 130, 246, 0.3); border: 1px solid rgba(59, 130, 246, 0.5); color: white; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    <button id="liveModePlaylistToggle" onclick="liveMode.togglePlaylist()" style="padding: 10px 20px; background: rgba(59, 130, 246, 0.3); border: 1px solid rgba(59, 130, 246, 0.5); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px;">
                         Show Playlist
                     </button>
                     <!-- Follow Leader toggle (players only) -->
-                    <label id="liveModeFollowLeader" style="display: none; cursor: pointer; padding: 10px 16px; background: rgba(16, 185, 129, 0.3); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 6px; font-size: 13px; color: white;">
+                    <label id="liveModeFollowLeader" style="display: none; cursor: pointer; padding: 10px 16px; background: rgba(16, 185, 129, 0.3); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 6px; font-size: 13px; color: var(--text);">
                         <input type="checkbox" id="followLeaderCheckbox" checked onchange="liveMode.toggleFollowLeader(this.checked)" style="margin-right: 6px;">
                         Follow Leader
                     </label>
                 </div>
-                <div id="liveModeSessionInfo" style="margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.6);"></div>
+                <div id="liveModeSessionInfo" style="margin-top: 8px; font-size: 12px; color: var(--text-muted);"></div>
             </div>
         </div>
     </div>
