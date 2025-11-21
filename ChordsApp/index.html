@@ -771,6 +771,20 @@
         #profileMenu button:hover {
             background: rgba(255, 255, 255, 0.05);
         }
+
+        /* Live Mode theme-aware gradients */
+        [data-theme="dark"] #liveModeBottomBar {
+            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent) !important;
+        }
+        [data-theme="light"] #liveModeBottomBar {
+            background: linear-gradient(to top, rgba(255,255,255,0.95), transparent) !important;
+        }
+        [data-theme="dark"] #liveModeTopBar {
+            background: rgba(0,0,0,0.9) !important;
+        }
+        [data-theme="light"] #liveModeTopBar {
+            background: rgba(255,255,255,0.9) !important;
+        }
     </style>
 
     <script>
