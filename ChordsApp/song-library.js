@@ -321,7 +321,7 @@
                 if (song.transposeSteps && song.transposeSteps !== 0) {
                     songKey.textContent += ` (Transposed ${song.transposeSteps > 0 ? '+' : ''}${song.transposeSteps})`;
                 }
-                songKey.style.cssText = 'font-size: 0.85rem; color: var(--primary); margin-top: 2px; font-weight: 500;';
+                songKey.style.cssText = 'font-size: 0.85rem; color: #3b82f6; margin-top: 2px; font-weight: 500;';
                 songInfo.appendChild(songKey);
             }
 
