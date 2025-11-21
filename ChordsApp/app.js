@@ -1907,7 +1907,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         currentTransposeSteps = 0;
 
         // Regenerate preview first
-        generateSongbookFormat();
+        updateSongBookFromVisual();
 
         // Apply user's local transpose preference for this song (if any)
         const localTranspose = window.sessionManager.getLocalTranspose(songData.songId);
@@ -2086,7 +2086,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         currentTransposeSteps = 0;
 
         // Regenerate preview
-        generateSongbookFormat();
+        updateSongBookFromVisual();
 
         // If leader, broadcast this song
         if (window.sessionManager && window.sessionManager.isLeader) {
