@@ -182,9 +182,9 @@
                     <span id="detectedKey" style="display: none;"></span>
                 </div>
                 <button class="ghost-button" id="nashvilleToggle" style="display: none;">🔢 Nashville Numbers: OFF</button>
-                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;">
-                    <label for="bpmInput" style="color: var(--text-muted); font-size: 0.9rem; white-space: nowrap;">BPM:</label>
-                    <input type="number" id="bpmInput" placeholder="Required" min="40" max="240" style="width: 80px; padding: 6px 10px; background: var(--surface); color: var(--text); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; font-size: 0.95rem; text-align: center;" required>
+                <div class="ghost-button" style="display: flex; align-items: center; gap: 8px; cursor: default;">
+                    <span style="font-size: 0.95rem;">🎵 BPM:</span>
+                    <input type="number" id="bpmInput" placeholder="120" min="40" max="240" style="width: 60px; padding: 4px 6px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; text-align: center;" required>
                 </div>
                 <button class="ghost-button" id="saveSongButton">💾 Save</button>
                 <button class="ghost-button" id="loadSongButton">📂 Load</button>
