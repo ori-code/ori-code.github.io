@@ -1915,6 +1915,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
             console.log(`🎵 Applying user's local transpose: ${localTranspose} steps`);
             applyTranspose(localTranspose);
         }
+
+        // If Live Mode is active, also update it
+        if (window.liveMode && window.liveMode.isActive) {
+            console.log('📺 Also updating Live Mode display');
+            window.liveMode.updateFromBroadcast(songData);
+        }
     }
 
     /**

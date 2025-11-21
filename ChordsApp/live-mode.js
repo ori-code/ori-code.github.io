@@ -4,6 +4,7 @@
 const liveMode = {
     isActive: false,
     controlsVisible: true,
+    sidebarVisible: false,
     currentSongContent: '',
     currentKey: 'C Major',
     currentTransposeSteps: 0,
@@ -53,8 +54,9 @@ const liveMode = {
         if (overlay) {
             overlay.style.display = 'block';
             this.isActive = true;
+            this.sidebarVisible = false;
 
-            // Show controls initially, then auto-hide after 3 seconds
+            // Show controls and start auto-hide timer
             this.showControls();
             this.startAutoHideTimer();
 
@@ -68,6 +70,15 @@ const liveMode = {
         // If in session but no song loaded, show playlist immediately
         if (!hasEditorContent && inSession) {
             setTimeout(() => this.showPlaylist(), 500);
+        }
+
+        // If player, check if leader has a current song and display it
+        if (inSession && !window.sessionManager.isLeader && window.sessionManager.inLiveMode) {
+            const leaderSong = window.sessionManager.getLeaderCurrentSong();
+            if (leaderSong) {
+                console.log('📺 Loading leader current song:', leaderSong.name);
+                this.updateFromBroadcast(leaderSong);
+            }
         }
 
         console.log('📺 Entered Live Mode:', this.currentSongName);
@@ -218,10 +229,6 @@ const liveMode = {
         } else {
             console.warn('transposeChart function not available');
         }
-
-        // Keep controls visible while interacting
-        this.showControls();
-        this.startAutoHideTimer();
     },
 
     /**
@@ -255,6 +262,8 @@ const liveMode = {
     updateSessionControls() {
         const sessionControls = document.getElementById('liveModeSessionControls');
         const sessionInfo = document.getElementById('liveModeSessionInfo');
+        const followLeaderToggle = document.getElementById('liveModeFollowLeader');
+        const followLeaderCheckbox = document.getElementById('followLeaderCheckbox');
 
         if (window.sessionManager && window.sessionManager.activeSession) {
             if (sessionControls) sessionControls.style.display = 'block';
@@ -263,35 +272,61 @@ const liveMode = {
                 const role = window.sessionManager.isLeader ? 'Leader' : 'Player';
                 sessionInfo.textContent = `You are: ${role}`;
             }
+
+            // Show Follow Leader toggle only for players
+            if (followLeaderToggle) {
+                followLeaderToggle.style.display = window.sessionManager.isLeader ? 'none' : 'block';
+            }
+
+            // Sync checkbox with session manager state
+            if (followLeaderCheckbox && !window.sessionManager.isLeader) {
+                followLeaderCheckbox.checked = window.sessionManager.inLiveMode;
+            }
         } else {
             if (sessionControls) sessionControls.style.display = 'none';
         }
     },
 
     /**
-     * Toggle playlist overlay
+     * Toggle follow leader mode (players only)
      */
-    togglePlaylist() {
-        const playlistOverlay = document.getElementById('liveModePlaylistOverlay');
-        if (playlistOverlay) {
-            if (playlistOverlay.style.display === 'none') {
-                this.showPlaylist();
-            } else {
-                this.hidePlaylist();
-            }
+    toggleFollowLeader(enabled) {
+        if (window.sessionManager && !window.sessionManager.isLeader) {
+            window.sessionManager.setLiveMode(enabled);
+            console.log(`${enabled ? '📻 Following' : '📴 Not following'} leader`);
         }
     },
 
     /**
-     * Show playlist overlay
+     * Toggle playlist sidebar
+     */
+    togglePlaylist() {
+        if (this.sidebarVisible) {
+            this.hidePlaylist();
+        } else {
+            this.showPlaylist();
+        }
+    },
+
+    /**
+     * Show playlist sidebar
      */
     async showPlaylist() {
-        const playlistOverlay = document.getElementById('liveModePlaylistOverlay');
+        const playlistSidebar = document.getElementById('liveModePlaylistSidebar');
         const playlistContent = document.getElementById('liveModePlaylistContent');
+        const toggleBtn = document.getElementById('liveModePlaylistToggle');
 
-        if (!playlistOverlay || !playlistContent) return;
+        if (!playlistSidebar || !playlistContent) return;
 
-        playlistOverlay.style.display = 'block';
+        // Slide sidebar in
+        playlistSidebar.style.right = '0';
+        this.sidebarVisible = true;
+
+        // Update button text
+        if (toggleBtn) {
+            toggleBtn.textContent = 'Hide Playlist';
+        }
+
         playlistContent.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center;">Loading playlist...</p>';
 
         try {
@@ -367,12 +402,20 @@ const liveMode = {
     },
 
     /**
-     * Hide playlist overlay
+     * Hide playlist sidebar
      */
     hidePlaylist() {
-        const playlistOverlay = document.getElementById('liveModePlaylistOverlay');
-        if (playlistOverlay) {
-            playlistOverlay.style.display = 'none';
+        const playlistSidebar = document.getElementById('liveModePlaylistSidebar');
+        const toggleBtn = document.getElementById('liveModePlaylistToggle');
+
+        if (playlistSidebar) {
+            playlistSidebar.style.right = '-380px';
+            this.sidebarVisible = false;
+        }
+
+        // Update button text
+        if (toggleBtn) {
+            toggleBtn.textContent = 'Show Playlist';
         }
     },
 
@@ -494,21 +537,26 @@ document.addEventListener('DOMContentLoaded', () => {
         goLiveBtn.addEventListener('click', () => liveMode.enter());
     }
 
-    // Tap to show playlist (if in session) or toggle controls
+    // Tap to show controls and toggle sidebar (if in session)
     const liveModeContent = document.getElementById('liveModeContent');
     if (liveModeContent) {
         liveModeContent.addEventListener('click', (e) => {
             // Don't toggle if clicking on a button
             if (e.target.tagName !== 'BUTTON') {
-                // If in session, show playlist; otherwise toggle controls
+                // Always show controls on tap
+                liveMode.showControls();
+                liveMode.startAutoHideTimer();
+
+                // If in session and controls were already visible, toggle playlist
                 if (window.sessionManager && window.sessionManager.activeSession) {
-                    liveMode.showPlaylist();
-                } else {
-                    liveMode.toggleControls();
+                    liveMode.togglePlaylist();
                 }
             }
         });
     }
+
+    // Note: Session manager callback is set up in app.js (handleSongUpdateFromLeader)
+    // which now also updates Live Mode when active
 
     // Escape key to exit
     document.addEventListener('keydown', (e) => {
