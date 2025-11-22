@@ -1294,14 +1294,22 @@ a {
         min-height: auto !important;
     }
 
+    /* Hide A4 label during print */
+    .preview-container > div[style*="position: absolute"] {
+        display: none !important;
+    }
+
     /* Show the live preview content */
     #livePreview {
         display: block !important;
-        padding: 0;
+        padding: 0 !important;
         font-family: 'Courier New', monospace;
         color: black !important;
         white-space: pre-wrap;
         background: white !important;
+        border: none !important;
+        aspect-ratio: auto !important;
+        min-height: auto !important;
     }
 
     /* Hide the hidden print preview div - we use livePreview instead */
