@@ -1536,12 +1536,40 @@ Our [Em7]hearts will cry, these bones will [D]sing
         return result.join('\n');
     };
 
+    // A4 page height calculation
+    // A4 = 297mm, with ~10mm margins = 277mm printable
+    // At 72 DPI (print): 277mm = 785 points
+    // At 96 DPI (screen): multiply by 96/72 = 1.333
+    const A4_PRINTABLE_HEIGHT_PX = 785 * (96 / 72); // ~1047px at screen resolution
+
+    function updateA4Indicator() {
+        const a4Indicator = document.getElementById('a4PageIndicator');
+        if (!a4Indicator || !livePreview) return;
+
+        const fontSize = parseFloat(fontSizeSlider ? fontSizeSlider.value : 10);
+        const lineHeight = parseFloat(lineHeightSlider ? lineHeightSlider.value : 1.3);
+
+        // Calculate line height in pixels (pt to px conversion: 1pt = 1.333px at 96 DPI)
+        const lineHeightPx = fontSize * 1.333 * lineHeight;
+
+        // Calculate how many lines fit on A4
+        const linesPerPage = Math.floor(A4_PRINTABLE_HEIGHT_PX / lineHeightPx);
+
+        // Position indicator at the end of the first page
+        const indicatorPosition = linesPerPage * lineHeightPx;
+
+        // Add padding offset (the preview container has padding)
+        const containerPadding = 30; // matches .live-preview padding
+        a4Indicator.style.top = (indicatorPosition + containerPadding) + 'px';
+    }
+
     // Font size control
     if (fontSizeSlider && fontSizeValue && livePreview) {
         fontSizeSlider.addEventListener('input', () => {
             const size = fontSizeSlider.value;
             fontSizeValue.textContent = size;
             livePreview.style.fontSize = size + 'pt';
+            updateA4Indicator();
         });
     }
 
@@ -1551,8 +1579,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const height = lineHeightSlider.value;
             lineHeightValue.textContent = height;
             livePreview.style.lineHeight = height;
+            updateA4Indicator();
         });
     }
+
+    // Initialize A4 indicator position
+    setTimeout(updateA4Indicator, 100);
 
     // Update SongBook and preview when visual editor changes
     if (visualEditor) {
