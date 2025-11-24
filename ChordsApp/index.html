@@ -133,7 +133,13 @@
             </div>
             <div class="editor-panel">
                 <header class="visual-editor-header">
-                    <h3>Visual Editor (edit here)</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0;">Visual Editor (edit here)</h3>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="proEditorToggle" style="cursor: pointer;">
+                            <span style="font-size: 0.9rem; font-weight: 500;">Pro Editor Mode</span>
+                        </label>
+                    </div>
                     <div class="mini-preview" id="miniWorkspacePreview">
                         <img id="miniWorkspacePreviewImage" alt="Uploaded chart preview">
                         <span class="mini-preview-placeholder">Preview appears here after upload.</span>

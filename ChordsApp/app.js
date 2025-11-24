@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bpmInput = document.getElementById('bpmInput');
     const keyAnalysisDiv = document.getElementById('keyAnalysis');
     const keyAnalysisText = document.getElementById('keyAnalysisText');
+    const proEditorToggle = document.getElementById('proEditorToggle');
 
     if (yearSpan) {
         yearSpan.textContent = new Date().getFullYear();
@@ -330,6 +331,38 @@ Our [Em7]hearts will cry, these bones will [D]sing
         lastRawTranscription = '';
     };
 
+    // Add {comment: } markers around section headers
+    const addCommentMarkers = (text) => {
+        if (!text) return '';
+
+        const lines = text.split('\n');
+        const result = [];
+
+        const sectionPatterns = [
+            /^(Verse|V|Strophe)\s*(\d+)?:?\s*$/i,
+            /^(Chorus|Refrain|C|Hook):?\s*$/i,
+            /^(Bridge|B):?\s*$/i,
+            /^(Pre-Chorus|Pre):?\s*$/i,
+            /^(Intro|Introduction):?\s*$/i,
+            /^(Outro|Ending):?\s*$/i,
+            /^(Tag|Coda):?\s*$/i
+        ];
+
+        for (const line of lines) {
+            // Check if line matches any section pattern and doesn't already have {comment: }
+            const isSectionHeader = sectionPatterns.some(pattern => pattern.test(line.trim()));
+            const hasCommentMarker = line.trim().startsWith('{comment:');
+
+            if (isSectionHeader && !hasCommentMarker) {
+                result.push(`{comment: ${line.trim()}}`);
+            } else {
+                result.push(line);
+            }
+        }
+
+        return result.join('\n');
+    };
+
     const removeAnalysisLines = (text) => {
         if (!text) {
             return '';
@@ -623,9 +656,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 baselineChart = removeAnalysisLines(result.transcription);
                 currentTransposeSteps = 0;
 
-                // Convert to visual format (above-line) for editing
-                const visualFormat = convertToAboveLineFormat(baselineChart, true);
-                visualEditor.value = visualFormat;
+                // Add {comment: } markers for section headers if not already present
+                baselineChart = addCommentMarkers(baselineChart);
+
+                // Check Pro Editor Mode toggle
+                if (proEditorToggle && proEditorToggle.checked) {
+                    // Pro Mode: Convert to visual format (above-line) for editing
+                    const visualFormat = convertToAboveLineFormat(baselineChart, true);
+                    visualEditor.value = visualFormat;
+                } else {
+                    // Regular Mode: Show inline [C] format
+                    visualEditor.value = baselineChart;
+                }
 
                 // Keep SongBook format
                 songbookOutput.value = baselineChart;
@@ -672,9 +714,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
             baselineChart = removeAnalysisLines(SAMPLE_CHART);
             currentTransposeSteps = 0;
 
-            // Convert to visual format for editing
-            const visualFormat = convertToAboveLineFormat(baselineChart, true);
-            visualEditor.value = visualFormat;
+            // Add {comment: } markers for section headers
+            baselineChart = addCommentMarkers(baselineChart);
+
+            // Check Pro Editor Mode toggle
+            if (proEditorToggle && proEditorToggle.checked) {
+                // Pro Mode: Convert to visual format for editing
+                const visualFormat = convertToAboveLineFormat(baselineChart, true);
+                visualEditor.value = visualFormat;
+            } else {
+                // Regular Mode: Show inline [C] format
+                visualEditor.value = baselineChart;
+            }
 
             // Keep SongBook format
             songbookOutput.value = baselineChart;
@@ -1143,8 +1194,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         baselineChart = removeAnalysisLines(result.transcription);
                         currentTransposeSteps = 0;
 
-                        const visualFormat = convertToAboveLineFormat(baselineChart, true);
-                        visualEditor.value = visualFormat;
+                        // Add {comment: } markers for section headers
+                        baselineChart = addCommentMarkers(baselineChart);
+
+                        // Check Pro Editor Mode toggle
+                        if (proEditorToggle && proEditorToggle.checked) {
+                            const visualFormat = convertToAboveLineFormat(baselineChart, true);
+                            visualEditor.value = visualFormat;
+                        } else {
+                            visualEditor.value = baselineChart;
+                        }
 
                         songbookOutput.value = baselineChart;
                         setDirectionalLayout(songbookOutput, baselineChart);
@@ -1683,6 +1742,27 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Initialize A4 indicator position and pagination
     setTimeout(updateA4Indicator, 100);
     setTimeout(updatePagination, 200);
+
+    // Pro Editor Mode Toggle
+    if (proEditorToggle && visualEditor && songbookOutput) {
+        proEditorToggle.addEventListener('change', () => {
+            if (proEditorToggle.checked) {
+                // Switch to Pro Mode: Show chords above lyrics
+                const inlineFormat = songbookOutput.value;
+                if (inlineFormat && inlineFormat.trim()) {
+                    const proFormat = convertToAboveLineFormat(inlineFormat);
+                    visualEditor.value = proFormat;
+                }
+            } else {
+                // Switch to Regular Mode: Show inline [C] format
+                const proFormat = visualEditor.value;
+                if (proFormat && proFormat.trim()) {
+                    const inlineFormat = convertVisualToSongBook(proFormat);
+                    visualEditor.value = inlineFormat;
+                }
+            }
+        });
+    }
 
     // Update SongBook and preview when visual editor changes
     if (visualEditor) {
