@@ -1454,6 +1454,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
         setDirectionalLayout(visualEditor, visualEditor.value);
         setDirectionalLayout(songbookOutput, songbookOutput.value);
 
+        // Update pagination after content is loaded
+        setTimeout(() => {
+            if (typeof updatePagination === 'function') {
+                updatePagination();
+            }
+        }, 100);
+
         console.log('Live preview updated successfully');
     };
 
@@ -1563,6 +1570,69 @@ Our [Em7]hearts will cry, these bones will [D]sing
         a4Indicator.style.top = (indicatorPosition + containerPadding) + 'px';
     }
 
+    // Pagination function - creates multiple pages when content overflows
+    function updatePagination() {
+        if (!livePreview) return;
+
+        const pagesWrapper = document.getElementById('pagesWrapper');
+        const pageCounter = document.getElementById('pageCounter');
+        if (!pagesWrapper || !pageCounter) return;
+
+        // A4 dimensions at 96 DPI (screen resolution)
+        const A4_HEIGHT_PX = 1123; // 297mm
+        const PADDING = 40; // 20px top + 20px bottom
+        const AVAILABLE_HEIGHT = A4_HEIGHT_PX - PADDING;
+
+        // Get content height
+        const contentHeight = livePreview.scrollHeight;
+
+        // Calculate number of pages needed
+        const pagesNeeded = Math.ceil(contentHeight / AVAILABLE_HEIGHT);
+
+        // Update page counter
+        pageCounter.textContent = `Page 1 of ${pagesNeeded} (A4)`;
+
+        // If multiple pages needed, adjust layout
+        if (pagesNeeded > 1) {
+            // Calculate height per page to distribute content evenly
+            const heightPerPage = Math.ceil(contentHeight / pagesNeeded);
+            livePreview.style.minHeight = `${contentHeight}px`;
+
+            // Show visual page breaks
+            const existingBreaks = livePreview.querySelectorAll('.page-break-indicator');
+            existingBreaks.forEach(br => br.remove());
+
+            for (let i = 1; i < pagesNeeded; i++) {
+                const breakPosition = AVAILABLE_HEIGHT * i;
+                const breakDiv = document.createElement('div');
+                breakDiv.className = 'page-break-indicator';
+                breakDiv.style.cssText = `
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    top: ${breakPosition}px;
+                    height: 2px;
+                    background: repeating-linear-gradient(
+                        90deg,
+                        rgba(239, 68, 68, 0.5) 0,
+                        rgba(239, 68, 68, 0.5) 10px,
+                        transparent 10px,
+                        transparent 20px
+                    );
+                    pointer-events: none;
+                    z-index: 10;
+                `;
+                livePreview.style.position = 'relative';
+                livePreview.appendChild(breakDiv);
+            }
+        } else {
+            // Single page - remove indicators
+            const existingBreaks = livePreview.querySelectorAll('.page-break-indicator');
+            existingBreaks.forEach(br => br.remove());
+            livePreview.style.minHeight = '1123px';
+        }
+    }
+
     // Font size control
     if (fontSizeSlider && fontSizeValue && livePreview) {
         fontSizeSlider.addEventListener('input', () => {
@@ -1570,6 +1640,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             fontSizeValue.textContent = size;
             livePreview.style.fontSize = size + 'pt';
             updateA4Indicator();
+            setTimeout(updatePagination, 100);
         });
     }
 
@@ -1580,6 +1651,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             lineHeightValue.textContent = height;
             livePreview.style.lineHeight = height;
             updateA4Indicator();
+            setTimeout(updatePagination, 100);
         });
     }
 
@@ -1603,12 +1675,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     livePreview.style.columnGap = '40px';
                     livePreview.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
                 }
+                setTimeout(updatePagination, 100);
             });
         });
     }
 
-    // Initialize A4 indicator position
+    // Initialize A4 indicator position and pagination
     setTimeout(updateA4Indicator, 100);
+    setTimeout(updatePagination, 200);
 
     // Update SongBook and preview when visual editor changes
     if (visualEditor) {
