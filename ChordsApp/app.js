@@ -1179,6 +1179,241 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
+    // NEW: Parse inline [C] format to structured song object for professional rendering
+    const parseInlineToStructured = (text) => {
+        if (!text.trim()) {
+            return null;
+        }
+
+        const song = {
+            title: '',
+            artist: '',
+            key: '',
+            bpm: '',
+            tempo: '',
+            timeSignature: '',
+            sections: []
+        };
+
+        const lines = text.split('\n');
+        let currentSection = null;
+
+        // Section type patterns
+        const sectionPatterns = {
+            verse: /^(Verse|V|Strophe)\s*(\d+)?:?\s*$/i,
+            chorus: /^(Chorus|Refrain|C|Hook):?\s*$/i,
+            bridge: /^(Bridge|B):?\s*$/i,
+            prechorus: /^(Pre-Chorus|Pre):?\s*$/i,
+            intro: /^(Intro|Introduction):?\s*$/i,
+            outro: /^(Outro|Ending):?\s*$/i,
+            tag: /^(Tag|Coda):?\s*$/i
+        };
+
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+
+            // Extract metadata
+            if (line.match(/^\{?Title:\s*/i)) {
+                song.title = line.replace(/^\{?Title:\s*/i, '').replace(/\}$/, '').trim();
+                continue;
+            }
+            if (line.match(/^\{?Artist:\s*/i)) {
+                song.artist = line.replace(/^\{?Artist:\s*/i, '').replace(/\}$/, '').trim();
+                continue;
+            }
+            if (line.match(/^\{?Key:\s*/i)) {
+                song.key = line.replace(/^\{?Key:\s*/i, '').replace(/\}$/, '').trim();
+                continue;
+            }
+            if (line.match(/^\{?BPM:\s*/i)) {
+                song.bpm = line.replace(/^\{?BPM:\s*/i, '').replace(/\}$/, '').trim();
+                continue;
+            }
+            if (line.match(/^\{?Tempo:\s*/i)) {
+                song.tempo = line.replace(/^\{?Tempo:\s*/i, '').replace(/\}$/, '').trim();
+                continue;
+            }
+            if (line.match(/^\{?Time:\s*/i)) {
+                song.timeSignature = line.replace(/^\{?Time:\s*/i, '').replace(/\}$/, '').trim();
+                continue;
+            }
+
+            // Skip {soc}, {eoc}, Number: lines
+            if (line.match(/^\{(soc|eoc|comment)\}$/i) || line.match(/^Number:/i)) {
+                continue;
+            }
+
+            // Check if line is a section header
+            let sectionMatch = null;
+            let sectionType = null;
+
+            for (const [type, pattern] of Object.entries(sectionPatterns)) {
+                if (pattern.test(line)) {
+                    sectionMatch = line;
+                    sectionType = type;
+                    break;
+                }
+            }
+
+            if (sectionMatch) {
+                // Start new section
+                currentSection = {
+                    type: sectionType,
+                    label: line.trim().replace(/:$/, ''),
+                    lines: []
+                };
+                song.sections.push(currentSection);
+                continue;
+            }
+
+            // Skip empty lines
+            if (!line.trim()) {
+                continue;
+            }
+
+            // Parse chord line with inline [C] format
+            if (line.includes('[') && line.includes(']')) {
+                const chordLine = { chords: [], lyrics: '' };
+                let lyricText = '';
+                let currentColumn = 0;
+
+                let i = 0;
+                while (i < line.length) {
+                    if (line[i] === '[') {
+                        const endBracket = line.indexOf(']', i);
+                        if (endBracket !== -1) {
+                            const chordName = line.substring(i + 1, endBracket);
+                            chordLine.chords.push({
+                                name: chordName,
+                                column: currentColumn
+                            });
+                            i = endBracket + 1;
+                            continue;
+                        }
+                    }
+                    lyricText += line[i];
+                    currentColumn++;
+                    i++;
+                }
+
+                chordLine.lyrics = lyricText;
+
+                // Add to current section or create default section
+                if (!currentSection) {
+                    currentSection = {
+                        type: 'default',
+                        label: '',
+                        lines: []
+                    };
+                    song.sections.push(currentSection);
+                }
+                currentSection.lines.push(chordLine);
+            } else {
+                // Plain line (no chords) - could be lyrics or metadata
+                if (!currentSection) {
+                    currentSection = {
+                        type: 'default',
+                        label: '',
+                        lines: []
+                    };
+                    song.sections.push(currentSection);
+                }
+                currentSection.lines.push({ chords: [], lyrics: line });
+            }
+        }
+
+        return song;
+    };
+
+    // NEW: Render structured song object as professional chord sheet
+    const renderStructuredSong = (song) => {
+        if (!song) return '';
+
+        const output = [];
+
+        // Header: Title | Key | BPM | Tempo | Time
+        const headerParts = [];
+        if (song.title) headerParts.push(song.title);
+        if (song.key) headerParts.push(`Key: ${song.key}`);
+        if (song.bpm) headerParts.push(`BPM: ${song.bpm}`);
+        if (song.tempo) headerParts.push(`Tempo: ${song.tempo}`);
+        if (song.timeSignature) headerParts.push(`Time: ${song.timeSignature}`);
+
+        if (headerParts.length > 0) {
+            output.push(`<div class="song-header">${headerParts.join(' | ')}</div>`);
+            output.push('');
+        }
+
+        // Artist
+        if (song.artist) {
+            output.push(`<div class="song-artist">${song.artist}</div>`);
+            output.push('');
+        }
+
+        // Render each section
+        for (const section of song.sections) {
+            // Section label (VERSE 1, CHORUS, etc.)
+            if (section.label) {
+                output.push(`<div class="chord-section-header">${section.label.toUpperCase()}</div>`);
+            }
+
+            // Render each line in the section
+            for (const line of section.lines) {
+                if (line.chords.length === 0) {
+                    // Plain lyric line (no chords)
+                    output.push(`<div class="lyric-line-only">${line.lyrics}</div>`);
+                } else {
+                    // Build chord line and lyric line
+                    const chordLine = buildChordLine(line.chords, line.lyrics.length);
+                    output.push(`<div class="chord-line">${chordLine}</div>`);
+                    output.push(`<div class="lyric-line">${line.lyrics}</div>`);
+                }
+            }
+
+            // Add spacing after section
+            output.push('');
+        }
+
+        return output.join('\n');
+    };
+
+    // Helper: Build chord line with proper spacing
+    const buildChordLine = (chords, lyricLength) => {
+        if (chords.length === 0) return '';
+
+        // Create array to hold chord characters at each position
+        const chordLineChars = new Array(Math.max(lyricLength + 20, 100)).fill('&nbsp;');
+
+        // Place each chord at its column position
+        for (const chord of chords) {
+            const chordStr = `<b>${chord.name}</b>`;
+            let col = chord.column;
+
+            // Place chord characters
+            for (let i = 0; i < chord.name.length; i++) {
+                if (col + i < chordLineChars.length) {
+                    if (i === 0) {
+                        chordLineChars[col + i] = chordStr;
+                    } else {
+                        chordLineChars[col + i] = ''; // Skip positions occupied by chord
+                    }
+                }
+            }
+
+            // Add padding after chord
+            const chordEndCol = col + chord.name.length;
+            if (chordEndCol < chordLineChars.length && chordLineChars[chordEndCol] === '&nbsp;') {
+                chordLineChars[chordEndCol] = '&nbsp;&nbsp;'; // Extra space after chord
+            }
+        }
+
+        // Join and clean up
+        return chordLineChars
+            .join('')
+            .replace(/(&nbsp;)+$/, '') // Remove trailing spaces
+            .replace(/<\/b>&nbsp;<b>/g, '</b>&nbsp;&nbsp;<b>'); // Add spacing between adjacent chords
+    };
+
     const convertToAboveLineFormat = (text, compact = true) => {
         if (!text.trim()) {
             return '';
@@ -1437,20 +1672,42 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return;
         }
 
-        let visualContent = visualEditor.value;
-        console.log('Updating live preview with content length:', visualContent.length);
+        // NEW APPROACH: Use structured rendering for professional layout
+        let sourceContent = songbookOutput.value; // Use [C] inline format as source
 
-        // Always make chords bold, then add Nashville numbers if enabled
-        visualContent = makeChordsBold(visualContent);
-        if (showNashvilleNumbers && currentKey) {
-            visualContent = addNashvilleNumbers(visualContent, currentKey);
+        if (!sourceContent || !sourceContent.trim()) {
+            sourceContent = visualEditor.value; // Fallback to visual editor
         }
 
-        // Use visual editor content for preview (innerHTML to support bold tags)
-        livePreview.innerHTML = visualContent.replace(/\n/g, '<br>');
+        console.log('Updating live preview with content length:', sourceContent.length);
+
+        // Parse to structured format
+        const songData = parseInlineToStructured(sourceContent);
+
+        if (songData) {
+            // Render using professional structured renderer
+            let renderedHTML = renderStructuredSong(songData);
+
+            // Add Nashville numbers if enabled
+            if (showNashvilleNumbers && currentKey) {
+                renderedHTML = addNashvilleNumbers(renderedHTML, currentKey);
+            }
+
+            livePreview.innerHTML = renderedHTML;
+            console.log('Live preview updated with structured rendering');
+        } else {
+            // Fallback to old method if parsing fails
+            console.warn('Structured parsing failed, falling back to old method');
+            let visualContent = visualEditor.value;
+            visualContent = makeChordsBold(visualContent);
+            if (showNashvilleNumbers && currentKey) {
+                visualContent = addNashvilleNumbers(visualContent, currentKey);
+            }
+            livePreview.innerHTML = visualContent.replace(/\n/g, '<br>');
+        }
 
         // Apply direction to all editing surfaces based on content
-        setDirectionalLayout(livePreview, visualContent);
+        setDirectionalLayout(livePreview, sourceContent);
         setDirectionalLayout(visualEditor, visualEditor.value);
         setDirectionalLayout(songbookOutput, songbookOutput.value);
 
