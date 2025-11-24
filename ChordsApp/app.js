@@ -1583,6 +1583,30 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
+    // Column layout control
+    const columnButtons = document.querySelectorAll('.column-btn');
+    if (columnButtons.length > 0 && livePreview) {
+        columnButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                columnButtons.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                btn.classList.add('active');
+
+                // Apply column count
+                const columns = btn.dataset.columns;
+                if (columns === '1') {
+                    livePreview.style.columns = '1';
+                    livePreview.style.columnRule = 'none';
+                } else {
+                    livePreview.style.columns = '2';
+                    livePreview.style.columnGap = '40px';
+                    livePreview.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
+                }
+            });
+        });
+    }
+
     // Initialize A4 indicator position
     setTimeout(updateA4Indicator, 100);
 

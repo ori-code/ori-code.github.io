@@ -706,6 +706,12 @@ a {
     background: rgba(255, 255, 255, 0.12);
 }
 
+.column-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
 .editor-actions {
     display: inline-flex;
     gap: 12px;
