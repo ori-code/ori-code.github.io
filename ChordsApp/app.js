@@ -656,15 +656,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 baselineChart = removeAnalysisLines(result.transcription);
                 currentTransposeSteps = 0;
 
-                // Add {comment: } markers for section headers if not already present
-                baselineChart = addCommentMarkers(baselineChart);
-
+                // AI now returns proper ChordPro format with metadata and {comment:} tags
                 // Default: Show chords above lyrics (cleaner view)
-                // User clicks Pro Mode toggle to see inline [C] format
                 const visualFormat = convertToAboveLineFormat(baselineChart, true);
                 visualEditor.value = visualFormat;
 
-                // Keep SongBook format
+                // Keep ChordPro format as baseline
                 songbookOutput.value = baselineChart;
                 setDirectionalLayout(songbookOutput, baselineChart);
 
@@ -1236,13 +1233,26 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const bpmPlaceholder = 'BPM: ___';
         let combinedTitleInserted = false;
 
-        // Pre-scan for title and key values
+        // Pre-scan for title, author, key, tempo, and time values
+        let extractedAuthor = null;
+        let extractedTempo = null;
+        let extractedTime = null;
+
         for (const rawLine of lines) {
-            if (!extractedTitle && rawLine.match(/^\{?Title:/i)) {
-                extractedTitle = rawLine.replace(/^\{?Title:\s*/i, '').replace(/\}$/, '').trim();
+            if (!extractedTitle && rawLine.match(/^\{title:/i)) {
+                extractedTitle = rawLine.replace(/^\{title:\s*/i, '').replace(/\}$/, '').trim();
             }
-            if (!extractedKey && rawLine.match(/^\{?Key:/i)) {
-                extractedKey = rawLine.replace(/^\{?Key:\s*/i, '').replace(/\}$/, '').trim();
+            if (!extractedAuthor && rawLine.match(/^\{author:/i)) {
+                extractedAuthor = rawLine.replace(/^\{author:\s*/i, '').replace(/\}$/, '').trim();
+            }
+            if (!extractedKey && rawLine.match(/^\{key:/i)) {
+                extractedKey = rawLine.replace(/^\{key:\s*/i, '').replace(/\}$/, '').trim();
+            }
+            if (!extractedTempo && rawLine.match(/^\{tempo:/i)) {
+                extractedTempo = rawLine.replace(/^\{tempo:\s*/i, '').replace(/\}$/, '').trim();
+            }
+            if (!extractedTime && rawLine.match(/^\{time:/i)) {
+                extractedTime = rawLine.replace(/^\{time:\s*/i, '').replace(/\}$/, '').trim();
             }
         }
 
@@ -1252,17 +1262,40 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Format metadata lines
-            if (line.match(/^\{?Title:/i)) {
-                const title = line.replace(/^\{?Title:\s*/i, '').replace(/\}$/, '').trim();
+            // Handle {comment: Section Name} - convert to "Section Name:"
+            if (line.match(/^\{comment:/i)) {
+                const sectionName = line.replace(/^\{comment:\s*/i, '').replace(/\}$/, '').trim();
+                if (compact && formatted.length > 0 && formatted[formatted.length - 1] !== '') {
+                    formatted.push(''); // Add blank line before section
+                }
+                formatted.push(sectionName + (sectionName.endsWith(':') ? '' : ':'));
+                continue;
+            }
+
+            // Format ChordPro metadata lines - {title:}, {author:}, {key:}, etc.
+            if (line.match(/^\{title:/i)) {
+                const title = line.replace(/^\{title:\s*/i, '').replace(/\}$/, '').trim();
                 const keyDisplay = extractedKey ? extractedKey : 'Unknown';
-                const combinedLine = `${title}${title ? ' | ' : ''}Key: ${keyDisplay} | ${bpmPlaceholder}`;
+                const tempoDisplay = extractedTempo ? `${extractedTempo} BPM` : bpmPlaceholder;
+                const combinedLine = `${title}${title ? ' | ' : ''}Key: ${keyDisplay} | ${tempoDisplay}`;
                 formatted.push(combinedLine.trim());
+                if (extractedAuthor) {
+                    formatted.push(extractedAuthor);
+                }
+                if (extractedTime) {
+                    formatted.push(`Time: ${extractedTime}`);
+                }
                 formatted.push('');
                 combinedTitleInserted = true;
                 continue;
             }
 
+            if (line.match(/^\{(author|key|tempo|time):/i)) {
+                // These are already handled in the metadata block above
+                continue;
+            }
+
+            // Legacy format support - old style metadata
             if (line.match(/^\{?Artist:/i)) {
                 const artist = line.replace(/^\{?Artist:\s*/i, '').replace(/\}$/, '');
                 if (compact) {
@@ -1271,11 +1304,6 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     formatted.push(artist);
                     formatted.push('');
                 }
-                continue;
-            }
-
-            if (line.match(/^\{?Key:/i)) {
-                // Key already merged with title line above
                 continue;
             }
 
@@ -1290,8 +1318,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Section markers - less spacing
-            if (line.match(/.*:$/)) {
+            // Section markers - less spacing (legacy format without {comment:})
+            if (line.match(/.*:$/) && !line.includes('[') && !line.includes(']')) {
                 if (compact && formatted.length > 0 && formatted[formatted.length - 1] !== '') {
                     formatted.push(''); // Only one blank line before sections
                 }
@@ -1731,21 +1759,23 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Pro Editor Mode Toggle
     if (proEditorToggle && visualEditor && songbookOutput) {
         proEditorToggle.addEventListener('change', () => {
-            if (proEditorToggle.checked) {
-                // Switch to Pro Mode: Show inline [C] format for precise editing
-                const proFormat = visualEditor.value;
-                if (proFormat && proFormat.trim()) {
-                    const inlineFormat = convertVisualToSongBook(proFormat);
-                    visualEditor.value = inlineFormat;
-                }
-            } else {
-                // Switch to Regular Mode: Show chords above lyrics
-                const inlineFormat = songbookOutput.value;
-                if (inlineFormat && inlineFormat.trim()) {
-                    const proFormat = convertToAboveLineFormat(inlineFormat);
-                    visualEditor.value = proFormat;
-                }
+            const chordProFormat = songbookOutput.value;
+
+            if (!chordProFormat || !chordProFormat.trim()) {
+                return; // No content to toggle
             }
+
+            if (proEditorToggle.checked) {
+                // Switch to Pro Mode: Show raw ChordPro format with {title:}, {comment:}, etc.
+                visualEditor.value = chordProFormat;
+            } else {
+                // Switch to Regular Mode: Show chords above lyrics (clean display)
+                const visualFormat = convertToAboveLineFormat(chordProFormat, true);
+                visualEditor.value = visualFormat;
+            }
+
+            // Update preview after toggle
+            updateLivePreview();
         });
     }
 
