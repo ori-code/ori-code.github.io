@@ -659,15 +659,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Add {comment: } markers for section headers if not already present
                 baselineChart = addCommentMarkers(baselineChart);
 
-                // Check Pro Editor Mode toggle
-                if (proEditorToggle && proEditorToggle.checked) {
-                    // Pro Mode: Convert to visual format (above-line) for editing
-                    const visualFormat = convertToAboveLineFormat(baselineChart, true);
-                    visualEditor.value = visualFormat;
-                } else {
-                    // Regular Mode: Show inline [C] format
-                    visualEditor.value = baselineChart;
-                }
+                // Always show inline format by default
+                // User clicks Pro Mode toggle to convert to chords-above format
+                visualEditor.value = baselineChart;
 
                 // Keep SongBook format
                 songbookOutput.value = baselineChart;
@@ -717,15 +711,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Add {comment: } markers for section headers
             baselineChart = addCommentMarkers(baselineChart);
 
-            // Check Pro Editor Mode toggle
-            if (proEditorToggle && proEditorToggle.checked) {
-                // Pro Mode: Convert to visual format for editing
-                const visualFormat = convertToAboveLineFormat(baselineChart, true);
-                visualEditor.value = visualFormat;
-            } else {
-                // Regular Mode: Show inline [C] format
-                visualEditor.value = baselineChart;
-            }
+            // Always show inline format by default
+            visualEditor.value = baselineChart;
 
             // Keep SongBook format
             songbookOutput.value = baselineChart;
@@ -1197,13 +1184,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         // Add {comment: } markers for section headers
                         baselineChart = addCommentMarkers(baselineChart);
 
-                        // Check Pro Editor Mode toggle
-                        if (proEditorToggle && proEditorToggle.checked) {
-                            const visualFormat = convertToAboveLineFormat(baselineChart, true);
-                            visualEditor.value = visualFormat;
-                        } else {
-                            visualEditor.value = baselineChart;
-                        }
+                        // Always show inline format by default
+                        visualEditor.value = baselineChart;
 
                         songbookOutput.value = baselineChart;
                         setDirectionalLayout(songbookOutput, baselineChart);
