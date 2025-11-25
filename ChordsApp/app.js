@@ -659,9 +659,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Add {comment: } markers for section headers if not already present
                 baselineChart = addCommentMarkers(baselineChart);
 
-                // Always show inline format by default
-                // User clicks Pro Mode toggle to convert to chords-above format
-                visualEditor.value = baselineChart;
+                // Default: Show chords above lyrics (cleaner view)
+                // User clicks Pro Mode toggle to see inline [C] format
+                const visualFormat = convertToAboveLineFormat(baselineChart, true);
+                visualEditor.value = visualFormat;
 
                 // Keep SongBook format
                 songbookOutput.value = baselineChart;
@@ -711,8 +712,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Add {comment: } markers for section headers
             baselineChart = addCommentMarkers(baselineChart);
 
-            // Always show inline format by default
-            visualEditor.value = baselineChart;
+            // Default: Show chords above lyrics
+            const visualFormat = convertToAboveLineFormat(baselineChart, true);
+            visualEditor.value = visualFormat;
 
             // Keep SongBook format
             songbookOutput.value = baselineChart;
@@ -1184,8 +1186,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         // Add {comment: } markers for section headers
                         baselineChart = addCommentMarkers(baselineChart);
 
-                        // Always show inline format by default
-                        visualEditor.value = baselineChart;
+                        // Default: Show chords above lyrics
+                        const visualFormat = convertToAboveLineFormat(baselineChart, true);
+                        visualEditor.value = visualFormat;
 
                         songbookOutput.value = baselineChart;
                         setDirectionalLayout(songbookOutput, baselineChart);
@@ -1729,18 +1732,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
     if (proEditorToggle && visualEditor && songbookOutput) {
         proEditorToggle.addEventListener('change', () => {
             if (proEditorToggle.checked) {
-                // Switch to Pro Mode: Show chords above lyrics
-                const inlineFormat = songbookOutput.value;
-                if (inlineFormat && inlineFormat.trim()) {
-                    const proFormat = convertToAboveLineFormat(inlineFormat);
-                    visualEditor.value = proFormat;
-                }
-            } else {
-                // Switch to Regular Mode: Show inline [C] format
+                // Switch to Pro Mode: Show inline [C] format for precise editing
                 const proFormat = visualEditor.value;
                 if (proFormat && proFormat.trim()) {
                     const inlineFormat = convertVisualToSongBook(proFormat);
                     visualEditor.value = inlineFormat;
+                }
+            } else {
+                // Switch to Regular Mode: Show chords above lyrics
+                const inlineFormat = songbookOutput.value;
+                if (inlineFormat && inlineFormat.trim()) {
+                    const proFormat = convertToAboveLineFormat(inlineFormat);
+                    visualEditor.value = proFormat;
                 }
             }
         });
