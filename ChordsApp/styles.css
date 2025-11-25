@@ -1245,6 +1245,43 @@ a {
     }
 }
 
+/* Live Preview Professional Chord Sheet Styling */
+#livePreview {
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+/* Style chords in red for professional look */
+#livePreview b {
+    color: #d32f2f;
+    font-weight: bold;
+    font-size: 0.95em;
+}
+
+/* Enhanced formatting with structured classes */
+.song-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 0.3em;
+    text-align: center;
+}
+
+.song-meta {
+    text-align: center;
+    font-size: 0.9em;
+    margin-bottom: 0.5em;
+    color: #333;
+}
+
+.section-header {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    text-transform: uppercase;
+}
+
 /* Print Styles - Clean Chord Chart Formatting */
 @media print {
     * {
@@ -1311,19 +1348,53 @@ a {
     /* Show the live preview content */
     #livePreview {
         display: block !important;
-        padding: 15px !important;
-        font-family: 'Courier New', monospace;
+        padding: 20px 30px !important;
+        font-family: Arial, Helvetica, sans-serif;
         color: black !important;
-        white-space: pre-wrap;
         background: white !important;
         border: none !important;
         aspect-ratio: auto !important;
         min-height: auto !important;
         font-size: 11pt;
-        line-height: 1.5;
+        line-height: 1.6;
         columns: 2;
-        column-gap: 30px;
-        column-rule: 1px solid #000;
+        column-gap: 40px;
+        column-rule: 1px solid rgba(0, 0, 0, 0.3);
+    }
+
+    /* Style bold tags (chords) in red */
+    #livePreview b {
+        color: #d32f2f !important;
+        font-weight: bold !important;
+        font-size: 10pt !important;
+    }
+
+    /* Professional print formatting */
+    .song-title {
+        font-size: 18pt !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        margin: 0 0 8px 0 !important;
+        column-span: all !important;
+        break-after: avoid !important;
+    }
+
+    .song-meta {
+        text-align: center !important;
+        font-size: 10pt !important;
+        margin: 2px 0 !important;
+        column-span: all !important;
+        break-after: avoid !important;
+        color: #333 !important;
+    }
+
+    .section-header {
+        font-weight: bold !important;
+        font-size: 11pt !important;
+        text-transform: uppercase !important;
+        margin: 12px 0 6px 0 !important;
+        break-after: avoid !important;
+        page-break-after: avoid !important;
     }
 
     /* Hide the hidden print preview div - we use livePreview instead */

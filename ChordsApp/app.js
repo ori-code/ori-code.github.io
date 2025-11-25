@@ -1503,6 +1503,72 @@ Our [Em7]hearts will cry, these bones will [D]sing
         setDirectionalLayout(songbookOutput, songbookOutput.value);
     };
 
+    // Format content with structured HTML for professional display
+    const formatForPreview = (content) => {
+        const lines = content.split('\n');
+        const formatted = [];
+        let inMetadata = true;
+        let metadataLines = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            // First non-empty lines are metadata (title, author, key info)
+            if (inMetadata && line) {
+                // Check if it's a metadata line (contains Key:, BPM:, Tempo:, etc.)
+                if (i < 3 || /Key:|BPM:|Tempo:|Time:|^\|/.test(line) || /(Words|Music)\s+by/i.test(line)) {
+                    metadataLines.push(line);
+                    if (metadataLines.length >= 4 || (i > 0 && !line)) {
+                        inMetadata = false;
+                    }
+                    continue;
+                } else {
+                    // First non-metadata line found
+                    inMetadata = false;
+                    // Output metadata
+                    if (metadataLines.length > 0) {
+                        formatted.push(`<div class="song-title">${metadataLines[0]}</div>`);
+                        for (let j = 1; j < metadataLines.length; j++) {
+                            formatted.push(`<div class="song-meta">${metadataLines[j]}</div>`);
+                        }
+                        formatted.push('<br>');
+                        metadataLines = [];
+                    }
+                }
+            }
+
+            // Empty line
+            if (!line) {
+                formatted.push('<br>');
+                continue;
+            }
+
+            // Section headers (VERSE 1:, CHORUS:, etc.)
+            if (/^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA)\s*\d*:?$/i.test(line) ||
+                /^(V|C|B)\s*\d+:$/i.test(line)) {
+                formatted.push(`<div class="section-header">${line}</div>`);
+                continue;
+            }
+
+            // Regular line
+            formatted.push(line + '<br>');
+        }
+
+        // If we haven't output metadata yet (all lines were metadata), output them now
+        if (metadataLines.length > 0) {
+            const result = [];
+            result.push(`<div class="song-title">${metadataLines[0]}</div>`);
+            for (let j = 1; j < metadataLines.length; j++) {
+                result.push(`<div class="song-meta">${metadataLines[j]}</div>`);
+            }
+            result.push('<br>');
+            result.push(...formatted);
+            return result.join('');
+        }
+
+        return formatted.join('');
+    };
+
     const updateLivePreview = () => {
         if (!livePreview) {
             console.error('livePreview element not found!');
@@ -1518,8 +1584,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             visualContent = addNashvilleNumbers(visualContent, currentKey);
         }
 
-        // Use visual editor content for preview (innerHTML to support bold tags)
-        livePreview.innerHTML = visualContent.replace(/\n/g, '<br>');
+        // Format with structured HTML for professional display
+        const formattedHTML = formatForPreview(visualContent);
+        livePreview.innerHTML = formattedHTML;
 
         // Apply direction to all editing surfaces based on content
         setDirectionalLayout(livePreview, visualContent);
