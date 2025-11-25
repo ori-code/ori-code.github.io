@@ -367,9 +367,46 @@ Our [Em7]hearts will cry, these bones will [D]sing
         if (!text) {
             return '';
         }
-        return text
-            .replace(/^Analysis:.*$/gim, '')
-            .replace(/^Number:.*$/gim, '')
+
+        // Split into lines
+        const lines = text.split('\n');
+        const cleaned = [];
+        let inAnalysisSection = false;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            // Detect start of analysis section
+            if (line.match(/^Analysis:/i)) {
+                inAnalysisSection = true;
+                continue;
+            }
+
+            // Skip lines that look like analysis bullets
+            // (lines starting with "-" or "•" that mention musical terms)
+            if (line.match(/^[-–—•]\s*(Predominant|Strong|Most frequent|Typical|Song begins|Harmonic|Dsus4|Gsus4|chord|progression|resolution|movement|scale|tonal)/i)) {
+                continue;
+            }
+
+            // Skip "Number:" lines
+            if (line.match(/^Number:/i)) {
+                continue;
+            }
+
+            // If we were in analysis section and hit an empty line followed by content, we're out
+            if (inAnalysisSection && line === '') {
+                inAnalysisSection = false;
+            }
+
+            // Skip lines while in analysis section
+            if (inAnalysisSection) {
+                continue;
+            }
+
+            cleaned.push(lines[i]); // Keep original line with spacing
+        }
+
+        return cleaned.join('\n')
             .replace(/\n{3,}/g, '\n\n')
             .trimEnd();
     };

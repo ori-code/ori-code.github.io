@@ -93,7 +93,12 @@ FORMATTING RULES:
 VERIFICATION STEP:
 Before finalizing, double-check each chord placement by verifying the character directly below the chord in the image matches where you placed [chord] in the text.
 
-Return ONLY the ChordPro formatted chord chart with metadata and section blocks. No explanations.
+OUTPUT REQUIREMENTS:
+- Return ONLY the ChordPro formatted chord chart with metadata and section blocks
+- DO NOT include any analysis, commentary, or explanations
+- DO NOT add bullet points analyzing chord progressions, harmonic movement, or musical theory
+- DO NOT include "Analysis:" sections or numbered observations
+- Just the clean chord chart with lyrics and chords
 
 This is the user's own chord sheet for personal practice.`
                 }, {
