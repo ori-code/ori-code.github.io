@@ -1556,8 +1556,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const isSectionHeader = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA)\s*\d*:?$/i.test(line) ||
                                        /^(V|C|B)\s*\d+:$/i.test(line);
 
+                // Skip chord progression summary lines (e.g., "C | 1 | G | 5 D/F | 2# Em | 3")
+                const isChordProgression = /^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(line);
+
                 // Check if it's a metadata line (contains Key:, BPM:, Tempo:, etc.)
-                if (!isSectionHeader && (i < 3 || /Key:|BPM:|Tempo:|Time:|^\|/.test(line) || /(Words|Music)\s+by/i.test(line))) {
+                if (!isSectionHeader && !isChordProgression && (i < 3 || /Key:|BPM:|Tempo:|Time:/.test(line) || /(Words|Music)\s+by/i.test(line))) {
                     metadataLines.push(line);
                     if (metadataLines.length >= 4 || (i > 0 && !line)) {
                         inMetadata = false;
@@ -1568,9 +1571,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     inMetadata = false;
                     // Output metadata
                     if (metadataLines.length > 0) {
-                        formatted.push(`<div class="song-title">${metadataLines[0]}</div>`);
+                        // Strip "Title:" prefix from first line
+                        let titleText = metadataLines[0].replace(/^Title:\s*/i, '').trim();
+                        formatted.push(`<div class="song-title">${titleText}</div>`);
                         for (let j = 1; j < metadataLines.length; j++) {
-                            formatted.push(`<div class="song-meta">${metadataLines[j]}</div>`);
+                            // Skip chord progression lines in metadata
+                            if (!/^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(metadataLines[j])) {
+                                formatted.push(`<div class="song-meta">${metadataLines[j]}</div>`);
+                            }
                         }
                         formatted.push('<br>');
                         metadataLines = [];
@@ -1598,9 +1606,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // If we haven't output metadata yet (all lines were metadata), output them now
         if (metadataLines.length > 0) {
             const result = [];
-            result.push(`<div class="song-title">${metadataLines[0]}</div>`);
+            // Strip "Title:" prefix from first line
+            let titleText = metadataLines[0].replace(/^Title:\s*/i, '').trim();
+            result.push(`<div class="song-title">${titleText}</div>`);
             for (let j = 1; j < metadataLines.length; j++) {
-                result.push(`<div class="song-meta">${metadataLines[j]}</div>`);
+                // Skip chord progression lines in metadata
+                if (!/^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(metadataLines[j])) {
+                    result.push(`<div class="song-meta">${metadataLines[j]}</div>`);
+                }
             }
             result.push('<br>');
             result.push(...formatted);
@@ -1617,16 +1630,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const lineCount = content.split('\n').length;
         const charCount = content.length;
 
-        // Calculate optimal font size based on content
-        let fontSize = 11; // Default 11pt
+        // Calculate optimal font size based on content (improved thresholds for readability)
+        let fontSize = 11; // Default 11pt for short content
 
-        if (lineCount > 120 || charCount > 3500) {
-            fontSize = 8.5; // Very long content
-        } else if (lineCount > 90 || charCount > 2800) {
+        if (lineCount > 100 || charCount > 3200) {
+            fontSize = 9.5; // Very long content - minimum readable size
+        } else if (lineCount > 80 || charCount > 2600) {
             fontSize = 9.5; // Long content
-        } else if (lineCount > 70 || charCount > 2200) {
+        } else if (lineCount > 60 || charCount > 2000) {
             fontSize = 10; // Medium-long content
-        } else if (lineCount > 50 || charCount > 1600) {
+        } else if (lineCount > 40 || charCount > 1400) {
             fontSize = 10.5; // Medium content
         }
 
@@ -1643,11 +1656,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         let visualContent = visualEditor.value;
         console.log('Updating live preview with content length:', visualContent.length);
 
-        // Always make chords bold, then add Nashville numbers if enabled
+        // Always make chords bold (skip Nashville numbers for clean print preview)
         visualContent = makeChordsBold(visualContent);
-        if (showNashvilleNumbers && currentKey) {
-            visualContent = addNashvilleNumbers(visualContent, currentKey);
-        }
 
         // Auto-optimize font size based on content length
         optimizeFontSize(visualContent);
