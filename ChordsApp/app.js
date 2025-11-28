@@ -1606,6 +1606,30 @@ Our [Em7]hearts will cry, these bones will [D]sing
         return formatted.join('');
     };
 
+    // Auto-optimize font size based on content length
+    const optimizeFontSize = (content) => {
+        if (!livePreview || !content) return;
+
+        const lineCount = content.split('\n').length;
+        const charCount = content.length;
+
+        // Calculate optimal font size based on content
+        let fontSize = 11; // Default 11pt
+
+        if (lineCount > 120 || charCount > 3500) {
+            fontSize = 8.5; // Very long content
+        } else if (lineCount > 90 || charCount > 2800) {
+            fontSize = 9.5; // Long content
+        } else if (lineCount > 70 || charCount > 2200) {
+            fontSize = 10; // Medium-long content
+        } else if (lineCount > 50 || charCount > 1600) {
+            fontSize = 10.5; // Medium content
+        }
+
+        livePreview.style.fontSize = fontSize + 'pt';
+        console.log(`Auto-optimized font size to ${fontSize}pt (${lineCount} lines, ${charCount} chars)`);
+    };
+
     const updateLivePreview = () => {
         if (!livePreview) {
             console.error('livePreview element not found!');
@@ -1620,6 +1644,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
         if (showNashvilleNumbers && currentKey) {
             visualContent = addNashvilleNumbers(visualContent, currentKey);
         }
+
+        // Auto-optimize font size based on content length
+        optimizeFontSize(visualContent);
 
         // Format with structured HTML for professional display
         const formattedHTML = formatForPreview(visualContent);
@@ -1834,6 +1861,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Column layout control
     const columnButtons = document.querySelectorAll('.column-btn');
     if (columnButtons.length > 0 && livePreview) {
+        // Initialize with 1 column (default)
+        livePreview.style.columns = '1';
+        livePreview.style.columnRule = 'none';
+
         columnButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 // Remove active class from all buttons
