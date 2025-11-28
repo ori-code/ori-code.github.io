@@ -1552,8 +1552,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // First non-empty lines are metadata (title, author, key info)
             if (inMetadata && line) {
+                // Check if line is a section header - if so, it's not metadata
+                const isSectionHeader = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA)\s*\d*:?$/i.test(line) ||
+                                       /^(V|C|B)\s*\d+:$/i.test(line);
+
                 // Check if it's a metadata line (contains Key:, BPM:, Tempo:, etc.)
-                if (i < 3 || /Key:|BPM:|Tempo:|Time:|^\|/.test(line) || /(Words|Music)\s+by/i.test(line)) {
+                if (!isSectionHeader && (i < 3 || /Key:|BPM:|Tempo:|Time:|^\|/.test(line) || /(Words|Music)\s+by/i.test(line))) {
                     metadataLines.push(line);
                     if (metadataLines.length >= 4 || (i > 0 && !line)) {
                         inMetadata = false;
