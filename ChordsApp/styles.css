@@ -1264,18 +1264,26 @@ a {
     font-size: 1.5em;
     font-weight: bold;
     margin-bottom: 0.3em;
-    text-align: center;
+    text-align: center !important;
     column-span: all;
     -webkit-column-span: all;
+    display: block;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .song-meta {
-    text-align: center;
+    text-align: center !important;
     font-size: 0.9em;
     margin-bottom: 0.5em;
     color: #333;
     column-span: all;
     -webkit-column-span: all;
+    display: block;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .section-header {
@@ -1378,18 +1386,22 @@ a {
         font-size: 18pt !important;
         font-weight: bold !important;
         text-align: center !important;
-        margin: 0 0 8px 0 !important;
+        margin: 0 auto 8px auto !important;
         column-span: all !important;
         break-after: avoid !important;
+        display: block !important;
+        width: 100% !important;
     }
 
     .song-meta {
         text-align: center !important;
         font-size: 10pt !important;
-        margin: 2px 0 !important;
+        margin: 2px auto !important;
         column-span: all !important;
         break-after: avoid !important;
         color: #333 !important;
+        display: block !important;
+        width: 100% !important;
     }
 
     .section-header {
