@@ -1004,6 +1004,8 @@ a {
     columns: 2;
     column-gap: 40px;
     column-rule: 1px solid rgba(0, 0, 0, 0.2);
+    margin: 0 auto;
+    position: relative;
     /* Direction will be set dynamically by JavaScript based on content */
 }
 
