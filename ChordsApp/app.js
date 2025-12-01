@@ -43,8 +43,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const API_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:3002/api/analyze-chart'
+    // Detect local development (localhost or local network IP)
+    const isLocalDev = window.location.hostname === 'localhost' ||
+                       window.location.hostname.startsWith('192.168.') ||
+                       window.location.hostname.startsWith('10.') ||
+                       window.location.hostname.startsWith('172.');
+
+    const API_URL = isLocalDev
+        ? `http://${window.location.hostname}:3002/api/analyze-chart`
         : 'https://ori-code-github-io.vercel.app/api/analyze-chart';
 
     // Nashville Number System state - ON by default with C Major
@@ -1622,6 +1628,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         return formatted.join('');
     };
+
+    // Make formatForPreview globally accessible for Live Mode
+    window.formatForPreview = formatForPreview;
 
     // Auto-optimize font size based on content length
     const optimizeFontSize = (content) => {

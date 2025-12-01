@@ -389,7 +389,16 @@
             currentAdminKey = adminKey;
 
             try {
-                const response = await fetch(`http://localhost:3002/api/admin/list-all-users?adminKey=${adminKey}`);
+                // Detect local development (localhost or local network IP)
+                const isLocalDev = window.location.hostname === 'localhost' ||
+                                   window.location.hostname.startsWith('192.168.') ||
+                                   window.location.hostname.startsWith('10.') ||
+                                   window.location.hostname.startsWith('172.');
+                const apiBase = isLocalDev
+                    ? `http://${window.location.hostname}:3002`
+                    : 'https://ori-code-github-io.vercel.app';
+
+                const response = await fetch(`${apiBase}/api/admin/list-all-users?adminKey=${adminKey}`);
 
                 if (!response.ok) {
                     if (response.status === 403) {
@@ -488,7 +497,16 @@
             }
 
             try {
-                const response = await fetch('http://localhost:3002/api/admin/give-bonus-analyses', {
+                // Detect local development
+                const isLocalDev = window.location.hostname === 'localhost' ||
+                                   window.location.hostname.startsWith('192.168.') ||
+                                   window.location.hostname.startsWith('10.') ||
+                                   window.location.hostname.startsWith('172.');
+                const apiBase = isLocalDev
+                    ? `http://${window.location.hostname}:3002`
+                    : 'https://ori-code-github-io.vercel.app';
+
+                const response = await fetch(`${apiBase}/api/admin/give-bonus-analyses`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -538,7 +556,16 @@
             }
 
             try {
-                const response = await fetch('http://localhost:3002/api/admin/upgrade-user', {
+                // Detect local development
+                const isLocalDev = window.location.hostname === 'localhost' ||
+                                   window.location.hostname.startsWith('192.168.') ||
+                                   window.location.hostname.startsWith('10.') ||
+                                   window.location.hostname.startsWith('172.');
+                const apiBase = isLocalDev
+                    ? `http://${window.location.hostname}:3002`
+                    : 'https://ori-code-github-io.vercel.app';
+
+                const response = await fetch(`${apiBase}/api/admin/upgrade-user`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

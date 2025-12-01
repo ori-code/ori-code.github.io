@@ -123,7 +123,14 @@ const liveMode = {
         const currentKeyEl = document.getElementById('liveModeCurrentKey');
 
         if (chartDisplay) {
-            chartDisplay.textContent = this.currentSongContent;
+            // Use formatted print preview HTML if available
+            if (window.formatForPreview && this.currentSongContent) {
+                const formattedHTML = window.formatForPreview(this.currentSongContent);
+                chartDisplay.innerHTML = formattedHTML;
+            } else {
+                // Fallback to plain text
+                chartDisplay.textContent = this.currentSongContent;
+            }
 
             // Apply RTL/LTR direction based on content
             const isRTL = this.detectRTL(this.currentSongContent);

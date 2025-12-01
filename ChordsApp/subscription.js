@@ -211,8 +211,14 @@ class SubscriptionManager {
             const idToken = await this.currentUser.getIdToken();
 
             // Call server API to increment count
-            const API_URL = window.location.hostname === 'localhost'
-                ? 'http://localhost:3002/api/increment-analysis'
+            // Detect local development (localhost or local network IP)
+            const isLocalDev = window.location.hostname === 'localhost' ||
+                               window.location.hostname.startsWith('192.168.') ||
+                               window.location.hostname.startsWith('10.') ||
+                               window.location.hostname.startsWith('172.');
+
+            const API_URL = isLocalDev
+                ? `http://${window.location.hostname}:3002/api/increment-analysis`
                 : 'https://ori-code-github-io.vercel.app/api/increment-analysis';
 
             const response = await fetch(API_URL, {

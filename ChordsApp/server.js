@@ -603,8 +603,8 @@ app.get('/api/admin/list-all-users', async (req, res) => {
     }
 });
 
-// Start server
-app.listen(PORT, () => {
+// Start server - bind to 0.0.0.0 to accept connections from any network interface
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`ChordsAppClaude API server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
     console.log(`Usage tracking: http://localhost:${PORT}/api/can-analyze`);
