@@ -1547,11 +1547,31 @@ Our [Em7]hearts will cry, these bones will [D]sing
     };
 
     // Format content with structured HTML for professional display
-    const formatForPreview = (content) => {
+    const formatForPreview = (content, options = {}) => {
+        const { enableSectionBlocks = false } = options;
         const lines = content.split('\n');
         const formatted = [];
         let inMetadata = true;
         let metadataLines = [];
+        let currentSection = null;
+        let sectionContent = [];
+        let sectionCounter = 0;
+
+        const finishSection = () => {
+            if (currentSection && sectionContent.length > 0) {
+                const sectionId = `section-${sectionCounter++}`;
+                const sectionClass = enableSectionBlocks ? 'song-section-block' : '';
+                const blockStart = enableSectionBlocks ? `<div class="${sectionClass}" data-section-id="${sectionId}" data-section-name="${currentSection}">` : '';
+                const blockEnd = enableSectionBlocks ? '</div>' : '';
+
+                formatted.push(blockStart);
+                formatted.push(`<div class="section-header">${currentSection}</div>`);
+                formatted.push(...sectionContent);
+                formatted.push(blockEnd);
+
+                sectionContent = [];
+            }
+        };
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
@@ -1594,20 +1614,34 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Empty line
             if (!line) {
-                formatted.push('<br>');
+                if (currentSection) {
+                    sectionContent.push('<br>');
+                } else {
+                    formatted.push('<br>');
+                }
                 continue;
             }
 
             // Section headers (VERSE 1:, CHORUS:, etc.)
             if (/^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA)\s*\d*:?$/i.test(line) ||
                 /^(V|C|B)\s*\d+:$/i.test(line)) {
-                formatted.push(`<div class="section-header">${line}</div>`);
+                // Finish previous section if exists
+                finishSection();
+                // Start new section
+                currentSection = line;
                 continue;
             }
 
             // Regular line
-            formatted.push(line + '<br>');
+            if (currentSection) {
+                sectionContent.push(line + '<br>');
+            } else {
+                formatted.push(line + '<br>');
+            }
         }
+
+        // Finish last section
+        finishSection();
 
         // If we haven't output metadata yet (all lines were metadata), output them now
         if (metadataLines.length > 0) {

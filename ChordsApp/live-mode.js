@@ -125,8 +125,15 @@ const liveMode = {
         if (chartDisplay) {
             // Use formatted print preview HTML if available
             if (window.formatForPreview && this.currentSongContent) {
-                const formattedHTML = window.formatForPreview(this.currentSongContent);
+                const formattedHTML = window.formatForPreview(this.currentSongContent, {
+                    enableSectionBlocks: true
+                });
                 chartDisplay.innerHTML = formattedHTML;
+
+                // Add click handlers for section blocks (leader only)
+                if (window.sessionManager && window.sessionManager.isLeader) {
+                    this.attachSectionClickHandlers();
+                }
             } else {
                 // Fallback to plain text
                 chartDisplay.textContent = this.currentSongContent;
@@ -586,6 +593,54 @@ const liveMode = {
         }
 
         console.log(`📺 Live Mode updated: ${songData.name}`);
+    },
+
+    /**
+     * Attach click handlers to section blocks (leader only)
+     */
+    attachSectionClickHandlers() {
+        const sectionBlocks = document.querySelectorAll('.song-section-block');
+        sectionBlocks.forEach(block => {
+            block.style.cursor = 'pointer';
+            block.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const sectionId = block.dataset.sectionId;
+                const sectionName = block.dataset.sectionName;
+                this.selectSection(sectionId, sectionName);
+            });
+        });
+    },
+
+    /**
+     * Select a section (leader broadcasts to all participants)
+     */
+    selectSection(sectionId, sectionName) {
+        if (!window.sessionManager || !window.sessionManager.isLeader) return;
+
+        console.log(`📍 Leader selected section: ${sectionName}`);
+
+        // Broadcast selection to all participants
+        window.sessionManager.updateSelectedSection(sectionId, sectionName);
+    },
+
+    /**
+     * Highlight a selected section (called for all participants)
+     */
+    highlightSection(sectionId) {
+        // Remove previous highlights
+        document.querySelectorAll('.song-section-block').forEach(block => {
+            block.classList.remove('section-selected');
+        });
+
+        // Add highlight to selected section
+        if (sectionId) {
+            const selectedBlock = document.querySelector(`[data-section-id="${sectionId}"]`);
+            if (selectedBlock) {
+                selectedBlock.classList.add('section-selected');
+                // Scroll to section if needed
+                selectedBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
     }
 };
 

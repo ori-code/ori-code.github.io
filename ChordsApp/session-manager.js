@@ -205,6 +205,17 @@ class SessionManager {
         });
 
         this.listeners.push({ ref: participantsRef, type: 'value' });
+
+        // Listen to selected section changes
+        const selectedSectionRef = this.database.ref(`sessions/${sessionId}/selectedSection`);
+        const selectedSectionListener = selectedSectionRef.on('value', (snapshot) => {
+            const selection = snapshot.val();
+            if (selection) {
+                this.onSectionSelected(selection.sectionId, selection.sectionName);
+            }
+        });
+
+        this.listeners.push({ ref: selectedSectionRef, type: 'value' });
     }
 
     /**
@@ -227,6 +238,26 @@ class SessionManager {
 
         await this.database.ref(`sessions/${this.activeSession}/currentSong`).set(currentSongData);
         console.log(`📡 Broadcasting song: ${songData.name}`);
+    }
+
+    /**
+     * Update selected section (LEADER only)
+     * @param {string} sectionId - Section identifier
+     * @param {string} sectionName - Section display name (e.g., "VERSE 1:", "CHORUS:")
+     */
+    async updateSelectedSection(sectionId, sectionName) {
+        if (!this.isLeader || !this.activeSession) {
+            throw new Error('Only the session leader can update the selected section');
+        }
+
+        const selectionData = {
+            sectionId: sectionId,
+            sectionName: sectionName,
+            timestamp: Date.now()
+        };
+
+        await this.database.ref(`sessions/${this.activeSession}/selectedSection`).set(selectionData);
+        console.log(`📍 Broadcasting selected section: ${sectionName}`);
     }
 
     /**
@@ -477,6 +508,20 @@ class SessionManager {
     onParticipantsUpdate(participants) {
         console.log('Participants update received:', Object.keys(participants).length, 'participants');
         // Override this in app.js to update the UI
+    }
+
+    /**
+     * Callback when section is selected (override in implementation)
+     * @param {string} sectionId - Selected section identifier
+     * @param {string} sectionName - Selected section name
+     */
+    onSectionSelected(sectionId, sectionName) {
+        console.log('Section selected:', sectionName);
+        // Override this in app.js/live-mode.js to update the UI
+        // Highlight the selected section in Live Mode
+        if (window.liveMode && window.liveMode.isActive) {
+            window.liveMode.highlightSection(sectionId);
+        }
     }
 }
 
