@@ -619,26 +619,38 @@ const liveMode = {
 
         console.log(`📍 Leader selected section: ${sectionName}`);
 
+        // Show highlight on leader's screen immediately
+        this.highlightSection(sectionId);
+
         // Broadcast selection to all participants
         window.sessionManager.updateSelectedSection(sectionId, sectionName);
     },
 
     /**
-     * Highlight a selected section (called for all participants)
+     * Highlight a selected section (called for all users)
      */
     highlightSection(sectionId) {
-        // Remove previous highlights
+        // Remove previous highlights and animations
         document.querySelectorAll('.song-section-block').forEach(block => {
             block.classList.remove('section-selected');
+            block.classList.remove('section-selected-static');
         });
 
         // Add highlight to selected section
         if (sectionId) {
             const selectedBlock = document.querySelector(`[data-section-id="${sectionId}"]`);
             if (selectedBlock) {
+                // Start with blinking animation
                 selectedBlock.classList.add('section-selected');
+
                 // Scroll to section if needed
                 selectedBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // After 2 seconds, switch to static border (no background animation)
+                setTimeout(() => {
+                    selectedBlock.classList.remove('section-selected');
+                    selectedBlock.classList.add('section-selected-static');
+                }, 2000);
             }
         }
     }

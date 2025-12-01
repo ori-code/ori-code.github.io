@@ -1328,6 +1328,13 @@ a {
     }
 }
 
+/* Static border after animation (no background vibration) */
+.song-section-block.section-selected-static {
+    border-color: rgba(139, 92, 246, 0.8);
+    background: transparent;
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+}
+
 /* Print Styles - Clean Chord Chart Formatting */
 @media print {
     * {
