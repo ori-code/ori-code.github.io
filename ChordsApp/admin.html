@@ -367,9 +367,33 @@
         </div>
     </div>
 
+    <!-- Remove User Modal -->
+    <div id="removeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #ef4444;">⚠️ Remove User</div>
+            <div class="modal-body">
+                <p style="margin-bottom: 12px; color: #ef4444; font-weight: 600;">Warning: This action cannot be undone!</p>
+                <p style="margin-bottom: 12px; color: #666;">User: <strong id="removeModalUserName"></strong></p>
+                <p style="margin-bottom: 12px; color: #666;">User ID: <strong id="removeModalUserId"></strong></p>
+                <p style="color: #666;">This will permanently delete:</p>
+                <ul style="margin: 12px 0 12px 24px; color: #666;">
+                    <li>User account and authentication</li>
+                    <li>All saved songs</li>
+                    <li>Usage statistics</li>
+                    <li>Subscription data</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeRemoveModal()">Cancel</button>
+                <button onclick="removeUser()" style="background: #ef4444;">🗑️ Remove User</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentAdminKey = '';
         let currentUserId = '';
+        let currentUserName = '';
 
         function showError(message) {
             const errorEl = document.getElementById('errorMessage');
@@ -469,6 +493,9 @@
                             </button>
                             <button class="action-btn" onclick="openUpgradeModal('${user.userId}', '${tier}')" style="background: #10b981; margin-left: 8px;">
                                 ⬆️ Upgrade
+                            </button>
+                            <button class="action-btn" onclick="openRemoveModal('${user.userId}', '${displayName}')" style="background: #ef4444; margin-left: 8px;">
+                                🗑️ Remove
                             </button>
                         </td>
                     </tr>
@@ -593,6 +620,62 @@
             }
         }
 
+        function openRemoveModal(userId, userName) {
+            currentUserId = userId;
+            currentUserName = userName;
+            document.getElementById('removeModalUserName').textContent = userName;
+            document.getElementById('removeModalUserId').textContent = userId.substring(0, 20) + '...';
+            document.getElementById('removeModal').classList.add('visible');
+        }
+
+        function closeRemoveModal() {
+            document.getElementById('removeModal').classList.remove('visible');
+            currentUserId = '';
+            currentUserName = '';
+        }
+
+        async function removeUser() {
+            if (!confirm(`Are you absolutely sure you want to remove ${currentUserName}?\n\nThis will permanently delete all their data!`)) {
+                return;
+            }
+
+            try {
+                // Detect local development
+                const isLocalDev = window.location.hostname === 'localhost' ||
+                                   window.location.hostname.startsWith('192.168.') ||
+                                   window.location.hostname.startsWith('10.') ||
+                                   window.location.hostname.startsWith('172.');
+                const apiBase = isLocalDev
+                    ? `http://${window.location.hostname}:3002`
+                    : 'https://ori-code-github-io.vercel.app';
+
+                const response = await fetch(`${apiBase}/api/admin/remove-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        adminKey: currentAdminKey
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to remove user');
+                }
+
+                const result = await response.json();
+                alert(`✅ Successfully removed user: ${currentUserName}`);
+
+                closeRemoveModal();
+                loadDashboard(); // Refresh data
+
+            } catch (error) {
+                console.error('Error removing user:', error);
+                alert('❌ Failed to remove user');
+            }
+        }
+
         // Allow Enter key to login
         document.getElementById('adminKeyInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -610,6 +693,12 @@
         document.getElementById('upgradeModal').addEventListener('click', (e) => {
             if (e.target.id === 'upgradeModal') {
                 closeUpgradeModal();
+            }
+        });
+
+        document.getElementById('removeModal').addEventListener('click', (e) => {
+            if (e.target.id === 'removeModal') {
+                closeRemoveModal();
             }
         });
     </script>

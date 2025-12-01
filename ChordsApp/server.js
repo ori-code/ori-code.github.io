@@ -603,6 +603,55 @@ app.get('/api/admin/list-all-users', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/admin/remove-user
+ * Remove a user completely (auth + database)
+ */
+app.post('/api/admin/remove-user', async (req, res) => {
+    const { userId, adminKey } = req.body;
+
+    // Verify admin key
+    if (adminKey !== process.env.ADMIN_KEY) {
+        return res.status(403).json({ error: 'Invalid admin key' });
+    }
+
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    try {
+        // Delete user from Firebase Authentication
+        try {
+            await admin.auth().deleteUser(userId);
+            console.log(`✅ Deleted user ${userId} from Firebase Auth`);
+        } catch (authError) {
+            console.error(`Error deleting user from Auth:`, authError.message);
+            // Continue even if auth deletion fails - user might not exist in auth
+        }
+
+        // Delete user data from Realtime Database
+        try {
+            await db.ref(`users/${userId}`).remove();
+            console.log(`✅ Deleted user ${userId} data from Database`);
+        } catch (dbError) {
+            console.error(`Error deleting user from Database:`, dbError.message);
+        }
+
+        res.json({
+            success: true,
+            message: `User ${userId} has been removed`,
+            deletedFrom: {
+                authentication: true,
+                database: true
+            }
+        });
+
+    } catch (error) {
+        console.error('Error removing user:', error);
+        res.status(500).json({ error: 'Server error while removing user' });
+    }
+});
+
 // Start server - bind to 0.0.0.0 to accept connections from any network interface
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`ChordsAppClaude API server running on port ${PORT}`);
