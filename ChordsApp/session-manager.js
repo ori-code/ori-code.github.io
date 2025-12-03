@@ -228,11 +228,25 @@ class SessionManager {
 
         const currentSongData = {
             songId: songData.id || `song_${Date.now()}`,
+
+            // Legacy field
             name: songData.name,
+
+            // ✅ NEW STRUCTURED METADATA FIELDS
+            title: songData.title || songData.name || 'Untitled',
+            author: songData.author || '',
+            key: songData.key || songData.originalKey || 'Unknown',
+            bpm: songData.bpm || null,
+            timeSignature: songData.timeSignature || '',
+
+            // Content
             content: songData.content,
+
+            // Transpose state
             originalKey: songData.originalKey || 'Unknown',
             transposeSteps: songData.transposeSteps || 0,
-            bpm: songData.bpm || null,
+
+            // Timestamp
             updatedAt: Date.now()
         };
 
@@ -277,10 +291,23 @@ class SessionManager {
         const order = Object.keys(playlist).length;
 
         await playlistRef.set({
+            // Legacy field
             name: songData.name,
-            content: songData.content || '',
-            originalKey: songData.originalKey || 'Unknown',
+
+            // ✅ NEW STRUCTURED METADATA FIELDS
+            title: songData.title || songData.name || 'Untitled',
+            author: songData.author || '',
+            key: songData.key || songData.originalKey || 'Unknown',
             bpm: songData.bpm || null,
+            timeSignature: songData.timeSignature || '',
+
+            // Content
+            content: songData.content || '',
+
+            // Transpose state
+            originalKey: songData.originalKey || 'Unknown',
+
+            // Playlist metadata
             addedAt: Date.now(),
             order: order
         });

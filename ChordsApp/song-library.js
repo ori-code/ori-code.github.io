@@ -181,19 +181,60 @@
             const baselineChart = window.getBaselineChart ? window.getBaselineChart() : '';
             const actualTransposeSteps = window.getCurrentTransposeSteps ? window.getCurrentTransposeSteps() : 0;
 
+            // ============= EXTRACT METADATA FROM CONTENT =============
+            // Extract title from songName (before " | Key:" if present)
+            const titleMatch = songName.match(/^([^|]+?)(?:\s*\|\s*Key:|$)/);
+            const title = titleMatch ? titleMatch[1].trim() : songName.trim();
+
+            // Extract author from content or baselineChart
+            let author = '';
+            const authorMatch = (content + '\n' + baselineChart).match(/\{author:\s*([^\}]+)\}/i) ||
+                               (content + '\n' + baselineChart).match(/^([^\n]+)\n([A-Z][^\n]+)$/m);
+            if (authorMatch) {
+                author = authorMatch[1].trim();
+            }
+
+            // Extract time signature from ChordPro format or visual format
+            let timeSignature = '';
+            const timeMatch = (content + '\n' + baselineChart).match(/\{time:\s*([^\}]+)\}/i) ||
+                             (content + '\n' + baselineChart).match(/Time:\s*(\d+\/\d+)/i);
+            if (timeMatch) {
+                timeSignature = timeMatch[1].trim();
+            }
+            // If not found in content, get from dropdown
+            if (!timeSignature) {
+                const timeSignatureDropdown = document.getElementById('timeSignature');
+                if (timeSignatureDropdown) {
+                    timeSignature = timeSignatureDropdown.value;
+                }
+            }
+
             try {
                 // Save to Firebase Realtime Database
                 const database = firebase.database();
                 const songRef = database.ref('users/' + user.uid + '/songs').push();
 
                 await songRef.set({
+                    // Legacy field for backwards compatibility
                     name: songName,
+
+                    // ✅ NEW STRUCTURED METADATA FIELDS
+                    title: title,
+                    author: author || '',
+                    key: originalKey,
+                    bpm: bpm,
+                    timeSignature: timeSignature || '',
+
+                    // Content storage
                     content: content, // Visual editor content (current state, possibly transposed)
                     baselineChart: baselineChart, // ORIGINAL untransposed chart for transpose reference
                     printPreview: printPreviewText, // Formatted preview text
+
+                    // Transpose state
                     transposeSteps: actualTransposeSteps, // Current transpose state
                     originalKey: originalKey, // Key from selector (required)
-                    bpm: bpm, // BPM (required)
+
+                    // Timestamps
                     createdAt: firebase.database.ServerValue.TIMESTAMP,
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
@@ -272,18 +313,58 @@
             const baselineChart = window.getBaselineChart ? window.getBaselineChart() : '';
             const actualTransposeSteps = window.getCurrentTransposeSteps ? window.getCurrentTransposeSteps() : 0;
 
+            // ============= EXTRACT METADATA FROM CONTENT =============
+            // Extract title from current song name (before " | Key:" if present)
+            const songName = currentLoadedSong.name || '';
+            const titleMatch = songName.match(/^([^|]+?)(?:\s*\|\s*Key:|$)/);
+            const title = titleMatch ? titleMatch[1].trim() : songName.trim();
+
+            // Extract author from content or baselineChart
+            let author = '';
+            const authorMatch = (content + '\n' + baselineChart).match(/\{author:\s*([^\}]+)\}/i) ||
+                               (content + '\n' + baselineChart).match(/^([^\n]+)\n([A-Z][^\n]+)$/m);
+            if (authorMatch) {
+                author = authorMatch[1].trim();
+            }
+
+            // Extract time signature from ChordPro format or visual format
+            let timeSignature = '';
+            const timeMatch = (content + '\n' + baselineChart).match(/\{time:\s*([^\}]+)\}/i) ||
+                             (content + '\n' + baselineChart).match(/Time:\s*(\d+\/\d+)/i);
+            if (timeMatch) {
+                timeSignature = timeMatch[1].trim();
+            }
+            // If not found in content, get from dropdown
+            if (!timeSignature) {
+                const timeSignatureDropdown = document.getElementById('timeSignature');
+                if (timeSignatureDropdown) {
+                    timeSignature = timeSignatureDropdown.value;
+                }
+            }
+
             try {
                 // Update in Firebase Realtime Database
                 const database = firebase.database();
                 const songRef = database.ref('users/' + user.uid + '/songs/' + currentLoadedSong.id);
 
                 await songRef.update({
+                    // ✅ UPDATE STRUCTURED METADATA FIELDS
+                    title: title,
+                    author: author || '',
+                    key: originalKey,
+                    bpm: bpmValue,
+                    timeSignature: timeSignature || '',
+
+                    // Content storage
                     content: content,
                     baselineChart: baselineChart,
                     printPreview: printPreviewText,
+
+                    // Transpose state
                     transposeSteps: actualTransposeSteps,
                     originalKey: originalKey,
-                    bpm: bpmValue,
+
+                    // Timestamp
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
 
@@ -302,28 +383,60 @@
             const songInfo = document.createElement('div');
             songInfo.style.cssText = 'flex: 1;';
 
+            // ✅ DISPLAY TITLE FROM STRUCTURED FIELD
             const songTitle = document.createElement('div');
-            songTitle.textContent = song.name;
-            songTitle.style.cssText = 'font-weight: 600; color: var(--text); margin-bottom: 4px;';
+            songTitle.textContent = song.title || song.name;
+            songTitle.style.cssText = 'font-weight: 600; color: var(--text); margin-bottom: 4px; font-size: 1.05rem;';
 
+            // ✅ DISPLAY AUTHOR IF AVAILABLE
+            if (song.author) {
+                const songAuthor = document.createElement('div');
+                songAuthor.textContent = song.author;
+                songAuthor.style.cssText = 'font-size: 0.9rem; color: var(--text-muted); margin-bottom: 6px; font-style: italic;';
+                songInfo.appendChild(songTitle);
+                songInfo.appendChild(songAuthor);
+            } else {
+                songInfo.appendChild(songTitle);
+            }
+
+            // ✅ METADATA BADGES (Key, BPM, Time Signature)
+            const metadataRow = document.createElement('div');
+            metadataRow.style.cssText = 'display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;';
+
+            if (song.key || song.originalKey) {
+                const keyBadge = document.createElement('span');
+                keyBadge.textContent = `Key: ${song.key || song.originalKey}`;
+                if (song.transposeSteps && song.transposeSteps !== 0) {
+                    keyBadge.textContent += ` (${song.transposeSteps > 0 ? '+' : ''}${song.transposeSteps})`;
+                }
+                keyBadge.style.cssText = 'background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;';
+                metadataRow.appendChild(keyBadge);
+            }
+
+            if (song.bpm) {
+                const bpmBadge = document.createElement('span');
+                bpmBadge.textContent = `${song.bpm} BPM`;
+                bpmBadge.style.cssText = 'background: rgba(34, 197, 94, 0.15); color: #22c55e; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;';
+                metadataRow.appendChild(bpmBadge);
+            }
+
+            if (song.timeSignature) {
+                const timeBadge = document.createElement('span');
+                timeBadge.textContent = song.timeSignature;
+                timeBadge.style.cssText = 'background: rgba(168, 85, 247, 0.15); color: #a855f7; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;';
+                metadataRow.appendChild(timeBadge);
+            }
+
+            if (metadataRow.children.length > 0) {
+                songInfo.appendChild(metadataRow);
+            }
+
+            // Last edited date
             const songDate = document.createElement('div');
             const date = new Date(song.updatedAt || song.createdAt);
             songDate.textContent = 'Last edited: ' + date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-            songDate.style.cssText = 'font-size: 0.85rem; color: var(--text-muted);';
-
-            songInfo.appendChild(songTitle);
+            songDate.style.cssText = 'font-size: 0.8rem; color: var(--text-muted);';
             songInfo.appendChild(songDate);
-
-            // Add key information if available
-            if (song.originalKey) {
-                const songKey = document.createElement('div');
-                songKey.textContent = `Key: ${song.originalKey}`;
-                if (song.transposeSteps && song.transposeSteps !== 0) {
-                    songKey.textContent += ` (Transposed ${song.transposeSteps > 0 ? '+' : ''}${song.transposeSteps})`;
-                }
-                songKey.style.cssText = 'font-size: 0.85rem; color: #3b82f6; margin-top: 2px; font-weight: 500;';
-                songInfo.appendChild(songKey);
-            }
 
             // Add to Session button
             const addToSessionBtn = document.createElement('button');
@@ -340,12 +453,23 @@
                     return;
                 }
 
-                // Store song data globally for session-ui to use
+                // ✅ STORE SONG DATA WITH NEW STRUCTURED FIELDS
                 window.pendingSongToAdd = {
+                    // Legacy field
                     name: song.name,
+
+                    // NEW STRUCTURED METADATA
+                    title: song.title || song.name || 'Untitled',
+                    author: song.author || '',
+                    key: song.key || song.originalKey || 'Unknown',
+                    bpm: song.bpm || null,
+                    timeSignature: song.timeSignature || '',
+
+                    // Content
                     content: song.baselineChart || song.songbookFormat || song.content,
-                    originalKey: song.originalKey || 'Unknown',
-                    bpm: song.bpm || null
+
+                    // Transpose state
+                    originalKey: song.originalKey || 'Unknown'
                 };
 
                 // Close load song modal
@@ -453,12 +577,19 @@
                         bpmInput.value = song.bpm;
                     }
 
+                    // Set Time signature
+                    const timeSignature = document.getElementById('timeSignature');
+                    if (timeSignature && song.timeSignature) {
+                        timeSignature.value = song.timeSignature;
+                    }
+
                     // Dispatch custom event - app.js will use ANALYZE logic
                     window.dispatchEvent(new CustomEvent('songLoaded', {
                         detail: {
                             baselineChart: baseline,
                             originalKey: song.originalKey || '',
                             bpm: song.bpm || null,
+                            timeSignature: song.timeSignature || '4/4',
                             songName: song.name
                         }
                     }));
@@ -638,6 +769,89 @@
             }
         });
     }
+
+    // ============= MIGRATION FUNCTION FOR EXISTING SONGS =============
+    /**
+     * Migrate existing songs to new structured format
+     * Call this function from browser console: window.migrateSongDatabase()
+     */
+    async function migrateSongDatabase() {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            console.error('❌ Please log in first');
+            return;
+        }
+
+        console.log('🔄 Starting song database migration...');
+
+        try {
+            const database = firebase.database();
+            const songsRef = database.ref(`users/${user.uid}/songs`);
+            const snapshot = await songsRef.once('value');
+            const songs = snapshot.val();
+
+            if (!songs) {
+                console.log('✅ No songs to migrate');
+                return;
+            }
+
+            let migratedCount = 0;
+            let skippedCount = 0;
+
+            for (const [songId, song] of Object.entries(songs)) {
+                // Skip if already has structured fields
+                if (song.title && song.author !== undefined) {
+                    console.log(`⏭️  Skipping "${song.name}" - already migrated`);
+                    skippedCount++;
+                    continue;
+                }
+
+                console.log(`🔄 Migrating: "${song.name}"`);
+
+                // Extract title from name (before " | Key:")
+                const titleMatch = song.name.match(/^([^|]+?)(?:\s*\|\s*Key:|$)/);
+                const title = titleMatch ? titleMatch[1].trim() : song.name.trim();
+
+                // Extract author from content or baselineChart
+                let author = '';
+                const content = (song.content || '') + '\n' + (song.baselineChart || '');
+                const authorMatch = content.match(/\{author:\s*([^\}]+)\}/i) ||
+                                   content.match(/^([^\n]+)\n([A-Z][^\n]+)$/m);
+                if (authorMatch) {
+                    author = authorMatch[1].trim();
+                }
+
+                // Extract time signature
+                let timeSignature = '';
+                const timeMatch = content.match(/\{time:\s*([^\}]+)\}/i);
+                if (timeMatch) {
+                    timeSignature = timeMatch[1].trim();
+                }
+
+                // Update with new structured fields
+                await database.ref(`users/${user.uid}/songs/${songId}`).update({
+                    title: title,
+                    author: author || '',
+                    key: song.originalKey || 'C Major',
+                    timeSignature: timeSignature || ''
+                });
+
+                console.log(`✅ Migrated: "${title}" (Author: ${author || 'N/A'}, Time: ${timeSignature || 'N/A'})`);
+                migratedCount++;
+            }
+
+            console.log(`\n🎉 Migration complete!`);
+            console.log(`   ✅ Migrated: ${migratedCount} songs`);
+            console.log(`   ⏭️  Skipped: ${skippedCount} songs`);
+            console.log(`\n📊 Total songs: ${migratedCount + skippedCount}`);
+
+        } catch (error) {
+            console.error('❌ Migration error:', error);
+        }
+    }
+
+    // Make migration function globally accessible
+    window.migrateSongDatabase = migrateSongDatabase;
 
     // Initialize when DOM is ready and Firebase is loaded
     if (document.readyState === 'loading') {

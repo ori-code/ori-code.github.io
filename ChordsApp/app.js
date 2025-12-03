@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reanalyzeButton = document.getElementById('reanalyzeButton');
     const reanalyzeFeedback = document.getElementById('reanalyzeFeedback');
     const printButton = document.getElementById('printButton');
+    const saveLayoutButton = document.getElementById('saveLayoutButton');
     const printPreview = document.getElementById('printPreview');
     const livePreview = document.getElementById('livePreview');
     const fontSizeSlider = document.getElementById('fontSizeSlider');
@@ -29,7 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const keyDetectionDiv = document.getElementById('keyDetection');
     const detectedKeySpan = document.getElementById('detectedKey');
     const keySelector = document.getElementById('keySelector');
-    const nashvilleToggle = document.getElementById('nashvilleToggle');
+    const nashvilleMode = document.getElementById('nashvilleMode');
+    const timeSignature = document.getElementById('timeSignature');
     const bpmInput = document.getElementById('bpmInput');
     const keyAnalysisDiv = document.getElementById('keyAnalysis');
     const keyAnalysisText = document.getElementById('keyAnalysisText');
@@ -53,8 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `http://${window.location.hostname}:3002/api/analyze-chart`
         : 'https://ori-code-github-io.vercel.app/api/analyze-chart';
 
-    // Nashville Number System state - ON by default with C Major
-    let showNashvilleNumbers = true;
+    // Nashville Number System state - default key is C Major
     let currentKey = 'C Major';
 
     // Nashville Number System mappings
@@ -440,11 +441,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
             keyDetectionDiv.style.display = 'block';
 
-            // Enable Nashville numbers by default after analysis
-            showNashvilleNumbers = true;
-            if (nashvilleToggle) {
-                nashvilleToggle.style.display = 'inline-block';
-                nashvilleToggle.textContent = '🔢 Nashville Numbers: ON';
+            // Set Nashville mode to "both" (numbers + chords) by default after analysis
+            if (nashvilleMode) {
+                nashvilleMode.value = 'both';
             }
             updateLivePreview();
         } else {
@@ -457,9 +456,6 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 keySelector.value = '';
             }
             keyDetectionDiv.style.display = 'block';
-            if (nashvilleToggle) {
-                nashvilleToggle.style.display = 'none';
-            }
         }
 
         // Look for "Analysis:" section in the transcription - grab everything after "Analysis:"
@@ -701,7 +697,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 // AI now returns proper ChordPro format with metadata and {comment:} tags
                 // Default: Show chords above lyrics (cleaner view)
-                const visualFormat = convertToAboveLineFormat(baselineChart, true);
+                let visualFormat = convertToAboveLineFormat(baselineChart, true);
+
+                // ✅ Auto-insert arrangement line (V1) (C) (V2) etc.
+                visualFormat = autoInsertArrangementLine(visualFormat);
+
                 visualEditor.value = visualFormat;
 
                 // Keep ChordPro format as baseline
@@ -753,7 +753,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
             baselineChart = addCommentMarkers(baselineChart);
 
             // Default: Show chords above lyrics
-            const visualFormat = convertToAboveLineFormat(baselineChart, true);
+            let visualFormat = convertToAboveLineFormat(baselineChart, true);
+
+            // ✅ Auto-insert arrangement line (V1) (C) (V2) etc.
+            visualFormat = autoInsertArrangementLine(visualFormat);
+
             visualEditor.value = visualFormat;
 
             // Keep SongBook format
@@ -1017,15 +1021,23 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Convert transposed version to visual format
             console.log('🔄 Converting to above-line format...');
-            const transposedVisual = convertToAboveLineFormat(transposedSongbook, true);
+            let transposedVisual = convertToAboveLineFormat(transposedSongbook, true);
             console.log('📊 Visual format length:', transposedVisual.length);
             console.log('📊 Visual format first 200 chars:', transposedVisual.substring(0, 200));
+
+            // Add arrangement line
+            transposedVisual = autoInsertArrangementLine(transposedVisual);
+
             visualEditor.value = transposedVisual;
         } else {
             // For loaded songs without songbook format, transpose visual format directly
             console.log('Transposing visual format directly');
             const sourceVisual = baselineVisualContent || visualEditor.value;
-            const transposedVisual = transposeVisualFormat(sourceVisual, currentTransposeSteps);
+            let transposedVisual = transposeVisualFormat(sourceVisual, currentTransposeSteps);
+
+            // Add arrangement line
+            transposedVisual = autoInsertArrangementLine(transposedVisual);
+
             visualEditor.value = transposedVisual;
         }
 
@@ -1273,7 +1285,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const formatted = [];
         let extractedTitle = null;
         let extractedKey = null;
-        const bpmPlaceholder = 'BPM: ___';
+        const bpmPlaceholder = 'BPM: 120';
         let combinedTitleInserted = false;
 
         // Pre-scan for title, author, key, tempo, and time values
@@ -1319,14 +1331,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (line.match(/^\{title:/i)) {
                 const title = line.replace(/^\{title:\s*/i, '').replace(/\}$/, '').trim();
                 const keyDisplay = extractedKey ? extractedKey : 'Unknown';
-                const tempoDisplay = extractedTempo ? `${extractedTempo} BPM` : bpmPlaceholder;
-                const combinedLine = `${title}${title ? ' | ' : ''}Key: ${keyDisplay} | ${tempoDisplay}`;
+                const tempoDisplay = extractedTempo ? `BPM: ${extractedTempo}` : bpmPlaceholder;
+                const timeDisplay = extractedTime ? `Time: ${extractedTime}` : 'Time: 4/4';
+                const combinedLine = `${title}${title ? ' | ' : ''}Key: ${keyDisplay} | ${tempoDisplay} | ${timeDisplay}`;
                 formatted.push(combinedLine.trim());
                 if (extractedAuthor) {
                     formatted.push(extractedAuthor);
-                }
-                if (extractedTime) {
-                    formatted.push(`Time: ${extractedTime}`);
                 }
                 formatted.push('');
                 combinedTitleInserted = true;
@@ -1557,6 +1567,44 @@ Our [Em7]hearts will cry, these bones will [D]sing
         let sectionContent = [];
         let sectionCounter = 0;
 
+        // ✅ STRIP HTML TAGS from content before parsing (fixes <b>C</b> issue)
+        const cleanContent = content.replace(/<[^>]*>/g, '');
+
+        // ✅ PARSE SONG STRUCTURE FOR CIRCULAR BADGES - ONLY inline notation
+        // Pattern for inline notation: (V1)2 or (C)3 or (PC)2 - number after parentheses = repeat count
+        // Must try PC and CD first (two chars) before single letter
+        const inlinePattern = /\((PC|CD|[VBICOT])(\d*)\)(\d+)?/gi;
+        const songStructure = [];
+        const inlineMatches = [...cleanContent.matchAll(inlinePattern)];
+
+        console.log('🔍 DEBUG: Badge parsing');
+        console.log('Original content:', content.substring(0, 200));
+        console.log('Clean content:', cleanContent.substring(0, 200));
+        console.log('Inline matches found:', inlineMatches.length);
+
+        for (const inlineMatch of inlineMatches) {
+            const sectionType = inlineMatch[1].toUpperCase();
+            const sectionNum = inlineMatch[2] || '';
+            const repeatCount = inlineMatch[3] ? parseInt(inlineMatch[3]) : 1;
+
+            console.log(`  Match: "${inlineMatch[0]}" -> type: ${sectionType}, num: ${sectionNum}, count: ${repeatCount}`);
+            songStructure.push({ type: sectionType, num: sectionNum, count: repeatCount });
+        }
+
+        console.log('Final songStructure:', songStructure);
+
+        // ✅ Simple check for arrangement line - line contains inline notation and only that
+        // Helper function to check if line is an arrangement line
+        const isArrangementLine = (line) => {
+            // Strip HTML tags from line first (e.g., (<b>C</b>) -> (C))
+            const cleanLine = line.replace(/<[^>]*>/g, '');
+            // Check if line contains at least one inline notation pattern
+            const hasInlineNotation = /\((?:PC|CD|[VBICOT])\d*\)/.test(cleanLine);
+            // Check if line contains ONLY inline notation patterns, digits, spaces, parentheses, and pipe
+            const onlyInlineNotation = /^[\s\(VBICOTPCD\d\)|]+$/.test(cleanLine) && hasInlineNotation;
+            return onlyInlineNotation;
+        };
+
         const finishSection = () => {
             if (currentSection && sectionContent.length > 0) {
                 const sectionId = `section-${sectionCounter++}`;
@@ -1585,8 +1633,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Skip chord progression summary lines (e.g., "C | 1 | G | 5 D/F | 2# Em | 3")
                 const isChordProgression = /^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(line);
 
+                // ✅ Check if line is arrangement line - skip it entirely
+                const lineIsArrangement = isArrangementLine(line);
+
                 // Check if it's a metadata line (contains Key:, BPM:, Tempo:, etc.)
-                if (!isSectionHeader && !isChordProgression && (i < 3 || /Key:|BPM:|Tempo:|Time:/.test(line) || /(Words|Music)\s+by/i.test(line))) {
+                if (!isSectionHeader && !isChordProgression && !lineIsArrangement && (i < 3 || /Key:|BPM:|Tempo:|Time:/.test(line) || /(Words|Music)\s+by/i.test(line))) {
                     metadataLines.push(line);
                     if (metadataLines.length >= 4 || (i > 0 && !line)) {
                         inMetadata = false;
@@ -1597,15 +1648,61 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     inMetadata = false;
                     // Output metadata
                     if (metadataLines.length > 0) {
-                        // Strip "Title:" prefix from first line
+                        // ✅ ALWAYS SHOW METADATA TEMPLATE
+                        // Extract title
                         let titleText = metadataLines[0].replace(/^Title:\s*/i, '').trim();
                         formatted.push(`<div class="song-title">${titleText}</div>`);
+
+                        // Parse metadata from lines
+                        let author = '';
+                        let keyInfo = '';
+                        let bpmInfo = '';
+                        let timeInfo = '';
+
                         for (let j = 1; j < metadataLines.length; j++) {
-                            // Skip chord progression lines in metadata
-                            if (!/^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(metadataLines[j])) {
-                                formatted.push(`<div class="song-meta">${metadataLines[j]}</div>`);
+                            const line = metadataLines[j];
+                            if (/Key:/i.test(line)) {
+                                keyInfo = line;
+                            } else if (/BPM:/i.test(line) || /Tempo:/i.test(line)) {
+                                bpmInfo = line;
+                            } else if (/Time:/i.test(line)) {
+                                timeInfo = line;
+                            } else if (!/(Words|Music)\s+by/i.test(line) && !/^[A-G|#b/\d\s]+\|/.test(line)) {
+                                // Assume it's author if not a special line
+                                if (!author) author = line;
                             }
                         }
+
+                        // Display in order: Author, Key, BPM, Time (always show template)
+                        // Use values from inputs/dropdowns if available
+                        const displayBPM = bpmInput && bpmInput.value ? `BPM: ${bpmInput.value}` : (bpmInfo || 'BPM: 120');
+                        const displayTime = timeSignature && timeSignature.value ? `Time: ${timeSignature.value}` : (timeInfo || 'Time: 4/4');
+
+                        if (author) {
+                            formatted.push(`<div class="song-meta">${author}</div>`);
+                        }
+                        // Combine Key, BPM, and Time on one line separated by spaces
+                        const metaLine = `${keyInfo || 'Key: —'}  •  ${displayBPM}  •  ${displayTime}`;
+                        formatted.push(`<div class="song-meta">${metaLine}</div>`);
+
+                        // ✅ ADD CIRCULAR SECTION BADGES WITH REPEAT COUNT
+                        if (songStructure.length > 0) {
+                            const badges = songStructure.map(section => {
+                                const label = section.num ? `${section.type}${section.num}` : section.type;
+                                // Add repeat count as superscript if > 1
+                                const repeatCount = section.count > 1 ? `<sup class="repeat-count">${section.count}</sup>` : '';
+                                const colorClass =
+                                    section.type === 'I' ? 'badge-intro' :
+                                    section.type === 'V' ? 'badge-verse' :
+                                    section.type === 'C' ? 'badge-chorus' :
+                                    section.type === 'B' ? 'badge-bridge' :
+                                    section.type === 'PC' ? 'badge-prechorus' :
+                                    'badge-other';
+                                return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
+                            }).join('');
+                            formatted.push(`<div class="section-badges-row">${badges}</div>`);
+                        }
+
                         formatted.push('<br>');
                         metadataLines = [];
                     }
@@ -1619,6 +1716,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 } else {
                     formatted.push('<br>');
                 }
+                continue;
+            }
+
+            // ✅ Skip arrangement line (line with only inline notation)
+            if (isArrangementLine(line)) {
                 continue;
             }
 
@@ -1724,10 +1826,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
         console.log('Live preview updated successfully');
     };
 
-    // Make all chords bold
+    // Make all chords bold with optional Nashville numbers
     const makeChordsBold = (content) => {
         const lines = content.split('\n');
         const result = [];
+
+        // Get Nashville mode from dropdown
+        const mode = nashvilleMode ? nashvilleMode.value : 'both';
+        const key = currentKey || 'C Major';
+
+        // Detect if content is RTL (Hebrew, Arabic, etc.)
+        const isRTL = /[\u0590-\u05FF\u0600-\u06FF]/.test(content);
 
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
@@ -1738,19 +1847,41 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
+            // Skip arrangement lines (e.g., "(I) (V1) (PC) (C) (V2) (PC) (C) (B) (C) (O)")
+            const hasInlineNotation = /\((?:PC|CD|[VBICOT])\d*\)/.test(line);
+            const onlyInlineNotation = /^[\s\(VBICOTPCD\d\)|]+$/.test(line) && hasInlineNotation;
+            if (onlyInlineNotation) {
+                result.push(line);
+                continue;
+            }
+
             // Skip lines with Hebrew/RTL characters to avoid messing up text
-            if (/[\u0590-\u05FF\u0600-\u06FF]/.test(line)) {
+            if (isRTL) {
                 // Still process chords but be more careful
                 // Only match chords that are surrounded by spaces or at start/end of line
                 const chordPattern = /(^|\s)([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(\s|$)/g;
                 line = line.replace(chordPattern, (match, before, chord, after) => {
-                    return `${before}<b>${chord}</b>${after}`;
+                    const number = chordToNashville(chord, key);
+                    if (mode === 'both' && number) {
+                        return `${before}<b>${number} | ${chord}</b>${after}`;
+                    } else if (mode === 'numbers' && number) {
+                        return `${before}<b>${number}</b>${after}`;
+                    } else {
+                        return `${before}<b>${chord}</b>${after}`;
+                    }
                 });
             } else {
                 // For English text, use normal pattern
                 const chordPattern = /\b([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
-                line = line.replace(chordPattern, (match) => {
-                    return `<b>${match}</b>`;
+                line = line.replace(chordPattern, (chord) => {
+                    const number = chordToNashville(chord, key);
+                    if (mode === 'both' && number) {
+                        return `<b>${chord} | ${number}</b>`;
+                    } else if (mode === 'numbers' && number) {
+                        return `<b>${number}</b>`;
+                    } else {
+                        return `<b>${chord}</b>`;
+                    }
                 });
             }
 
@@ -1915,38 +2046,211 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
-    // Column layout control
-    const columnButtons = document.querySelectorAll('.column-btn');
-    if (columnButtons.length > 0 && livePreview) {
-        // Initialize with 1 column (default)
-        livePreview.style.columns = '1';
-        livePreview.style.columnRule = 'none';
+    // Column and Page layout control with dropdowns
+    const columnCountSelect = document.getElementById('columnCount');
+    const pageCountSelect = document.getElementById('pageCount');
 
-        columnButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all buttons
-                columnButtons.forEach(b => b.classList.remove('active'));
-                // Add active class to clicked button
-                btn.classList.add('active');
+    // Auto-fit content to selected layout
+    function autoFitContent(pages) {
+        if (!livePreview || !fontSizeSlider) return;
 
-                // Apply column count
-                const columns = btn.dataset.columns;
-                if (columns === '1') {
-                    livePreview.style.columns = '1';
-                    livePreview.style.columnRule = 'none';
-                } else {
-                    livePreview.style.columns = '2';
-                    livePreview.style.columnGap = '40px';
-                    livePreview.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
+        const A4_HEIGHT_PX = 1123;
+        const totalAvailableHeight = A4_HEIGHT_PX * pages;
+        const contentHeight = livePreview.scrollHeight;
+
+        // Calculate if content fits
+        if (contentHeight > totalAvailableHeight) {
+            // Content too large - reduce font size
+            let currentSize = parseFloat(fontSizeSlider.value);
+            const minSize = parseFloat(fontSizeSlider.min);
+
+            // Reduce by 0.5pt increments until it fits or reaches minimum
+            while (currentSize > minSize && livePreview.scrollHeight > totalAvailableHeight) {
+                currentSize -= 0.5;
+                fontSizeSlider.value = currentSize;
+                fontSizeValue.textContent = currentSize;
+                livePreview.style.fontSize = currentSize + 'pt';
+
+                // Force reflow
+                livePreview.offsetHeight;
+            }
+            console.log('📐 Auto-fit: Reduced font to', currentSize, 'pt to fit content');
+        } else if (contentHeight < totalAvailableHeight * 0.6) {
+            // Content too small - increase font size
+            let currentSize = parseFloat(fontSizeSlider.value);
+            const maxSize = parseFloat(fontSizeSlider.max);
+
+            // Increase by 0.5pt increments while it still fits
+            while (currentSize < maxSize && livePreview.scrollHeight < totalAvailableHeight * 0.8) {
+                currentSize += 0.5;
+                fontSizeSlider.value = currentSize;
+                fontSizeValue.textContent = currentSize;
+                livePreview.style.fontSize = currentSize + 'pt';
+
+                // Force reflow
+                livePreview.offsetHeight;
+
+                // Check if it still fits
+                if (livePreview.scrollHeight > totalAvailableHeight) {
+                    // Went too far, revert
+                    currentSize -= 0.5;
+                    fontSizeSlider.value = currentSize;
+                    fontSizeValue.textContent = currentSize;
+                    livePreview.style.fontSize = currentSize + 'pt';
+                    break;
                 }
-                setTimeout(updatePagination, 100);
-            });
-        });
+            }
+            console.log('📐 Auto-fit: Increased font to', currentSize, 'pt to better fill space');
+        }
+    }
+
+    // Apply layout settings based on column and page count
+    function applyLayoutSettings() {
+        if (!livePreview || !columnCountSelect || !pageCountSelect) return;
+
+        const columns = parseInt(columnCountSelect.value);
+        const pages = parseInt(pageCountSelect.value);
+        const A4_HEIGHT_PX = 1123;
+
+        console.log(`📊 Layout: ${columns} columns × ${pages} pages`);
+
+        // Calculate height based on pages
+        const height = A4_HEIGHT_PX * pages;
+
+        // Apply column settings
+        livePreview.style.columns = columns.toString();
+        livePreview.style.columnFill = 'auto';
+        livePreview.style.height = height + 'px';
+
+        if (columns > 1) {
+            livePreview.style.columnGap = '40px';
+            livePreview.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
+        } else {
+            livePreview.style.columnGap = '0px';
+            livePreview.style.columnRule = 'none';
+        }
+
+        // Auto-fit content to layout
+        setTimeout(() => {
+            autoFitContent(pages);
+            updatePagination();
+        }, 100);
+    }
+
+    // Initialize with default values (2 columns, 1 page)
+    if (livePreview && columnCountSelect && pageCountSelect) {
+        console.log('📋 Initializing layout dropdowns...');
+        applyLayoutSettings();
+
+        // Event listeners for dropdowns
+        columnCountSelect.addEventListener('change', applyLayoutSettings);
+        pageCountSelect.addEventListener('change', applyLayoutSettings);
+
+        console.log('✅ Layout dropdowns initialized');
+    } else {
+        console.log('⚠️ Layout dropdowns or livePreview not found!');
     }
 
     // Initialize A4 indicator position and pagination
     setTimeout(updateA4Indicator, 100);
     setTimeout(updatePagination, 200);
+
+    // ✅ AUTO-INSERT ARRANGEMENT LINE - Extract sections and add (V1) (C) notation
+    function autoInsertArrangementLine(content) {
+        // ALWAYS use default arrangement structure - don't scan for sections
+        // Intro → Verse → Pre-Chorus → Chorus → Verse → Pre-Chorus → Chorus → Bridge → Chorus → Outro
+        const arrangementLine = '(I) (V1) (PC) (C) (V2) (PC) (C) (B) (C) (O)';
+
+        const lines = content.split('\n');
+        const sectionPattern = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA)\s*(\d*):?$/i;
+
+        // Find where to insert the arrangement line (after metadata, before first section)
+        let insertIndex = 0;
+        let metadataEnded = false;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            // Check if this is a metadata line (Title, Key, BPM, etc.)
+            const isMetadata = /^(Title|Key|BPM|Tempo|Time|Author):/i.test(line) || line.startsWith('{');
+
+            // Check if this is the first section header
+            const isSection = sectionPattern.test(line);
+
+            if (!metadataEnded && !isMetadata && line !== '') {
+                metadataEnded = true;
+            }
+
+            if (isSection) {
+                insertIndex = i;
+                break;
+            }
+        }
+
+        // Insert the arrangement line before the first section
+        lines.splice(insertIndex, 0, arrangementLine, '');
+        return lines.join('\n');
+    }
+
+    // ✅ UPDATE EDITOR BADGES - Show song structure in edit mode
+    function updateEditorBadges() {
+        const visualEditor = document.getElementById('visualEditor');
+        const editorStructure = document.getElementById('editorSongStructure');
+        const badgesRow = document.getElementById('editorBadgesRow');
+
+        if (!visualEditor || !editorStructure || !badgesRow) return;
+
+        const content = visualEditor.value;
+        if (!content || !content.trim()) {
+            editorStructure.style.display = 'none';
+            return;
+        }
+
+        // ✅ ONLY parse inline notation: (V1) (C) (V2) etc. - NOT section headers
+        // Pattern for inline notation: (V1)2 or (C)3 or (PC)2 - number after parentheses = repeat count
+        // Must try PC and CD first (two chars) before single letter
+        const inlinePattern = /\((PC|CD|[VBICOT])(\d*)\)(\d+)?/gi;
+
+        const songStructure = [];
+        const inlineMatches = [...content.matchAll(inlinePattern)];
+
+        for (const inlineMatch of inlineMatches) {
+            const sectionType = inlineMatch[1].toUpperCase();
+            const sectionNum = inlineMatch[2] || '';
+            const repeatCount = inlineMatch[3] ? parseInt(inlineMatch[3]) : 1;
+
+            songStructure.push({ type: sectionType, num: sectionNum, count: repeatCount });
+        }
+
+        // Show/hide structure based on whether sections exist
+        if (songStructure.length === 0) {
+            editorStructure.style.display = 'none';
+            return;
+        }
+
+        editorStructure.style.display = 'block';
+
+        // Generate badges HTML with repeat count
+        const badges = songStructure.map(section => {
+            const label = section.num ? `${section.type}${section.num}` : section.type;
+            // ✅ Add repeat count as superscript if > 1
+            const repeatCount = section.count && section.count > 1 ? `<sup class="repeat-count">${section.count}</sup>` : '';
+            const colorClass =
+                section.type === 'I' ? 'badge-intro' :
+                section.type === 'V' ? 'badge-verse' :
+                section.type === 'C' ? 'badge-chorus' :
+                section.type === 'B' ? 'badge-bridge' :
+                section.type === 'PC' ? 'badge-prechorus' :
+                section.type === 'O' ? 'badge-outro' :
+                'badge-other';
+            return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
+        }).join('');
+
+        badgesRow.innerHTML = badges;
+    }
+
+    // ✅ Call once on page load if there's content
+    updateEditorBadges();
 
     // Pro Editor Mode Toggle
     if (proEditorToggle && visualEditor && songbookOutput) {
@@ -1968,6 +2272,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Update preview after toggle
             updateLivePreview();
+            updateEditorBadges(); // ✅ Update badges after mode toggle
         });
     }
 
@@ -1976,6 +2281,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         visualEditor.addEventListener('input', () => {
             updateSongBookFromVisual();
             updateLivePreview();
+            updateEditorBadges(); // ✅ Update section badges in edit mode
         });
     }
 
@@ -2015,12 +2321,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
-    // Handle Nashville numbers toggle (with subscription check)
-    if (nashvilleToggle) {
-        nashvilleToggle.addEventListener('click', () => {
+    // Handle Nashville mode dropdown (with subscription check)
+    if (nashvilleMode) {
+        nashvilleMode.addEventListener('change', () => {
             // Check if user has Pro subscription for Nashville Numbers
             if (window.subscriptionManager && !window.subscriptionManager.canUseNashvilleNumbers()) {
                 alert('🔢 Nashville Numbers is a Pro feature!\n\nUpgrade to Pro for $1.99/month to unlock Nashville Number System and unlimited AI analyses.');
+
+                // Reset to "chords only" mode
+                nashvilleMode.value = 'chords';
 
                 // Show subscription modal
                 if (document.getElementById('subscriptionModal')) {
@@ -2029,10 +2338,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 return;
             }
 
-            showNashvilleNumbers = !showNashvilleNumbers;
-            nashvilleToggle.textContent = showNashvilleNumbers
-                ? '🔢 Nashville Numbers: ON'
-                : '🔢 Nashville Numbers: OFF';
+            // Update the preview with the selected mode
+            updateLivePreview();
+        });
+    }
+
+    // Handle time signature dropdown
+    if (timeSignature) {
+        timeSignature.addEventListener('change', () => {
+            // Just update the preview - don't modify editor text
             updateLivePreview();
         });
     }
@@ -2040,27 +2354,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Handle BPM input change
     if (bpmInput) {
         bpmInput.addEventListener('input', () => {
-            const bpm = bpmInput.value;
-            if (visualEditor && bpm) {
-                // Update BPM in the visual editor content
-                let content = visualEditor.value;
-                const bpmRegex = /BPM:\s*(\d+|___)/i;
-
-                if (bpmRegex.test(content)) {
-                    // Replace existing BPM value
-                    content = content.replace(bpmRegex, `BPM: ${bpm}`);
-                } else {
-                    // If no BPM line exists, try to add it to the first line with Key
-                    const keyLineRegex = /^(.*Key:[^|\n]*)\|?\s*(.*)$/m;
-                    if (keyLineRegex.test(content)) {
-                        content = content.replace(keyLineRegex, `$1 | BPM: ${bpm} $2`);
-                    }
-                }
-
-                visualEditor.value = content;
-                updateSongBookFromVisual();
-                updateLivePreview();
-            }
+            // Just update the preview - don't modify editor text
+            updateLivePreview();
         });
     }
 
@@ -2082,6 +2377,135 @@ Our [Em7]hearts will cry, these bones will [D]sing
             window.print();
         });
     }
+
+    // ============= PRINT PREVIEW PREFERENCES =============
+
+    /**
+     * Save print preview layout preferences to Firebase
+     */
+    async function savePrintPreviewPreferences() {
+        const user = auth.currentUser;
+        if (!user) {
+            alert('Please log in to save layout preferences');
+            return;
+        }
+
+        try {
+            // Get current layout settings from dropdowns
+            const columnCountSelect = document.getElementById('columnCount');
+            const pageCountSelect = document.getElementById('pageCount');
+            const columnCount = columnCountSelect ? parseInt(columnCountSelect.value) : 2;
+            const pageCount = pageCountSelect ? parseInt(pageCountSelect.value) : 1;
+
+            const preferences = {
+                fontSize: parseFloat(fontSizeSlider.value),
+                lineHeight: parseFloat(lineHeightSlider.value),
+                columnCount: columnCount,
+                pageCount: pageCount,
+                savedAt: Date.now()
+            };
+
+            await firebase.database().ref(`users/${user.uid}/printPreviewPreferences`).set(preferences);
+            console.log('✅ Layout preferences saved:', preferences);
+
+            // Show success feedback
+            const originalText = saveLayoutButton.textContent;
+            saveLayoutButton.textContent = '✓ Saved!';
+            saveLayoutButton.style.background = '#10b981';
+            setTimeout(() => {
+                saveLayoutButton.textContent = originalText;
+                saveLayoutButton.style.background = 'var(--primary)';
+            }, 2000);
+        } catch (error) {
+            console.error('❌ Error saving layout preferences:', error);
+            alert('Failed to save layout preferences. Please try again.');
+        }
+    }
+
+    /**
+     * Load print preview layout preferences from Firebase
+     */
+    async function loadPrintPreviewPreferences() {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        try {
+            const snapshot = await firebase.database().ref(`users/${user.uid}/printPreviewPreferences`).once('value');
+            const preferences = snapshot.val();
+
+            if (preferences) {
+                console.log('📥 Loading saved layout preferences:', preferences);
+
+                // Apply font size
+                if (preferences.fontSize && fontSizeSlider && fontSizeValue) {
+                    fontSizeSlider.value = preferences.fontSize;
+                    fontSizeValue.textContent = preferences.fontSize;
+                    if (livePreview) {
+                        livePreview.style.fontSize = `${preferences.fontSize}pt`;
+                    }
+                }
+
+                // Apply line height
+                if (preferences.lineHeight && lineHeightSlider && lineHeightValue) {
+                    lineHeightSlider.value = preferences.lineHeight;
+                    lineHeightValue.textContent = preferences.lineHeight;
+                    if (livePreview) {
+                        livePreview.style.lineHeight = preferences.lineHeight;
+                    }
+                }
+
+                // Apply column count
+                if (preferences.columnCount) {
+                    const columnCountSelect = document.getElementById('columnCount');
+                    if (columnCountSelect) {
+                        columnCountSelect.value = preferences.columnCount;
+                    }
+                }
+
+                // Apply page count
+                if (preferences.pageCount) {
+                    const pageCountSelect = document.getElementById('pageCount');
+                    if (pageCountSelect) {
+                        pageCountSelect.value = preferences.pageCount;
+                    }
+                }
+
+                // Apply the layout settings (this will trigger auto-fit)
+                const columnCountSelect = document.getElementById('columnCount');
+                const pageCountSelect = document.getElementById('pageCount');
+                if (columnCountSelect && pageCountSelect && livePreview) {
+                    const columns = parseInt(columnCountSelect.value);
+                    const pages = parseInt(pageCountSelect.value);
+                    const A4_HEIGHT_PX = 1123;
+                    const height = A4_HEIGHT_PX * pages;
+
+                    livePreview.style.columns = columns.toString();
+                    livePreview.style.columnFill = 'auto';
+                    livePreview.style.height = height + 'px';
+
+                    if (columns > 1) {
+                        livePreview.style.columnGap = '40px';
+                        livePreview.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
+                    } else {
+                        livePreview.style.columnGap = '0px';
+                        livePreview.style.columnRule = 'none';
+                    }
+                }
+
+                console.log('✅ Layout preferences applied successfully');
+            }
+        } catch (error) {
+            console.error('❌ Error loading layout preferences:', error);
+        }
+    }
+
+    // Save Layout button handler
+    if (saveLayoutButton) {
+        saveLayoutButton.addEventListener('click', savePrintPreviewPreferences);
+    }
+
+    // Make loadPrintPreviewPreferences globally accessible for auth state changes
+    window.loadPrintPreviewPreferences = loadPrintPreviewPreferences;
 
     // ============= SUBSCRIPTION SYSTEM INTEGRATION =============
 
@@ -2142,13 +2566,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
         }
 
-        // Update Nashville Numbers toggle UI
-        if (nashvilleToggle && !summary.canUseNashville) {
-            nashvilleToggle.style.opacity = '0.5';
-            nashvilleToggle.title = 'Pro feature - Upgrade to unlock';
-        } else if (nashvilleToggle) {
-            nashvilleToggle.style.opacity = '1';
-            nashvilleToggle.title = 'Toggle Nashville Number System';
+        // Update Nashville Numbers mode UI
+        if (nashvilleMode && !summary.canUseNashville) {
+            nashvilleMode.style.opacity = '0.5';
+            nashvilleMode.disabled = true;
+            nashvilleMode.title = 'Pro feature - Upgrade to unlock';
+        } else if (nashvilleMode) {
+            nashvilleMode.style.opacity = '1';
+            nashvilleMode.disabled = false;
+            nashvilleMode.title = 'Select Nashville Number System display mode';
         }
     }
 
@@ -2255,6 +2681,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Initialize session manager
                 await window.sessionManager.init(user);
                 updateSessionButtonsVisibility();
+
+                // Load saved print preview preferences
+                await loadPrintPreviewPreferences();
 
                 // Show intense scan option for Pro users
                 const intenseScanOption = document.getElementById('intenseScanOption');
@@ -2414,6 +2843,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const bpmInput = document.getElementById('bpmInput');
         if (bpmInput && songData.bpm) {
             bpmInput.value = songData.bpm;
+        }
+
+        // Update Time signature
+        const timeSignature = document.getElementById('timeSignature');
+        if (timeSignature && songData.timeSignature) {
+            timeSignature.value = songData.timeSignature;
         }
 
         // Update song name
@@ -2597,6 +3032,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
             bpmInput.value = song.bpm;
         }
 
+        const timeSignature = document.getElementById('timeSignature');
+        if (timeSignature && song.timeSignature) {
+            timeSignature.value = song.timeSignature;
+        }
+
         // Update state
         currentSongName = song.name;
         baselineChart = song.content;
@@ -2606,6 +3046,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Regenerate preview
         updateSongBookFromVisual();
+        updateEditorBadges(); // ✅ Update badges in edit mode
 
         // If leader, broadcast this song
         if (window.sessionManager && window.sessionManager.isLeader) {

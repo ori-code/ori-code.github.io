@@ -155,11 +155,18 @@
             </div>
 
             <!-- Editor actions moved below textarea -->
-            <div class="editor-actions" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
-                <button class="ghost-button" id="nashvilleToggle">🔢 Nashville Numbers: ON</button>
-                <div id="keyDetection" style="padding: 8px 16px; background: rgba(255, 59, 92, 0.1); border: 1px solid rgba(255, 59, 92, 0.3); border-radius: 8px;">
-                    <span style="color: var(--text-muted); font-size: 0.9rem;">Key:</span>
-                    <select id="keySelector" style="margin-left: 8px; padding: 4px 8px; background: var(--surface); color: var(--primary); border: 1px solid rgba(255, 59, 92, 0.3); border-radius: 4px; font-size: 0.95rem; font-weight: 600; cursor: pointer;">
+            <div class="editor-actions" style="margin: 20px 0; padding: 10px 14px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; overflow-x: auto; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px;">
+                    <span style="font-size: 0.85rem; opacity: 0.8;">🔢</span>
+                    <select id="nashvilleMode" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 6px; font-size: 0.875rem; cursor: pointer; font-weight: 500;">
+                        <option value="chords" selected>Chords</option>
+                        <option value="both">Nashville + Chords</option>
+                        <option value="numbers">Nashville Only</option>
+                    </select>
+                </div>
+                <div id="keyDetection" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(255, 59, 92, 0.08); border: 1px solid rgba(255, 59, 92, 0.2); border-radius: 8px;">
+                    <span style="font-size: 0.85rem; opacity: 0.8;">🎹</span>
+                    <select id="keySelector" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--primary); border: 1px solid rgba(255, 59, 92, 0.25); border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
                         <optgroup label="Major Keys">
                             <option value="C Major" selected>C Major</option>
                             <option value="C# Major">C# Major</option>
@@ -191,14 +198,25 @@
                     </select>
                     <span id="detectedKey" style="display: none;"></span>
                 </div>
-                <button class="ghost-button" id="nashvilleToggle" style="display: none;">🔢 Nashville Numbers: OFF</button>
-                <div class="ghost-button" style="display: flex; align-items: center; gap: 8px; cursor: default;">
-                    <span style="font-size: 0.95rem;">🎵 BPM:</span>
-                    <input type="number" id="bpmInput" placeholder="120" min="40" max="240" style="width: 60px; padding: 4px 6px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; text-align: center;" required>
+                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 8px;">
+                    <span style="font-size: 0.85rem; opacity: 0.8;">🎵</span>
+                    <input type="number" id="bpmInput" value="120" min="40" max="240" style="width: 55px; padding: 5px 8px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(249, 115, 22, 0.25); border-radius: 6px; font-size: 0.875rem; text-align: center; font-weight: 500;" required>
                 </div>
-                <button class="ghost-button" id="saveSongButton">💾 Save</button>
-                <button class="ghost-button" id="loadSongButton">📂 Load</button>
-                <button class="ghost-button" id="updateSongButton">🔄 Update</button>
+                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 8px;">
+                    <span style="font-size: 0.85rem; opacity: 0.8;">⏱️</span>
+                    <select id="timeSignature" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(34, 211, 238, 0.25); border-radius: 6px; font-size: 0.875rem; cursor: pointer; font-weight: 500;">
+                        <option value="4/4" selected>4/4</option>
+                        <option value="3/4">3/4</option>
+                        <option value="6/8">6/8</option>
+                        <option value="2/4">2/4</option>
+                        <option value="5/4">5/4</option>
+                        <option value="7/8">7/8</option>
+                        <option value="12/8">12/8</option>
+                    </select>
+                </div>
+                <button class="ghost-button" id="saveSongButton" style="padding: 6px 14px; font-size: 0.875rem;">💾 Save</button>
+                <button class="ghost-button" id="loadSongButton" style="padding: 6px 14px; font-size: 0.875rem;">📂 Load</button>
+                <button class="ghost-button" id="updateSongButton" style="padding: 6px 14px; font-size: 0.875rem;">🔄 Update</button>
                 <button class="ghost-button" id="copyToClipboard" style="display: none;">Copy text</button>
             </div>
 
@@ -239,7 +257,10 @@
         <section class="preview-section" id="previewSection">
             <div class="preview-header">
                 <h2>Print Preview & Transpose</h2>
-                <button class="primary-action" id="printButton">Print chart</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="primary-action" id="printButton">Print chart</button>
+                    <button class="secondary-action" id="saveLayoutButton" style="background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Save Layout</button>
+                </div>
             </div>
             <div class="preview-controls-row">
                 <div class="preview-controls">
@@ -251,10 +272,25 @@
                         Line Spacing: <span id="lineHeightValue">1.3</span>
                         <input type="range" id="lineHeightSlider" min="1.0" max="2.0" value="1.3" step="0.1">
                     </label>
-                    <div class="column-layout-control" style="display: flex; align-items: center; gap: 8px;">
-                        <span style="font-size: 0.9rem; color: var(--text-muted);">Layout:</span>
-                        <button class="ghost-button column-btn" data-columns="2">2 Columns</button>
-                        <button class="ghost-button column-btn active" data-columns="1">1 Column</button>
+                    <div class="column-layout-control" style="display: flex; align-items: center; gap: 12px;">
+                        <label style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 0.9rem; color: var(--text-muted);">Layout:</span>
+                            <select id="columnCount" class="layout-select ghost-button">
+                                <option value="1">1 Column</option>
+                                <option value="2" selected>2 Columns</option>
+                                <option value="3">3 Columns</option>
+                                <option value="4">4 Columns</option>
+                            </select>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 0.9rem; color: var(--text-muted);">Pages:</span>
+                            <select id="pageCount" class="layout-select ghost-button">
+                                <option value="1" selected>1 Page</option>
+                                <option value="2">2 Pages</option>
+                                <option value="3">3 Pages</option>
+                                <option value="4">4 Pages</option>
+                            </select>
+                        </label>
                     </div>
                     <div class="transpose-controls">
                         <button class="ghost-button" data-shift="-1">–1</button>
@@ -692,7 +728,7 @@
         <div style="display: flex; height: 100%; width: 100%;">
             <!-- Song Display Area (tap to toggle sidebar) -->
             <div id="liveModeContent" style="flex: 1; height: 100%; overflow-y: auto; padding: 60px 20px 140px 20px; box-sizing: border-box; cursor: pointer; display: flex; justify-content: center; transition: margin-right 0.3s ease;">
-                <pre id="liveModeChartDisplay" style="font-family: 'Courier New', monospace; font-size: 18px; line-height: 1.8; white-space: pre-wrap; color: var(--text); margin: 0; max-width: 800px; text-align: left;"></pre>
+                <div id="liveModeChartDisplay" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: var(--text); margin: 0; max-width: 800px; text-align: left;"></div>
             </div>
 
             <!-- Playlist Sidebar (slide in from right) -->

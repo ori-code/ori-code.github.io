@@ -139,6 +139,9 @@ const liveMode = {
                 chartDisplay.textContent = this.currentSongContent;
             }
 
+            // Apply saved user preferences to Live Mode display
+            this.applySavedPreferences(chartDisplay);
+
             // Apply RTL/LTR direction based on content
             const isRTL = this.detectRTL(this.currentSongContent);
             const direction = isRTL ? 'rtl' : 'ltr';
@@ -500,16 +503,22 @@ const liveMode = {
                 window.setDirectionalLayout(livePreview, songData.content);
             }
 
-            if (keySelector && songData.originalKey) {
-                keySelector.value = songData.originalKey;
+            if (keySelector && (songData.key || songData.originalKey)) {
+                keySelector.value = songData.key || songData.originalKey;
             }
 
-            // Update live mode state
+            // ✅ UPDATE LIVE MODE STATE WITH NEW STRUCTURED FIELDS
             this.currentSongContent = songData.content || '';
-            this.currentKey = songData.originalKey || 'C Major';
-            this.currentSongName = songData.name;
+            this.currentKey = songData.key || songData.originalKey || 'C Major';
             this.currentSongId = songId;
             this.currentTransposeSteps = 0;
+
+            // Build display name from structured fields
+            const title = songData.title || songData.name || 'Untitled';
+            const author = songData.author ? ` - ${songData.author}` : '';
+            const bpmInfo = songData.bpm ? ` | ${songData.bpm} BPM` : '';
+            const timeInfo = songData.timeSignature ? ` | ${songData.timeSignature}` : '';
+            this.currentSongName = `${title}${author}${bpmInfo}${timeInfo}`;
 
             // Check for local transpose preference
             if (!window.sessionManager.isLeader) {
@@ -561,12 +570,19 @@ const liveMode = {
             return;
         }
 
-        // Update state
+        // ✅ USE NEW STRUCTURED METADATA FIELDS
         this.currentSongContent = songData.content || '';
-        this.currentKey = songData.originalKey || 'C Major';
-        this.currentSongName = songData.name;
+        this.currentKey = songData.key || songData.originalKey || 'C Major';
         this.currentSongId = songData.songId;
         this.currentTransposeSteps = 0;
+
+        // Build display name from structured fields
+        const title = songData.title || songData.name || 'Untitled';
+        const author = songData.author ? ` - ${songData.author}` : '';
+        const bpmInfo = songData.bpm ? ` | ${songData.bpm} BPM` : '';
+        const timeInfo = songData.timeSignature ? ` | ${songData.timeSignature}` : '';
+        this.currentSongName = `${title}${author}${bpmInfo}${timeInfo}`;
+
         console.log('📺 Content length:', this.currentSongContent.length);
 
         // Check for local transpose preference
@@ -601,11 +617,17 @@ const liveMode = {
     attachSectionClickHandlers() {
         const sectionBlocks = document.querySelectorAll('.song-section-block');
         sectionBlocks.forEach(block => {
-            block.style.cursor = 'pointer';
-            block.addEventListener('click', (e) => {
+            // Remove any existing click handlers to prevent duplicates
+            const newBlock = block.cloneNode(true);
+            block.parentNode.replaceChild(newBlock, block);
+
+            // Add click handler to the new node
+            newBlock.style.cursor = 'pointer';
+            newBlock.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const sectionId = block.dataset.sectionId;
-                const sectionName = block.dataset.sectionName;
+                const sectionId = newBlock.dataset.sectionId;
+                const sectionName = newBlock.dataset.sectionName;
+                console.log(`🎯 Section clicked: ${sectionName} (ID: ${sectionId})`);
                 this.selectSection(sectionId, sectionName);
             });
         });
@@ -652,6 +674,41 @@ const liveMode = {
                     selectedBlock.classList.add('section-selected-static');
                 }, 2000);
             }
+        }
+    },
+
+    /**
+     * Apply saved user preferences from Firebase to Live Mode display
+     */
+    async applySavedPreferences(chartDisplay) {
+        const user = window.auth ? window.auth.currentUser : null;
+        if (!user) return;
+
+        try {
+            const snapshot = await firebase.database().ref(`users/${user.uid}/printPreviewPreferences`).once('value');
+            const preferences = snapshot.val();
+
+            if (preferences && chartDisplay) {
+                // Apply font size
+                if (preferences.fontSize) {
+                    chartDisplay.style.fontSize = `${preferences.fontSize}pt`;
+                }
+
+                // Apply line height
+                if (preferences.lineHeight) {
+                    chartDisplay.style.lineHeight = preferences.lineHeight;
+                }
+
+                // Apply column layout
+                if (preferences.columnLayout) {
+                    chartDisplay.style.columns = preferences.columnLayout;
+                    chartDisplay.style.columnGap = '40px';
+                }
+
+                console.log('✅ Applied saved preferences to Live Mode:', preferences);
+            }
+        } catch (error) {
+            console.error('❌ Error applying saved preferences to Live Mode:', error);
         }
     }
 };
