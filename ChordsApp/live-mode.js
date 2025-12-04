@@ -699,13 +699,25 @@ const liveMode = {
                     chartDisplay.style.lineHeight = preferences.lineHeight;
                 }
 
-                // Apply column layout
-                if (preferences.columnLayout) {
-                    chartDisplay.style.columns = preferences.columnLayout;
+                // Apply column layout with page count
+                const columns = preferences.columnCount || preferences.columnLayout || 2; // Support both old and new field
+                const pages = preferences.pageCount || 1;
+                const A4_HEIGHT_PX = 1123;
+                const height = A4_HEIGHT_PX * pages;
+
+                chartDisplay.style.columns = columns.toString();
+                chartDisplay.style.columnFill = 'auto';
+                chartDisplay.style.height = height + 'px';
+
+                if (columns > 1) {
                     chartDisplay.style.columnGap = '40px';
+                    chartDisplay.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
+                } else {
+                    chartDisplay.style.columnGap = '0px';
+                    chartDisplay.style.columnRule = 'none';
                 }
 
-                console.log('✅ Applied saved preferences to Live Mode:', preferences);
+                console.log('✅ Applied saved preferences to Live Mode:', preferences, `(${columns} columns × ${pages} pages)`);
             }
         } catch (error) {
             console.error('❌ Error applying saved preferences to Live Mode:', error);
