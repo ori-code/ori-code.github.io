@@ -1001,6 +1001,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return;
         }
 
+        // Capture current page count BEFORE transposing (for auto-layout)
+        const A4_HEIGHT_PX = 1123;
+        const PADDING = 40;
+        const AVAILABLE_HEIGHT = A4_HEIGHT_PX - PADDING;
+        const pageCountBeforeTranspose = livePreview
+            ? Math.ceil(livePreview.scrollHeight / AVAILABLE_HEIGHT)
+            : 1;
+        console.log('📄 Page count before transpose:', pageCountBeforeTranspose);
+
         console.log('Before transpose - currentTransposeSteps:', currentTransposeSteps);
         // Update cumulative transpose steps
         currentTransposeSteps += steps;
@@ -1067,6 +1076,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Update the live preview
         updateLivePreview();
+
+        // Auto-adjust layout to maintain original page count after transpose
+        // Wait 200ms for updateLivePreview's internal timeout (100ms) to complete
+        setTimeout(() => {
+            autoAdjustLayoutAfterTranspose(pageCountBeforeTranspose);
+        }, 200);
 
         // Save local transpose preference if in a session
         if (window.sessionManager && window.sessionManager.activeSession && currentSessionSongId) {
@@ -2102,6 +2117,111 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
             console.log('📐 Auto-fit: Increased font to', currentSize, 'pt to better fill space');
         }
+    }
+
+    // Auto-adjust layout to maintain target page count (used after transpose)
+    function autoAdjustLayoutAfterTranspose(targetPages) {
+        if (!livePreview || !fontSizeSlider) return;
+
+        console.log('🎯 Auto-layout: Target pages =', targetPages);
+
+        // Wait for layout to stabilize using double RAF
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const A4_HEIGHT_PX = 1123;
+                const PADDING = 40;
+                const AVAILABLE_HEIGHT = A4_HEIGHT_PX - PADDING;
+
+                // Calculate current page count
+                const contentHeight = livePreview.scrollHeight;
+                const currentPages = Math.ceil(contentHeight / AVAILABLE_HEIGHT);
+
+                console.log('🎯 Auto-layout: Current pages =', currentPages, '| Content height =', contentHeight);
+
+                if (currentPages === targetPages) {
+                    console.log('✅ Auto-layout: Already at target page count');
+                    return;
+                }
+
+                let currentSize = parseFloat(fontSizeSlider.value);
+                const minSize = parseFloat(fontSizeSlider.min);
+                const maxSize = parseFloat(fontSizeSlider.max);
+                const maxIterations = 100; // Safety limit
+                let iterations = 0;
+
+                if (currentPages > targetPages) {
+                    // Content overflowed - reduce font size
+                    console.log('📉 Auto-layout: Reducing font to fit', targetPages, 'pages');
+
+                    while (iterations < maxIterations && currentSize > minSize) {
+                        const newContentHeight = livePreview.scrollHeight;
+                        const newPages = Math.ceil(newContentHeight / AVAILABLE_HEIGHT);
+
+                        if (newPages <= targetPages) {
+                            console.log('✅ Auto-layout: Font reduced to', currentSize, 'pt (', newPages, 'pages)');
+                            updateA4Indicator();
+                            updatePagination();
+                            return;
+                        }
+
+                        currentSize -= 0.5;
+                        fontSizeSlider.value = currentSize;
+                        fontSizeValue.textContent = currentSize;
+                        livePreview.style.fontSize = currentSize + 'pt';
+
+                        // Force reflow
+                        livePreview.offsetHeight;
+                        iterations++;
+                    }
+
+                    if (iterations >= maxIterations) {
+                        console.log('⚠️ Auto-layout: Reached iteration limit');
+                    } else {
+                        console.log('⚠️ Auto-layout: Reached minimum font size');
+                    }
+                } else {
+                    // Content fits in fewer pages - try to increase font size
+                    console.log('📈 Auto-layout: Increasing font to fill', targetPages, 'pages');
+
+                    while (iterations < maxIterations && currentSize < maxSize) {
+                        // Try incrementing
+                        const testSize = currentSize + 0.5;
+                        fontSizeSlider.value = testSize;
+                        fontSizeValue.textContent = testSize;
+                        livePreview.style.fontSize = testSize + 'pt';
+
+                        // Force reflow
+                        livePreview.offsetHeight;
+
+                        const newContentHeight = livePreview.scrollHeight;
+                        const newPages = Math.ceil(newContentHeight / AVAILABLE_HEIGHT);
+
+                        if (newPages > targetPages) {
+                            // Went too far, revert to previous size
+                            fontSizeSlider.value = currentSize;
+                            fontSizeValue.textContent = currentSize;
+                            livePreview.style.fontSize = currentSize + 'pt';
+                            console.log('✅ Auto-layout: Font increased to', currentSize, 'pt (', targetPages, 'pages)');
+                            updateA4Indicator();
+                            updatePagination();
+                            return;
+                        }
+
+                        currentSize = testSize;
+                        iterations++;
+                    }
+
+                    if (iterations >= maxIterations) {
+                        console.log('⚠️ Auto-layout: Reached iteration limit');
+                    } else {
+                        console.log('✅ Auto-layout: Reached maximum font size at', currentSize, 'pt');
+                    }
+                }
+
+                updateA4Indicator();
+                updatePagination();
+            });
+        });
     }
 
     // Apply layout settings based on column and page count

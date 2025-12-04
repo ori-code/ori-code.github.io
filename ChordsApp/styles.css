@@ -1017,6 +1017,7 @@ a {
     min-height: 800px;
     max-width: 210mm; /* A4 width */
     margin: 0 auto;
+    border: 3px solid #ff3b5c; /* RED BORDER - outer container */
 }
 
 .live-preview {
@@ -1029,10 +1030,11 @@ a {
     padding: 20px;
     columns: 2;
     column-gap: 40px;
-    column-rule: 1px solid rgba(0, 0, 0, 0.2);
+    column-rule: 3px solid #3b82f6; /* BLUE COLUMN DIVIDER - more visible */
     column-fill: auto;
     margin: 0 auto;
     position: relative;
+    border: 2px solid #22c55e; /* GREEN BORDER - content area */
     /* Direction will be set dynamically by JavaScript based on content */
 }
 
@@ -1451,10 +1453,11 @@ a {
 .song-section-block {
     margin: 16px 0;
     padding: 8px;
-    border: 2px solid transparent;
+    border: 2px dashed #f97316; /* ORANGE DASHED BORDER - section blocks */
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.15s ease;
+    background-color: rgba(249, 115, 22, 0.05); /* Light orange tint */
     /* Keep each section block together - don't split across columns/pages */
     break-inside: avoid;
     -webkit-column-break-inside: avoid;
