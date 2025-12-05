@@ -1495,6 +1495,100 @@ a {
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
 }
 
+/* Overflow Notification Toast */
+.overflow-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.98) 0%, rgba(251, 140, 0, 0.98) 100%);
+    border: 2px solid rgba(255, 152, 0, 0.5);
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    max-width: 400px;
+    opacity: 0;
+    transform: translateX(450px);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: none;
+}
+
+.overflow-notification.show {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+}
+
+.overflow-notification-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: white;
+}
+
+.overflow-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.overflow-text {
+    flex: 1;
+}
+
+.overflow-text strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.overflow-text p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.95;
+    line-height: 1.4;
+}
+
+.overflow-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.overflow-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .overflow-notification {
+        right: 10px;
+        left: 10px;
+        max-width: calc(100% - 20px);
+    }
+}
+
 /* Print Styles - Clean Chord Chart Formatting */
 @media print {
     * {

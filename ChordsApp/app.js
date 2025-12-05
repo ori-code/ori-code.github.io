@@ -2039,6 +2039,64 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }
     }
 
+    // Overflow notification system
+    let overflowNotificationTimeout = null;
+
+    function showOverflowNotification(currentPages, expectedPages, overflowPages) {
+        const notification = document.getElementById('overflowNotification');
+        const message = document.getElementById('overflowMessage');
+
+        if (!notification || !message) return;
+
+        message.textContent = `Content is ${overflowPages} page${overflowPages > 1 ? 's' : ''} over the limit! (${currentPages} pages instead of ${expectedPages})`;
+
+        // Show notification
+        notification.classList.add('show');
+
+        // Clear any existing timeout
+        if (overflowNotificationTimeout) {
+            clearTimeout(overflowNotificationTimeout);
+        }
+
+        // Auto-hide after 5 seconds
+        overflowNotificationTimeout = setTimeout(() => {
+            notification.classList.remove('show');
+        }, 5000);
+    }
+
+    function hideOverflowNotification() {
+        const notification = document.getElementById('overflowNotification');
+        if (notification) {
+            notification.classList.remove('show');
+        }
+        if (overflowNotificationTimeout) {
+            clearTimeout(overflowNotificationTimeout);
+        }
+    }
+
+    function checkContentOverflow() {
+        if (!livePreview || !pageCountSelect) return;
+
+        const A4_HEIGHT_PX = 1123;
+        const PADDING = 40;
+        const AVAILABLE_HEIGHT = A4_HEIGHT_PX - PADDING;
+
+        // Get expected page count from dropdown
+        const expectedPages = parseInt(pageCountSelect.value);
+
+        // Calculate actual page count based on content height
+        const contentHeight = livePreview.scrollHeight;
+        const currentPages = Math.ceil(contentHeight / AVAILABLE_HEIGHT);
+
+        // Check if content exceeds expected pages
+        if (currentPages > expectedPages) {
+            const overflowPages = currentPages - expectedPages;
+            showOverflowNotification(currentPages, expectedPages, overflowPages);
+        } else {
+            hideOverflowNotification();
+        }
+    }
+
     // Font size control
     if (fontSizeSlider && fontSizeValue && livePreview) {
         fontSizeSlider.addEventListener('input', () => {
@@ -2046,7 +2104,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
             fontSizeValue.textContent = size;
             livePreview.style.fontSize = size + 'pt';
             updateA4Indicator();
-            setTimeout(updatePagination, 100);
+            setTimeout(() => {
+                updatePagination();
+                checkContentOverflow();
+            }, 100);
         });
     }
 
@@ -2057,7 +2118,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
             lineHeightValue.textContent = height;
             livePreview.style.lineHeight = height;
             updateA4Indicator();
-            setTimeout(updatePagination, 100);
+            setTimeout(() => {
+                updatePagination();
+                checkContentOverflow();
+            }, 100);
         });
     }
 

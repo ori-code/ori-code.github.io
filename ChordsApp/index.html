@@ -939,5 +939,17 @@
         };
 
     </script>
+
+    <!-- Overflow Notification Toast -->
+    <div id="overflowNotification" class="overflow-notification">
+        <div class="overflow-notification-content">
+            <span class="overflow-icon">⚠️</span>
+            <div class="overflow-text">
+                <strong>Content Overflow Warning</strong>
+                <p id="overflowMessage">Content exceeds page boundaries</p>
+            </div>
+            <button class="overflow-close" onclick="document.getElementById('overflowNotification').classList.remove('show')">×</button>
+        </div>
+    </div>
 </body>
 </html>
