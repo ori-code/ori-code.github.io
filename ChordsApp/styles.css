@@ -1387,6 +1387,37 @@ a {
     white-space: nowrap;
 }
 
+/* Mobile: Auto-resize circles to fit all in one row */
+@media (max-width: 768px) {
+    .section-badges-row {
+        overflow-x: visible; /* Remove scroll on mobile */
+        justify-content: space-between;
+    }
+
+    .section-badge {
+        /* Calculate size to fit 10 badges with gaps */
+        /* Formula: (100% - (9 gaps × 6px)) / 10 badges */
+        min-width: calc((100% - 54px) / 10);
+        max-width: calc((100% - 54px) / 10);
+        width: calc((100% - 54px) / 10);
+        height: auto;
+        aspect-ratio: 1 / 1; /* Keep circles perfectly round */
+        padding: 0 2px;
+        font-size: clamp(8px, 2.5vw, 12px); /* Responsive font size */
+        border-width: 1.5px; /* Slightly thinner border on mobile */
+        flex-shrink: 1; /* Allow shrinking if needed */
+    }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+    .section-badge {
+        font-size: clamp(7px, 2.2vw, 10px);
+        border-width: 1px;
+        padding: 0 1px;
+    }
+}
+
 /* Badge Colors - Matching Screenshot */
 .badge-intro {
     background: rgba(59, 130, 246, 0.1);
