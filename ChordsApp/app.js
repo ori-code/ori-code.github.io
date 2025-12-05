@@ -26,6 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fontSizeValue = document.getElementById('fontSizeValue');
     const lineHeightSlider = document.getElementById('lineHeightSlider');
     const lineHeightValue = document.getElementById('lineHeightValue');
+    const charSpacingSlider = document.getElementById('charSpacingSlider');
+    const charSpacingValue = document.getElementById('charSpacingValue');
     const yearSpan = document.getElementById('year');
     const keyDetectionDiv = document.getElementById('keyDetection');
     const detectedKeySpan = document.getElementById('detectedKey');
@@ -930,6 +932,21 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
+            // Skip arrangement lines with notation like (I) (V1) (PC) (C) etc.
+            if (/\([VBICOTPC]+\d*\)/.test(line)) {
+                result.push(line);
+                continue;
+            }
+
+            // Skip arrangement lines without parentheses like "I V1 PC C V2 PC C B C O"
+            // Check if line contains only section notation (requires at least 3 sections to avoid catching lyrics)
+            const cleanLine = line.replace(/<[^>]*>/g, '').trim(); // Remove HTML tags
+            const sectionPattern = /^(?:[IVBCOTPC]+\d*\s*){3,}$/; // At least 3 section notations
+            if (sectionPattern.test(cleanLine)) {
+                result.push(line);
+                continue;
+            }
+
             // Check if this line contains chords (has multiple chord-like patterns)
             const hasChords = /\b[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\b/.test(line);
 
@@ -1077,11 +1094,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Update the live preview
         updateLivePreview();
 
-        // Auto-adjust layout to maintain original page count after transpose
+        // Auto-adjust layout DISABLED - preserve user's layout settings
         // Wait 200ms for updateLivePreview's internal timeout (100ms) to complete
-        setTimeout(() => {
-            autoAdjustLayoutAfterTranspose(pageCountBeforeTranspose);
-        }, 200);
+        // setTimeout(() => {
+        //     autoAdjustLayoutAfterTranspose(pageCountBeforeTranspose);
+        // }, 200);
 
         // Save local transpose preference if in a session
         if (window.sessionManager && window.sessionManager.activeSession && currentSessionSongId) {
@@ -1819,8 +1836,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Always make chords bold (skip Nashville numbers for clean print preview)
         visualContent = makeChordsBold(visualContent);
 
-        // Auto-optimize font size based on content length
-        optimizeFontSize(visualContent);
+        // Auto-optimize font size DISABLED - preserve user's settings
+        // optimizeFontSize(visualContent);
 
         // Format with structured HTML for professional display
         const formattedHTML = formatForPreview(visualContent);
@@ -1960,7 +1977,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         if (!a4Indicator || !livePreview) return;
 
         const fontSize = parseFloat(fontSizeSlider ? fontSizeSlider.value : 10);
-        const lineHeight = parseFloat(lineHeightSlider ? lineHeightSlider.value : 1.3);
+        const lineHeight = parseFloat(lineHeightSlider ? lineHeightSlider.value : 1.2);
 
         // Calculate line height in pixels (pt to px conversion: 1pt = 1.333px at 96 DPI)
         const lineHeightPx = fontSize * 1.333 * lineHeight;
@@ -2122,6 +2139,32 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 updatePagination();
                 checkContentOverflow();
             }, 100);
+        });
+    }
+
+    // Character spacing control
+    if (charSpacingSlider && charSpacingValue && livePreview) {
+        charSpacingSlider.addEventListener('input', () => {
+            const spacing = charSpacingSlider.value;
+            charSpacingValue.textContent = spacing;
+            livePreview.style.letterSpacing = spacing + 'px';
+            updateA4Indicator();
+            setTimeout(() => {
+                updatePagination();
+                checkContentOverflow();
+            }, 100);
+        });
+    }
+
+    // Editor font size control (for the edit window textarea)
+    const editorFontSizeSlider = document.getElementById('editorFontSizeSlider');
+    const editorFontSizeValue = document.getElementById('editorFontSizeValue');
+
+    if (editorFontSizeSlider && editorFontSizeValue && visualEditor) {
+        editorFontSizeSlider.addEventListener('input', () => {
+            const size = editorFontSizeSlider.value;
+            editorFontSizeValue.textContent = size + 'px';
+            visualEditor.style.fontSize = size + 'px';
         });
     }
 
@@ -2584,6 +2627,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const preferences = {
                 fontSize: parseFloat(fontSizeSlider.value),
                 lineHeight: parseFloat(lineHeightSlider.value),
+                charSpacing: parseFloat(charSpacingSlider.value),
                 columnCount: columnCount,
                 pageCount: pageCount,
                 savedAt: Date.now()
@@ -2635,6 +2679,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     lineHeightValue.textContent = preferences.lineHeight;
                     if (livePreview) {
                         livePreview.style.lineHeight = preferences.lineHeight;
+                    }
+                }
+
+                // Apply character spacing
+                if (preferences.charSpacing !== undefined && charSpacingSlider && charSpacingValue) {
+                    charSpacingSlider.value = preferences.charSpacing;
+                    charSpacingValue.textContent = preferences.charSpacing;
+                    if (livePreview) {
+                        livePreview.style.letterSpacing = `${preferences.charSpacing}px`;
                     }
                 }
 
@@ -2690,6 +2743,72 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Make loadPrintPreviewPreferences globally accessible for auth state changes
     window.loadPrintPreviewPreferences = loadPrintPreviewPreferences;
+
+    // ============= LIVE PREVIEW TOGGLE =============
+    const livePreviewToggle = document.getElementById('livePreviewToggle');
+    let isLivePreviewMode = false;
+
+    if (livePreviewToggle) {
+        livePreviewToggle.addEventListener('click', () => {
+            isLivePreviewMode = !isLivePreviewMode;
+
+            const previewControlsRow = document.querySelector('.preview-controls-row');
+            const editorWorkspace = document.querySelector('.editor-workspace');
+            const uploadSection = document.querySelector('.upload-section');
+            const songInfoSection = document.querySelector('.song-info-section');
+            const sessionControls = document.querySelector('.session-controls');
+            const previewHeaderTitle = document.getElementById('previewHeaderTitle');
+            const pageCounter = document.getElementById('pageCounter');
+
+            if (isLivePreviewMode) {
+                // Enter Live Preview Mode
+                livePreviewToggle.innerHTML = '✏️ Back to Editor';
+                livePreviewToggle.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+
+                // Hide editing controls
+                if (previewControlsRow) previewControlsRow.style.display = 'none';
+                if (editorWorkspace) editorWorkspace.style.display = 'none';
+                if (uploadSection) uploadSection.style.display = 'none';
+                if (songInfoSection) songInfoSection.style.display = 'none';
+                if (sessionControls) sessionControls.style.display = 'none';
+                if (printButton) printButton.style.display = 'none';
+                if (saveLayoutButton) saveLayoutButton.style.display = 'none';
+                if (pageCounter) pageCounter.style.display = 'none';
+
+                // Update header
+                if (previewHeaderTitle) previewHeaderTitle.textContent = 'Live Session Preview';
+
+                // Make preview full width and centered
+                if (livePreview) {
+                    livePreview.style.maxWidth = '100%';
+                    livePreview.style.margin = '0 auto';
+                }
+            } else {
+                // Exit Live Preview Mode - Back to Editor
+                livePreviewToggle.innerHTML = '📺 Live Preview';
+                livePreviewToggle.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)';
+
+                // Show editing controls
+                if (previewControlsRow) previewControlsRow.style.display = 'flex';
+                if (editorWorkspace) editorWorkspace.style.display = 'block';
+                if (uploadSection) uploadSection.style.display = 'block';
+                if (songInfoSection) songInfoSection.style.display = 'block';
+                if (sessionControls) sessionControls.style.display = 'block';
+                if (printButton) printButton.style.display = 'block';
+                if (saveLayoutButton) saveLayoutButton.style.display = 'block';
+                if (pageCounter) pageCounter.style.display = 'block';
+
+                // Restore header
+                if (previewHeaderTitle) previewHeaderTitle.textContent = 'Print Preview & Transpose';
+
+                // Restore preview layout
+                if (livePreview) {
+                    livePreview.style.maxWidth = '210mm';
+                    livePreview.style.margin = '';
+                }
+            }
+        });
+    }
 
     // ============= SUBSCRIPTION SYSTEM INTEGRATION =============
 
