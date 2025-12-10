@@ -293,13 +293,19 @@ Our [Em7]hearts will cry, these bones will [D]sing
     const statusDot = analysisStatus.querySelector('.status-dot');
     const statusText = analysisStatus.querySelector('.status-text');
 
-    const setStatus = (state, message) => {
+    const setStatus = (state, message, progress = null) => {
         if (!statusDot || !statusText) {
             return;
         }
 
         statusDot.className = `status-dot ${state}`;
-        statusText.textContent = message;
+
+        // Add progress percentage if provided
+        if (progress !== null && progress >= 0 && progress <= 100) {
+            statusText.textContent = `${message} (${progress}%)`;
+        } else {
+            statusText.textContent = message;
+        }
     };
 
     const resetPreview = (message = 'No file selected yet. Supported: JPG, PNG, HEIC, PDF.') => {
@@ -663,7 +669,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             reanalyzeButton.disabled = true;
         }
 
-        setStatus('processing', 'Analyzing chart…');
+        setStatus('processing', 'Preparing image', 10);
         analyzeButton.disabled = true;
 
         try {
@@ -674,6 +680,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 reader.onerror = reject;
                 reader.readAsDataURL(uploadedFile);
             });
+
+            setStatus('processing', 'Encoding file', 20);
 
             // Extract base64 data and mime type
             const [metadata, base64Data] = fileData.split(',');
@@ -687,6 +695,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Check if intense mode is enabled (Pro users only)
             const intenseScanCheckbox = document.getElementById('intenseScanCheckbox');
             const intenseMode = intenseScanCheckbox ? intenseScanCheckbox.checked : false;
+
+            setStatus('processing', 'Uploading to AI server', 30);
 
             // Call the Vercel serverless API
             const response = await fetch(API_URL, {
@@ -705,7 +715,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 throw new Error(`API error: ${response.status} ${response.statusText}`);
             }
 
+            setStatus('processing', 'AI analyzing chords', 60);
+
             const result = await response.json();
+
+            setStatus('processing', 'Processing results', 80);
 
             if (result.success && result.transcription) {
                 baselineChart = removeAnalysisLines(result.transcription);
@@ -736,6 +750,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 lastRawTranscription = result.transcription;
 
                 transposeStepInput.value = 0;
+
+                setStatus('processing', 'Finalizing', 95);
+                // Small delay to show the final progress step
+                await new Promise(resolve => setTimeout(resolve, 200));
+
                 setStatus('success', 'AI transcription ready! Edit visually on the left.');
 
                 // Increment analysis counter
@@ -1316,12 +1335,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 return;
             }
 
-            setStatus('processing', 'Re-analyzing with your feedback…');
+            setStatus('processing', 'Preparing re-analysis', 15);
             reanalyzeButton.disabled = true;
 
             // Check if intense mode is enabled
             const intenseScanCheckbox = document.getElementById('intenseScanCheckbox');
             const intenseMode = intenseScanCheckbox ? intenseScanCheckbox.checked : false;
+
+            setStatus('processing', 'Sending to AI server', 30);
 
             fetch(API_URL, {
                 method: 'POST',
@@ -1340,9 +1361,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     if (!response.ok) {
                         throw new Error(`API error: ${response.status} ${response.statusText}`);
                     }
+                    setStatus('processing', 'AI re-analyzing', 65);
                     return response.json();
                 })
-                .then((result) => {
+                .then(async (result) => {
+                    setStatus('processing', 'Processing updated chart', 85);
+
+                    // Small delay to show progress
+                    await new Promise(resolve => setTimeout(resolve, 150));
+
                     if (result.success && result.transcription) {
                         baselineChart = removeAnalysisLines(result.transcription);
                         currentTransposeSteps = 0;
