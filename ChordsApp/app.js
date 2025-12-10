@@ -1232,28 +1232,38 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Calculate steps needed to transpose to target key
             const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-            // Extract root note from current key (e.g., "C Major" -> "C", "Am" -> "A")
-            let currentRoot = originalDetectedKey || currentKey;
-            currentRoot = currentRoot.replace(/\s*(Major|Minor|m)\s*/gi, '').trim();
+            // Extract root note from ORIGINAL key (before any transposition)
+            let originalRoot = originalDetectedKey || currentKey;
+            originalRoot = originalRoot.replace(/\s*(Major|Minor|m)\s*/gi, '').trim();
             // Handle flat notation
-            currentRoot = currentRoot.replace('Db', 'C#').replace('Eb', 'D#').replace('Gb', 'F#')
+            originalRoot = originalRoot.replace('Db', 'C#').replace('Eb', 'D#').replace('Gb', 'F#')
                 .replace('Ab', 'G#').replace('Bb', 'A#');
 
-            const currentIndex = chromaticScale.indexOf(currentRoot);
+            const originalIndex = chromaticScale.indexOf(originalRoot);
             const targetIndex = chromaticScale.indexOf(targetKey);
 
-            if (currentIndex === -1 || targetIndex === -1) {
-                console.warn('⚠️ Cannot transpose: invalid key', currentRoot, '->', targetKey);
+            if (originalIndex === -1 || targetIndex === -1) {
+                console.warn('⚠️ Cannot transpose: invalid key', originalRoot, '->', targetKey);
                 return;
             }
 
-            let steps = targetIndex - currentIndex;
+            // Calculate absolute steps from original to target
+            let targetSteps = targetIndex - originalIndex;
             // Normalize to range [-6, 6] for shortest path
-            if (steps > 6) steps -= 12;
-            if (steps < -6) steps += 12;
+            if (targetSteps > 6) targetSteps -= 12;
+            if (targetSteps < -6) targetSteps += 12;
 
-            console.log(`🎹 Quick transpose: ${currentRoot} -> ${targetKey} (${steps} steps)`);
-            applyTranspose(steps);
+            // Calculate DELTA from current transposition to target
+            const deltaSteps = targetSteps - currentTransposeSteps;
+
+            console.log(`🎹 Quick transpose: ${originalRoot} (currently at ${currentTransposeSteps} steps) -> ${targetKey} (target: ${targetSteps} steps) = delta: ${deltaSteps} steps`);
+
+            if (deltaSteps === 0) {
+                console.log('✓ Already in target key');
+                return;
+            }
+
+            applyTranspose(deltaSteps);
         });
     });
 
