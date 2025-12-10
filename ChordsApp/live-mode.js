@@ -10,8 +10,6 @@ const liveMode = {
     currentTransposeSteps: 0,
     currentSongId: null,
     currentSongName: '',
-    currentBpm: 120,
-    currentTimeSignature: '4/4',
     hideControlsTimeout: null,
 
     /**
@@ -39,12 +37,6 @@ const liveMode = {
             this.currentTransposeSteps = window.currentTransposeSteps || 0;
             this.currentSongName = window.currentSongName || 'Untitled';
             this.currentSongId = window.currentSongId || null;
-
-            // Get BPM and time signature
-            const bpmInput = document.getElementById('bpmInput');
-            const timeSignature = document.getElementById('timeSignature');
-            this.currentBpm = bpmInput ? (bpmInput.value || 120) : 120;
-            this.currentTimeSignature = timeSignature ? (timeSignature.value || '4/4') : '4/4';
         } else {
             // No editor content but in session - show empty state, user will tap to see playlist
             this.currentSongContent = '\n\n\n        Tap to view playlist\n        and select a song';
@@ -163,17 +155,10 @@ const liveMode = {
         }
 
         if (songKeyEl) {
-            // Build info string with key, BPM, time signature, and transposed key if applicable
-            let infoText = `Key: ${this.currentKey} • BPM: ${this.currentBpm} • Time: ${this.currentTimeSignature}`;
-
-            // Add transposed key information if transposed
-            if (this.currentTransposeSteps !== 0) {
-                const transposedKey = this.calculateNewKey(this.currentKey, this.currentTransposeSteps);
-                const transposeSign = this.currentTransposeSteps > 0 ? '+' : '';
-                infoText += ` • Transposed: ${transposeSign}${this.currentTransposeSteps} (${transposedKey})`;
-            }
-
-            songKeyEl.textContent = infoText;
+            const transposeInfo = this.currentTransposeSteps !== 0
+                ? ` (${this.currentTransposeSteps > 0 ? '+' : ''}${this.currentTransposeSteps})`
+                : '';
+            songKeyEl.textContent = `Key: ${this.currentKey}${transposeInfo}`;
         }
 
         if (currentKeyEl) {
@@ -590,13 +575,13 @@ const liveMode = {
         this.currentKey = songData.key || songData.originalKey || 'C Major';
         this.currentSongId = songData.songId;
         this.currentTransposeSteps = 0;
-        this.currentBpm = songData.bpm || 120;
-        this.currentTimeSignature = songData.timeSignature || '4/4';
 
         // Build display name from structured fields
         const title = songData.title || songData.name || 'Untitled';
         const author = songData.author ? ` - ${songData.author}` : '';
-        this.currentSongName = `${title}${author}`;
+        const bpmInfo = songData.bpm ? ` | ${songData.bpm} BPM` : '';
+        const timeInfo = songData.timeSignature ? ` | ${songData.timeSignature}` : '';
+        this.currentSongName = `${title}${author}${bpmInfo}${timeInfo}`;
 
         console.log('📺 Content length:', this.currentSongContent.length);
 
