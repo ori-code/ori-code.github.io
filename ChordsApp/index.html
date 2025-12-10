@@ -379,11 +379,18 @@
 
         <section class="editor-workspace">
             <div class="editor-panel">
-                <header>
-                    <h3>SongBook Format (auto-updated)</h3>
-                    <small>Copy this to SongBook app</small>
+                <header style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3>SongBook Format (auto-updated)</h3>
+                        <small>Copy this to SongBook app</small>
+                    </div>
+                    <button id="toggleSongbookFormat" class="ghost-button" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">
+                        ▼ Expand
+                    </button>
                 </header>
-                <textarea id="songbookOutput" readonly placeholder="SongBook format with [C] brackets will appear here..."></textarea>
+                <div id="songbookFormatContent" style="display: none;">
+                    <textarea id="songbookOutput" readonly placeholder="SongBook format with [C] brackets will appear here..."></textarea>
+                </div>
             </div>
         </section>
 

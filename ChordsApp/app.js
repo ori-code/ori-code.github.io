@@ -1239,6 +1239,32 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }
     }
 
+    // SongBook format collapse toggle
+    const toggleSongbookFormat = document.getElementById('toggleSongbookFormat');
+    const songbookFormatContent = document.getElementById('songbookFormatContent');
+    if (toggleSongbookFormat && songbookFormatContent) {
+        toggleSongbookFormat.addEventListener('click', () => {
+            const isHidden = songbookFormatContent.style.display === 'none';
+            songbookFormatContent.style.display = isHidden ? 'block' : 'none';
+            toggleSongbookFormat.textContent = isHidden ? '▲ Collapse' : '▼ Expand';
+
+            // Store preference
+            localStorage.setItem('songbookFormatState', isHidden ? 'expanded' : 'collapsed');
+            console.log('📋 SongBook Format:', isHidden ? 'Expanded' : 'Collapsed');
+        });
+
+        // Restore state preference on load (default: collapsed)
+        const savedState = localStorage.getItem('songbookFormatState');
+        if (savedState === 'expanded') {
+            songbookFormatContent.style.display = 'block';
+            toggleSongbookFormat.textContent = '▲ Collapse';
+        } else {
+            // Default state: collapsed
+            songbookFormatContent.style.display = 'none';
+            toggleSongbookFormat.textContent = '▼ Expand';
+        }
+    }
+
     // Auto-optimize button
     const autoOptimizeButton = document.getElementById('autoOptimizeButton');
     if (autoOptimizeButton) {
