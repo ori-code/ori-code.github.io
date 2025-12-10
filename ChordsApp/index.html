@@ -989,6 +989,32 @@
             }
         };
 
+        // Hide header on scroll
+        (function() {
+            const header = document.querySelector('.app-header');
+            let lastScrollTop = 0;
+            let isScrolling;
+
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                // Clear timeout if scrolling
+                clearTimeout(isScrolling);
+
+                if (scrollTop > lastScrollTop && scrollTop > 100) {
+                    // Scrolling down - hide header
+                    header.style.transform = 'translateY(-100%)';
+                    header.style.transition = 'transform 0.3s ease-in-out';
+                } else {
+                    // Scrolling up - show header
+                    header.style.transform = 'translateY(0)';
+                    header.style.transition = 'transform 0.3s ease-in-out';
+                }
+
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+            }, false);
+        })();
+
     </script>
 
 </body>
