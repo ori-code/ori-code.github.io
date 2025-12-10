@@ -876,6 +876,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     return line;
                 }
 
+                // Skip arrangement lines with notation like (I) (V1) (PC) (C) etc.
+                const isArrangementLine = /\([VBICOTPC]+\d*\)/.test(line);
+                if (isArrangementLine) {
+                    console.log(`  ⏭️ Line ${index} is arrangement line, skipping:`, line.substring(0, 60));
+                    return line;
+                }
+
                 // Check if this line looks like a chord line
                 // More flexible detection: line with mostly chords and whitespace
 
