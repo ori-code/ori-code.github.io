@@ -1213,6 +1213,32 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }
     }
 
+    // Chord workspace collapse toggle
+    const toggleChordWorkspace = document.getElementById('toggleChordWorkspace');
+    const chordWorkspaceContent = document.getElementById('chordWorkspaceContent');
+    if (toggleChordWorkspace && chordWorkspaceContent) {
+        toggleChordWorkspace.addEventListener('click', () => {
+            const isHidden = chordWorkspaceContent.style.display === 'none';
+            chordWorkspaceContent.style.display = isHidden ? 'block' : 'none';
+            toggleChordWorkspace.textContent = isHidden ? '▲ Collapse' : '▼ Expand';
+
+            // Store preference
+            localStorage.setItem('chordWorkspaceState', isHidden ? 'expanded' : 'collapsed');
+            console.log('📝 Chord workspace:', isHidden ? 'Expanded' : 'Collapsed');
+        });
+
+        // Restore state preference on load (default: collapsed)
+        const savedState = localStorage.getItem('chordWorkspaceState');
+        if (savedState === 'expanded') {
+            chordWorkspaceContent.style.display = 'block';
+            toggleChordWorkspace.textContent = '▲ Collapse';
+        } else {
+            // Default state: collapsed
+            chordWorkspaceContent.style.display = 'none';
+            toggleChordWorkspace.textContent = '▼ Expand';
+        }
+    }
+
     // Auto-optimize button
     const autoOptimizeButton = document.getElementById('autoOptimizeButton');
     if (autoOptimizeButton) {

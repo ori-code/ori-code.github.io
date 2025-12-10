@@ -131,9 +131,13 @@
         </section>
 
         <section class="editor" id="editor">
-            <div class="editor-header">
+            <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>Chord workspace</h2>
+                <button id="toggleChordWorkspace" class="ghost-button" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">
+                    ▼ Expand
+                </button>
             </div>
+            <div id="chordWorkspaceContent" style="display: none;">
             <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
                 <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
                 <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
@@ -234,8 +238,11 @@
                 <button class="ghost-button" id="updateSongButton" style="flex: 1 1 auto; min-width: 120px; padding: 6px 14px; font-size: 0.875rem;">🔄 Update</button>
                 <button class="ghost-button" id="copyToClipboard" style="display: none;">Copy text</button>
             </div>
+            </div>
+        </section>
 
-            <!-- Live Session Controls -->
+        <!-- Live Session Controls -->
+        <section class="session-section">
             <div class="session-controls" style="margin: 20px 0; padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px;">
                 <!-- Session Status Indicator (shown when in session) -->
                 <div id="sessionStatusIndicator" style="display: none; margin-bottom: 12px;"></div>
