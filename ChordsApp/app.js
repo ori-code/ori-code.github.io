@@ -377,6 +377,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return '';
         }
 
+        // Remove markdown code block markers (```chordpro, ```songbook, etc.)
+        text = text.replace(/^```[a-z]*\n?/gm, '').replace(/```$/gm, '').trim();
+
         // Split into lines
         const lines = text.split('\n');
         const cleaned = [];
