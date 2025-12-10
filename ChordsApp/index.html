@@ -387,6 +387,14 @@
             <div id="songbookFormatContent" style="display: none;">
                 <div class="editor-panel">
                     <small style="display: block; margin-bottom: 12px; color: var(--text-muted);">Copy this to SongBook app</small>
+                    <!-- Font Size Control -->
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; margin-bottom: 12px;">
+                        <label style="flex: 1; display: flex; align-items: center; gap: 8px; margin: 0;">
+                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500; white-space: nowrap;">Font Size:</span>
+                            <span id="songbookFontSizeValue" style="font-size: 0.9rem; color: var(--primary); font-weight: 600; min-width: 40px;">14px</span>
+                            <input type="range" id="songbookFontSizeSlider" min="10" max="24" value="14" step="1" style="flex: 1; min-width: 120px;">
+                        </label>
+                    </div>
                     <textarea id="songbookOutput" readonly placeholder="SongBook format with [C] brackets will appear here..."></textarea>
                 </div>
             </div>

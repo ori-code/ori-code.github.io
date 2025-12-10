@@ -2362,6 +2362,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
+    // SongBook font size control
+    const songbookFontSizeSlider = document.getElementById('songbookFontSizeSlider');
+    const songbookFontSizeValue = document.getElementById('songbookFontSizeValue');
+
+    if (songbookFontSizeSlider && songbookFontSizeValue && songbookOutput) {
+        songbookFontSizeSlider.addEventListener('input', () => {
+            const size = songbookFontSizeSlider.value;
+            songbookFontSizeValue.textContent = size + 'px';
+            songbookOutput.style.fontSize = size + 'px';
+        });
+    }
+
     // Column and Page layout control with dropdowns
     const columnCountSelect = document.getElementById('columnCount');
     const pageCountSelect = document.getElementById('pageCount');
