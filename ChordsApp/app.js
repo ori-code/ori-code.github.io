@@ -1224,7 +1224,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Store preference
             localStorage.setItem('chordWorkspaceState', isHidden ? 'expanded' : 'collapsed');
-            console.log('📝 Chord workspace:', isHidden ? 'Expanded' : 'Collapsed');
+            console.log('📝 Edit workspace:', isHidden ? 'Expanded' : 'Collapsed');
         });
 
         // Restore state preference on load (default: collapsed)
