@@ -586,6 +586,8 @@ a {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 999px;
     padding: 8px 14px;
+    position: relative;
+    overflow: hidden;
 }
 
 .status-dot {
@@ -615,6 +617,42 @@ a {
 .status-text {
     font-size: 0.85rem;
     color: var(--text-muted);
+}
+
+.progress-bar-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0 0 999px 999px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.status-panel.processing .progress-bar-container {
+    opacity: 1;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff3b5c, #ffd15c, #4fd18b);
+    background-size: 200% 100%;
+    animation: progressShimmer 2s linear infinite;
+    transition: width 0.4s ease-out;
+    box-shadow: 0 0 10px rgba(255, 59, 92, 0.5);
+}
+
+@keyframes progressShimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 .status-hint {

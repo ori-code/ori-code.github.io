@@ -292,6 +292,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     const statusDot = analysisStatus.querySelector('.status-dot');
     const statusText = analysisStatus.querySelector('.status-text');
+    const progressBarFill = analysisStatus.querySelector('.progress-bar-fill');
 
     const setStatus = (state, message, progress = null) => {
         if (!statusDot || !statusText) {
@@ -300,11 +301,28 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         statusDot.className = `status-dot ${state}`;
 
+        // Update status panel class for progress bar visibility
+        if (state === 'processing' && progress !== null) {
+            analysisStatus.classList.add('processing');
+        } else {
+            analysisStatus.classList.remove('processing');
+        }
+
         // Add progress percentage if provided
         if (progress !== null && progress >= 0 && progress <= 100) {
             statusText.textContent = `${message} (${progress}%)`;
+
+            // Update progress bar width
+            if (progressBarFill) {
+                progressBarFill.style.width = `${progress}%`;
+            }
         } else {
             statusText.textContent = message;
+
+            // Reset progress bar
+            if (progressBarFill) {
+                progressBarFill.style.width = '0%';
+            }
         }
     };
 
