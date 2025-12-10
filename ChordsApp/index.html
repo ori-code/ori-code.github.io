@@ -91,6 +91,10 @@
                     <span class="step-number">2</span>
                     <h3>AI transcription ready!</h3>
                     <p>Edit visually in the bottom Editor.</p>
+                    <label style="display: block; margin-bottom: 12px; font-size: 0.9rem; color: var(--text); cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="autoAnalyzeCheckbox" checked style="margin-right: 8px; cursor: pointer;">
+                        ⚡ Auto-analyze uploads <span style="color: var(--text-muted); font-size: 0.8rem;">(recommended)</span>
+                    </label>
                     <button id="analyzeButton" class="primary-action" disabled>Analyze</button>
                     <label id="intenseScanOption" style="display: none; margin-top: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; user-select: none;">
                         <input type="checkbox" id="intenseScanCheckbox" style="margin-right: 6px; cursor: pointer;">
@@ -265,60 +269,85 @@
         <section class="preview-section" id="previewSection">
             <div class="preview-header">
                 <h2 id="previewHeaderTitle">Print Preview & Transpose</h2>
+                <div style="display: flex; gap: 10px; width: 100%; margin-bottom: 16px;">
+                    <button class="primary-action" id="printButton" style="flex: 2; font-size: 16px; padding: 14px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">🖨️ Print Chart</button>
+                    <button class="ghost-button" id="toggleLayoutMode" style="flex: 1; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">⚙️ Customize</button>
+                </div>
                 <div style="display: flex; gap: 10px; width: 100%;">
-                    <button class="primary-action" id="printButton" style="flex: 1;">Print chart</button>
                     <button class="secondary-action" id="saveLayoutButton" style="flex: 1; background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Save Layout</button>
                     <button class="ghost-button" id="livePreviewToggle" style="flex: 1; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">📺 Live Preview</button>
                 </div>
             </div>
-            <div class="preview-controls-row" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                <!-- Row 1: Sliders + Layout + Pages (all in same line) -->
-                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <label class="font-size-control" style="flex: 1 1 120px; min-width: 120px;">
-                        Font Size: <span id="fontSizeValue">10</span>pt
-                        <input type="range" id="fontSizeSlider" min="8" max="28" value="10" step="0.5">
-                    </label>
-                    <label class="line-height-control" style="flex: 1 1 130px; min-width: 130px;">
-                        Line Spacing: <span id="lineHeightValue">1.2</span>
-                        <input type="range" id="lineHeightSlider" min="1.0" max="2.0" value="1.2" step="0.1">
-                    </label>
-                    <label class="char-spacing-control" style="flex: 1 1 130px; min-width: 130px;">
-                        Char Spacing: <span id="charSpacingValue">0</span>px
-                        <input type="range" id="charSpacingSlider" min="0" max="8" value="0" step="0.5">
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; flex: 0 0 auto;">
-                        <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Layout:</span>
-                        <select id="columnCount" class="layout-select ghost-button" style="min-width: 105px;">
-                            <option value="1">1 Column</option>
-                            <option value="2" selected>2 Columns</option>
-                            <option value="3">3 Columns</option>
-                            <option value="4">4 Columns</option>
-                        </select>
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; flex: 0 0 auto;">
-                        <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Pages:</span>
-                        <select id="pageCount" class="layout-select ghost-button" style="min-width: 88px;">
-                            <option value="1" selected>1 Page</option>
-                            <option value="2">2 Pages</option>
-                            <option value="3">3 Pages</option>
-                            <option value="4">4 Pages</option>
-                        </select>
-                    </label>
+            <!-- Advanced Layout Controls (Collapsible) -->
+            <div id="advancedControls" class="preview-controls-row" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 20px; overflow: hidden; transition: all 0.3s ease;">
+                <div style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; padding: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.9rem; font-weight: 600;">Layout Customization</h4>
+                    <!-- Row 1: Sliders + Layout + Pages (all in same line) -->
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+                        <label class="font-size-control" style="flex: 1 1 120px; min-width: 120px;">
+                            Font Size: <span id="fontSizeValue">10</span>pt
+                            <input type="range" id="fontSizeSlider" min="8" max="28" value="10" step="0.5">
+                        </label>
+                        <label class="line-height-control" style="flex: 1 1 130px; min-width: 130px;">
+                            Line Spacing: <span id="lineHeightValue">1.2</span>
+                            <input type="range" id="lineHeightSlider" min="1.0" max="2.0" value="1.2" step="0.1">
+                        </label>
+                        <label class="char-spacing-control" style="flex: 1 1 130px; min-width: 130px;">
+                            Char Spacing: <span id="charSpacingValue">0</span>px
+                            <input type="range" id="charSpacingSlider" min="0" max="8" value="0" step="0.5">
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; flex: 0 0 auto;">
+                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Layout:</span>
+                            <select id="columnCount" class="layout-select ghost-button" style="min-width: 105px;">
+                                <option value="1">1 Column</option>
+                                <option value="2" selected>2 Columns</option>
+                                <option value="3">3 Columns</option>
+                                <option value="4">4 Columns</option>
+                            </select>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; flex: 0 0 auto;">
+                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Pages:</span>
+                            <select id="pageCount" class="layout-select ghost-button" style="min-width: 88px;">
+                                <option value="1" selected>1 Page</option>
+                                <option value="2">2 Pages</option>
+                                <option value="3">3 Pages</option>
+                                <option value="4">4 Pages</option>
+                            </select>
+                        </label>
+                    </div>
+                    <button class="ghost-button" id="autoOptimizeButton" style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; padding: 10px; font-weight: 600;">✨ Auto-fit to 1 Page</button>
                 </div>
 
-                <!-- Row 2: Transpose Controls -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; align-items: center;">
-                    <div style="display: flex; gap: 8px;">
-                        <button class="ghost-button" data-shift="-1" style="flex: 1; padding: 10px; min-width: 44px;">–1</button>
-                        <button class="ghost-button" data-shift="1" style="flex: 1; padding: 10px; min-width: 44px;">+1</button>
+                <!-- Transpose Controls -->
+                <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: #3b82f6; font-size: 0.9rem; font-weight: 600;">Transpose</h4>
+
+                    <!-- Quick Key Transpose -->
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Quick Transpose to Key:</label>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button class="ghost-button quick-key-transpose" data-target-key="C" style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: rgba(59, 130, 246, 0.1);">C</button>
+                            <button class="ghost-button quick-key-transpose" data-target-key="D" style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: rgba(59, 130, 246, 0.1);">D</button>
+                            <button class="ghost-button quick-key-transpose" data-target-key="E" style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: rgba(59, 130, 246, 0.1);">E</button>
+                            <button class="ghost-button quick-key-transpose" data-target-key="F" style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: rgba(59, 130, 246, 0.1);">F</button>
+                            <button class="ghost-button quick-key-transpose" data-target-key="G" style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: rgba(59, 130, 246, 0.1);">G</button>
+                            <button class="ghost-button quick-key-transpose" data-target-key="A" style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: rgba(59, 130, 246, 0.1);">A</button>
+                        </div>
                     </div>
-                    <label class="transpose-label" style="display: flex; align-items: center; gap: 6px; white-space: nowrap; justify-content: center;">
-                        <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Steps</span>
-                        <input type="number" id="transposeStepInput" value="0" min="-11" max="11" style="width: 60px; padding: 8px;">
-                    </label>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="ghost-button" id="applyTranspose" style="flex: 1; padding: 10px;">Apply</button>
-                        <button class="ghost-button" id="resetTranspose" style="flex: 1; padding: 10px;">Reset</button>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; align-items: center;">
+                        <div style="display: flex; gap: 8px;">
+                            <button class="ghost-button" data-shift="-1" style="flex: 1; padding: 10px; min-width: 44px;">–1</button>
+                            <button class="ghost-button" data-shift="1" style="flex: 1; padding: 10px; min-width: 44px;">+1</button>
+                        </div>
+                        <label class="transpose-label" style="display: flex; align-items: center; gap: 6px; white-space: nowrap; justify-content: center;">
+                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Steps</span>
+                            <input type="number" id="transposeStepInput" value="0" min="-11" max="11" style="width: 60px; padding: 8px;">
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="ghost-button" id="applyTranspose" style="flex: 1; padding: 10px;">Apply</button>
+                            <button class="ghost-button" id="resetTranspose" style="flex: 1; padding: 10px;">Reset</button>
+                        </div>
                     </div>
                 </div>
             </div>

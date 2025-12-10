@@ -611,6 +611,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
         } else {
             resetPreview('Preview not available for this file type, but it is ready for analysis.');
         }
+
+        // Auto-analyze if enabled
+        const autoAnalyzeCheckbox = document.getElementById('autoAnalyzeCheckbox');
+        if (autoAnalyzeCheckbox && autoAnalyzeCheckbox.checked && uploadedFile) {
+            setTimeout(() => {
+                if (analyzeButton && !analyzeButton.disabled) {
+                    console.log('🚀 Auto-analyzing uploaded file...');
+                    analyzeChart();
+                }
+            }, 500); // Small delay to ensure preview is ready
+        }
     };
 
     const analyzeChart = async () => {
@@ -1139,6 +1150,72 @@ Our [Em7]hearts will cry, these bones will [D]sing
     if (analyzeButton) {
         analyzeButton.addEventListener('click', analyzeChart);
     }
+
+    // Mode toggle between Quick Print and Custom
+    const toggleLayoutMode = document.getElementById('toggleLayoutMode');
+    const advancedControls = document.getElementById('advancedControls');
+    if (toggleLayoutMode && advancedControls) {
+        toggleLayoutMode.addEventListener('click', () => {
+            const isHidden = advancedControls.style.display === 'none';
+            advancedControls.style.display = isHidden ? 'flex' : 'none';
+            toggleLayoutMode.textContent = isHidden ? '← Quick Print' : '⚙️ Customize';
+
+            // Store preference
+            localStorage.setItem('layoutMode', isHidden ? 'custom' : 'quick');
+            console.log('🎨 Layout mode:', isHidden ? 'Custom' : 'Quick Print');
+        });
+
+        // Restore mode preference on load
+        const savedMode = localStorage.getItem('layoutMode');
+        if (savedMode === 'custom') {
+            advancedControls.style.display = 'flex';
+            toggleLayoutMode.textContent = '← Quick Print';
+        }
+    }
+
+    // Auto-optimize button
+    const autoOptimizeButton = document.getElementById('autoOptimizeButton');
+    if (autoOptimizeButton) {
+        autoOptimizeButton.addEventListener('click', () => {
+            console.log('✨ Auto-optimize clicked');
+            autoOptimizeLayout();
+        });
+    }
+
+    // Quick key transpose buttons
+    const quickKeyTransposeButtons = document.querySelectorAll('.quick-key-transpose');
+    quickKeyTransposeButtons.forEach((button) => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetKey = button.dataset.targetKey;
+
+            // Calculate steps needed to transpose to target key
+            const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+            // Extract root note from current key (e.g., "C Major" -> "C", "Am" -> "A")
+            let currentRoot = originalDetectedKey || currentKey;
+            currentRoot = currentRoot.replace(/\s*(Major|Minor|m)\s*/gi, '').trim();
+            // Handle flat notation
+            currentRoot = currentRoot.replace('Db', 'C#').replace('Eb', 'D#').replace('Gb', 'F#')
+                .replace('Ab', 'G#').replace('Bb', 'A#');
+
+            const currentIndex = chromaticScale.indexOf(currentRoot);
+            const targetIndex = chromaticScale.indexOf(targetKey);
+
+            if (currentIndex === -1 || targetIndex === -1) {
+                console.warn('⚠️ Cannot transpose: invalid key', currentRoot, '->', targetKey);
+                return;
+            }
+
+            let steps = targetIndex - currentIndex;
+            // Normalize to range [-6, 6] for shortest path
+            if (steps > 6) steps -= 12;
+            if (steps < -6) steps += 12;
+
+            console.log(`🎹 Quick transpose: ${currentRoot} -> ${targetKey} (${steps} steps)`);
+            applyTranspose(steps);
+        });
+    });
 
     transposeButtons.forEach((button) => {
         button.addEventListener('click', (e) => {
@@ -2329,6 +2406,37 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 updatePagination();
             });
         });
+    }
+
+    // Auto-optimize layout to fit content on 1 page
+    function autoOptimizeLayout() {
+        if (!livePreview || !columnCountSelect || !pageCountSelect) {
+            console.warn('⚠️ Cannot auto-optimize: missing required elements');
+            return;
+        }
+
+        console.log('✨ Auto-optimizing layout for 1 page...');
+
+        // Get content length to determine optimal columns
+        const content = livePreview.textContent || '';
+        const contentLength = content.length;
+
+        // Smart defaults based on content length
+        let optimalColumns = 2; // Default to 2 columns
+        if (contentLength < 500) {
+            optimalColumns = 1; // Short content - single column
+        } else if (contentLength > 2000) {
+            optimalColumns = 3; // Long content - 3 columns
+        }
+
+        // Set optimal layout
+        columnCountSelect.value = optimalColumns;
+        pageCountSelect.value = 1;
+
+        // Apply layout settings (this will trigger autoFitContent)
+        applyLayoutSettings();
+
+        console.log(`✅ Auto-optimized: ${optimalColumns} columns, 1 page`);
     }
 
     // Apply layout settings based on column and page count
