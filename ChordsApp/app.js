@@ -2646,34 +2646,48 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Intro → Verse → Pre-Chorus → Chorus → Verse → Pre-Chorus → Chorus → Bridge → Chorus → Outro
         const arrangementLine = '(I) (V1) (PC) (C) (V2) (PC) (C) (B) (C) (O)';
 
-        const lines = content.split('\n');
-        const sectionPattern = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA)\s*(\d*):?$/i;
+        // Check if arrangement line already exists - don't duplicate
+        if (/\([VBICOTPC]+\d*\)\s*\([VBICOTPC]+\d*\)/.test(content)) {
+            console.log('Arrangement line already exists, skipping insertion');
+            return content;
+        }
 
-        // Find where to insert the arrangement line (after metadata, before first section)
-        let insertIndex = 0;
-        let metadataEnded = false;
+        const lines = content.split('\n');
+        const sectionPattern = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA|Intro|Verse|Chorus|Bridge|Outro|Pre-Chorus)/i;
+
+        // Find where to insert the arrangement line (after metadata, before first section or content)
+        let insertIndex = -1;
+        let lastMetadataIndex = -1;
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
 
             // Check if this is a metadata line (Title, Key, BPM, etc.)
-            const isMetadata = /^(Title|Key|BPM|Tempo|Time|Author):/i.test(line) || line.startsWith('{');
+            const isMetadata = /^(Title|Key|BPM|Tempo|Time|Author):/i.test(line) ||
+                              line.includes('Key:') || line.includes('BPM:') || line.includes('Time:') ||
+                              line.startsWith('{');
 
-            // Check if this is the first section header
-            const isSection = sectionPattern.test(line);
-
-            if (!metadataEnded && !isMetadata && line !== '') {
-                metadataEnded = true;
+            if (isMetadata) {
+                lastMetadataIndex = i;
             }
 
-            if (isSection) {
+            // Check if this is the first section header or content
+            const isSection = sectionPattern.test(line);
+            const isContent = line !== '' && !isMetadata && !/^\s*$/.test(line);
+
+            if (isSection || (isContent && lastMetadataIndex >= 0)) {
                 insertIndex = i;
                 break;
             }
         }
 
-        // Insert the arrangement line before the first section
-        lines.splice(insertIndex, 0, arrangementLine, '');
+        // If no section found, insert after last metadata line
+        if (insertIndex === -1) {
+            insertIndex = lastMetadataIndex + 1;
+        }
+
+        // Insert the arrangement line before the first section/content
+        lines.splice(insertIndex, 0, '', arrangementLine, '');
         return lines.join('\n');
     }
 
