@@ -470,9 +470,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
             keyDetectionDiv.style.display = 'block';
 
-            // Set Nashville mode to "both" (numbers + chords) by default after analysis
+            // Set Nashville mode to "chords" only by default after analysis
             if (nashvilleMode) {
-                nashvilleMode.value = 'both';
+                nashvilleMode.value = 'chords';
             }
             updateLivePreview();
         } else {
