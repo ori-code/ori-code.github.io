@@ -762,6 +762,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // ✅ Ensure BPM and Time Signature metadata exist with defaults
                 visualFormat = ensureMetadata(visualFormat);
 
+                // ✅ Normalize spacing around pipes in metadata
+                visualFormat = normalizeMetadataSpacing(visualFormat);
+
                 visualEditor.value = visualFormat;
 
                 // Keep ChordPro format as baseline
@@ -825,6 +828,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // ✅ Ensure BPM and Time Signature metadata exist with defaults
             visualFormat = ensureMetadata(visualFormat);
+
+            // ✅ Normalize spacing around pipes in metadata
+            visualFormat = normalizeMetadataSpacing(visualFormat);
 
             visualEditor.value = visualFormat;
 
@@ -2668,6 +2674,25 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Insert the arrangement line before the first section
         lines.splice(insertIndex, 0, arrangementLine, '');
+        return lines.join('\n');
+    }
+
+    /**
+     * Normalize spacing around pipe characters in metadata lines
+     * Ensures consistent format: "Key: A Major | BPM: 125 | Time: 4/4"
+     */
+    function normalizeMetadataSpacing(content) {
+        const lines = content.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            // Check if this is a metadata line containing pipes
+            if (/Key:|BPM:|Time:|Tempo:/i.test(line) && line.includes('|')) {
+                // Normalize spacing: remove spaces around pipes, then add consistent spacing
+                lines[i] = line.replace(/\s*\|\s*/g, ' | ');
+            }
+        }
+
         return lines.join('\n');
     }
 
