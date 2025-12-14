@@ -474,6 +474,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (nashvilleMode) {
                 nashvilleMode.value = 'chords';
             }
+
+            // Set default BPM and Time Signature if not detected
+            if (bpmInput && !bpmInput.value) {
+                bpmInput.value = '120';
+            }
+            if (timeSignature && !timeSignature.value) {
+                timeSignature.value = '4/4';
+            }
+
             updateLivePreview();
         } else {
             // Show "not detected" message if no key found
@@ -750,6 +759,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // ✅ Auto-insert arrangement line (V1) (C) (V2) etc.
                 visualFormat = autoInsertArrangementLine(visualFormat);
 
+                // ✅ Ensure BPM and Time Signature metadata exist with defaults
+                visualFormat = ensureMetadata(visualFormat);
+
                 visualEditor.value = visualFormat;
 
                 // Keep ChordPro format as baseline
@@ -810,6 +822,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // ✅ Auto-insert arrangement line (V1) (C) (V2) etc.
             visualFormat = autoInsertArrangementLine(visualFormat);
+
+            // ✅ Ensure BPM and Time Signature metadata exist with defaults
+            visualFormat = ensureMetadata(visualFormat);
 
             visualEditor.value = visualFormat;
 
@@ -2653,6 +2668,55 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Insert the arrangement line before the first section
         lines.splice(insertIndex, 0, arrangementLine, '');
+        return lines.join('\n');
+    }
+
+    /**
+     * Ensures BPM and Time Signature metadata exist in content with default values
+     * Adds "BPM: 120" and "Time: 4/4" if not present
+     */
+    function ensureMetadata(content) {
+        const lines = content.split('\n');
+
+        // Check if BPM exists
+        const hasBPM = /BPM:\s*\d+/i.test(content);
+        // Check if Time Signature exists
+        const hasTime = /Time:\s*[^\n\r|]+/i.test(content);
+
+        // If both exist, return content unchanged
+        if (hasBPM && hasTime) {
+            return content;
+        }
+
+        // Find the Key line to add BPM and Time to it
+        let keyLineIndex = lines.findIndex(line => /Key:/i.test(line));
+
+        if (keyLineIndex >= 0) {
+            // Add missing metadata to the Key line
+            let keyLine = lines[keyLineIndex];
+
+            if (!hasBPM) {
+                keyLine += ' | BPM: 120';
+            }
+            if (!hasTime) {
+                keyLine += ' | Time: 4/4';
+            }
+
+            lines[keyLineIndex] = keyLine;
+        } else {
+            // No Key line found - add a new metadata line at the start
+            let metadataLine = '';
+            if (!hasBPM) {
+                metadataLine = 'BPM: 120';
+            }
+            if (!hasTime) {
+                metadataLine += (metadataLine ? ' | ' : '') + 'Time: 4/4';
+            }
+            if (metadataLine) {
+                lines.unshift(metadataLine);
+            }
+        }
+
         return lines.join('\n');
     }
 
