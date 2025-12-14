@@ -4054,6 +4054,226 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // ============= END SECTION HEADER EDITOR =============
 
+    // ============= ARRANGEMENT TAG EDITOR =============
+    // Arrangement tag options for dropdown
+    const arrangementTagOptions = [
+        '(I)',     // Intro
+        '(V1)', '(V2)', '(V3)', '(V4)',  // Verses
+        '(PC)', '(PC1)', '(PC2)',  // Pre-Chorus
+        '(C)', '(C1)', '(C2)',  // Chorus
+        '(B)', '(B1)', '(B2)',  // Bridge
+        '(INT)',  // Interlude
+        '(TAG)',  // Tag
+        '(CODA)', // Coda
+        '(O)'     // Outro
+    ];
+
+    // Create arrangement tag editor dropdown overlay
+    const arrangementEditorOverlay = document.createElement('div');
+    arrangementEditorOverlay.id = 'arrangementEditorOverlay';
+    arrangementEditorOverlay.style.cssText = `
+        position: absolute;
+        display: none;
+        background: var(--bg-secondary, #1a1a2e);
+        border: 2px solid var(--primary);
+        border-radius: 8px;
+        padding: 12px;
+        z-index: 10000;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        min-width: 180px;
+    `;
+
+    const arrangementSelectLabel = document.createElement('label');
+    arrangementSelectLabel.textContent = 'Edit Tag:';
+    arrangementSelectLabel.style.cssText = `
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.85rem;
+        color: var(--text);
+        font-weight: 600;
+    `;
+
+    const arrangementSelect = document.createElement('select');
+    arrangementSelect.style.cssText = `
+        width: 100%;
+        padding: 8px;
+        background: var(--bg, #0f0f23);
+        color: var(--text);
+        border: 1px solid var(--primary);
+        border-radius: 6px;
+        font-size: 0.95rem;
+        cursor: pointer;
+    `;
+
+    arrangementTagOptions.forEach(tag => {
+        const option = document.createElement('option');
+        option.value = tag;
+        option.textContent = tag;
+        arrangementSelect.appendChild(option);
+    });
+
+    const arrangementApplyButton = document.createElement('button');
+    arrangementApplyButton.textContent = 'Apply';
+    arrangementApplyButton.style.cssText = `
+        margin-top: 8px;
+        width: 100%;
+        padding: 8px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+    `;
+
+    arrangementEditorOverlay.appendChild(arrangementSelectLabel);
+    arrangementEditorOverlay.appendChild(arrangementSelect);
+    arrangementEditorOverlay.appendChild(arrangementApplyButton);
+    document.body.appendChild(arrangementEditorOverlay);
+
+    let currentEditingTag = null;
+    let currentEditingTagPosition = null; // {lineIndex, tagIndex}
+
+    function showArrangementEditor(tag, lineIndex, tagIndex, clickX, clickY) {
+        currentEditingTag = tag;
+        currentEditingTagPosition = { lineIndex, tagIndex };
+
+        // Set current value in dropdown
+        const cleanTag = tag.trim();
+        if (arrangementTagOptions.includes(cleanTag)) {
+            arrangementSelect.value = cleanTag;
+        } else {
+            arrangementSelect.value = '(C)'; // Default to chorus
+        }
+
+        // Position overlay with proper scroll compensation
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+
+        let leftPos = clickX + scrollX + 10;
+        let topPos = clickY + scrollY + 10;
+
+        // Make sure it doesn't go off screen
+        if (leftPos + 180 > viewportWidth + scrollX) {
+            leftPos = viewportWidth + scrollX - 180;
+        }
+
+        arrangementEditorOverlay.style.left = leftPos + 'px';
+        arrangementEditorOverlay.style.top = topPos + 'px';
+        arrangementEditorOverlay.style.display = 'block';
+        arrangementSelect.focus();
+    }
+
+    function hideArrangementEditor() {
+        arrangementEditorOverlay.style.display = 'none';
+        currentEditingTag = null;
+        currentEditingTagPosition = null;
+    }
+
+    function applyArrangementTagChange() {
+        if (!currentEditingTagPosition || !visualEditor) return;
+
+        const newTag = arrangementSelect.value;
+        const lines = visualEditor.value.split('\n');
+        const { lineIndex, tagIndex } = currentEditingTagPosition;
+
+        if (lineIndex < 0 || lineIndex >= lines.length) return;
+
+        const line = lines[lineIndex];
+        // Split line into tags (each tag is like "(V1)" or "(C)")
+        const tagMatches = [...line.matchAll(/\([A-Z\d]+\)/g)];
+
+        if (tagIndex < 0 || tagIndex >= tagMatches.length) return;
+
+        const match = tagMatches[tagIndex];
+        const startPos = match.index;
+        const endPos = startPos + match[0].length;
+
+        // Replace the tag
+        const newLine = line.substring(0, startPos) + newTag + line.substring(endPos);
+        lines[lineIndex] = newLine;
+
+        visualEditor.value = lines.join('\n');
+
+        // Trigger update
+        updateSongBookFromVisual();
+        updateLivePreview();
+        updateEditorBadges();
+
+        hideArrangementEditor();
+    }
+
+    // Apply button click
+    arrangementApplyButton.addEventListener('click', applyArrangementTagChange);
+
+    // Enter key to apply
+    arrangementSelect.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            applyArrangementTagChange();
+        } else if (e.key === 'Escape') {
+            hideArrangementEditor();
+        }
+    });
+
+    // Click detection on arrangement tags in visual editor
+    if (visualEditor) {
+        visualEditor.addEventListener('click', (e) => {
+            const textarea = e.target;
+            const cursorPos = textarea.selectionStart;
+            const lines = textarea.value.split('\n');
+
+            // Find which line was clicked
+            let charCount = 0;
+            let lineIndex = -1;
+            for (let i = 0; i < lines.length; i++) {
+                if (cursorPos <= charCount + lines[i].length) {
+                    lineIndex = i;
+                    break;
+                }
+                charCount += lines[i].length + 1; // +1 for newline
+            }
+
+            if (lineIndex === -1) return;
+
+            const currentLine = lines[lineIndex];
+            const posInLine = cursorPos - charCount;
+
+            // Check if line is an arrangement line (contains multiple tags like "(V1) (C) (V2)")
+            const isArrangementLine = /\([A-Z\d]+\)/.test(currentLine) &&
+                                      currentLine.split(/\([A-Z\d]+\)/).length > 2;
+
+            if (isArrangementLine) {
+                // Find which tag was clicked
+                const tagMatches = [...currentLine.matchAll(/\([A-Z\d]+\)/g)];
+
+                for (let i = 0; i < tagMatches.length; i++) {
+                    const match = tagMatches[i];
+                    const tagStart = match.index;
+                    const tagEnd = tagStart + match[0].length;
+
+                    if (posInLine >= tagStart && posInLine <= tagEnd) {
+                        // Clicked on this tag
+                        showArrangementEditor(match[0], lineIndex, i, e.clientX, e.clientY);
+                        break;
+                    }
+                }
+            }
+        });
+    }
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+        if (arrangementEditorOverlay.style.display === 'block' &&
+            !arrangementEditorOverlay.contains(e.target) &&
+            e.target !== visualEditor) {
+            hideArrangementEditor();
+        }
+    });
+
+    // ============= END ARRANGEMENT TAG EDITOR =============
+
     // Initialize subscription UI
     initSubscriptionUI();
 });
