@@ -2810,7 +2810,37 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Handle time signature dropdown
     if (timeSignature) {
         timeSignature.addEventListener('change', () => {
-            // Just update the preview - don't modify editor text
+            const newTimeSig = timeSignature.value;
+            if (!newTimeSig || !visualEditor) return;
+
+            // Update the time signature in the visual editor content
+            let content = visualEditor.value;
+
+            // Replace existing "Time: ..." pattern
+            const timeSigRegex = /^(.*Time:\s*)([^\n\r|]+)/m;
+            if (timeSigRegex.test(content)) {
+                content = content.replace(timeSigRegex, `$1${newTimeSig}`);
+            } else {
+                // If no time signature line exists, add it after BPM or Key
+                const lines = content.split('\n');
+                const bpmIndex = lines.findIndex(line => line.match(/BPM:/i));
+                const keyIndex = lines.findIndex(line => line.match(/Key:/i));
+
+                if (bpmIndex >= 0) {
+                    // Insert after BPM line
+                    lines[bpmIndex] = lines[bpmIndex] + ` | Time: ${newTimeSig}`;
+                } else if (keyIndex >= 0) {
+                    // Insert into key line
+                    lines[keyIndex] = lines[keyIndex] + ` | Time: ${newTimeSig}`;
+                } else {
+                    // Add as first line
+                    lines.unshift(`Time: ${newTimeSig}`);
+                }
+                content = lines.join('\n');
+            }
+
+            visualEditor.value = content;
+            updateSongBookFromVisual();
             updateLivePreview();
         });
     }
@@ -2818,8 +2848,80 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Handle BPM input change
     if (bpmInput) {
         bpmInput.addEventListener('input', () => {
-            // Just update the preview - don't modify editor text
+            const newBPM = bpmInput.value;
+            if (!newBPM || !visualEditor) return;
+
+            // Update the BPM in the visual editor content
+            let content = visualEditor.value;
+
+            // Replace existing "BPM: ..." pattern
+            const bpmRegex = /^(.*BPM:\s*)(\d+)/mi;
+            if (bpmRegex.test(content)) {
+                content = content.replace(bpmRegex, `$1${newBPM}`);
+            } else {
+                // If no BPM line exists, add it after Key
+                const lines = content.split('\n');
+                const keyIndex = lines.findIndex(line => line.match(/Key:/i));
+
+                if (keyIndex >= 0) {
+                    // Insert into key line
+                    lines[keyIndex] = lines[keyIndex] + ` | BPM: ${newBPM}`;
+                } else {
+                    // Add as first line
+                    lines.unshift(`BPM: ${newBPM}`);
+                }
+                content = lines.join('\n');
+            }
+
+            visualEditor.value = content;
+            updateSongBookFromVisual();
             updateLivePreview();
+        });
+    }
+
+    // Reverse sync: When editor content changes, update controllers
+    if (visualEditor) {
+        let syncTimeout;
+        visualEditor.addEventListener('input', () => {
+            // Debounce to avoid too many updates while typing
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => {
+                const content = visualEditor.value;
+
+                // Extract Key
+                const keyMatch = content.match(/Key:\s*([^\n\r|]+)/i);
+                if (keyMatch && keySelector) {
+                    const extractedKey = keyMatch[1].trim();
+                    // Only update if different to avoid circular updates
+                    if (keySelector.value !== extractedKey) {
+                        keySelector.value = extractedKey;
+                        if (detectedKeySpan) {
+                            detectedKeySpan.textContent = extractedKey;
+                        }
+                        currentKey = extractedKey;
+                    }
+                }
+
+                // Extract BPM
+                const bpmMatch = content.match(/BPM:\s*(\d+)/i);
+                if (bpmMatch && bpmInput) {
+                    const extractedBPM = bpmMatch[1];
+                    // Only update if different to avoid circular updates
+                    if (bpmInput.value !== extractedBPM) {
+                        bpmInput.value = extractedBPM;
+                    }
+                }
+
+                // Extract Time Signature
+                const timeMatch = content.match(/Time:\s*([^\n\r|]+)/i);
+                if (timeMatch && timeSignature) {
+                    const extractedTime = timeMatch[1].trim();
+                    // Only update if different to avoid circular updates
+                    if (timeSignature.value !== extractedTime) {
+                        timeSignature.value = extractedTime;
+                    }
+                }
+            }, 500); // 500ms debounce delay
         });
     }
 
