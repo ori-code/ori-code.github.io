@@ -1526,6 +1526,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
+    // Normalize section headers to uppercase format to match dropdown options
+    const normalizeSectionHeader = (sectionName) => {
+        // Remove trailing colon if present
+        const withoutColon = sectionName.replace(/:$/, '').trim();
+
+        // Convert to uppercase
+        const uppercase = withoutColon.toUpperCase();
+
+        // Add colon back
+        return uppercase + ':';
+    };
+
     const convertToAboveLineFormat = (text, compact = true) => {
         if (!text.trim()) {
             return '';
@@ -1568,13 +1580,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Handle {comment: Section Name} - convert to "Section Name:"
+            // Handle {comment: Section Name} - convert to "Section Name:" and normalize to uppercase
             if (line.match(/^\{comment:/i)) {
                 const sectionName = line.replace(/^\{comment:\s*/i, '').replace(/\}$/, '').trim();
                 if (compact && formatted.length > 0 && formatted[formatted.length - 1] !== '') {
                     formatted.push(''); // Add blank line before section
                 }
-                formatted.push(sectionName + (sectionName.endsWith(':') ? '' : ':'));
+                // Normalize section header to uppercase (e.g., "Verse 2" -> "VERSE 2:")
+                const normalizedSection = normalizeSectionHeader(sectionName);
+                formatted.push(normalizedSection);
                 continue;
             }
 
@@ -1627,7 +1641,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 if (compact && formatted.length > 0 && formatted[formatted.length - 1] !== '') {
                     formatted.push(''); // Only one blank line before sections
                 }
-                formatted.push(line);
+                // Normalize section header to uppercase (e.g., "verse 2:" -> "VERSE 2:")
+                const normalizedSection = normalizeSectionHeader(line);
+                formatted.push(normalizedSection);
                 continue;
             }
 
