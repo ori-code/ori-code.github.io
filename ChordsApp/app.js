@@ -3952,9 +3952,27 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 sectionSelect.value = 'CHORUS';
             }
 
-            // Position overlay near click
-            sectionEditorOverlay.style.left = clickX + 'px';
-            sectionEditorOverlay.style.top = (clickY + 20) + 'px';
+            // Position overlay with proper scroll compensation
+            const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+            const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+            let leftPos = clickX + scrollX + 10;
+            let topPos = clickY + scrollY + 10;
+
+            // Make sure it doesn't go off screen
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            if (leftPos + 220 > viewportWidth + scrollX) {
+                leftPos = viewportWidth + scrollX - 220;
+            }
+
+            if (topPos + 150 > viewportHeight + scrollY) {
+                topPos = clickY + scrollY - 160;
+            }
+
+            sectionEditorOverlay.style.left = leftPos + 'px';
+            sectionEditorOverlay.style.top = topPos + 'px';
             sectionEditorOverlay.style.display = 'block';
 
             // Focus the select
