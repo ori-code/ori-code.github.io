@@ -3864,11 +3864,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
     sectionEditorOverlay.style.cssText = `
         position: absolute;
         display: none;
-        background: white;
+        background: var(--bg-secondary, #1a1a2e);
         border: 2px solid var(--primary);
         border-radius: 8px;
         padding: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         z-index: 10000;
         min-width: 200px;
     `;
@@ -3881,7 +3881,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         font-size: 14px;
         border: 1px solid rgba(139, 92, 246, 0.3);
         border-radius: 6px;
-        background: rgba(255, 255, 255, 0.95);
+        background: var(--bg, #0f0f23);
         color: var(--text);
         cursor: pointer;
         margin-bottom: 8px;
