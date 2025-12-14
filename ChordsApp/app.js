@@ -3843,6 +3843,183 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // ============= END LIVE SESSION INTEGRATION =============
 
+    // ============= SECTION HEADER EDITOR WITH DROPDOWNS =============
+
+    // Section options for dropdown
+    const sectionOptions = [
+        'INTRO',
+        'VERSE 1', 'VERSE 2', 'VERSE 3', 'VERSE 4',
+        'PRE-CHORUS', 'PRE-CHORUS 1', 'PRE-CHORUS 2',
+        'CHORUS', 'CHORUS 1', 'CHORUS 2',
+        'BRIDGE', 'BRIDGE 1', 'BRIDGE 2',
+        'INTERLUDE',
+        'TAG',
+        'CODA',
+        'OUTRO'
+    ];
+
+    // Create section editor dropdown overlay
+    const sectionEditorOverlay = document.createElement('div');
+    sectionEditorOverlay.id = 'sectionEditorOverlay';
+    sectionEditorOverlay.style.cssText = `
+        position: absolute;
+        display: none;
+        background: white;
+        border: 2px solid var(--primary);
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        min-width: 200px;
+    `;
+
+    const sectionSelect = document.createElement('select');
+    sectionSelect.id = 'sectionTypeSelect';
+    sectionSelect.style.cssText = `
+        width: 100%;
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--text);
+        cursor: pointer;
+        margin-bottom: 8px;
+    `;
+
+    sectionOptions.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        sectionSelect.appendChild(opt);
+    });
+
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = 'display: flex; gap: 8px;';
+
+    const applyButton = document.createElement('button');
+    applyButton.textContent = 'Apply';
+    applyButton.style.cssText = `
+        flex: 1;
+        padding: 6px 12px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+    `;
+
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = 'Cancel';
+    cancelButton.style.cssText = `
+        flex: 1;
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+    `;
+
+    buttonContainer.appendChild(applyButton);
+    buttonContainer.appendChild(cancelButton);
+    sectionEditorOverlay.appendChild(sectionSelect);
+    sectionEditorOverlay.appendChild(buttonContainer);
+    document.body.appendChild(sectionEditorOverlay);
+
+    let currentEditingLine = null;
+    let currentEditingLineNumber = null;
+
+    // Function to show section editor
+    function showSectionEditor(lineText, lineNumber, clickX, clickY) {
+        const sectionMatch = lineText.match(/^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|CHOURS)[\s\d]*:?/i);
+
+        if (sectionMatch) {
+            currentEditingLine = lineText.trim();
+            currentEditingLineNumber = lineNumber;
+
+            // Try to find matching option
+            const currentSection = currentEditingLine.replace(':', '').trim().toUpperCase();
+            const matchingOption = sectionOptions.find(opt => opt === currentSection);
+
+            if (matchingOption) {
+                sectionSelect.value = matchingOption;
+            } else {
+                // Default to CHORUS if no match (covers typos like "CHOURS")
+                sectionSelect.value = 'CHORUS';
+            }
+
+            // Position overlay near click
+            sectionEditorOverlay.style.left = clickX + 'px';
+            sectionEditorOverlay.style.top = (clickY + 20) + 'px';
+            sectionEditorOverlay.style.display = 'block';
+
+            // Focus the select
+            sectionSelect.focus();
+        }
+    }
+
+    // Function to hide section editor
+    function hideSectionEditor() {
+        sectionEditorOverlay.style.display = 'none';
+        currentEditingLine = null;
+        currentEditingLineNumber = null;
+    }
+
+    // Apply section change
+    applyButton.addEventListener('click', () => {
+        if (currentEditingLineNumber !== null) {
+            const newSection = sectionSelect.value + ':';
+            const lines = visualEditor.value.split('\n');
+            lines[currentEditingLineNumber] = newSection;
+            visualEditor.value = lines.join('\n');
+
+            // Update SongBook and preview
+            updateSongBookFromVisual();
+            updateLivePreview();
+
+            hideSectionEditor();
+        }
+    });
+
+    // Cancel editing
+    cancelButton.addEventListener('click', hideSectionEditor);
+
+    // Click on visualEditor to detect section headers
+    if (visualEditor) {
+        visualEditor.addEventListener('click', (e) => {
+            const textarea = e.target;
+            const cursorPos = textarea.selectionStart;
+            const textBeforeCursor = textarea.value.substring(0, cursorPos);
+            const lineNumber = textBeforeCursor.split('\n').length - 1;
+            const lines = textarea.value.split('\n');
+            const currentLine = lines[lineNumber];
+
+            // Check if this line is a section header
+            const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|CHOURS)[\s\d]*:?/i.test(currentLine.trim());
+
+            if (isSectionHeader) {
+                // Show editor at click position
+                const rect = textarea.getBoundingClientRect();
+                showSectionEditor(currentLine, lineNumber, e.clientX, e.clientY);
+            }
+        });
+    }
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+        if (sectionEditorOverlay.style.display === 'block' &&
+            !sectionEditorOverlay.contains(e.target) &&
+            e.target !== visualEditor) {
+            hideSectionEditor();
+        }
+    });
+
+    // ============= END SECTION HEADER EDITOR =============
+
     // Initialize subscription UI
     initSubscriptionUI();
 });
