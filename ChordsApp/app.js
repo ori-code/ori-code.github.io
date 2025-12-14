@@ -1920,6 +1920,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
                             }
                         }
 
+                        // Extract just the Key value if keyInfo contains combined metadata
+                        let displayKey = keyInfo || 'Key: —';
+                        if (keyInfo && keyInfo.includes('|')) {
+                            // Extract just the "Key: X" part before the first pipe
+                            const keyMatch = keyInfo.match(/Key:\s*([^|]+)/i);
+                            if (keyMatch) {
+                                displayKey = `Key: ${keyMatch[1].trim()}`;
+                            }
+                        }
+
                         // Display in order: Author, Key, BPM, Time (always show template)
                         // Use values from inputs/dropdowns if available
                         const displayBPM = bpmInput && bpmInput.value ? `BPM: ${bpmInput.value}` : (bpmInfo || 'BPM: 120');
@@ -1929,7 +1939,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                             formatted.push(`<div class="song-meta">${author}</div>`);
                         }
                         // Combine Key, BPM, and Time on one line separated by spaces
-                        const metaLine = `${keyInfo || 'Key: —'}  •  ${displayBPM}  •  ${displayTime}`;
+                        const metaLine = `${displayKey}  •  ${displayBPM}  •  ${displayTime}`;
                         formatted.push(`<div class="song-meta">${metaLine}</div>`);
 
                         // ✅ ADD CIRCULAR SECTION BADGES WITH REPEAT COUNT
