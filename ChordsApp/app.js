@@ -1387,7 +1387,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
             songbookOutput.value = baselineChart;
 
             // Convert to visual format
-            const visualFormat = convertToAboveLineFormat(baselineChart, true);
+            let visualFormat = convertToAboveLineFormat(baselineChart, true);
+
+            // Re-insert arrangement line (preserve it during reset)
+            visualFormat = autoInsertArrangementLine(visualFormat);
+
             visualEditor.value = visualFormat;
 
             // Reset key to original
