@@ -2112,21 +2112,35 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Skip lines with Hebrew/RTL characters to avoid messing up text
+            // For RTL content, be more careful about what is a chord vs lyrics
             if (isRTL) {
-                // Still process chords but be more careful
-                // Only match chords that are surrounded by spaces or at start/end of line
-                const chordPattern = /(^|\s)([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(\s|$)/g;
-                line = line.replace(chordPattern, (match, before, chord, after) => {
-                    const number = chordToNashville(chord, key);
-                    if (mode === 'both' && number) {
-                        return `${before}<b>${number} | ${chord}</b>${after}`;
-                    } else if (mode === 'numbers' && number) {
-                        return `${before}<b>${number}</b>${after}`;
-                    } else {
-                        return `${before}<b>${chord}</b>${after}`;
-                    }
-                });
+                // Check if this line is a chord line or a lyrics line
+                // Chord lines: contain multiple chords (2+) OR only chords with spaces
+                // Lyrics lines: contain Hebrew characters + text
+                const hasHebrewChars = /[\u0590-\u05FF]/.test(line);
+                const chordMatches = line.match(/\b[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\b/g);
+                const chordCount = chordMatches ? chordMatches.length : 0;
+
+                // Only process chords if:
+                // 1. Line has no Hebrew characters (English chord line), OR
+                // 2. Line has multiple chords (2+), indicating it's a chord line not lyrics
+                const shouldProcessChords = !hasHebrewChars || chordCount >= 2;
+
+                if (shouldProcessChords) {
+                    // Only match chords that are surrounded by spaces or at start/end of line
+                    const chordPattern = /(^|\s)([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(\s|$)/g;
+                    line = line.replace(chordPattern, (match, before, chord, after) => {
+                        const number = chordToNashville(chord, key);
+                        if (mode === 'both' && number) {
+                            return `${before}<b>${number} | ${chord}</b>${after}`;
+                        } else if (mode === 'numbers' && number) {
+                            return `${before}<b>${number}</b>${after}`;
+                        } else {
+                            return `${before}<b>${chord}</b>${after}`;
+                        }
+                    });
+                }
+                // If it's a lyrics line with Hebrew and isolated letters, leave it as-is
             } else {
                 // For English text, use normal pattern
                 const chordPattern = /\b([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
