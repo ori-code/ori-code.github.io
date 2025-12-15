@@ -1595,14 +1595,22 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Format ChordPro metadata lines - {title:}, {author:}, {key:}, etc.
             if (line.match(/^\{title:/i)) {
                 const title = line.replace(/^\{title:\s*/i, '').replace(/\}$/, '').trim();
-                const keyDisplay = extractedKey ? extractedKey : 'Unknown';
+                const titleDisplay = title || 'Enter the Title';
+                const keyDisplay = extractedKey ? extractedKey : 'C Major';
                 const tempoDisplay = extractedTempo ? `BPM: ${extractedTempo}` : bpmPlaceholder;
                 const timeDisplay = extractedTime ? `Time: ${extractedTime}` : 'Time: 4/4';
-                const combinedLine = `${title}${title ? ' | ' : ''}Key: ${keyDisplay} | ${tempoDisplay} | ${timeDisplay}`;
-                formatted.push(combinedLine.trim());
+
+                // Format: Title: [title]
+                formatted.push(`Title: ${titleDisplay}`);
+
+                // Format: Authors: [author] (if exists)
                 if (extractedAuthor) {
-                    formatted.push(extractedAuthor);
+                    formatted.push(`Authors: ${extractedAuthor}`);
                 }
+
+                // Format: Key: [key] | BPM: [bpm] | Time: [time]
+                const metadataLine = `Key: ${keyDisplay} | ${tempoDisplay} | ${timeDisplay}`;
+                formatted.push(metadataLine);
                 formatted.push('');
                 combinedTitleInserted = true;
                 continue;
