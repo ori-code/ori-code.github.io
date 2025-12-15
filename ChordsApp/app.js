@@ -1133,6 +1133,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Add arrangement line
             transposedVisual = autoInsertArrangementLine(transposedVisual);
 
+            // Ensure metadata format is correct
+            transposedVisual = ensureMetadata(transposedVisual);
+            transposedVisual = normalizeMetadataSpacing(transposedVisual);
+
             visualEditor.value = transposedVisual;
         } else {
             // For loaded songs without songbook format, transpose visual format directly
@@ -1142,6 +1146,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Add arrangement line
             transposedVisual = autoInsertArrangementLine(transposedVisual);
+
+            // Ensure metadata format is correct
+            transposedVisual = ensureMetadata(transposedVisual);
+            transposedVisual = normalizeMetadataSpacing(transposedVisual);
 
             visualEditor.value = transposedVisual;
         }
