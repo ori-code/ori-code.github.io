@@ -146,10 +146,6 @@
                 <header class="visual-editor-header">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <h3 style="margin: 0;">Visual Editor (edit here)</h3>
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
-                            <input type="checkbox" id="proEditorToggle" style="cursor: pointer;">
-                            <span style="font-size: 0.9rem; font-weight: 500;">Pro Editor Mode</span>
-                        </label>
                     </div>
                     <div class="mini-preview" id="miniWorkspacePreview">
                         <img id="miniWorkspacePreviewImage" alt="Uploaded chart preview">
@@ -198,6 +194,7 @@
                         <option value="chords" selected>Chords</option>
                         <option value="both">Nashville + Chords</option>
                         <option value="numbers">Nashville Only</option>
+                        <option value="lyrics">Lyrics Only</option>
                     </select>
                 </div>
                 <div id="keyDetection" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(255, 59, 92, 0.08); border: 1px solid rgba(255, 59, 92, 0.2); border-radius: 8px; flex: 1 1 auto; min-width: 200px;">
@@ -252,6 +249,8 @@
                 </div>
                 <button class="ghost-button" id="saveSongButton" style="flex: 1 1 auto; min-width: 120px; padding: 6px 14px; font-size: 0.875rem;">💾 Save</button>
                 <button class="ghost-button" id="loadSongButton" style="flex: 1 1 auto; min-width: 120px; padding: 6px 14px; font-size: 0.875rem;">📂 Load</button>
+                <button class="ghost-button" id="bulkImportButton" style="flex: 1 1 auto; min-width: 120px; padding: 6px 14px; font-size: 0.875rem;">📥 Bulk Import</button>
+                <input type="file" id="bulkImportInput" multiple accept=".txt,.cho,.chordpro,.chopro" style="display: none;">
                 <button class="ghost-button" id="updateSongButton" style="flex: 1 1 auto; min-width: 120px; padding: 6px 14px; font-size: 0.875rem;">🔄 Update</button>
                 <button class="ghost-button" id="copyToClipboard" style="display: none;">Copy text</button>
             </div>
@@ -367,11 +366,11 @@
                     </div>
                 </div>
             </div>
-            <div class="preview-container" style="position: relative; padding: 0;">
+            <div class="preview-container" style="position: relative; padding: 0 0 50px 0;">
                 <div id="pageCounter" style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">Page 1 of 1 (A4)</div>
                 <div id="pagesWrapper" style="display: flex; flex-direction: column; gap: 20px;">
                     <div class="preview-page" data-page="1">
-                        <div id="livePreview" class="live-preview" style="min-height: 1123px; border: none; border-radius: 4px; padding: 20px; width: 100%; max-width: 210mm;"></div>
+                        <div id="livePreview" class="live-preview" style="min-height: 1123px; border: none; border-radius: 4px; padding: 20px 20px 20px 20px; width: 100%; max-width: 210mm;"></div>
                     </div>
                 </div>
             </div>
@@ -412,7 +411,7 @@
     </main>
 
     <footer class="app-footer">
-        <p>&copy; <span id="year"></span> The Faith Sound. Built with love for worship leaders and musicians. <span style="opacity: 0.7;">| v1.5 - 21/11/2025 09:30</span></p>
+        <p>&copy; <span id="year"></span> The Faith Sound. Built with love for worship leaders and musicians. <span style="opacity: 0.7;">| v1.6 - 15/12/2025</span></p>
     </footer>
 
     <!-- Hidden print-only formatted version -->

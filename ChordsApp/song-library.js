@@ -269,10 +269,20 @@
                 return;
             }
 
-            if (!currentLoadedSong) {
+            // Use window version as fallback (in case closure lost sync)
+            const songToUpdate = currentLoadedSong || window.currentLoadedSong;
+
+            if (!songToUpdate || !songToUpdate.id) {
+                console.log('currentLoadedSong:', currentLoadedSong);
+                console.log('window.currentLoadedSong:', window.currentLoadedSong);
                 showMessage('Error', 'Please load a song first before updating. Use the Load button to select a song.', 'error');
                 return;
             }
+
+            // Sync the local variable
+            currentLoadedSong = songToUpdate;
+
+            console.log('Updating song:', songToUpdate.id, songToUpdate.name);
 
             const content = visualEditor.value.trim();
             if (!content) {
@@ -309,13 +319,25 @@
             const keySelector = document.getElementById('keySelector');
             const originalKey = keySelector ? keySelector.value : 'C Major';
 
-            // Get ORIGINAL baseline (untransposed) SongBook format for proper transpose on load
-            const baselineChart = window.getBaselineChart ? window.getBaselineChart() : '';
+            // Get transpose state
             const actualTransposeSteps = window.getCurrentTransposeSteps ? window.getCurrentTransposeSteps() : 0;
+
+            // FIX: When no transpose is applied (steps = 0), use the CURRENT edited content as baseline
+            // This ensures edits are saved properly. Only use old baseline when transpose is active.
+            let baselineChart;
+            if (actualTransposeSteps === 0) {
+                // No transpose - the editor content IS the new baseline
+                baselineChart = content;
+                console.log('Update: Using edited content as baseline (no transpose)');
+            } else {
+                // Transpose active - keep the original untransposed baseline
+                baselineChart = window.getBaselineChart ? window.getBaselineChart() : content;
+                console.log('Update: Keeping original baseline (transpose active:', actualTransposeSteps, ')');
+            }
 
             // ============= EXTRACT METADATA FROM CONTENT =============
             // Extract title from current song name (before " | Key:" if present)
-            const songName = currentLoadedSong.name || '';
+            const songName = songToUpdate.name || '';
             const titleMatch = songName.match(/^([^|]+?)(?:\s*\|\s*Key:|$)/);
             const title = titleMatch ? titleMatch[1].trim() : songName.trim();
 
@@ -345,7 +367,7 @@
             try {
                 // Update in Firebase Realtime Database
                 const database = firebase.database();
-                const songRef = database.ref('users/' + user.uid + '/songs/' + currentLoadedSong.id);
+                const songRef = database.ref('users/' + user.uid + '/songs/' + songToUpdate.id);
 
                 await songRef.update({
                     // ✅ UPDATE STRUCTURED METADATA FIELDS
@@ -368,7 +390,7 @@
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
 
-                showMessage('Success', `"${currentLoadedSong.name}" updated successfully!`, 'success');
+                showMessage('Success', `"${songToUpdate.name}" updated successfully!`, 'success');
             } catch (error) {
                 console.error('Error updating song:', error);
                 showMessage('Error', 'Failed to update song: ' + error.message, 'error');
@@ -465,8 +487,8 @@
                     bpm: song.bpm || null,
                     timeSignature: song.timeSignature || '',
 
-                    // Content
-                    content: song.baselineChart || song.songbookFormat || song.content,
+                    // Content - prioritize baselineChart, fallback to content
+                    content: song.baselineChart || song.content || song.songbookFormat,
 
                     // Transpose state
                     originalKey: song.originalKey || 'Unknown'
@@ -531,18 +553,39 @@
                 deleteBtn.style.background = 'transparent';
             });
 
+            // Share button
+            const shareBtn = document.createElement('button');
+            shareBtn.textContent = '🔗';
+            shareBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease; margin-right: 4px;';
+            shareBtn.title = 'Share song link';
+
+            shareBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await shareSong(song, user);
+            });
+
+            shareBtn.addEventListener('mouseenter', () => {
+                shareBtn.style.background = 'rgba(59, 130, 246, 0.2)';
+            });
+
+            shareBtn.addEventListener('mouseleave', () => {
+                shareBtn.style.background = 'transparent';
+            });
+
             songItem.appendChild(songInfo);
             songItem.appendChild(addToSessionBtn);
+            songItem.appendChild(shareBtn);
             songItem.appendChild(deleteBtn);
 
             // Load song on click
             songItem.addEventListener('click', () => {
-                // Get the ORIGINAL baseline (untransposed) - same as analyze
-                const baseline = song.baselineChart || song.songbookFormat || '';
+                // Get the ORIGINAL baseline (untransposed) - prioritize baselineChart, fallback to content
+                const baseline = song.baselineChart || song.content || song.songbookFormat || '';
 
                 console.log('=== LOADING SONG ===');
                 console.log('Song name:', song.name);
                 console.log('Has baselineChart:', !!song.baselineChart);
+                console.log('Has content:', !!song.content);
                 console.log('Has songbookFormat:', !!song.songbookFormat);
                 console.log('Baseline length:', baseline.length);
                 console.log('First 200 chars:', baseline.substring(0, 200));
@@ -552,6 +595,10 @@
                     id: song.id,
                     name: song.name
                 };
+
+                // Expose for debugging and external access
+                window.currentLoadedSong = currentLoadedSong;
+                console.log('✅ Song loaded for update - ID:', song.id);
 
                 // Set global song name for session-ui
                 window.currentSongName = song.name;
@@ -768,6 +815,226 @@
                 saveSongConfirm.click();
             }
         });
+
+        // ============= BULK IMPORT FUNCTIONALITY =============
+        const bulkImportButton = document.getElementById('bulkImportButton');
+        const bulkImportInput = document.getElementById('bulkImportInput');
+
+        if (bulkImportButton && bulkImportInput) {
+            bulkImportButton.addEventListener('click', () => {
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    showMessage('Error', 'Please sign in to import songs', 'error');
+                    return;
+                }
+
+                // Check subscription
+                if (window.subscriptionManager && !window.subscriptionManager.canSaveSongs()) {
+                    showMessage('Error', 'Importing songs requires Basic ($0.99/mo) or Pro ($1.99/mo) subscription', 'error');
+                    return;
+                }
+
+                bulkImportInput.click();
+            });
+
+            bulkImportInput.addEventListener('change', async (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    showMessage('Error', 'Please sign in to import songs', 'error');
+                    return;
+                }
+
+                const database = firebase.database();
+                let successCount = 0;
+                let errorCount = 0;
+                const totalFiles = files.length;
+
+                showMessage('Info', `Importing ${totalFiles} songs...`, 'info');
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    try {
+                        let content = await file.text();
+
+                        // Extract song title from content or filename
+                        let songName = extractSongTitle(content, file.name);
+
+                        // Extract metadata from content before cleaning
+                        const keyMatch = content.match(/\{key:\s*([^}]+)\}/i);
+                        const tempoMatch = content.match(/\{tempo:\s*([^}]+)\}/i);
+                        const timeMatch = content.match(/\{time:\s*([^}]+)\}/i);
+                        const authorMatch = content.match(/\{author:\s*([^}]+)\}/i);
+
+                        // Clean unnecessary tags from content
+                        content = cleanChordProContent(content);
+
+                        const songData = {
+                            name: songName,
+                            content: content,
+                            printPreviewText: content,
+                            baselineChart: content,
+                            currentTransposeSteps: 0,
+                            key: keyMatch ? keyMatch[1].trim() : '',
+                            bpm: tempoMatch ? tempoMatch[1].trim() : '120',
+                            time: timeMatch ? timeMatch[1].trim() : '4/4',
+                            author: authorMatch ? authorMatch[1].trim() : '',
+                            createdAt: firebase.database.ServerValue.TIMESTAMP,
+                            updatedAt: firebase.database.ServerValue.TIMESTAMP
+                        };
+
+                        // Save to Firebase
+                        const songsRef = database.ref(`users/${user.uid}/songs`);
+                        await songsRef.push(songData);
+                        successCount++;
+
+                        // Update progress
+                        if ((i + 1) % 5 === 0 || i === files.length - 1) {
+                            showMessage('Info', `Importing... ${i + 1}/${totalFiles}`, 'info');
+                        }
+
+                    } catch (error) {
+                        console.error(`Error importing ${file.name}:`, error);
+                        errorCount++;
+                    }
+                }
+
+                // Reset input for future imports
+                bulkImportInput.value = '';
+
+                // Show final result
+                if (errorCount === 0) {
+                    showMessage('Success', `Successfully imported ${successCount} songs!`, 'success');
+                } else {
+                    showMessage('Warning', `Imported ${successCount} songs, ${errorCount} failed`, 'warning');
+                }
+            });
+        }
+
+        // ============= SHARE SONG FUNCTIONALITY =============
+        async function shareSong(song, user) {
+            try {
+                const database = firebase.database();
+
+                // Generate unique slug (8 chars)
+                const slug = generateSlug();
+
+                // Prepare public song data
+                const publicSongData = {
+                    name: song.name,
+                    title: song.title || song.name,
+                    content: song.content || song.baselineChart || '',
+                    baselineChart: song.baselineChart || song.content || '',
+                    key: song.key || song.originalKey || '',
+                    bpm: song.bpm || '120',
+                    time: song.timeSignature || '4/4',
+                    author: song.author || '',
+                    ownerUid: user.uid,
+                    sharedAt: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                // Save to public-songs collection
+                await database.ref(`public-songs/${slug}`).set(publicSongData);
+
+                // Generate shareable link
+                const shareUrl = `${window.location.origin}${window.location.pathname}?song=${slug}`;
+
+                // Copy to clipboard
+                await navigator.clipboard.writeText(shareUrl);
+
+                showMessage('Success', 'Link copied to clipboard!', 'success');
+                console.log('Shared song URL:', shareUrl);
+
+            } catch (error) {
+                console.error('Error sharing song:', error);
+                showMessage('Error', 'Failed to share song: ' + error.message, 'error');
+            }
+        }
+
+        // Generate unique 8-character slug
+        function generateSlug() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let slug = '';
+            for (let i = 0; i < 8; i++) {
+                slug += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return slug;
+        }
+
+        // Helper function to clean unnecessary ChordPro tags
+        function cleanChordProContent(content) {
+            // Tags to remove completely (formatting/display tags)
+            const tagsToRemove = [
+                /\{subtitle:[^}]*\}/gi,
+                /\{st:[^}]*\}/gi,
+                /\{textfont:[^}]*\}/gi,
+                /\{textsize:[^}]*\}/gi,
+                /\{chordfont:[^}]*\}/gi,
+                /\{chordsize:[^}]*\}/gi,
+                /\{columns:[^}]*\}/gi,
+                /\{col:[^}]*\}/gi,
+                /\{column_break\}/gi,
+                /\{cb\}/gi,
+                /\{new_page\}/gi,
+                /\{np\}/gi,
+                /\{pagetype:[^}]*\}/gi,
+                /\{define:[^}]*\}/gi,
+                /\{grid[^}]*\}/gi,
+                /\{no_grid\}/gi,
+                /\{ng\}/gi,
+                /\{titles:[^}]*\}/gi,
+                /\{new_song\}/gi,
+                /\{ns\}/gi,
+                /\{start_of_tab\}/gi,
+                /\{sot\}/gi,
+                /\{end_of_tab\}/gi,
+                /\{eot\}/gi,
+                /\{start_of_grid\}/gi,
+                /\{sog\}/gi,
+                /\{end_of_grid\}/gi,
+                /\{eog\}/gi,
+                /\{image:[^}]*\}/gi,
+                /\{musicpath:[^}]*\}/gi,
+            ];
+
+            let cleaned = content;
+            for (const pattern of tagsToRemove) {
+                cleaned = cleaned.replace(pattern, '');
+            }
+
+            // Remove empty lines left behind (multiple consecutive blank lines → single blank line)
+            cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+
+            // Trim leading/trailing whitespace
+            cleaned = cleaned.trim();
+
+            return cleaned;
+        }
+
+        // Helper function to extract song title from content or filename
+        function extractSongTitle(content, filename) {
+            // Try to get title from {title:} tag
+            const titleMatch = content.match(/\{title:\s*([^}]+)\}/i);
+            if (titleMatch) {
+                return titleMatch[1].trim();
+            }
+
+            // Try first non-empty line that's not a metadata tag
+            const lines = content.split('\n');
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed && !trimmed.startsWith('{') && !trimmed.startsWith('#')) {
+                    // Remove leading numbers like "171. "
+                    const cleaned = trimmed.replace(/^\d+\.\s*/, '');
+                    if (cleaned) return cleaned.substring(0, 100); // Limit length
+                }
+            }
+
+            // Fall back to filename without extension
+            return filename.replace(/\.(txt|cho|chordpro|chopro)$/i, '');
+        }
     }
 
     // ============= MIGRATION FUNCTION FOR EXISTING SONGS =============
@@ -852,6 +1119,114 @@
 
     // Make migration function globally accessible
     window.migrateSongDatabase = migrateSongDatabase;
+
+    // ============= CLEAN LIBRARY SONGS FUNCTION =============
+    /**
+     * Clean all songs in library by removing unnecessary ChordPro tags
+     * Call this function from browser console: window.cleanLibrarySongs()
+     */
+    async function cleanLibrarySongs() {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            console.error('❌ Please log in first');
+            return;
+        }
+
+        console.log('🧹 Starting library cleanup...');
+
+        // Tags to remove (same as in bulk import)
+        const tagsToRemove = [
+            /\{subtitle:[^}]*\}/gi,
+            /\{st:[^}]*\}/gi,
+            /\{textfont:[^}]*\}/gi,
+            /\{textsize:[^}]*\}/gi,
+            /\{chordfont:[^}]*\}/gi,
+            /\{chordsize:[^}]*\}/gi,
+            /\{columns:[^}]*\}/gi,
+            /\{col:[^}]*\}/gi,
+            /\{column_break\}/gi,
+            /\{cb\}/gi,
+            /\{new_page\}/gi,
+            /\{np\}/gi,
+            /\{pagetype:[^}]*\}/gi,
+            /\{define:[^}]*\}/gi,
+            /\{grid[^}]*\}/gi,
+            /\{no_grid\}/gi,
+            /\{ng\}/gi,
+            /\{titles:[^}]*\}/gi,
+            /\{new_song\}/gi,
+            /\{ns\}/gi,
+            /\{start_of_tab\}/gi,
+            /\{sot\}/gi,
+            /\{end_of_tab\}/gi,
+            /\{eot\}/gi,
+            /\{start_of_grid\}/gi,
+            /\{sog\}/gi,
+            /\{end_of_grid\}/gi,
+            /\{eog\}/gi,
+            /\{image:[^}]*\}/gi,
+            /\{musicpath:[^}]*\}/gi,
+        ];
+
+        function cleanContent(content) {
+            if (!content) return content;
+            let cleaned = content;
+            for (const pattern of tagsToRemove) {
+                cleaned = cleaned.replace(pattern, '');
+            }
+            cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+            return cleaned.trim();
+        }
+
+        try {
+            const database = firebase.database();
+            const songsRef = database.ref(`users/${user.uid}/songs`);
+            const snapshot = await songsRef.once('value');
+            const songs = snapshot.val();
+
+            if (!songs) {
+                console.log('✅ No songs to clean');
+                return;
+            }
+
+            let cleanedCount = 0;
+            let skippedCount = 0;
+            const total = Object.keys(songs).length;
+
+            for (const [songId, song] of Object.entries(songs)) {
+                const originalContent = song.content || '';
+                const cleanedContent = cleanContent(originalContent);
+
+                // Check if content actually changed
+                if (cleanedContent === originalContent) {
+                    skippedCount++;
+                    continue;
+                }
+
+                // Update song with cleaned content
+                const updates = {
+                    content: cleanedContent,
+                    printPreviewText: cleanContent(song.printPreviewText || ''),
+                    baselineChart: cleanContent(song.baselineChart || ''),
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                await songsRef.child(songId).update(updates);
+                cleanedCount++;
+                console.log(`✅ Cleaned: "${song.name}"`);
+            }
+
+            console.log('\n🎉 Library cleanup complete!');
+            console.log(`   ✅ Cleaned: ${cleanedCount} songs`);
+            console.log(`   ⏭️  Skipped (already clean): ${skippedCount} songs`);
+            console.log(`   📊 Total: ${total} songs`);
+
+        } catch (error) {
+            console.error('❌ Cleanup error:', error);
+        }
+    }
+
+    window.cleanLibrarySongs = cleanLibrarySongs;
 
     // Initialize when DOM is ready and Firebase is loaded
     if (document.readyState === 'loading') {

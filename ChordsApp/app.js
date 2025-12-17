@@ -47,6 +47,108 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // ============= CHECK FOR SHARED SONG URL =============
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedSongSlug = urlParams.get('song');
+
+    if (sharedSongSlug) {
+        loadSharedSong(sharedSongSlug);
+    }
+
+    async function loadSharedSong(slug) {
+        try {
+            // Wait for Firebase to be ready
+            await new Promise(resolve => {
+                if (typeof firebase !== 'undefined' && firebase.database) {
+                    resolve();
+                } else {
+                    const checkFirebase = setInterval(() => {
+                        if (typeof firebase !== 'undefined' && firebase.database) {
+                            clearInterval(checkFirebase);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            const database = firebase.database();
+            const snapshot = await database.ref(`public-songs/${slug}`).once('value');
+            const song = snapshot.val();
+
+            if (!song) {
+                showMessage('Error', 'Shared song not found', 'error');
+                return;
+            }
+
+            console.log('Loading shared song:', song.name);
+
+            // Enter view-only mode
+            enterViewOnlyMode();
+
+            // Load song content into preview
+            const content = song.baselineChart || song.content || '';
+            const visualFormat = convertToAboveLineFormat(content);
+
+            // Display in preview
+            if (livePreview) {
+                livePreview.innerHTML = formatForPreview(visualFormat);
+            }
+
+            // Update metadata displays
+            if (keySelector) keySelector.value = song.key || '';
+            if (bpmInput) bpmInput.value = song.bpm || '120';
+            if (timeSignature) timeSignature.value = song.time || '4/4';
+
+            // Set the visualEditor (for transpose to work)
+            visualEditor.value = visualFormat;
+
+            // Store for transpose
+            window.setBaselineChart && window.setBaselineChart(content);
+
+            showMessage('Info', `Viewing: ${song.title || song.name}`, 'info');
+
+        } catch (error) {
+            console.error('Error loading shared song:', error);
+            showMessage('Error', 'Failed to load shared song', 'error');
+        }
+    }
+
+    function enterViewOnlyMode() {
+        document.body.classList.add('view-only-mode');
+
+        // Hide editor panel
+        const editorPanel = document.querySelector('.editor-panel');
+        if (editorPanel) editorPanel.style.display = 'none';
+
+        // Hide upload section
+        const uploadSection = document.querySelector('.upload-section');
+        if (uploadSection) uploadSection.style.display = 'none';
+
+        // Hide session section
+        const sessionSection = document.querySelector('.session-section');
+        if (sessionSection) sessionSection.style.display = 'none';
+
+        // Hide save/load/update buttons
+        const saveSongBtn = document.getElementById('saveSongButton');
+        const loadSongBtn = document.getElementById('loadSongButton');
+        const updateSongBtn = document.getElementById('updateSongButton');
+        const bulkImportBtn = document.getElementById('bulkImportButton');
+        if (saveSongBtn) saveSongBtn.style.display = 'none';
+        if (loadSongBtn) loadSongBtn.style.display = 'none';
+        if (updateSongBtn) updateSongBtn.style.display = 'none';
+        if (bulkImportBtn) bulkImportBtn.style.display = 'none';
+
+        // Add "View Only" banner
+        const banner = document.createElement('div');
+        banner.id = 'viewOnlyBanner';
+        banner.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(90deg, #3b82f6, #8b5cf6); color: white; text-align: center; padding: 8px; font-weight: 500; z-index: 1000;';
+        banner.innerHTML = '👁️ View Only Mode - <a href="' + window.location.pathname + '" style="color: white; text-decoration: underline;">Create your own charts</a>';
+        document.body.prepend(banner);
+
+        // Add top padding to body for banner
+        document.body.style.paddingTop = '40px';
+    }
+
     // Detect local development (localhost or local network IP)
     const isLocalDev = window.location.hostname === 'localhost' ||
                        window.location.hostname.startsWith('192.168.') ||
@@ -233,6 +335,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
         baselineVisualContent = content;
         console.log('Baseline visual content set for transposition');
     };
+
+    // Expose getter for baseline chart (for song-library.js save)
+    window.getBaselineChart = () => baselineChart;
+
+    // Expose getter for current transpose steps (for song-library.js save)
+    window.getCurrentTransposeSteps = () => currentTransposeSteps;
 
     // Expose function to convert visual format to inline songbook format
     window.convertToInlineFormat = (visualContent) => {
@@ -890,8 +998,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const transposedLines = lines.map((line, index) => {
                 // Skip metadata/title lines - they contain pipe-separated info or key/bpm labels
                 const isMetadataLine = /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line) ||
-                                       /^(Key|Title|Artist|BPM|Tempo|Capo):/i.test(line) ||
-                                       /\|\s*Key:/i.test(line);
+                                       /^(Key|Title|Artists?|Authors?|BPM|Tempo|Capo):/i.test(line) ||
+                                       /\|\s*Key:/i.test(line) ||
+                                       /^Key:\s*[A-G].*\|.*BPM:/i.test(line);
                 if (isMetadataLine) {
                     console.log(`  ⏭️ Line ${index} is metadata, skipping:`, line.substring(0, 60));
                     return line;
@@ -1005,8 +1114,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const result = [];
 
         for (let line of lines) {
-            // Skip metadata lines
-            if (/^(Key|Title|Artist|BPM|Tempo|Capo):/i.test(line) || /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line)) {
+            // Skip metadata lines (Artist/Artists/Author/Authors variants)
+            if (/^(Key|Title|Artists?|Authors?|BPM|Tempo|Capo):/i.test(line) || /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line)) {
                 result.push(line);
                 continue;
             }
@@ -1770,7 +1879,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const line = lines[i];
 
             // Skip metadata and section markers
-            if (line.match(/^(Title:|Artist:|Key:|Tempo:|Time:|Number:|\{.*\}|.*:$|^\s*$)/)) {
+            if (line.match(/^(Title:|Artists?:|Authors?:|Key:|Tempo:|Time:|Number:|BPM:|\{.*\}|.*:$|^\s*$)/)) {
                 result.push(line);
                 i++;
                 continue;
@@ -1783,7 +1892,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Check if current line might be chords (contains chord-like patterns)
                 const hasChordPattern = /[A-G](#|b)?(maj|min|m|dim|aug|sus|add)?[0-9]*(\/[A-G](#|b)?)?/.test(line);
 
-                if (hasChordPattern && !nextLine.match(/^(Title:|Artist:|Key:|.*:$)/)) {
+                if (hasChordPattern && !nextLine.match(/^(Title:|Artists?:|Authors?:|Key:|.*:$)/)) {
                     // This looks like a chord line followed by lyrics
                     const chordLine = line;
                     const lyricLine = nextLine;
@@ -1889,7 +1998,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         };
 
         const finishSection = () => {
-            if (currentSection && sectionContent.length > 0) {
+            if (currentSection) {
                 const sectionId = `section-${sectionCounter++}`;
                 const sectionClass = enableSectionBlocks ? 'song-section-block' : '';
                 const blockStart = enableSectionBlocks ? `<div class="${sectionClass}" data-section-id="${sectionId}" data-section-name="${currentSection}">` : '';
@@ -1897,7 +2006,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 formatted.push(blockStart);
                 formatted.push(`<div class="section-header">${currentSection}</div>`);
-                formatted.push(...sectionContent);
+                if (sectionContent.length > 0) {
+                    formatted.push(...sectionContent);
+                }
                 formatted.push(blockEnd);
 
                 sectionContent = [];
@@ -1916,11 +2027,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Skip chord progression summary lines (e.g., "C | 1 | G | 5 D/F | 2# Em | 3")
                 const isChordProgression = /^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(line);
 
-                // ✅ Check if line is arrangement line - skip it entirely
+                // ✅ Check if line is arrangement line - skip it but DON'T stop metadata collection
                 const lineIsArrangement = isArrangementLine(line);
+                if (lineIsArrangement) {
+                    continue; // Skip arrangement line, keep collecting metadata
+                }
 
-                // Check if it's a metadata line (contains Key:, BPM:, Tempo:, etc.)
-                if (!isSectionHeader && !isChordProgression && !lineIsArrangement && (i < 3 || /Key:|BPM:|Tempo:|Time:/.test(line) || /(Words|Music)\s+by/i.test(line))) {
+                // Check if it's a metadata line (contains Key:, BPM:, Tempo:, Authors:, etc.)
+                const isMetadataPattern = /Key:|BPM:|Tempo:|Time:|Authors?:|Artists?:/i.test(line) || /(Words|Music)\s+by/i.test(line);
+                if (!isSectionHeader && !isChordProgression && (i < 5 || isMetadataPattern)) {
                     metadataLines.push(line);
                     if (metadataLines.length >= 4 || (i > 0 && !line)) {
                         inMetadata = false;
@@ -1931,7 +2046,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     inMetadata = false;
                     // Output metadata
                     if (metadataLines.length > 0) {
-                        // ✅ ALWAYS SHOW METADATA TEMPLATE
+                        // ✅ ALWAYS SHOW METADATA TEMPLATE - wrapped in song-header container
+                        formatted.push('<div class="song-header">');
+
                         // Extract title
                         let titleText = metadataLines[0].replace(/^Title:\s*/i, '').trim();
                         formatted.push(`<div class="song-title">${titleText}</div>`);
@@ -1996,6 +2113,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                             formatted.push(`<div class="section-badges-row">${badges}</div>`);
                         }
 
+                        formatted.push('</div>'); // Close song-header
                         formatted.push('<br>');
                         metadataLines = [];
                     }
@@ -2052,10 +2170,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
             result.push('<br>');
             result.push(...formatted);
-            return result.join('');
+            // Trim leading <br> tags from output
+            return result.join('').replace(/^(<br\s*\/?>)+/i, '');
         }
 
-        return formatted.join('');
+        // Trim leading <br> tags from output
+        return formatted.join('').replace(/^(<br\s*\/?>)+/i, '');
     };
 
     // Make formatForPreview globally accessible for Live Mode
@@ -2144,6 +2264,46 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const hasInlineNotation = /\((?:PC|CD|[VBICOT])\d*\)/.test(line);
             const onlyInlineNotation = /^[\s\(VBICOTPCD\d\)|]+$/.test(line) && hasInlineNotation;
             if (onlyInlineNotation) {
+                result.push(line);
+                continue;
+            }
+
+            // LYRICS ONLY MODE: Remove chord lines entirely, keep lyrics with proper spacing
+            if (mode === 'lyrics') {
+                // Keep blank lines for section separation
+                if (line.trim() === '') {
+                    result.push(line);
+                    continue;
+                }
+
+                // Keep section headers (VERSE, CHORUS, BRIDGE, etc.)
+                // Must be a standalone header, not a chord line starting with C, B, etc.
+                const trimmedLine = line.trim();
+                const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO)\s*\d*\s*:?$/i.test(trimmedLine) ||
+                                       /^(V|PC)\d+\s*:?$/i.test(trimmedLine); // V1, V2, PC1, etc.
+                if (isSectionHeader) {
+                    result.push(''); // Add blank line before section header
+                    result.push(line);
+                    continue;
+                }
+
+                // Check if this is a chord-only line
+                const hasRTLChars = /[\u0590-\u05FF\u0600-\u06FF]/.test(line);
+                const chordPattern = /\b[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\b/g;
+                const lineWithoutChords = line.replace(chordPattern, '').trim();
+
+                // If line has RTL characters, it's lyrics - keep it
+                if (hasRTLChars) {
+                    result.push(line);
+                    continue;
+                }
+
+                // If removing chords leaves the line empty, skip it (chord-only line)
+                if (lineWithoutChords.length === 0) {
+                    continue;
+                }
+
+                // Has English text that's not just chords - keep it
                 result.push(line);
                 continue;
             }
@@ -2722,8 +2882,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
 
-            // Check if this is a metadata line (Title, Key, BPM, etc.)
-            const isMetadata = /^(Title|Key|BPM|Tempo|Time|Author):/i.test(line) ||
+            // Check if this is a metadata line (Title, Key, BPM, Authors, etc.)
+            const isMetadata = /^(Title|Key|BPM|Tempo|Time|Authors?|Artists?):/i.test(line) ||
                               line.includes('Key:') || line.includes('BPM:') || line.includes('Time:') ||
                               line.startsWith('{');
 
@@ -3863,9 +4023,62 @@ Our [Em7]hearts will cry, these bones will [D]sing
         window.sessionUI.hideSessionControls();
     };
 
-    // Listen for song loaded from library and broadcast if leader
+    // Listen for song loaded from library - process baselineChart and display
     window.addEventListener('songLoaded', async (event) => {
-        // Wait a bit for the song to fully load into the editor
+        const detail = event.detail || {};
+        const loadedBaseline = detail.baselineChart;
+
+        if (loadedBaseline) {
+            console.log('=== SONG LOADED EVENT ===');
+            console.log('Baseline length:', loadedBaseline.length);
+
+            // Store baseline for transpose operations
+            baselineChart = loadedBaseline;
+            currentTransposeSteps = 0;
+
+            // Convert ChordPro to visual format (same as analyze flow)
+            let visualFormat = convertToAboveLineFormat(loadedBaseline, true);
+
+            // Auto-insert arrangement line
+            visualFormat = autoInsertArrangementLine(visualFormat);
+
+            // Ensure metadata exists
+            visualFormat = ensureMetadata(visualFormat);
+
+            // Normalize spacing
+            visualFormat = normalizeMetadataSpacing(visualFormat);
+
+            // Store as baseline visual content for direct transpose
+            baselineVisualContent = visualFormat;
+
+            // Display in editor
+            visualEditor.value = visualFormat;
+            setDirectionalLayout(visualEditor, visualFormat);
+
+            // Update songbook output
+            songbookOutput.value = loadedBaseline;
+            setDirectionalLayout(songbookOutput, loadedBaseline);
+
+            // Reset transpose input
+            transposeStepInput.value = 0;
+
+            // Extract and display key if provided
+            if (detail.originalKey) {
+                originalDetectedKey = detail.originalKey;
+                currentKey = detail.originalKey;
+                detectedKeySpan.textContent = detail.originalKey;
+            } else {
+                extractAndDisplayKey(loadedBaseline);
+            }
+
+            // Update live preview
+            updateLivePreview();
+            updateEditorBadges();
+
+            console.log('Visual format loaded, length:', visualFormat.length);
+        }
+
+        // Broadcast to session if leader (after content is loaded)
         setTimeout(async () => {
             if (window.sessionManager && window.sessionManager.isLeader && window.sessionManager.activeSession) {
                 await broadcastCurrentSong();

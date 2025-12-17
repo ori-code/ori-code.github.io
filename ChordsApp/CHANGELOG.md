@@ -1,5 +1,21 @@
 # ChordsApp Changelog
 
+## v1.6 - 2025-12-15
+### Fixed
+- **Transpose metadata corruption bug:**
+  - Added missing `window.getBaselineChart()` getter function
+  - Added missing `window.getCurrentTransposeSteps()` getter function
+  - Fixed metadata skip pattern in `transposeVisualFormat()` to handle "Authors:" lines
+  - Songs now save baseline chart and transpose steps correctly
+  - Loading transposed songs no longer corrupts metadata display
+- **Song loading from library bug:**
+  - Fixed `songLoaded` event handler to actually process and display the baseline chart
+  - Songs now properly convert from ChordPro to visual format when loaded
+  - Key, BPM, and other metadata now display correctly after loading
+- **Consecutive chords display bug:**
+  - Fixed `convertToAboveLineFormat()` to add spaces between consecutive chords
+  - Chord-only lines like `[C][C][C]` now display as "C C C" instead of "CCC"
+
 ## v1.5 - 2025-01-20
 ### Added
 - **Add to Session from Library:**

@@ -50,11 +50,11 @@ Return the transcription in ChordPro format with metadata tags and section block
 {tempo: [Extract BPM if shown, or estimate based on genre - optional]}
 {time: [Extract time signature if shown, e.g., "4/4", "3/4" - optional]}
 
-{comment: Verse 1}
+{comment: VERSE 1}
 O [G]come all ye [D]faithful, [G]joyful and tri[C]umphant
 O [Em]come ye, O [Am]come ye to [D]Bethle[G]hem
 
-{comment: Chorus}
+{comment: CHORUS}
 O [G]come let us a[D]dore [Em]Him
 O [C]come let us a[G]dore Him
 
@@ -73,9 +73,12 @@ METADATA EXTRACTION:
 5. {time: } - Extract time signature if shown, default to 4/4 for most songs (optional)
 
 SECTION BLOCKS:
-- Wrap each section with {comment: Section Name}
-- Common sections: Verse 1, Verse 2, Chorus, Bridge, Pre-Chorus, Intro, Outro, Tag
-- Detect section headers like "Verse 1:", "Chorus:", "V1:", "C:", etc.
+- Wrap each section with {comment: SECTION NAME} using UPPERCASE
+- ALLOWED SECTION NAMES (use these EXACT names):
+  INTRO, VERSE 1, VERSE 2, VERSE 3, VERSE 4, PRE-CHORUS, PRE-CHORUS 1, PRE-CHORUS 2,
+  CHORUS, CHORUS 1, CHORUS 2, BRIDGE, BRIDGE 1, BRIDGE 2, INTERLUDE, TAG, CODA, OUTRO
+- Map common abbreviations: V1→VERSE 1, V2→VERSE 2, C→CHORUS, B→BRIDGE, PC→PRE-CHORUS, I→INTRO, O→OUTRO
+- Detect section headers like "Verse 1:", "Chorus:", "V1:", "C:", etc. and convert to standard format
 - Each section should be separated by blank lines
 
 CHORD PLACEMENT EXAMPLES:
