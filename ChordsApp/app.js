@@ -1,3 +1,74 @@
+// ============= GLOBAL STYLED PROMPT FUNCTION =============
+// Replaces native browser prompt() with a styled modal
+window.styledPrompt = (message, defaultValue = '', title = 'Enter value') => {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('styledPromptModal');
+        const input = document.getElementById('styledPromptInput');
+        const titleEl = document.getElementById('styledPromptTitle');
+        const messageEl = document.getElementById('styledPromptMessage');
+        const confirmBtn = document.getElementById('styledPromptConfirm');
+        const cancelBtn = document.getElementById('styledPromptCancel');
+        const closeBtn = document.getElementById('styledPromptClose');
+
+        if (!modal || !input) {
+            // Fallback to native prompt if modal not found
+            resolve(prompt(message, defaultValue));
+            return;
+        }
+
+        // Set content
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        input.value = defaultValue;
+        input.placeholder = '';
+
+        // Show modal
+        modal.style.display = 'flex';
+
+        // Focus and select input
+        setTimeout(() => {
+            input.focus();
+            input.select();
+        }, 100);
+
+        // Cleanup function
+        const cleanup = () => {
+            modal.style.display = 'none';
+            confirmBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', onCancel);
+            closeBtn.removeEventListener('click', onCancel);
+            input.removeEventListener('keydown', onKeydown);
+        };
+
+        // Event handlers
+        const onConfirm = () => {
+            cleanup();
+            resolve(input.value);
+        };
+
+        const onCancel = () => {
+            cleanup();
+            resolve(null);
+        };
+
+        const onKeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                onConfirm();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                onCancel();
+            }
+        };
+
+        // Attach event listeners
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+        closeBtn.addEventListener('click', onCancel);
+        input.addEventListener('keydown', onKeydown);
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('chartFileInput');
     const previewPanel = document.getElementById('uploadPreview');
@@ -781,9 +852,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 setStatus('error', `You've used all ${summary.analysesLimit} analyses this month. Upgrade to continue!`);
 
                 // Show subscription modal
-                if (document.getElementById('subscriptionModal')) {
-                    document.getElementById('subscriptionModal').style.display = 'flex';
-                }
+                window.showSubscriptionModal();
                 return;
             }
         }
@@ -2358,6 +2427,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
         return result.join('\n');
     };
 
+    // Make makeChordsBold globally accessible for Live Mode
+    window.makeChordsBold = makeChordsBold;
+
     // Add Nashville numbers after bold chords (e.g., <b>C | 1</b> for LTR, <b>1 | C</b> for RTL)
     const addNashvilleNumbers = (content, key) => {
         console.log('addNashvilleNumbers called with key:', key);
@@ -3111,6 +3183,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Handle Nashville mode dropdown (with subscription check)
     if (nashvilleMode) {
         nashvilleMode.addEventListener('change', () => {
+            // Skip check if programmatically changed (e.g., from live mode)
+            if (window._skipNashvilleCheck) return;
+
             // Check if user has Pro subscription for Nashville Numbers
             if (window.subscriptionManager && !window.subscriptionManager.canUseNashvilleNumbers()) {
                 alert('🔢 Nashville Numbers is a Pro feature!\n\nUpgrade to Pro for $1.99/month to unlock Nashville Number System and unlimited AI analyses.');
@@ -3119,9 +3194,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 nashvilleMode.value = 'chords';
 
                 // Show subscription modal
-                if (document.getElementById('subscriptionModal')) {
-                    document.getElementById('subscriptionModal').style.display = 'flex';
-                }
+                window.showSubscriptionModal();
                 return;
             }
 
@@ -3199,6 +3272,20 @@ Our [Em7]hearts will cry, these bones will [D]sing
             visualEditor.value = content;
             updateSongBookFromVisual();
             updateLivePreview();
+        });
+    }
+
+    // Handle show/hide badges checkbox
+    const showBadgesCheckbox = document.getElementById('showBadges');
+    if (showBadgesCheckbox) {
+        showBadgesCheckbox.addEventListener('change', () => {
+            if (livePreview) {
+                if (showBadgesCheckbox.checked) {
+                    livePreview.classList.remove('hide-badges');
+                } else {
+                    livePreview.classList.add('hide-badges');
+                }
+            }
         });
     }
 
@@ -3478,9 +3565,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
      * Update usage display in header and subscription modal
      */
     function updateUsageDisplay() {
-        if (!window.subscriptionManager) return;
+        if (!window.subscriptionManager) {
+            console.log('⚠️ updateUsageDisplay: subscriptionManager not available');
+            return;
+        }
 
         const summary = window.subscriptionManager.getUsageSummary();
+        console.log('📊 Subscription summary:', summary);
 
         // Update header usage indicator
         const headerIndicator = document.getElementById('headerUsageIndicator');
@@ -3615,11 +3706,77 @@ Our [Em7]hearts will cry, these bones will [D]sing
     }
 
     /**
+     * Update subscription modal to show current plan
+     */
+    function updateSubscriptionModal() {
+        try {
+            if (!window.subscriptionManager) return;
+
+            const currentTier = window.subscriptionManager.getCurrentTier() || 'FREE';
+            const tiers = ['free', 'basic', 'pro'];
+
+            tiers.forEach(tier => {
+                const card = document.getElementById(`pricing-card-${tier}`);
+                const actionDiv = document.getElementById(`pricing-${tier}-action`);
+                if (!card || !actionDiv) return;
+
+                const isCurrentPlan = tier.toUpperCase() === currentTier;
+
+                // Highlight current plan card
+                if (isCurrentPlan) {
+                    card.style.border = '2px solid #10b981';
+                    card.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.3)';
+                } else {
+                    // Reset to default styles
+                    if (tier === 'free') {
+                        card.style.border = '2px solid rgba(255, 255, 255, 0.1)';
+                    } else if (tier === 'basic') {
+                        card.style.border = '2px solid rgba(59, 130, 246, 0.5)';
+                    } else if (tier === 'pro') {
+                        card.style.border = '2px solid var(--primary)';
+                    }
+                    card.style.boxShadow = 'none';
+                }
+
+                if (isCurrentPlan) {
+                    // Show "Current Plan" button
+                    actionDiv.innerHTML = '<button class="ghost-button" style="width: 100%; background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981;" disabled>✓ Current Plan</button>';
+                } else if (tier === 'free') {
+                    // Free tier - no action needed if user is on paid plan
+                    actionDiv.innerHTML = '';
+                } else {
+                    // Show PayPal button for upgrades
+                    actionDiv.innerHTML = `<div id="paypal-${tier}-button" style="min-height: 45px;"></div>`;
+                    // Re-initialize PayPal button for this tier
+                    if (window.paypalSubscriptionManager) {
+                        window.paypalSubscriptionManager.createSubscriptionButton(tier.toUpperCase(), `paypal-${tier}-button`);
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error updating subscription modal:', error);
+        }
+    }
+
+    // Make updateSubscriptionModal globally accessible
+    window.updateSubscriptionModal = updateSubscriptionModal;
+
+    // Global function to show subscription modal
+    window.showSubscriptionModal = function() {
+        const modal = document.getElementById('subscriptionModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            updateSubscriptionModal();
+        }
+    };
+
+    /**
      * Handle subscription changes
      */
     function handleSubscriptionChange(data) {
         console.log('Subscription changed:', data);
         updateUsageDisplay();
+        updateSubscriptionModal();
 
         // Update save button state based on new subscription
         if (window.updateSaveButtonState) {
@@ -3943,7 +4100,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         createSessionBtn.addEventListener('click', () => {
             if (!window.subscriptionManager || !window.subscriptionManager.canCreateSession()) {
                 alert('Creating sessions requires a PRO subscription ($1.99/mo)');
-                document.getElementById('subscriptionModal').style.display = 'flex';
+                window.showSubscriptionModal();
                 return;
             }
             window.sessionUI.showCreateSessionModal();
@@ -3955,7 +4112,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         joinSessionBtn.addEventListener('click', () => {
             if (!window.subscriptionManager || !window.subscriptionManager.canJoinSession()) {
                 alert('Joining sessions requires at least a BASIC subscription ($0.99/mo)');
-                document.getElementById('subscriptionModal').style.display = 'flex';
+                window.showSubscriptionModal();
                 return;
             }
             window.sessionUI.showJoinSessionModal();

@@ -77,9 +77,8 @@
 
                 // Show subscription modal
                 setTimeout(() => {
-                    const modal = document.getElementById('subscriptionModal');
-                    if (modal) {
-                        modal.style.display = 'flex';
+                    if (window.showSubscriptionModal) {
+                        window.showSubscriptionModal();
                     }
                 }, 500);
                 return;
@@ -261,9 +260,8 @@
 
                 // Show subscription modal
                 setTimeout(() => {
-                    const modal = document.getElementById('subscriptionModal');
-                    if (modal) {
-                        modal.style.display = 'flex';
+                    if (window.showSubscriptionModal) {
+                        window.showSubscriptionModal();
                     }
                 }, 500);
                 return;
@@ -741,9 +739,8 @@
 
                 // Show subscription modal
                 setTimeout(() => {
-                    const modal = document.getElementById('subscriptionModal');
-                    if (modal) {
-                        modal.style.display = 'flex';
+                    if (window.showSubscriptionModal) {
+                        window.showSubscriptionModal();
                     }
                 }, 500);
                 return;

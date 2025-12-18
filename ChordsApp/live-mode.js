@@ -11,6 +11,8 @@ const liveMode = {
     currentSongId: null,
     currentSongName: '',
     hideControlsTimeout: null,
+    displayMode: 'chords',
+    showBadges: true,
 
     /**
      * Enter live mode with current song
@@ -26,7 +28,9 @@ const liveMode = {
         const inSession = window.sessionManager && window.sessionManager.activeSession;
 
         if (!hasEditorContent && !inSession) {
-            alert('No song loaded. Please analyze or load a song first.');
+            if (window.sessionUI) {
+                window.sessionUI.showToast('No song loaded. Please analyze or load a song first.');
+            }
             return;
         }
 
@@ -45,6 +49,9 @@ const liveMode = {
             this.currentSongName = 'Select a Song';
             this.currentSongId = null;
         }
+
+        // Sync display options from main editor
+        this.syncDisplayOptions();
 
         // Update display
         this.updateDisplay();
@@ -125,7 +132,40 @@ const liveMode = {
         if (chartDisplay) {
             // Use formatted print preview HTML if available
             if (window.formatForPreview && this.currentSongContent) {
-                const formattedHTML = window.formatForPreview(this.currentSongContent, {
+                // Sync key selector for Nashville numbers calculation
+                const keySelector = document.getElementById('keySelector');
+                const originalKey = keySelector ? keySelector.value : null;
+                if (keySelector && this.currentKey) {
+                    keySelector.value = this.currentKey;
+                }
+
+                // Sync display mode for chord formatting
+                // Use flag to prevent triggering subscription check in change event
+                const nashvilleDropdown = document.getElementById('nashvilleMode');
+                const originalMode = nashvilleDropdown ? nashvilleDropdown.value : null;
+                if (nashvilleDropdown && this.displayMode) {
+                    window._skipNashvilleCheck = true;
+                    nashvilleDropdown.value = this.displayMode;
+                    window._skipNashvilleCheck = false;
+                }
+
+                // Apply makeChordsBold first (handles Nashville numbers, lyrics mode, etc.)
+                let processedContent = this.currentSongContent;
+                if (window.makeChordsBold) {
+                    processedContent = window.makeChordsBold(processedContent);
+                }
+
+                // Restore original values
+                if (keySelector && originalKey !== null) {
+                    keySelector.value = originalKey;
+                }
+                if (nashvilleDropdown && originalMode !== null) {
+                    window._skipNashvilleCheck = true;
+                    nashvilleDropdown.value = originalMode;
+                    window._skipNashvilleCheck = false;
+                }
+
+                const formattedHTML = window.formatForPreview(processedContent, {
                     enableSectionBlocks: true
                 });
                 chartDisplay.innerHTML = formattedHTML;
@@ -141,6 +181,13 @@ const liveMode = {
 
             // Apply saved user preferences to Live Mode display
             this.applySavedPreferences(chartDisplay);
+
+            // Apply badges visibility
+            if (this.showBadges) {
+                chartDisplay.classList.remove('hide-badges');
+            } else {
+                chartDisplay.classList.add('hide-badges');
+            }
 
             // Apply RTL/LTR direction based on content
             const isRTL = this.detectRTL(this.currentSongContent);
@@ -298,6 +345,67 @@ const liveMode = {
 
         const newIndex = ((noteIndex + steps) % 12 + 12) % 12;
         return `${notes[newIndex]} ${mode}`;
+    },
+
+    /**
+     * Set display mode (chords, both, numbers, lyrics)
+     */
+    setDisplayMode(mode) {
+        this.displayMode = mode;
+
+        // Update display (syncing happens inside updateDisplay now)
+        this.updateDisplay();
+
+        console.log(`📺 Display mode set to: ${mode}`);
+    },
+
+    /**
+     * Toggle badges visibility
+     */
+    toggleBadges(show) {
+        this.showBadges = show;
+
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            if (show) {
+                chartDisplay.classList.remove('hide-badges');
+            } else {
+                chartDisplay.classList.add('hide-badges');
+            }
+        }
+
+        console.log(`📺 Badges ${show ? 'shown' : 'hidden'}`);
+    },
+
+    /**
+     * Sync display options from main editor when entering live mode
+     */
+    syncDisplayOptions() {
+        // Sync display mode from main dropdown
+        const mainDropdown = document.getElementById('nashvilleMode');
+        const liveModeDropdown = document.getElementById('liveModeDisplayMode');
+        if (mainDropdown && liveModeDropdown) {
+            this.displayMode = mainDropdown.value;
+            liveModeDropdown.value = mainDropdown.value;
+        }
+
+        // Sync badges checkbox from main checkbox
+        const mainBadgesCheckbox = document.getElementById('showBadges');
+        const liveModeBadgesCheckbox = document.getElementById('liveModeBadges');
+        if (mainBadgesCheckbox && liveModeBadgesCheckbox) {
+            this.showBadges = mainBadgesCheckbox.checked;
+            liveModeBadgesCheckbox.checked = mainBadgesCheckbox.checked;
+        }
+
+        // Apply badges visibility immediately
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            if (this.showBadges) {
+                chartDisplay.classList.remove('hide-badges');
+            } else {
+                chartDisplay.classList.add('hide-badges');
+            }
+        }
     },
 
     /**

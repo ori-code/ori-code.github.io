@@ -1454,6 +1454,16 @@ a {
     display: flex;
 }
 
+/* Hide badges when checkbox is unchecked */
+.hide-badges .section-badges-row {
+    display: none !important;
+}
+
+/* Styled prompt modal - higher z-index to appear above other modals */
+#styledPromptModal {
+    z-index: 99999 !important;
+}
+
 /* Hide scrollbar for webkit browsers but keep functionality */
 .section-badges-row::-webkit-scrollbar {
     height: 4px;

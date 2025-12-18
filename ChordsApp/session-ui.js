@@ -150,7 +150,7 @@ class SessionUI {
      * Edit session title
      */
     async editSession(sessionId, currentTitle) {
-        const newTitle = prompt('Edit session name:', currentTitle);
+        const newTitle = await window.styledPrompt('Enter new session name:', currentTitle, '✏️ Edit Session Name');
         if (!newTitle || newTitle === currentTitle) return;
 
         try {
@@ -162,7 +162,7 @@ class SessionUI {
             await this.loadUserSessions();
         } catch (error) {
             console.error('Error editing session:', error);
-            alert('❌ Failed to rename session');
+            this.showToast('❌ Failed to rename session');
         }
     }
 
@@ -183,7 +183,7 @@ class SessionUI {
             await this.loadUserSessions();
         } catch (error) {
             console.error('Error deleting session:', error);
-            alert('❌ Failed to delete session');
+            this.showToast('❌ Failed to delete session');
         }
     }
 
@@ -254,16 +254,16 @@ class SessionUI {
      * Edit song in session playlist
      */
     async editSessionSong(sessionId, songId, currentName) {
-        const newName = prompt('Edit song name:', currentName);
+        const newName = await window.styledPrompt('Enter new song name:', currentName, '✏️ Edit Song Name');
         if (!newName || newName === currentName) return;
 
         try {
             await firebase.database().ref(`sessions/${sessionId}/playlist/${songId}/name`).set(newName);
             this.showToast(`✅ Renamed to "${newName}"`);
-            await this.loadSessionPlaylistInline(sessionId);
+            await this.loadSessionPlaylistInline(sessionId, true);
         } catch (error) {
             console.error('Error editing song:', error);
-            alert('❌ Failed to edit song');
+            this.showToast('❌ Failed to edit song');
         }
     }
 
@@ -276,10 +276,10 @@ class SessionUI {
         try {
             await firebase.database().ref(`sessions/${sessionId}/playlist/${songId}`).remove();
             this.showToast(`🗑️ "${songName}" removed`);
-            await this.loadSessionPlaylistInline(sessionId);
+            await this.loadSessionPlaylistInline(sessionId, true);
         } catch (error) {
             console.error('Error deleting song:', error);
-            alert('❌ Failed to delete song');
+            this.showToast('❌ Failed to delete song');
         }
     }
 
@@ -310,10 +310,10 @@ class SessionUI {
             await firebase.database().ref(`sessions/${sessionId}/playlist/${songId}/order`).set(swapOrder);
             await firebase.database().ref(`sessions/${sessionId}/playlist/${playlist[newIndex].id}/order`).set(currentOrder);
 
-            await this.loadSessionPlaylistInline(sessionId);
+            await this.loadSessionPlaylistInline(sessionId, true);
         } catch (error) {
             console.error('Error moving song:', error);
-            alert('❌ Failed to move song');
+            this.showToast('❌ Failed to move song');
         }
     }
 
@@ -325,7 +325,7 @@ class SessionUI {
         const title = titleInput.value.trim();
 
         if (!title) {
-            alert('Please enter a session title');
+            this.showToast('Please enter a session title');
             return;
         }
 
@@ -336,11 +336,11 @@ class SessionUI {
             this.hideCreateSessionModal();
             this.showSessionActive(sessionCode, true);
 
-            alert(`✅ Session created!\n\nShare this code with your band:\n\n${sessionCode}`);
+            this.showToast(`✅ Session created! Share code: ${sessionCode}`);
 
         } catch (error) {
             console.error('Error creating session:', error);
-            alert('❌ ' + error.message);
+            this.showToast('❌ ' + error.message);
         }
     }
 
@@ -352,7 +352,7 @@ class SessionUI {
         const sessionCode = codeInput.value.trim().toUpperCase();
 
         if (!sessionCode) {
-            alert('Please enter a session code');
+            this.showToast('Please enter a session code');
             return;
         }
 
@@ -363,11 +363,11 @@ class SessionUI {
             this.hideJoinSessionModal();
             this.showSessionActive(sessionCode, false);
 
-            alert(`✅ Joined session: ${session.metadata.title}`);
+            this.showToast(`✅ Joined session: ${session.metadata.title}`);
 
         } catch (error) {
             console.error('Error joining session:', error);
-            alert('❌ ' + error.message);
+            this.showToast('❌ ' + error.message);
         }
     }
 
@@ -382,11 +382,11 @@ class SessionUI {
             this.hideMySessionsModal();
             this.showSessionActive(session.metadata.sessionCode, true);
 
-            alert(`✅ Session reactivated: ${session.metadata.title}`);
+            this.showToast(`✅ Session reactivated: ${session.metadata.title}`);
 
         } catch (error) {
             console.error('Error reactivating session:', error);
-            alert('❌ ' + error.message);
+            this.showToast('❌ ' + error.message);
         }
     }
 
@@ -410,11 +410,11 @@ class SessionUI {
             this.hideMySessionsModal();
             this.showSessionActive(sessionCode, false);
 
-            alert(`✅ Rejoined session: ${session.metadata.title}`);
+            this.showToast(`✅ Rejoined session: ${session.metadata.title}`);
 
         } catch (error) {
             console.error('Error joining session:', error);
-            alert('❌ ' + error.message);
+            this.showToast('❌ ' + error.message);
         }
     }
 
@@ -430,7 +430,7 @@ class SessionUI {
             if (window.pendingSongToAdd) {
                 // Use the pending song data
                 defaultName = window.pendingSongToAdd.name || '';
-                const songName = prompt('Enter song name:', defaultName);
+                const songName = await window.styledPrompt('Enter song name:', defaultName, '🎵 Add Song to Session');
                 if (!songName) {
                     window.pendingSongToAdd = null; // Clear pending
                     return;
@@ -454,13 +454,13 @@ class SessionUI {
 
                 // Check if there's a song loaded
                 if (!visualEditor || !visualEditor.value.trim()) {
-                    alert('⚠️ No song loaded. Please analyze or load a song first.');
+                    this.showToast('⚠️ No song loaded. Please analyze or load a song first.');
                     return;
                 }
 
                 // Get song name - pre-fill with current name but allow editing
                 defaultName = window.currentSongName || '';
-                const songName = prompt('Enter song name:', defaultName);
+                const songName = await window.styledPrompt('Enter song name:', defaultName, '🎵 Add Song to Session');
                 if (!songName) return;
 
                 // Prepare song data
@@ -495,12 +495,12 @@ class SessionUI {
             // Refresh playlist if visible
             const playlistEl = document.getElementById(`playlist-${sessionId}`);
             if (playlistEl && playlistEl.style.display !== 'none') {
-                await this.loadSessionPlaylistInline(sessionId);
+                await this.loadSessionPlaylistInline(sessionId, true);
             }
 
         } catch (error) {
             console.error('Error adding song to session:', error);
-            alert('❌ ' + error.message);
+            this.showToast('❌ ' + error.message);
         }
     }
 
@@ -659,7 +659,7 @@ class SessionUI {
     async editPlaylistSong(songId, currentName) {
         if (!window.sessionManager || !window.sessionManager.isLeader) return;
 
-        const newName = prompt('Edit song name:', currentName);
+        const newName = await window.styledPrompt('Enter new song name:', currentName, '✏️ Edit Song Name');
         if (!newName || newName === currentName) return;
 
         try {
@@ -669,7 +669,7 @@ class SessionUI {
             await this.loadPlaylist();
         } catch (error) {
             console.error('Error editing song:', error);
-            alert('❌ Failed to edit song');
+            this.showToast('❌ Failed to edit song');
         }
     }
 
@@ -687,7 +687,7 @@ class SessionUI {
             await this.loadPlaylist();
         } catch (error) {
             console.error('Error deleting song:', error);
-            alert('❌ Failed to delete song');
+            this.showToast('❌ Failed to delete song');
         }
     }
 
