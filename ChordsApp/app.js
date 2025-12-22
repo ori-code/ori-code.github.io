@@ -2528,33 +2528,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const heightPerPage = Math.ceil(contentHeight / pagesNeeded);
             livePreview.style.minHeight = `${contentHeight}px`;
 
-            // Show visual page breaks
+            // Remove any existing page break indicators (no longer showing them)
             const existingBreaks = livePreview.querySelectorAll('.page-break-indicator');
             existingBreaks.forEach(br => br.remove());
-
-            for (let i = 1; i < pagesNeeded; i++) {
-                const breakPosition = AVAILABLE_HEIGHT * i;
-                const breakDiv = document.createElement('div');
-                breakDiv.className = 'page-break-indicator';
-                breakDiv.style.cssText = `
-                    position: absolute;
-                    left: 0;
-                    right: 0;
-                    top: ${breakPosition}px;
-                    height: 2px;
-                    background: repeating-linear-gradient(
-                        90deg,
-                        rgba(239, 68, 68, 0.5) 0,
-                        rgba(239, 68, 68, 0.5) 10px,
-                        transparent 10px,
-                        transparent 20px
-                    );
-                    pointer-events: none;
-                    z-index: 10;
-                `;
-                livePreview.style.position = 'relative';
-                livePreview.appendChild(breakDiv);
-            }
         } else {
             // Single page - remove indicators
             const existingBreaks = livePreview.querySelectorAll('.page-break-indicator');

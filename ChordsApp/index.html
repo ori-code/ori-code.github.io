@@ -11,11 +11,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=8">
     <script src="https://www.paypal.com/sdk/js?client-id=AUjr_VTe9_mnojYbrv2wEhvIlYN3nXES7HG2hIfHpNhZchdcNGCh6WeHJtxwXkDBqS09gb2RjX-HAYEK&vault=true&intent=subscription&currency=USD"></script>
 
     <!-- PDF.js for PDF preview -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <!-- html2canvas for Save as Image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         // Set PDF.js worker
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -63,9 +66,6 @@
             <div class="hero-text">
                 <h1>Turn any chord sheet into a clean, printable chart.</h1>
                 <p>Upload a handwritten sheet or photo, let AI extract the music, refine the result, transpose to any key, then print with confidence.</p>
-                <div class="hero-actions">
-                    <label class="primary-action" for="chartFileInput">Start with an upload</label>
-                </div>
             </div>
         </section>
 
@@ -76,12 +76,8 @@
                     <span class="step-number">1</span>
                     <h3>Upload your chart</h3>
                     <p>Accepts images (JPG, PNG, HEIC) and PDFs. High contrast photos deliver the best recognition results.</p>
-                    <label class="upload-tile" for="chartFileInput">
-                        <span class="upload-icon">⬆︎</span>
-                        <span class="upload-label">Choose a file</span>
-                        <span class="upload-note">Drag &amp; drop coming soon</span>
-                    </label>
                     <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
+                    <label class="primary-action" for="chartFileInput" style="width: 100%;">Upload</label>
                     <div class="preview-panel" id="uploadPreview">
                         <img id="previewImage" alt="Uploaded chart preview">
                         <p class="preview-placeholder">No file selected yet. Supported: JPG, PNG, HEIC, PDF.</p>
@@ -91,7 +87,7 @@
                     <span class="step-number">2</span>
                     <h3>AI transcription ready!</h3>
                     <p>Edit visually in the bottom Editor.</p>
-                    <label style="display: block; margin-bottom: 12px; font-size: 0.9rem; color: var(--text); cursor: pointer; user-select: none;">
+                    <label style="display: block; margin-top: 12px; font-size: 0.9rem; color: var(--text); cursor: pointer; user-select: none;">
                         <input type="checkbox" id="autoAnalyzeCheckbox" checked style="margin-right: 8px; cursor: pointer;">
                         ⚡ Auto-analyze uploads <span style="color: var(--text-muted); font-size: 0.8rem;">(recommended)</span>
                     </label>
@@ -113,15 +109,8 @@
                     <span class="step-number">3</span>
                     <h3>Refine, transpose &amp; print</h3>
                     <p>Edit chords visually in the editor. The SongBook format (under the editor) updates automatically. AI original stays on the right for reference.</p>
-                    <ul class="feature-list">
-                        <li>Visual editing - move chords with spaces</li>
-                        <li>Transpose to any key</li>
-                        <li>Auto-converts to SongBook format</li>
-                        <li>Print or export as PDF</li>
-                    </ul>
-                    <div class="ai-reference-preview" id="aiReferencePreview">
+                    <div class="ai-reference-preview" id="aiReferencePreview" style="flex: 1;">
                         <h4>AI Original (reference)</h4>
-                        <p class="reference-subtitle">Original AI extraction</p>
                         <div class="reference-content" id="aiReferenceContent">
                             <p class="preview-placeholder">AI transcription will appear here after analysis.</p>
                         </div>
@@ -132,7 +121,14 @@
 
         <section class="editor" id="editor">
             <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Edit workspace</h2>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button id="sideMenuToggle" class="hamburger-btn" title="Open Menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <h2 style="margin: 0;">Edit workspace</h2>
+                </div>
                 <button id="toggleChordWorkspace" class="ghost-button" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">
                     ▼ Expand
                 </button>
@@ -173,17 +169,181 @@
 
         <section class="preview-section" id="previewSection">
             <div class="preview-header">
-                <h2 id="previewHeaderTitle">Print Preview & Transpose</h2>
-                <div style="display: flex; gap: 10px; width: 100%; margin-bottom: 16px;">
-                    <button class="primary-action" id="printButton" style="flex: 2; font-size: 16px; padding: 14px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">🖨️ Print Chart</button>
-                    <button class="ghost-button" id="toggleLayoutMode" style="flex: 1; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">⚙️ Customize</button>
-                </div>
-                <div style="display: flex; gap: 10px; width: 100%;">
-                    <button class="secondary-action" id="saveLayoutButton" style="flex: 1; background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Save Layout</button>
-                    <button class="ghost-button" id="livePreviewToggle" style="flex: 1; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">📺 Live Preview</button>
+                <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 16px;">
+                    <h2 id="previewHeaderTitle" style="margin: 0; flex: 1;">Print Preview</h2>
+                    <button class="primary-action" id="printButton" style="font-size: 14px; padding: 10px 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">🖨️ Print</button>
                 </div>
             </div>
         </section>
+
+        <!-- Side Menu Overlay -->
+        <div id="sideMenuOverlay" class="side-menu-overlay"></div>
+
+        <!-- Side Menu Panel -->
+        <aside id="sideMenuPanel" class="side-menu-panel">
+            <div class="side-menu-header">
+                <h3>Controls</h3>
+                <button id="sideMenuClose" class="side-menu-close">&times;</button>
+            </div>
+            <div class="side-menu-content">
+                <!-- Quick Actions -->
+                <div class="side-menu-section">
+                    <h4>Quick Actions</h4>
+                    <div class="side-menu-buttons">
+                        <button class="side-menu-btn primary" id="sideMenuPrint">🖨️ Print Chart</button>
+                        <button class="side-menu-btn orange" id="saveAsImageButton">📷 Save as Image</button>
+                        <button class="side-menu-btn purple" id="livePreviewToggle">📺 Live Preview</button>
+                        <button class="side-menu-btn" id="saveLayoutButton">💾 Save Layout</button>
+                    </div>
+                </div>
+
+                <!-- Display Mode -->
+                <div class="side-menu-section">
+                    <h4>Display</h4>
+                    <div class="side-menu-row">
+                        <label>Mode:</label>
+                        <select id="sideMenuNashvilleMode" class="side-menu-select">
+                            <option value="chords" selected>Chords</option>
+                            <option value="both">Nashville + Chords</option>
+                            <option value="numbers">Nashville Only</option>
+                            <option value="lyrics">Lyrics Only</option>
+                        </select>
+                    </div>
+                    <div class="side-menu-row">
+                        <label>Font Size:</label>
+                        <input type="range" id="sideMenuFontSize" min="8" max="28" value="10" step="0.5">
+                        <span id="sideMenuFontSizeVal">10pt</span>
+                    </div>
+                    <div class="side-menu-row">
+                        <label>Line Spacing:</label>
+                        <input type="range" id="sideMenuLineHeight" min="1.0" max="2.0" value="1.2" step="0.1">
+                        <span id="sideMenuLineHeightVal">1.2</span>
+                    </div>
+                    <div class="side-menu-row">
+                        <label>Char Spacing:</label>
+                        <input type="range" id="sideMenuCharSpacing" min="0" max="8" value="0" step="0.5">
+                        <span id="sideMenuCharSpacingVal">0px</span>
+                    </div>
+                    <div class="side-menu-row">
+                        <label class="side-menu-checkbox">
+                            <input type="checkbox" id="sideMenuBadges" checked>
+                            <span>Show Badges</span>
+                        </label>
+                    </div>
+                    <div class="side-menu-row">
+                        <label class="side-menu-checkbox">
+                            <input type="checkbox" id="sideMenuShowControls" checked>
+                            <span>Show Main Controls</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Layout -->
+                <div class="side-menu-section">
+                    <h4>Layout</h4>
+                    <div class="side-menu-row">
+                        <label>Columns:</label>
+                        <select id="sideMenuColumns" class="side-menu-select">
+                            <option value="1">1 Column</option>
+                            <option value="2" selected>2 Columns</option>
+                            <option value="3">3 Columns</option>
+                            <option value="4">4 Columns</option>
+                        </select>
+                    </div>
+                    <div class="side-menu-row">
+                        <label>Pages:</label>
+                        <select id="sideMenuPages" class="side-menu-select">
+                            <option value="1" selected>1 Page</option>
+                            <option value="2">2 Pages</option>
+                            <option value="3">3 Pages</option>
+                            <option value="4">4 Pages</option>
+                        </select>
+                    </div>
+                    <button class="side-menu-btn purple full-width" id="sideMenuAutoFit">✨ Auto-fit to 1 Page</button>
+                </div>
+
+                <!-- Transpose -->
+                <div class="side-menu-section">
+                    <h4>Transpose</h4>
+                    <div class="side-menu-row">
+                        <label>Key:</label>
+                        <select id="sideMenuKey" class="side-menu-select">
+                            <optgroup label="Major Keys">
+                                <option value="C Major">C Major</option>
+                                <option value="D Major">D Major</option>
+                                <option value="E Major">E Major</option>
+                                <option value="F Major">F Major</option>
+                                <option value="G Major">G Major</option>
+                                <option value="A Major">A Major</option>
+                                <option value="B Major">B Major</option>
+                            </optgroup>
+                            <optgroup label="Minor Keys">
+                                <option value="A Minor">A Minor</option>
+                                <option value="B Minor">B Minor</option>
+                                <option value="C Minor">C Minor</option>
+                                <option value="D Minor">D Minor</option>
+                                <option value="E Minor">E Minor</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="side-menu-key-grid">
+                        <button class="key-btn" data-key="C">C</button>
+                        <button class="key-btn" data-key="D">D</button>
+                        <button class="key-btn" data-key="E">E</button>
+                        <button class="key-btn" data-key="F">F</button>
+                        <button class="key-btn" data-key="G">G</button>
+                        <button class="key-btn" data-key="A">A</button>
+                        <button class="key-btn" data-key="B">B</button>
+                    </div>
+                    <div class="side-menu-transpose-btns">
+                        <button class="side-menu-btn" id="sideMenuTransposeDown">−1</button>
+                        <span id="sideMenuTransposeVal">0</span>
+                        <button class="side-menu-btn" id="sideMenuTransposeUp">+1</button>
+                        <button class="side-menu-btn" id="sideMenuTransposeReset">Reset</button>
+                    </div>
+                </div>
+
+                <!-- Song Info -->
+                <div class="side-menu-section">
+                    <h4>Song Info</h4>
+                    <div class="side-menu-row">
+                        <label>BPM:</label>
+                        <input type="number" id="sideMenuBPM" value="120" min="40" max="240" class="side-menu-input">
+                    </div>
+                    <div class="side-menu-row">
+                        <label>Time:</label>
+                        <select id="sideMenuTime" class="side-menu-select">
+                            <option value="4/4" selected>4/4</option>
+                            <option value="3/4">3/4</option>
+                            <option value="6/8">6/8</option>
+                            <option value="2/4">2/4</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Library -->
+                <div class="side-menu-section">
+                    <h4>Library</h4>
+                    <div class="side-menu-buttons">
+                        <button class="side-menu-btn" id="sideMenuSave">💾 Save Song</button>
+                        <button class="side-menu-btn" id="sideMenuLoad">📂 Load Song</button>
+                        <button class="side-menu-btn" id="sideMenuBulkImport">📥 Bulk Import</button>
+                        <button class="side-menu-btn" id="sideMenuUpdate">🔄 Update Song</button>
+                    </div>
+                </div>
+
+                <!-- Live Sessions -->
+                <div class="side-menu-section">
+                    <h4>Live Sessions</h4>
+                    <div class="side-menu-buttons">
+                        <button class="side-menu-btn green" id="sideMenuCreateSession">📡 Create Session</button>
+                        <button class="side-menu-btn blue" id="sideMenuJoinSession">📻 Join Session</button>
+                        <button class="side-menu-btn" id="sideMenuMySessions">📋 My Sessions</button>
+                        <button class="side-menu-btn purple" id="sideMenuGoLive">📺 Go Live</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
         <!-- Editor actions -->
         <section class="editor-actions-section">
@@ -403,14 +563,67 @@
             </div>
         </section>
 
-        <section class="support-section" id="support" style="max-width: 600px; margin: 60px auto 80px; padding: 30px 20px; text-align: center;">
-            <h2 style="font-size: 2rem; margin-bottom: 20px;">Support ChordsApp</h2>
-            <p style="font-size: 1.1rem; color: var(--text-muted, #999); margin-bottom: 30px; line-height: 1.6;">
-                Love ChordsApp? Upgrade to Basic ($0.99/mo) or Pro ($1.99/mo) to unlock more features and support ongoing development!
-            </p>
-            <button class="primary-action" onclick="window.showSubscriptionModal()" style="padding: 14px 32px; font-size: 1.1rem;">
-                ⭐ View Plans
-            </button>
+        <section class="support-section" id="support" style="max-width: 800px; margin: 60px auto 80px; padding: 40px 30px; text-align: center; background: linear-gradient(135deg, rgba(255, 59, 92, 0.15) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(59, 130, 246, 0.15) 100%); border-radius: 24px; border: 1px solid rgba(255, 59, 92, 0.2); position: relative; overflow: hidden;">
+            <!-- Decorative elements -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(255, 59, 92, 0.3) 0%, transparent 70%); pointer-events: none;"></div>
+            <div style="position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%); pointer-events: none;"></div>
+
+            <div style="position: relative; z-index: 1;">
+                <div style="display: inline-block; background: linear-gradient(135deg, #ff3b5c, #8b5cf6); padding: 8px 20px; border-radius: 20px; margin-bottom: 20px;">
+                    <span style="color: white; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;">UNLOCK FULL POWER</span>
+                </div>
+
+                <h2 style="font-size: 2.2rem; margin-bottom: 16px; background: linear-gradient(135deg, #ff3b5c 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Support ChordsApp</h2>
+
+                <p style="font-size: 1.15rem; color: var(--text-muted, #999); margin-bottom: 28px; line-height: 1.7; max-width: 550px; margin-left: auto; margin-right: auto;">
+                    Join thousands of worship leaders using ChordsApp to transform their music ministry
+                </p>
+
+                <!-- Feature highlights -->
+                <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 32px;">
+                    <div style="display: flex; align-items: center; gap: 8px; color: var(--text);">
+                        <span style="font-size: 1.3rem;">🎵</span>
+                        <span style="font-size: 0.95rem;">Unlimited AI Scans</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; color: var(--text);">
+                        <span style="font-size: 1.3rem;">⚡</span>
+                        <span style="font-size: 0.95rem;">Priority Processing</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; color: var(--text);">
+                        <span style="font-size: 1.3rem;">💾</span>
+                        <span style="font-size: 0.95rem;">Cloud Sync</span>
+                    </div>
+                </div>
+
+                <!-- Pricing badges -->
+                <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap;">
+                    <!-- Free tier -->
+                    <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 16px 20px; min-width: 140px;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Free</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: var(--text);">$0</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">3 analyses/day<br>Basic features</div>
+                    </div>
+                    <!-- Basic tier -->
+                    <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 16px 20px; min-width: 140px;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Basic</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: var(--text);">$0.99<span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">15 analyses/day<br>Song library</div>
+                    </div>
+                    <!-- Pro tier -->
+                    <div style="background: linear-gradient(135deg, rgba(255, 59, 92, 0.2), rgba(139, 92, 246, 0.2)); border: 2px solid var(--primary); border-radius: 12px; padding: 16px 20px; position: relative; min-width: 140px;">
+                        <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; font-size: 0.7rem; padding: 2px 10px; border-radius: 10px; font-weight: 600;">POPULAR</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Pro</div>
+                        <div style="font-size: 1.4rem; font-weight: 700; color: var(--text);">$1.99<span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">Unlimited analyses<br>Priority + Cloud sync</div>
+                    </div>
+                </div>
+
+                <button class="primary-action" onclick="window.showSubscriptionModal()" style="padding: 16px 40px; font-size: 1.15rem; background: linear-gradient(135deg, #ff3b5c 0%, #ff6b8a 100%); box-shadow: 0 8px 30px rgba(255, 59, 92, 0.4); border-radius: 12px; transition: all 0.3s ease;">
+                    🚀 Get Started Now
+                </button>
+
+                <p style="margin-top: 16px; font-size: 0.85rem; color: var(--text-muted);">Cancel anytime • Secure payment via PayPal</p>
+            </div>
         </section>
     </main>
 
@@ -892,7 +1105,7 @@
     </div>
 
     <!-- Theme Toggle -->
-    <script src="theme.js"></script>
+    <script src="theme.js?v=4"></script>
 
     <!-- Firebase Configuration and Auth -->
     <script src="firebase-config.js"></script>
@@ -913,26 +1126,27 @@
     <!-- Live Mode (full-screen performance view) -->
     <script src="live-mode.js"></script>
 
-    <script src="app.js?v=41"></script>
+    <script src="app.js?v=42"></script>
 
     <style>
+        /* Auth message states */
         #authMessage.success {
-            background: rgba(52, 211, 153, 0.1);
-            color: #34d399;
-            border: 1px solid rgba(52, 211, 153, 0.3);
+            background: rgba(52, 199, 89, 0.1);
+            color: #34c759;
+            border: 1px solid rgba(52, 199, 89, 0.2);
         }
         #authMessage.error {
-            background: rgba(255, 59, 92, 0.1);
-            color: var(--primary);
-            border: 1px solid rgba(255, 59, 92, 0.3);
+            background: rgba(255, 59, 48, 0.1);
+            color: #ff3b30;
+            border: 1px solid rgba(255, 59, 48, 0.2);
         }
         #authMessage.info {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(0, 122, 255, 0.1);
+            color: #007aff;
+            border: 1px solid rgba(0, 122, 255, 0.2);
         }
         #profileMenu button:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--background-secondary);
         }
 
         /* Live Mode theme-aware solid backgrounds */
@@ -1039,6 +1253,104 @@
             }
         };
 
+        // Save as Image functionality
+        (function() {
+            const saveAsImageBtn = document.getElementById('saveAsImageButton');
+            if (saveAsImageBtn) {
+                saveAsImageBtn.addEventListener('click', async function() {
+                    const livePreview = document.getElementById('livePreview');
+                    if (!livePreview || !livePreview.innerHTML.trim()) {
+                        alert('Nothing to save. Please load or create a chord sheet first.');
+                        return;
+                    }
+
+                    // Show loading state
+                    const originalText = saveAsImageBtn.innerHTML;
+                    saveAsImageBtn.innerHTML = '⏳ Saving...';
+                    saveAsImageBtn.disabled = true;
+
+                    try {
+                        // Get song title for filename
+                        const titleEl = livePreview.querySelector('.song-title');
+                        const songTitle = titleEl ? titleEl.textContent.trim().replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_') : 'chord_sheet';
+
+                        // Create a clone of the preview for capturing
+                        const previewContainer = document.querySelector('.preview-container');
+
+                        // Capture the preview
+                        const canvas = await html2canvas(previewContainer, {
+                            backgroundColor: '#ffffff',
+                            scale: 2, // Higher resolution for better quality
+                            useCORS: true,
+                            logging: false,
+                            width: previewContainer.scrollWidth,
+                            height: previewContainer.scrollHeight,
+                            windowWidth: previewContainer.scrollWidth,
+                            windowHeight: previewContainer.scrollHeight
+                        });
+
+                        // Convert to image
+                        const imageData = canvas.toDataURL('image/png', 1.0);
+
+                        // Check if on mobile (for different save behavior)
+                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                        if (isMobile) {
+                            // On mobile, open image in new tab so user can long-press to save
+                            const newTab = window.open();
+                            if (newTab) {
+                                newTab.document.write(`
+                                    <html>
+                                    <head>
+                                        <title>${songTitle}</title>
+                                        <meta name="viewport" content="width=device-width, initial-scale=1">
+                                        <style>
+                                            body { margin: 0; padding: 20px; background: #f0f0f0; text-align: center; font-family: -apple-system, sans-serif; }
+                                            img { max-width: 100%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border-radius: 8px; }
+                                            p { color: #666; margin-top: 20px; font-size: 14px; }
+                                        </style>
+                                    </head>
+                                    <body>
+                                        <img src="${imageData}" alt="${songTitle}">
+                                        <p>📱 Long-press the image to save to your Photos</p>
+                                    </body>
+                                    </html>
+                                `);
+                                newTab.document.close();
+                            } else {
+                                // Fallback: direct download
+                                downloadImage(imageData, songTitle);
+                            }
+                        } else {
+                            // On desktop, trigger download
+                            downloadImage(imageData, songTitle);
+                        }
+
+                        saveAsImageBtn.innerHTML = '✅ Saved!';
+                        setTimeout(() => {
+                            saveAsImageBtn.innerHTML = originalText;
+                            saveAsImageBtn.disabled = false;
+                        }, 2000);
+
+                    } catch (error) {
+                        console.error('Error saving image:', error);
+                        alert('Failed to save image. Please try again.');
+                        saveAsImageBtn.innerHTML = originalText;
+                        saveAsImageBtn.disabled = false;
+                    }
+                });
+            }
+
+            function downloadImage(dataUrl, filename) {
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = `${filename}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        })();
+
         // Hide header on scroll
         (function() {
             const header = document.querySelector('.app-header');
@@ -1063,6 +1375,466 @@
 
                 lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
             }, false);
+        })();
+
+        // ============================================
+        // SIDE MENU - Toggle & Control Sync
+        // ============================================
+        (function() {
+            const hamburgerBtn = document.getElementById('sideMenuToggle');
+            const sideMenuPanel = document.getElementById('sideMenuPanel');
+            const sideMenuOverlay = document.getElementById('sideMenuOverlay');
+            const sideMenuClose = document.getElementById('sideMenuClose');
+
+            // Toggle menu
+            function openMenu() {
+                hamburgerBtn.classList.add('active');
+                sideMenuPanel.classList.add('active');
+                sideMenuOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMenu() {
+                hamburgerBtn.classList.remove('active');
+                sideMenuPanel.classList.remove('active');
+                sideMenuOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener('click', () => {
+                    if (sideMenuPanel.classList.contains('active')) {
+                        closeMenu();
+                    } else {
+                        openMenu();
+                    }
+                });
+            }
+
+            if (sideMenuOverlay) {
+                sideMenuOverlay.addEventListener('click', closeMenu);
+            }
+
+            if (sideMenuClose) {
+                sideMenuClose.addEventListener('click', closeMenu);
+            }
+
+            // Close on Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && sideMenuPanel.classList.contains('active')) {
+                    closeMenu();
+                }
+            });
+
+            // ---- SYNC SIDEBAR CONTROLS WITH MAIN CONTROLS ----
+
+            // Quick Actions: Print
+            const sideMenuPrint = document.getElementById('sideMenuPrint');
+            const mainPrintBtn = document.getElementById('printButton');
+            if (sideMenuPrint && mainPrintBtn) {
+                sideMenuPrint.addEventListener('click', () => {
+                    closeMenu();
+                    mainPrintBtn.click();
+                });
+            }
+
+            // Quick Actions: Save as Image (use existing saveAsImageButton)
+            const sideMenuSaveImage = document.getElementById('saveAsImageButton');
+            // Already has its own event listener
+
+            // Quick Actions: Live Preview toggle
+            const sideMenuLivePreview = document.getElementById('livePreviewToggle');
+            const mainLivePreviewBtn = document.getElementById('livePreviewBtn');
+            if (sideMenuLivePreview && mainLivePreviewBtn) {
+                sideMenuLivePreview.addEventListener('click', () => {
+                    closeMenu();
+                    mainLivePreviewBtn.click();
+                });
+            }
+
+            // Quick Actions: Save Layout
+            const sideMenuSaveLayout = document.getElementById('saveLayoutButton');
+            const mainSaveLayoutBtn = document.getElementById('saveLayoutBtn');
+            if (sideMenuSaveLayout && mainSaveLayoutBtn) {
+                sideMenuSaveLayout.addEventListener('click', () => {
+                    closeMenu();
+                    mainSaveLayoutBtn.click();
+                });
+            }
+
+            // Display: Nashville Mode sync
+            const sideMenuNashvilleMode = document.getElementById('sideMenuNashvilleMode');
+            const mainNashvilleMode = document.getElementById('nashvilleMode');
+            if (sideMenuNashvilleMode && mainNashvilleMode) {
+                // Sync initial value
+                sideMenuNashvilleMode.value = mainNashvilleMode.value;
+
+                // Side menu changes main
+                sideMenuNashvilleMode.addEventListener('change', () => {
+                    mainNashvilleMode.value = sideMenuNashvilleMode.value;
+                    mainNashvilleMode.dispatchEvent(new Event('change'));
+                });
+
+                // Main changes side menu
+                mainNashvilleMode.addEventListener('change', () => {
+                    sideMenuNashvilleMode.value = mainNashvilleMode.value;
+                });
+            }
+
+            // Display: Font Size sync
+            const sideMenuFontSize = document.getElementById('sideMenuFontSize');
+            const sideMenuFontSizeVal = document.getElementById('sideMenuFontSizeVal');
+            const mainFontSize = document.getElementById('fontSizeSlider');
+            const mainFontSizeVal = document.getElementById('fontSizeValue');
+            if (sideMenuFontSize && mainFontSize) {
+                // Sync initial value
+                sideMenuFontSize.value = mainFontSize.value;
+                if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = mainFontSize.value + 'pt';
+
+                sideMenuFontSize.addEventListener('input', () => {
+                    mainFontSize.value = sideMenuFontSize.value;
+                    mainFontSize.dispatchEvent(new Event('input'));
+                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = sideMenuFontSize.value + 'pt';
+                });
+
+                mainFontSize.addEventListener('input', () => {
+                    sideMenuFontSize.value = mainFontSize.value;
+                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = mainFontSize.value + 'pt';
+                });
+            }
+
+            // Display: Line Height sync
+            const sideMenuLineHeight = document.getElementById('sideMenuLineHeight');
+            const sideMenuLineHeightVal = document.getElementById('sideMenuLineHeightVal');
+            const mainLineHeight = document.getElementById('lineHeightSlider');
+            if (sideMenuLineHeight && mainLineHeight) {
+                sideMenuLineHeight.value = mainLineHeight.value;
+                if (sideMenuLineHeightVal) sideMenuLineHeightVal.textContent = mainLineHeight.value;
+
+                sideMenuLineHeight.addEventListener('input', () => {
+                    mainLineHeight.value = sideMenuLineHeight.value;
+                    mainLineHeight.dispatchEvent(new Event('input'));
+                    if (sideMenuLineHeightVal) sideMenuLineHeightVal.textContent = sideMenuLineHeight.value;
+                });
+
+                mainLineHeight.addEventListener('input', () => {
+                    sideMenuLineHeight.value = mainLineHeight.value;
+                    if (sideMenuLineHeightVal) sideMenuLineHeightVal.textContent = mainLineHeight.value;
+                });
+            }
+
+            // Display: Char Spacing sync
+            const sideMenuCharSpacing = document.getElementById('sideMenuCharSpacing');
+            const sideMenuCharSpacingVal = document.getElementById('sideMenuCharSpacingVal');
+            const mainCharSpacing = document.getElementById('charSpacingSlider');
+            if (sideMenuCharSpacing && mainCharSpacing) {
+                sideMenuCharSpacing.value = mainCharSpacing.value;
+                if (sideMenuCharSpacingVal) sideMenuCharSpacingVal.textContent = mainCharSpacing.value + 'px';
+
+                sideMenuCharSpacing.addEventListener('input', () => {
+                    mainCharSpacing.value = sideMenuCharSpacing.value;
+                    mainCharSpacing.dispatchEvent(new Event('input'));
+                    if (sideMenuCharSpacingVal) sideMenuCharSpacingVal.textContent = sideMenuCharSpacing.value + 'px';
+                });
+
+                mainCharSpacing.addEventListener('input', () => {
+                    sideMenuCharSpacing.value = mainCharSpacing.value;
+                    if (sideMenuCharSpacingVal) sideMenuCharSpacingVal.textContent = mainCharSpacing.value + 'px';
+                });
+            }
+
+            // Display: Badges sync
+            const sideMenuBadges = document.getElementById('sideMenuBadges');
+            const mainBadges = document.getElementById('showBadges');
+            if (sideMenuBadges && mainBadges) {
+                sideMenuBadges.checked = mainBadges.checked;
+
+                sideMenuBadges.addEventListener('change', () => {
+                    mainBadges.checked = sideMenuBadges.checked;
+                    mainBadges.dispatchEvent(new Event('change'));
+                });
+
+                mainBadges.addEventListener('change', () => {
+                    sideMenuBadges.checked = mainBadges.checked;
+                });
+            }
+
+            // Layout: Columns sync
+            const sideMenuColumns = document.getElementById('sideMenuColumns');
+            const mainColumns = document.getElementById('columnCount');
+            if (sideMenuColumns && mainColumns) {
+                sideMenuColumns.value = mainColumns.value;
+
+                sideMenuColumns.addEventListener('change', () => {
+                    mainColumns.value = sideMenuColumns.value;
+                    mainColumns.dispatchEvent(new Event('change'));
+                });
+
+                mainColumns.addEventListener('change', () => {
+                    sideMenuColumns.value = mainColumns.value;
+                });
+            }
+
+            // Layout: Pages sync
+            const sideMenuPages = document.getElementById('sideMenuPages');
+            const mainPages = document.getElementById('pageCount');
+            if (sideMenuPages && mainPages) {
+                sideMenuPages.value = mainPages.value;
+
+                sideMenuPages.addEventListener('change', () => {
+                    mainPages.value = sideMenuPages.value;
+                    mainPages.dispatchEvent(new Event('change'));
+                });
+
+                mainPages.addEventListener('change', () => {
+                    sideMenuPages.value = mainPages.value;
+                });
+            }
+
+            // Layout: Auto-fit
+            const sideMenuAutoFit = document.getElementById('sideMenuAutoFit');
+            const mainAutoFit = document.getElementById('autoFitButton');
+            if (sideMenuAutoFit && mainAutoFit) {
+                sideMenuAutoFit.addEventListener('click', () => {
+                    mainAutoFit.click();
+                });
+            }
+
+            // Transpose: Key selector sync
+            const sideMenuKey = document.getElementById('sideMenuKey');
+            const mainKey = document.getElementById('keySelector');
+            if (sideMenuKey && mainKey) {
+                sideMenuKey.value = mainKey.value;
+
+                sideMenuKey.addEventListener('change', () => {
+                    mainKey.value = sideMenuKey.value;
+                    mainKey.dispatchEvent(new Event('change'));
+                });
+
+                mainKey.addEventListener('change', () => {
+                    sideMenuKey.value = mainKey.value;
+                    // Update key grid active state
+                    updateKeyGrid(mainKey.value);
+                });
+            }
+
+            // Transpose: Key grid buttons
+            const keyBtns = document.querySelectorAll('.key-btn');
+            function updateKeyGrid(keyValue) {
+                const keyLetter = keyValue.split(' ')[0];
+                keyBtns.forEach(btn => {
+                    if (btn.dataset.key === keyLetter) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+
+            keyBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const keyLetter = btn.dataset.key;
+                    // Find matching major key in selector
+                    const mainKey = document.getElementById('keySelector');
+                    if (mainKey) {
+                        const majorKey = keyLetter + ' Major';
+                        if ([...mainKey.options].some(opt => opt.value === majorKey)) {
+                            mainKey.value = majorKey;
+                            mainKey.dispatchEvent(new Event('change'));
+                        }
+                    }
+                    updateKeyGrid(keyLetter + ' Major');
+                });
+            });
+
+            // Transpose: Transpose buttons
+            const sideMenuTransposeDown = document.getElementById('sideMenuTransposeDown');
+            const sideMenuTransposeUp = document.getElementById('sideMenuTransposeUp');
+            const sideMenuTransposeReset = document.getElementById('sideMenuTransposeReset');
+            const sideMenuTransposeVal = document.getElementById('sideMenuTransposeVal');
+            const mainTransposeDown = document.getElementById('transposeDown');
+            const mainTransposeUp = document.getElementById('transposeUp');
+            const mainTransposeReset = document.getElementById('transposeReset');
+            const mainTransposeVal = document.getElementById('transposeValue');
+
+            function syncTransposeValue() {
+                if (mainTransposeVal && sideMenuTransposeVal) {
+                    sideMenuTransposeVal.textContent = mainTransposeVal.textContent || '0';
+                }
+            }
+
+            if (sideMenuTransposeDown && mainTransposeDown) {
+                sideMenuTransposeDown.addEventListener('click', () => {
+                    mainTransposeDown.click();
+                    setTimeout(syncTransposeValue, 50);
+                });
+            }
+
+            if (sideMenuTransposeUp && mainTransposeUp) {
+                sideMenuTransposeUp.addEventListener('click', () => {
+                    mainTransposeUp.click();
+                    setTimeout(syncTransposeValue, 50);
+                });
+            }
+
+            if (sideMenuTransposeReset && mainTransposeReset) {
+                sideMenuTransposeReset.addEventListener('click', () => {
+                    mainTransposeReset.click();
+                    setTimeout(syncTransposeValue, 50);
+                });
+            }
+
+            // Song Info: BPM sync
+            const sideMenuBPM = document.getElementById('sideMenuBPM');
+            const mainBPM = document.getElementById('bpmInput');
+            if (sideMenuBPM && mainBPM) {
+                sideMenuBPM.value = mainBPM.value;
+
+                sideMenuBPM.addEventListener('input', () => {
+                    mainBPM.value = sideMenuBPM.value;
+                    mainBPM.dispatchEvent(new Event('input'));
+                });
+
+                mainBPM.addEventListener('input', () => {
+                    sideMenuBPM.value = mainBPM.value;
+                });
+            }
+
+            // Song Info: Time signature sync
+            const sideMenuTime = document.getElementById('sideMenuTime');
+            const mainTime = document.getElementById('timeSignature');
+            if (sideMenuTime && mainTime) {
+                sideMenuTime.value = mainTime.value;
+
+                sideMenuTime.addEventListener('change', () => {
+                    mainTime.value = sideMenuTime.value;
+                    mainTime.dispatchEvent(new Event('change'));
+                });
+
+                mainTime.addEventListener('change', () => {
+                    sideMenuTime.value = mainTime.value;
+                });
+            }
+
+            // Library: Save Song
+            const sideMenuSave = document.getElementById('sideMenuSave');
+            const mainSave = document.getElementById('saveButton');
+            if (sideMenuSave && mainSave) {
+                sideMenuSave.addEventListener('click', () => {
+                    closeMenu();
+                    mainSave.click();
+                });
+            }
+
+            // Library: Load Song
+            const sideMenuLoad = document.getElementById('sideMenuLoad');
+            const mainLoad = document.getElementById('loadButton');
+            if (sideMenuLoad && mainLoad) {
+                sideMenuLoad.addEventListener('click', () => {
+                    closeMenu();
+                    mainLoad.click();
+                });
+            }
+
+            // Library: Bulk Import
+            const sideMenuBulkImport = document.getElementById('sideMenuBulkImport');
+            const mainBulkImport = document.getElementById('bulkImportButton');
+            if (sideMenuBulkImport && mainBulkImport) {
+                sideMenuBulkImport.addEventListener('click', () => {
+                    closeMenu();
+                    mainBulkImport.click();
+                });
+            }
+
+            // Library: Update Song
+            const sideMenuUpdate = document.getElementById('sideMenuUpdate');
+            const mainUpdate = document.getElementById('updateButton');
+            if (sideMenuUpdate && mainUpdate) {
+                sideMenuUpdate.addEventListener('click', () => {
+                    closeMenu();
+                    mainUpdate.click();
+                });
+            }
+
+            // Live Sessions: Create Session
+            const sideMenuCreateSession = document.getElementById('sideMenuCreateSession');
+            const mainCreateSession = document.getElementById('createSessionButton');
+            if (sideMenuCreateSession && mainCreateSession) {
+                sideMenuCreateSession.addEventListener('click', () => {
+                    closeMenu();
+                    mainCreateSession.click();
+                });
+            }
+
+            // Live Sessions: Join Session
+            const sideMenuJoinSession = document.getElementById('sideMenuJoinSession');
+            const mainJoinSession = document.getElementById('joinSessionButton');
+            if (sideMenuJoinSession && mainJoinSession) {
+                sideMenuJoinSession.addEventListener('click', () => {
+                    closeMenu();
+                    mainJoinSession.click();
+                });
+            }
+
+            // Live Sessions: My Sessions
+            const sideMenuMySessions = document.getElementById('sideMenuMySessions');
+            const mainMySessions = document.getElementById('mySessionsButton');
+            if (sideMenuMySessions && mainMySessions) {
+                sideMenuMySessions.addEventListener('click', () => {
+                    closeMenu();
+                    mainMySessions.click();
+                });
+            }
+
+            // Live Sessions: Go Live
+            const sideMenuGoLive = document.getElementById('sideMenuGoLive');
+            const mainGoLive = document.getElementById('goLiveButton');
+            if (sideMenuGoLive && mainGoLive) {
+                sideMenuGoLive.addEventListener('click', () => {
+                    closeMenu();
+                    mainGoLive.click();
+                });
+            }
+
+            // Initialize key grid based on current key
+            if (mainKey) {
+                updateKeyGrid(mainKey.value);
+            }
+
+            // Display: Show Main Controls toggle
+            const sideMenuShowControls = document.getElementById('sideMenuShowControls');
+            const editorActionsSection = document.querySelector('.editor-actions-section');
+            const sessionSection = document.querySelector('.session-section');
+            const advancedControls = document.getElementById('advancedControls');
+
+            function setMainControlsVisibility(visible) {
+                if (visible) {
+                    // Show all controls
+                    if (editorActionsSection) editorActionsSection.style.display = '';
+                    if (sessionSection) sessionSection.style.display = '';
+                    if (advancedControls) advancedControls.style.display = 'flex';
+                } else {
+                    // Hide all controls
+                    if (editorActionsSection) editorActionsSection.style.display = 'none';
+                    if (sessionSection) sessionSection.style.display = 'none';
+                    if (advancedControls) advancedControls.style.display = 'none';
+                }
+            }
+
+            if (sideMenuShowControls) {
+                // Load saved preference or use default (checked)
+                const savedShowControls = localStorage.getItem('chordsapp-show-controls');
+                const showControls = savedShowControls !== null ? savedShowControls === 'true' : true;
+                sideMenuShowControls.checked = showControls;
+                // Always apply visibility on load
+                setMainControlsVisibility(showControls);
+
+                sideMenuShowControls.addEventListener('change', () => {
+                    const show = sideMenuShowControls.checked;
+                    setMainControlsVisibility(show);
+                    localStorage.setItem('chordsapp-show-controls', show);
+                });
+            }
         })();
 
     </script>

@@ -86,6 +86,12 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* Light theme - step number badges */
+[data-theme="light"] .step-number {
+    background: rgba(255, 59, 92, 0.15);
+    color: #e5334f;
+}
+
 /* Light theme - buttons */
 [data-theme="light"] .ghost-button {
     background: rgba(0, 0, 0, 0.04);
@@ -189,7 +195,7 @@ a {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 120px 24px 96px;
+    padding: 90px 24px 60px;
 }
 
 .app-header {
@@ -300,22 +306,23 @@ a {
 
 .hero {
     display: grid;
-    gap: 48px;
+    gap: 32px;
     align-items: center;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    margin-bottom: 72px;
+    margin-bottom: 40px;
 }
 
 .hero-text h1 {
-    font-size: clamp(2.5rem, 4vw, 3.6rem);
-    margin-bottom: 18px;
-    line-height: 1.1;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    margin-bottom: 12px;
+    line-height: 1.2;
 }
 
 .hero-text p {
     color: var(--text-muted);
     max-width: 520px;
-    margin-bottom: 28px;
+    margin-bottom: 18px;
+    font-size: 0.95rem;
 }
 
 .hero-actions {
@@ -329,9 +336,9 @@ a {
 .ghost-button {
     font-family: inherit;
     font-weight: 600;
-    font-size: 0.95rem;
-    padding: 12px 22px;
-    border-radius: 10px;
+    font-size: 0.85rem;
+    padding: 10px 18px;
+    border-radius: 8px;
     text-decoration: none;
     border: none;
     cursor: pointer;
@@ -339,7 +346,14 @@ a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
+}
+
+/* Smaller buttons inside step cards */
+.step-card .primary-action,
+.step-card .ghost-button {
+    font-size: 0.8rem;
+    padding: 8px 14px;
 }
 
 .primary-action {
@@ -435,43 +449,56 @@ a {
 .workflow h2,
 .editor h2,
 .next-steps h2 {
-    font-size: 2rem;
-    margin-bottom: 28px;
+    font-size: 1.5rem;
+    margin-bottom: 16px;
 }
 
 .workflow-grid {
     display: grid;
-    gap: 24px;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .step-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 14px;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
+}
+
+.step-card h3 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.step-card p {
+    font-size: 0.85rem;
+    margin: 0;
+    line-height: 1.4;
+    color: var(--text-muted);
 }
 
 .step-number {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
     background: var(--primary-soft);
     color: var(--primary);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
+    font-size: 0.85rem;
 }
 
 .upload-tile {
     border: 2px dashed var(--border);
-    border-radius: 16px;
-    padding: 20px 16px;
+    border-radius: 10px;
+    padding: 12px 10px;
     text-align: center;
     color: var(--text-muted);
     cursor: pointer;
@@ -485,20 +512,21 @@ a {
 }
 
 .upload-icon {
-    font-size: 1.6rem;
+    font-size: 1.2rem;
     display: block;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 
 .upload-label {
     font-weight: 600;
     display: block;
+    font-size: 0.85rem;
 }
 
 .upload-note {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     display: block;
-    margin-top: 8px;
+    margin-top: 4px;
     color: var(--text-muted);
 }
 
@@ -516,9 +544,9 @@ a {
 .preview-panel {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px;
-    min-height: 140px;
+    border-radius: 10px;
+    padding: 8px;
+    min-height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -527,45 +555,46 @@ a {
 
 .preview-panel img {
     max-width: 100%;
-    max-height: 280px;
-    border-radius: 10px;
+    max-height: 120px;
+    border-radius: 8px;
     display: none;
 }
 
 .preview-placeholder {
     color: var(--text-muted);
     margin: 0;
+    font-size: 0.75rem;
 }
 
 /* AI Reference Preview in Step 3 */
 .ai-reference-preview {
-    margin-top: 24px;
+    margin-top: 12px;
 }
 
 .ai-reference-preview h4 {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     font-weight: 700;
-    margin: 0 0 4px 0;
+    margin: 0 0 10px 0;
     color: var(--text);
 }
 
 .reference-subtitle {
     color: var(--text-muted);
-    font-size: 0.875rem;
-    margin: 0 0 12px 0;
+    font-size: 0.75rem;
+    margin: 0 0 8px 0;
 }
 
 .reference-content {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px;
+    border-radius: 10px;
+    padding: 8px;
     min-height: 120px;
     max-height: 200px;
     overflow-y: auto;
     font-family: 'Courier New', monospace;
-    font-size: 0.875rem;
-    line-height: 1.6;
+    font-size: 0.75rem;
+    line-height: 1.4;
     white-space: pre-wrap;
     word-wrap: break-word;
     text-align: left;
@@ -575,18 +604,19 @@ a {
 .reference-content .preview-placeholder {
     text-align: center;
     display: block;
-    padding: 40px 20px;
+    padding: 20px 10px;
+    font-size: 0.7rem;
 }
 
 .status-panel {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 12px 20px;
+    border-radius: 6px;
+    padding: 8px 12px;
     position: relative;
     overflow: hidden;
     width: 100%;
@@ -600,8 +630,8 @@ a {
 }
 
 .status-dot {
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     display: inline-flex;
     flex-shrink: 0;
@@ -626,7 +656,7 @@ a {
 }
 
 .status-text {
-    font-size: 0.9rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
     transition: color 0.3s ease;
 }
@@ -674,6 +704,8 @@ a {
 
 .status-hint {
     color: var(--text-muted);
+    font-size: 0.7rem;
+    line-height: 1.3;
 }
 
 @keyframes pulse {
@@ -689,11 +721,12 @@ a {
 
 .feature-list {
     list-style: none;
-    margin: 12px 0 0;
+    margin: 6px 0 0;
     padding: 0;
     color: var(--text-muted);
     display: grid;
-    gap: 8px;
+    gap: 4px;
+    font-size: 0.8rem;
 }
 
 .editor {
@@ -1094,12 +1127,12 @@ a {
 .preview-container {
     background: white;
     border-radius: 12px;
-    padding: 0 0 50px 0;
+    padding: 0;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    min-height: 800px;
-    max-width: 210mm; /* A4 width */
+    width: 210mm; /* A4 width */
+    min-height: 297mm; /* A4 height */
+    max-width: 100%;
     margin: 0 auto;
-    border: 3px solid #ff3b5c; /* RED BORDER - outer container */
 }
 
 .live-preview {
@@ -1109,14 +1142,13 @@ a {
     color: black;
     white-space: pre-wrap;
     word-wrap: break-word;
-    padding: 0 20px 20px 20px;
+    padding: 20px;
     columns: 2;
     column-gap: 40px;
-    column-rule: 3px solid #3b82f6; /* BLUE COLUMN DIVIDER - more visible */
     column-fill: auto;
     margin: 0 auto;
     position: relative;
-    border: 2px solid #22c55e; /* GREEN BORDER - content area */
+    min-height: 297mm; /* A4 height */
     /* Direction will be set dynamically by JavaScript based on content */
 }
 
@@ -2007,5 +2039,402 @@ a {
     @page {
         margin: 1cm;
         size: A4 portrait;
+    }
+}
+
+/* ============================================
+   SIDE MENU - Hamburger & Sliding Panel
+   ============================================ */
+
+/* Hamburger Button */
+.hamburger-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 32px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+}
+
+.hamburger-btn span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.hamburger-btn:hover span {
+    background: var(--text);
+}
+
+/* Hide hamburger when menu is open */
+.hamburger-btn.active {
+    display: none;
+}
+
+/* Side Menu Overlay */
+.side-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 999;
+}
+
+.side-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Side Menu Panel */
+.side-menu-panel {
+    position: fixed;
+    top: 0;
+    left: -340px;
+    width: 320px;
+    height: 100vh;
+    background: var(--bg-soft);
+    border-right: 1px solid var(--border);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    transition: left 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-menu-panel.active {
+    left: 0;
+}
+
+/* Side Menu Header */
+.side-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+}
+
+.side-menu-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--primary);
+}
+
+.side-menu-close {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: opacity 0.2s;
+}
+
+.side-menu-close:hover {
+    opacity: 0.7;
+}
+
+/* Side Menu Content (scrollable) */
+.side-menu-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+/* Side Menu Sections */
+.side-menu-section {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.side-menu-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.side-menu-section h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* Side Menu Buttons */
+.side-menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.side-menu-btn {
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.side-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-strong);
+}
+
+.side-menu-btn.primary {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    color: white;
+}
+
+.side-menu-btn.primary:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.side-menu-btn.orange {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    color: white;
+}
+
+.side-menu-btn.orange:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+}
+
+.side-menu-btn.purple {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    border: none;
+    color: white;
+}
+
+.side-menu-btn.purple:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+.side-menu-btn.green {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    color: white;
+}
+
+.side-menu-btn.green:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+}
+
+.side-menu-btn.blue {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    color: white;
+}
+
+.side-menu-btn.blue:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.side-menu-btn.full-width {
+    width: 100%;
+    text-align: center;
+}
+
+/* Side Menu Row (for sliders, inputs, selects) */
+.side-menu-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.side-menu-row:last-child {
+    margin-bottom: 0;
+}
+
+.side-menu-row label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    min-width: 80px;
+}
+
+.side-menu-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--primary);
+    height: 6px;
+}
+
+.side-menu-row span {
+    font-size: 0.85rem;
+    color: var(--text);
+    min-width: 40px;
+    text-align: right;
+    font-weight: 500;
+}
+
+/* Side Menu Select */
+.side-menu-select {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.side-menu-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Side Menu Input */
+.side-menu-input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    font-size: 0.85rem;
+}
+
+.side-menu-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Side Menu Checkbox */
+.side-menu-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    min-width: auto !important;
+}
+
+.side-menu-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.side-menu-checkbox span {
+    font-size: 0.85rem;
+    color: var(--text);
+    min-width: auto !important;
+    text-align: left !important;
+}
+
+/* Key Grid */
+.side-menu-key-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin: 10px 0;
+}
+
+.key-btn {
+    padding: 8px 4px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.key-btn:hover {
+    background: rgba(255, 59, 92, 0.15);
+    border-color: var(--primary);
+}
+
+.key-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* Transpose Buttons */
+.side-menu-transpose-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.side-menu-transpose-btns span {
+    flex: 1;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.side-menu-transpose-btns .side-menu-btn {
+    padding: 8px 16px;
+    text-align: center;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .side-menu-panel {
+    background: #ffffff;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .side-menu-header {
+    background: #f8f9fa;
+}
+
+/* Only apply light background to non-colored buttons */
+[data-theme="light"] .side-menu-btn:not(.primary):not(.orange):not(.purple):not(.green):not(.blue) {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .side-menu-btn:not(.primary):not(.orange):not(.purple):not(.green):not(.blue):hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .side-menu-select,
+[data-theme="light"] .side-menu-input {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .key-btn {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .key-btn:hover {
+    background: rgba(255, 59, 92, 0.1);
+}
+
+/* Mobile adjustments for side menu */
+@media (max-width: 768px) {
+    .side-menu-panel {
+        width: 85vw;
+        max-width: 320px;
+        left: -90vw;
     }
 }
