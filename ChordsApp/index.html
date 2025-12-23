@@ -19,6 +19,9 @@
 
     <!-- html2canvas for Save as Image -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <!-- QRCode.js for session QR codes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         // Set PDF.js worker
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -32,7 +35,14 @@
 <body>
     <header class="app-header">
         <div class="header-container">
-            <a href="../index.html" class="nav-logo">THE FAITH <span>SOUND</span></a>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button id="sideMenuToggle" class="hamburger-btn" title="Open Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <a href="../index.html" class="nav-logo">THE FAITH <span>SOUND</span></a>
+            </div>
             <div class="header-actions">
                 <!-- Usage Indicator -->
                 <div id="headerUsageIndicator" style="display: none; margin-right: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.15); border-radius: 6px; font-size: 13px; color: #3b82f6; white-space: nowrap;">
@@ -119,59 +129,14 @@
             </div>
         </section>
 
-        <section class="editor" id="editor">
-            <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <button id="sideMenuToggle" class="hamburger-btn" title="Open Menu">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                    <h2 style="margin: 0;">Edit workspace</h2>
-                </div>
-                <button id="toggleChordWorkspace" class="ghost-button" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">
-                    ▼ Expand
-                </button>
-            </div>
-            <div id="chordWorkspaceContent" style="display: none;">
-            <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
-                <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
-                <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
-            </div>
-            <div class="editor-panel">
-                <header class="visual-editor-header">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <h3 style="margin: 0;">Visual Editor (edit here)</h3>
-                    </div>
-                    <div class="mini-preview" id="miniWorkspacePreview">
-                        <img id="miniWorkspacePreviewImage" alt="Uploaded chart preview">
-                        <span class="mini-preview-placeholder">Preview appears here after upload.</span>
-                    </div>
-                    <div class="reanalyze-block">
-                        <label for="reanalyzeFeedback">Need a better pass? Tell the AI what to fix.</label>
-                        <textarea id="reanalyzeFeedback" placeholder="Example: Verse 1 chords drift left; please align with lyrics and double-check key."></textarea>
-                        <button class="ghost-button" id="reanalyzeButton" disabled>Re-analyze with feedback</button>
-                    </div>
-                    <small class="visual-editor-subtitle">Chords above lyrics - adjust spacing freely</small>
-                </header>
-                <!-- Edit Window Font Size Control -->
-                <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; margin-bottom: 12px;">
-                    <label style="flex: 1; display: flex; align-items: center; gap: 8px; margin: 0;">
-                        <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500; white-space: nowrap;">Edit Font Size:</span>
-                        <span id="editorFontSizeValue" style="font-size: 0.9rem; color: var(--primary); font-weight: 600; min-width: 40px;">10px</span>
-                        <input type="range" id="editorFontSizeSlider" min="8" max="24" value="10" step="1" style="flex: 1; min-width: 120px;">
-                    </label>
-                </div>
-                <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
-            </div>
-            </div>
-        </section>
-
         <section class="preview-section" id="previewSection">
             <div class="preview-header">
                 <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 16px;">
                     <h2 id="previewHeaderTitle" style="margin: 0; flex: 1;">Print Preview</h2>
-                    <button class="primary-action" id="printButton" style="font-size: 14px; padding: 10px 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">🖨️ Print</button>
+                    <button class="ghost-button" id="headerSaveSong" style="font-size: 14px; padding: 10px 20px;">💾 Save Song</button>
+                    <button class="ghost-button" id="headerLoadSong" style="font-size: 14px; padding: 10px 20px;">📂 Load Song</button>
+                    <button class="ghost-button" id="headerSaveAsImage" style="font-size: 14px; padding: 10px 20px;">📷 Save as Image</button>
+                    <button class="ghost-button" id="printButton" style="font-size: 14px; padding: 10px 20px;">🖨️ Print</button>
                 </div>
             </div>
         </section>
@@ -211,8 +176,8 @@
                     </div>
                     <div class="side-menu-row">
                         <label>Font Size:</label>
-                        <input type="range" id="sideMenuFontSize" min="8" max="28" value="10" step="0.5">
-                        <span id="sideMenuFontSizeVal">10pt</span>
+                        <input type="range" id="sideMenuFontSize" min="8" max="28" value="11" step="0.5">
+                        <span id="sideMenuFontSizeVal">11pt</span>
                     </div>
                     <div class="side-menu-row">
                         <label>Line Spacing:</label>
@@ -234,6 +199,18 @@
                         <label class="side-menu-checkbox">
                             <input type="checkbox" id="sideMenuShowControls" checked>
                             <span>Show Main Controls</span>
+                        </label>
+                    </div>
+                    <div class="side-menu-row">
+                        <label class="side-menu-checkbox">
+                            <input type="checkbox" id="sideMenuShowEditor">
+                            <span>Show Edit Workspace</span>
+                        </label>
+                    </div>
+                    <div class="side-menu-row">
+                        <label class="side-menu-checkbox">
+                            <input type="checkbox" id="sideMenuShowSongbook">
+                            <span>Show SongBook Format</span>
                         </label>
                     </div>
                 </div>
@@ -340,6 +317,35 @@
                         <button class="side-menu-btn blue" id="sideMenuJoinSession">📻 Join Session</button>
                         <button class="side-menu-btn" id="sideMenuMySessions">📋 My Sessions</button>
                         <button class="side-menu-btn purple" id="sideMenuGoLive">📺 Go Live</button>
+                    </div>
+                </div>
+
+                <!-- Active Session Info (shown when broadcasting) -->
+                <div id="sideMenuActiveSession" class="side-menu-section" style="display: none; border-top: 2px solid #10b981;">
+                    <h4 style="color: #10b981;">Active Session</h4>
+                    <div style="text-align: center; padding: 12px 0;">
+                        <div id="sideMenuSessionCode" style="font-family: monospace; font-size: 28px; font-weight: bold; color: #10b981; margin-bottom: 12px; letter-spacing: 2px;"></div>
+                        <div id="sideMenuQRCode" style="display: flex; justify-content: center; margin-bottom: 12px; background: white; padding: 8px; border-radius: 8px; width: fit-content; margin-left: auto; margin-right: auto;"></div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Scan QR or share link:</div>
+                        <input type="text" id="sideMenuSessionLink" readonly style="width: 100%; padding: 8px; font-size: 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: var(--text); text-align: center; cursor: pointer;">
+                        <button id="sideMenuCopyLink" class="side-menu-btn green" style="margin-top: 8px; width: 100%;">📋 Copy Link</button>
+                    </div>
+                </div>
+
+                <!-- User Profile Section (shown when logged in) -->
+                <div id="sideMenuUserProfile" class="side-menu-section" style="display: none; border-top: 1px solid rgba(255,255,255,0.1); margin-top: auto; padding-top: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; font-weight: 600;">
+                            <span id="sideMenuUserAvatar">?</span>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div id="sideMenuUserName" style="font-weight: 600; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">User</div>
+                            <div id="sideMenuTierBadge" style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-top: 4px; background: rgba(59, 130, 246, 0.15); color: #3b82f6;">Free</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; display: flex; gap: 8px;">
+                        <button id="sideMenuMySubscription" class="side-menu-btn" style="flex: 1; font-size: 12px;">My Subscription</button>
+                        <button id="sideMenuSignOut" class="side-menu-btn" style="flex: 1; font-size: 12px; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444;">Sign Out</button>
                     </div>
                 </div>
             </div>
@@ -463,8 +469,8 @@
                     <!-- Row 1: Sliders + Layout + Pages (all in same line) -->
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
                         <label class="font-size-control" style="flex: 1 1 120px; min-width: 120px;">
-                            Font Size: <span id="fontSizeValue">10</span>pt
-                            <input type="range" id="fontSizeSlider" min="8" max="28" value="10" step="0.5">
+                            Font Size: <span id="fontSizeValue">11</span>pt
+                            <input type="range" id="fontSizeSlider" min="8" max="28" value="11" step="0.5">
                         </label>
                         <label class="line-height-control" style="flex: 1 1 130px; min-width: 130px;">
                             Line Spacing: <span id="lineHeightValue">1.2</span>
@@ -530,17 +536,57 @@
                     </div>
                 </div>
             </div>
-            <div class="preview-container" style="position: relative; padding: 0 0 50px 0;">
+            <div class="preview-container" style="position: relative; padding: 0; overflow: hidden;">
                 <div id="pageCounter" style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">Page 1 of 1 (A4)</div>
                 <div id="pagesWrapper" style="display: flex; flex-direction: column; gap: 20px;">
                     <div class="preview-page" data-page="1">
-                        <div id="livePreview" class="live-preview" style="min-height: 1123px; border: none; border-radius: 4px; padding: 20px 20px 20px 20px; width: 100%; max-width: 210mm;"></div>
+                        <div id="livePreview" class="live-preview" style="min-height: 1123px; border: none; padding: 20px 20px 20px 20px; width: 100%; max-width: 210mm;"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="editor" id="songbookSection">
+        <section class="editor" id="editor" style="display: none;">
+            <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">Edit workspace</h2>
+                <button id="toggleChordWorkspace" class="ghost-button" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">
+                    ▼ Expand
+                </button>
+            </div>
+            <div id="chordWorkspaceContent" style="display: none;">
+            <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
+                <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
+                <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
+            </div>
+            <div class="editor-panel">
+                <header class="visual-editor-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0;">Visual Editor (edit here)</h3>
+                    </div>
+                    <div class="mini-preview" id="miniWorkspacePreview">
+                        <img id="miniWorkspacePreviewImage" alt="Uploaded chart preview">
+                        <span class="mini-preview-placeholder">Preview appears here after upload.</span>
+                    </div>
+                    <div class="reanalyze-block">
+                        <label for="reanalyzeFeedback">Need a better pass? Tell the AI what to fix.</label>
+                        <textarea id="reanalyzeFeedback" placeholder="Example: Verse 1 chords drift left; please align with lyrics and double-check key."></textarea>
+                        <button class="ghost-button" id="reanalyzeButton" disabled>Re-analyze with feedback</button>
+                    </div>
+                    <small class="visual-editor-subtitle">Chords above lyrics - adjust spacing freely</small>
+                </header>
+                <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; margin-bottom: 12px;">
+                    <label style="flex: 1; display: flex; align-items: center; gap: 8px; margin: 0;">
+                        <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500; white-space: nowrap;">Edit Font Size:</span>
+                        <span id="editorFontSizeValue" style="font-size: 0.9rem; color: var(--primary); font-weight: 600; min-width: 40px;">10px</span>
+                        <input type="range" id="editorFontSizeSlider" min="8" max="24" value="10" step="1" style="flex: 1; min-width: 120px;">
+                    </label>
+                </div>
+                <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
+            </div>
+            </div>
+        </section>
+
+        <section class="editor" id="songbookSection" style="display: none;">
             <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>SongBook Format (auto-updated)</h2>
                 <button id="toggleSongbookFormat" class="ghost-button" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">
@@ -563,7 +609,7 @@
             </div>
         </section>
 
-        <section class="support-section" id="support" style="max-width: 800px; margin: 60px auto 80px; padding: 40px 30px; text-align: center; background: linear-gradient(135deg, rgba(255, 59, 92, 0.15) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(59, 130, 246, 0.15) 100%); border-radius: 24px; border: 1px solid rgba(255, 59, 92, 0.2); position: relative; overflow: hidden;">
+        <section class="support-section" id="support" style="max-width: 1100px; margin: 60px auto 80px; padding: 40px 30px; text-align: center; background: linear-gradient(135deg, rgba(255, 59, 92, 0.15) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(59, 130, 246, 0.15) 100%); border-radius: 24px; border: 1px solid rgba(255, 59, 92, 0.2); position: relative; overflow: hidden;">
             <!-- Decorative elements -->
             <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(255, 59, 92, 0.3) 0%, transparent 70%); pointer-events: none;"></div>
             <div style="position: absolute; bottom: -30px; left: -30px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%); pointer-events: none;"></div>
@@ -629,6 +675,10 @@
 
     <footer class="app-footer">
         <p>&copy; <span id="year"></span> The Faith Sound. Built with love for worship leaders and musicians. <span style="opacity: 0.7;">| v1.6 - 15/12/2025</span></p>
+        <p style="margin-top: 8px; font-size: 0.85rem;">
+            <a href="privacy.html" style="color: var(--text-muted);">Privacy Policy</a> ·
+            <a href="terms.html" style="color: var(--text-muted);">Terms of Service</a>
+        </p>
     </footer>
 
     <!-- Hidden print-only formatted version -->
@@ -1341,6 +1391,32 @@
                 });
             }
 
+            // Header Save as Image button - triggers the same functionality
+            const headerSaveAsImage = document.getElementById('headerSaveAsImage');
+            if (headerSaveAsImage && saveAsImageBtn) {
+                headerSaveAsImage.addEventListener('click', () => {
+                    saveAsImageBtn.click();
+                });
+            }
+
+            // Header Save Song button
+            const headerSaveSong = document.getElementById('headerSaveSong');
+            const mainSaveSongBtn = document.getElementById('saveSongButton');
+            if (headerSaveSong && mainSaveSongBtn) {
+                headerSaveSong.addEventListener('click', () => {
+                    mainSaveSongBtn.click();
+                });
+            }
+
+            // Header Load Song button
+            const headerLoadSong = document.getElementById('headerLoadSong');
+            const mainLoadSongBtn = document.getElementById('loadSongButton');
+            if (headerLoadSong && mainLoadSongBtn) {
+                headerLoadSong.addEventListener('click', () => {
+                    mainLoadSongBtn.click();
+                });
+            }
+
             function downloadImage(dataUrl, filename) {
                 const link = document.createElement('a');
                 link.href = dataUrl;
@@ -1833,6 +1909,42 @@
                     const show = sideMenuShowControls.checked;
                     setMainControlsVisibility(show);
                     localStorage.setItem('chordsapp-show-controls', show);
+                });
+            }
+
+            // Display: Show Edit Workspace toggle
+            const sideMenuShowEditor = document.getElementById('sideMenuShowEditor');
+            const editorSection = document.getElementById('editor');
+
+            if (sideMenuShowEditor && editorSection) {
+                // Load saved preference or use default (unchecked/hidden)
+                const savedShowEditor = localStorage.getItem('chordsapp-show-editor');
+                const showEditor = savedShowEditor === 'true';
+                sideMenuShowEditor.checked = showEditor;
+                editorSection.style.display = showEditor ? 'block' : 'none';
+
+                sideMenuShowEditor.addEventListener('change', () => {
+                    const show = sideMenuShowEditor.checked;
+                    editorSection.style.display = show ? 'block' : 'none';
+                    localStorage.setItem('chordsapp-show-editor', show);
+                });
+            }
+
+            // Display: Show SongBook Format toggle
+            const sideMenuShowSongbook = document.getElementById('sideMenuShowSongbook');
+            const songbookSection = document.getElementById('songbookSection');
+
+            if (sideMenuShowSongbook && songbookSection) {
+                // Load saved preference or use default (unchecked/hidden)
+                const savedShowSongbook = localStorage.getItem('chordsapp-show-songbook');
+                const showSongbook = savedShowSongbook === 'true';
+                sideMenuShowSongbook.checked = showSongbook;
+                songbookSection.style.display = showSongbook ? 'block' : 'none';
+
+                sideMenuShowSongbook.addEventListener('change', () => {
+                    const show = sideMenuShowSongbook.checked;
+                    songbookSection.style.display = show ? 'block' : 'none';
+                    localStorage.setItem('chordsapp-show-songbook', show);
                 });
             }
         })();
