@@ -125,6 +125,10 @@ class SessionUI {
                                             style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
                                         Rejoin
                                     </button>
+                                    <button onclick="sessionUI.removeFromMyList('${session.id}', '${session.title.replace(/'/g, "\\'")}')"
+                                            style="padding: 6px 12px; background: rgba(239, 68, 68, 0.2); border: none; border-radius: 6px; color: #ef4444; cursor: pointer; font-size: 12px; margin-top: 4px;">
+                                        🗑️ Remove
+                                    </button>
                                 `}
                             </div>
                         </div>
@@ -184,6 +188,24 @@ class SessionUI {
         } catch (error) {
             console.error('Error deleting session:', error);
             this.showToast('❌ Failed to delete session');
+        }
+    }
+
+    /**
+     * Remove session from user's list (for non-owners)
+     */
+    async removeFromMyList(sessionId, sessionTitle) {
+        if (!confirm(`Remove "${sessionTitle}" from your list?\n\nYou can rejoin later with the session code.`)) return;
+
+        try {
+            // Only remove from user's session list, don't delete the actual session
+            await firebase.database().ref(`users/${firebase.auth().currentUser.uid}/sessions/${sessionId}`).remove();
+
+            this.showToast(`👋 Removed "${sessionTitle}" from your list`);
+            await this.loadUserSessions();
+        } catch (error) {
+            console.error('Error removing session:', error);
+            this.showToast('❌ Failed to remove session');
         }
     }
 
