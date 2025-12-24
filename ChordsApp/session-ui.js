@@ -530,6 +530,72 @@ class SessionUI {
         `;
 
         indicator.style.display = 'block';
+
+        // Update side menu session info
+        this.updateSideMenuSession(sessionCode, isLeader);
+    }
+
+    /**
+     * Update side menu with session info (QR code, link)
+     */
+    updateSideMenuSession(sessionCode, isLeader) {
+        const sideMenuSection = document.getElementById('sideMenuActiveSession');
+        const codeDisplay = document.getElementById('sideMenuSessionCode');
+        const qrContainer = document.getElementById('sideMenuQRCode');
+        const linkInput = document.getElementById('sideMenuSessionLink');
+        const copyBtn = document.getElementById('sideMenuCopyLink');
+
+        if (!sideMenuSection) return;
+
+        if (!sessionCode) {
+            sideMenuSection.style.display = 'none';
+            return;
+        }
+
+        // Show section
+        sideMenuSection.style.display = 'block';
+
+        // Display session code
+        if (codeDisplay) {
+            codeDisplay.textContent = sessionCode;
+        }
+
+        // Generate shareable link
+        const baseUrl = window.location.origin + window.location.pathname;
+        const joinLink = `${baseUrl}?join=${sessionCode}`;
+
+        if (linkInput) {
+            linkInput.value = joinLink;
+        }
+
+        // Generate QR code
+        if (qrContainer && typeof QRCode !== 'undefined') {
+            qrContainer.innerHTML = ''; // Clear previous
+            new QRCode(qrContainer, {
+                text: joinLink,
+                width: 120,
+                height: 120,
+                colorDark: '#10b981',
+                colorLight: '#ffffff'
+            });
+        }
+
+        // Copy button handler
+        if (copyBtn) {
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(joinLink);
+                this.showToast('📋 Link copied!');
+            };
+        }
+
+        // Also allow clicking the link input to copy
+        if (linkInput) {
+            linkInput.onclick = () => {
+                linkInput.select();
+                navigator.clipboard.writeText(joinLink);
+                this.showToast('📋 Link copied!');
+            };
+        }
     }
 
     /**
@@ -539,6 +605,12 @@ class SessionUI {
         const indicator = document.getElementById('sessionStatusIndicator');
         if (indicator) {
             indicator.style.display = 'none';
+        }
+
+        // Also hide side menu session info
+        const sideMenuSection = document.getElementById('sideMenuActiveSession');
+        if (sideMenuSection) {
+            sideMenuSection.style.display = 'none';
         }
     }
 

@@ -131,12 +131,16 @@
 
         <section class="preview-section" id="previewSection">
             <div class="preview-header">
-                <div style="display: flex; align-items: center; gap: 12px; width: 100%; margin-bottom: 16px;">
-                    <h2 id="previewHeaderTitle" style="margin: 0; flex: 1;">Print Preview</h2>
-                    <button class="ghost-button" id="headerSaveSong" style="font-size: 14px; padding: 10px 20px;">💾 Save Song</button>
-                    <button class="ghost-button" id="headerLoadSong" style="font-size: 14px; padding: 10px 20px;">📂 Load Song</button>
-                    <button class="ghost-button" id="headerSaveAsImage" style="font-size: 14px; padding: 10px 20px;">📷 Save as Image</button>
-                    <button class="ghost-button" id="printButton" style="font-size: 14px; padding: 10px 20px;">🖨️ Print</button>
+                <div class="preview-header-row">
+                    <h2 id="previewHeaderTitle">Print Preview</h2>
+                    <button id="toggleControlsBtn2" class="header-btn display-toggle active">🎛️ Controls</button>
+                    <button id="toggleEditorBtn2" class="header-btn display-toggle">✏️ Editor</button>
+                    <div class="header-spacer"></div>
+                    <button class="header-btn" id="headerSaveSong">💾 Save</button>
+                    <button class="header-btn" id="headerLoadSong">📂 Load</button>
+                    <button class="header-btn" id="headerSaveAsImage">📷 Image</button>
+                    <button class="header-btn" id="printButton">🖨️ Print</button>
+                    <button class="header-btn" id="headerLivePreview" style="background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%); color: white; border: none;">📺 Live Preview</button>
                 </div>
             </div>
         </section>
@@ -499,6 +503,15 @@
                             </select>
                         </label>
                     </div>
+                    <!-- Display Toggle Buttons -->
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                        <button id="toggleControlsBtn" class="ghost-button display-toggle active" style="flex: 1; min-width: 120px; padding: 8px 12px; font-size: 12px; font-weight: 500;">
+                            <span style="margin-right: 4px;">🎛️</span> Main Controls
+                        </button>
+                        <button id="toggleEditorBtn" class="ghost-button display-toggle" style="flex: 1; min-width: 120px; padding: 8px 12px; font-size: 12px; font-weight: 500;">
+                            <span style="margin-right: 4px;">✏️</span> Edit Workspace
+                        </button>
+                    </div>
                     <button class="ghost-button" id="autoOptimizeButton" style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; padding: 10px; font-weight: 600;">✨ Auto-fit to 1 Page</button>
                 </div>
 
@@ -520,22 +533,64 @@
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; align-items: center;">
-                        <div style="display: flex; gap: 8px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                        <div style="display: flex; gap: 8px; flex: 1 1 100px; min-width: 100px;">
                             <button class="ghost-button" data-shift="-1" style="flex: 1; padding: 10px; min-width: 44px;">–1</button>
                             <button class="ghost-button" data-shift="1" style="flex: 1; padding: 10px; min-width: 44px;">+1</button>
                         </div>
-                        <label class="transpose-label" style="display: flex; align-items: center; gap: 6px; white-space: nowrap; justify-content: center;">
+                        <label class="transpose-label" style="display: flex; align-items: center; gap: 6px; white-space: nowrap; justify-content: center; flex: 1 1 100px; min-width: 100px;">
                             <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Steps</span>
-                            <input type="number" id="transposeStepInput" value="0" min="-11" max="11" style="width: 60px; padding: 8px;">
+                            <input type="number" id="transposeStepInput" value="0" min="-11" max="11" style="width: 50px; padding: 8px;">
                         </label>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="ghost-button" id="applyTranspose" style="flex: 1; padding: 10px;">Apply</button>
-                            <button class="ghost-button" id="resetTranspose" style="flex: 1; padding: 10px;">Reset</button>
+                        <div style="display: flex; gap: 8px; flex: 1 1 150px; min-width: 150px;">
+                            <button class="ghost-button" id="applyTranspose" style="flex: 1; padding: 10px 12px;">Apply</button>
+                            <button class="ghost-button" id="resetTranspose" style="flex: 1; padding: 10px 12px;">Reset</button>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Edit Workspace (right before preview) -->
+            <section id="editor" class="editor" style="display: none;">
+                <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0;">Edit workspace</h2>
+                    <button id="toggleChordWorkspace" class="ghost-button" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">
+                        ▼ Expand
+                    </button>
+                </div>
+                <div id="chordWorkspaceContent" style="display: none;">
+                    <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
+                        <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
+                        <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
+                    </div>
+                    <div class="editor-panel">
+                        <header class="visual-editor-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h3 style="margin: 0;">Visual Editor (edit here)</h3>
+                            </div>
+                            <div class="mini-preview" id="miniWorkspacePreview">
+                                <img id="miniWorkspacePreviewImage" alt="Uploaded chart preview">
+                                <span class="mini-preview-placeholder">Preview appears here after upload.</span>
+                            </div>
+                            <div class="reanalyze-block">
+                                <label for="reanalyzeFeedback">Need a better pass? Tell the AI what to fix.</label>
+                                <textarea id="reanalyzeFeedback" placeholder="Example: Verse 1 chords drift left; please align with lyrics and double-check key."></textarea>
+                                <button class="ghost-button" id="reanalyzeButton" disabled>Re-analyze with feedback</button>
+                            </div>
+                            <small class="visual-editor-subtitle">Chords above lyrics - adjust spacing freely</small>
+                        </header>
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; margin-bottom: 12px;">
+                            <label style="flex: 1; display: flex; align-items: center; gap: 8px; margin: 0;">
+                                <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500; white-space: nowrap;">Edit Font Size:</span>
+                                <span id="editorFontSizeValue" style="font-size: 0.9rem; color: var(--primary); font-weight: 600; min-width: 40px;">10px</span>
+                                <input type="range" id="editorFontSizeSlider" min="8" max="24" value="10" step="1" style="flex: 1; min-width: 120px;">
+                            </label>
+                        </div>
+                        <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
+                    </div>
+                </div>
+            </section>
+
             <div class="preview-container" style="position: relative; padding: 0; overflow: hidden;">
                 <div id="pageCounter" style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">Page 1 of 1 (A4)</div>
                 <div id="pagesWrapper" style="display: flex; flex-direction: column; gap: 20px;">
@@ -543,46 +598,6 @@
                         <div id="livePreview" class="live-preview" style="min-height: 1123px; border: none; padding: 20px 20px 20px 20px; width: 100%; max-width: 210mm;"></div>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <section class="editor" id="editor" style="display: none;">
-            <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin: 0;">Edit workspace</h2>
-                <button id="toggleChordWorkspace" class="ghost-button" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">
-                    ▼ Expand
-                </button>
-            </div>
-            <div id="chordWorkspaceContent" style="display: none;">
-            <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
-                <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
-                <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
-            </div>
-            <div class="editor-panel">
-                <header class="visual-editor-header">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <h3 style="margin: 0;">Visual Editor (edit here)</h3>
-                    </div>
-                    <div class="mini-preview" id="miniWorkspacePreview">
-                        <img id="miniWorkspacePreviewImage" alt="Uploaded chart preview">
-                        <span class="mini-preview-placeholder">Preview appears here after upload.</span>
-                    </div>
-                    <div class="reanalyze-block">
-                        <label for="reanalyzeFeedback">Need a better pass? Tell the AI what to fix.</label>
-                        <textarea id="reanalyzeFeedback" placeholder="Example: Verse 1 chords drift left; please align with lyrics and double-check key."></textarea>
-                        <button class="ghost-button" id="reanalyzeButton" disabled>Re-analyze with feedback</button>
-                    </div>
-                    <small class="visual-editor-subtitle">Chords above lyrics - adjust spacing freely</small>
-                </header>
-                <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; margin-bottom: 12px;">
-                    <label style="flex: 1; display: flex; align-items: center; gap: 8px; margin: 0;">
-                        <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500; white-space: nowrap;">Edit Font Size:</span>
-                        <span id="editorFontSizeValue" style="font-size: 0.9rem; color: var(--primary); font-weight: 600; min-width: 40px;">10px</span>
-                        <input type="range" id="editorFontSizeSlider" min="8" max="24" value="10" step="1" style="flex: 1; min-width: 120px;">
-                    </label>
-                </div>
-                <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
-            </div>
             </div>
         </section>
 
@@ -1124,7 +1139,7 @@
             </div>
 
             <!-- Display Options -->
-            <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 12px; align-items: center;">
+            <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;">
                 <select id="liveModeDisplayMode" onchange="liveMode.setDisplayMode(this.value)" style="padding: 10px 16px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 14px;">
                     <option value="chords" selected>Chords</option>
                     <option value="both">Nashville + Chords</option>
@@ -1135,6 +1150,9 @@
                     <input type="checkbox" id="liveModeBadges" checked onchange="liveMode.toggleBadges(this.checked)" style="accent-color: var(--primary); cursor: pointer;">
                     <span>Badges</span>
                 </label>
+                <button id="liveModeFullOverview" onclick="liveMode.toggleFullOverview()" style="padding: 10px 16px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s ease;">
+                    📄 Full Overview
+                </button>
             </div>
 
             <!-- Session Info & Playlist Button (if in session) -->
@@ -1234,6 +1252,11 @@
         /* Hide song header in live mode (title/key shown in top bar) */
         #liveModeChartDisplay .song-header {
             display: none;
+        }
+        /* Show song header in Full Overview mode */
+        #liveModeChartDisplay.full-overview-active .song-header {
+            display: block;
+            margin-bottom: 16px;
         }
     </style>
 
@@ -1945,8 +1968,44 @@
                     const show = sideMenuShowSongbook.checked;
                     songbookSection.style.display = show ? 'block' : 'none';
                     localStorage.setItem('chordsapp-show-songbook', show);
+                    // Sync toggle button
+                    const toggleBtn = document.getElementById('toggleSongbookBtn');
+                    if (toggleBtn) toggleBtn.classList.toggle('active', show);
                 });
             }
+
+            // ============================================
+            // DISPLAY TOGGLE BUTTONS (Controls & Editor)
+            // ============================================
+
+            // Helper to sync all toggle buttons with same function
+            function syncToggleButtons(btn1Id, btn2Id, checkbox) {
+                const btn1 = document.getElementById(btn1Id);
+                const btn2 = document.getElementById(btn2Id);
+
+                [btn1, btn2].forEach(btn => {
+                    if (btn && checkbox) {
+                        btn.classList.toggle('active', checkbox.checked);
+                        btn.addEventListener('click', () => {
+                            checkbox.checked = !checkbox.checked;
+                            checkbox.dispatchEvent(new Event('change'));
+                        });
+                    }
+                });
+
+                // Sync when checkbox changes
+                if (checkbox) {
+                    checkbox.addEventListener('change', () => {
+                        [btn1, btn2].forEach(btn => {
+                            if (btn) btn.classList.toggle('active', checkbox.checked);
+                        });
+                    });
+                }
+            }
+
+            // Connect toggle buttons to side menu checkboxes
+            syncToggleButtons('toggleControlsBtn', 'toggleControlsBtn2', sideMenuShowControls);
+            syncToggleButtons('toggleEditorBtn', 'toggleEditorBtn2', sideMenuShowEditor);
         })();
 
     </script>

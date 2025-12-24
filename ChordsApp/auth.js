@@ -89,17 +89,51 @@ class ChordsAuthManager {
         const signInButton = document.getElementById('signInButton');
         const userProfileBtn = document.getElementById('userProfileBtn');
 
+        // Side menu user profile elements
+        const sideMenuUserProfile = document.getElementById('sideMenuUserProfile');
+        const sideMenuUserName = document.getElementById('sideMenuUserName');
+        const sideMenuUserAvatar = document.getElementById('sideMenuUserAvatar');
+        const sideMenuSignOut = document.getElementById('sideMenuSignOut');
+        const sideMenuMySubscription = document.getElementById('sideMenuMySubscription');
+
         if (this.currentUser) {
             // User is signed in
+            const displayName = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+
             if (signInButton) {
-                signInButton.textContent = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+                signInButton.textContent = displayName;
                 signInButton.onclick = () => this.showProfileMenu();
+            }
+
+            // Update side menu user profile
+            if (sideMenuUserProfile) {
+                sideMenuUserProfile.style.display = 'block';
+            }
+            if (sideMenuUserName) {
+                sideMenuUserName.textContent = displayName;
+            }
+            if (sideMenuUserAvatar) {
+                sideMenuUserAvatar.textContent = displayName.charAt(0).toUpperCase();
+            }
+            if (sideMenuSignOut) {
+                sideMenuSignOut.onclick = () => this.signOut();
+            }
+            if (sideMenuMySubscription) {
+                sideMenuMySubscription.onclick = () => {
+                    const modal = document.getElementById('subscriptionModal');
+                    if (modal) modal.style.display = 'flex';
+                };
             }
         } else {
             // User is signed out
             if (signInButton) {
                 signInButton.textContent = 'Sign In';
                 signInButton.onclick = () => this.showAuthModal('login');
+            }
+
+            // Hide side menu user profile
+            if (sideMenuUserProfile) {
+                sideMenuUserProfile.style.display = 'none';
             }
         }
     }

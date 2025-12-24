@@ -126,6 +126,21 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSharedSong(sharedSongSlug);
     }
 
+    // ============= CHECK FOR SESSION JOIN URL =============
+    const joinSessionCode = urlParams.get('join');
+    if (joinSessionCode) {
+        // Wait for sessionUI to be ready, then open join modal with pre-filled code
+        setTimeout(() => {
+            const sessionCodeInput = document.getElementById('sessionCodeInput');
+            if (sessionCodeInput && window.sessionUI) {
+                sessionCodeInput.value = joinSessionCode.toUpperCase();
+                window.sessionUI.showJoinSessionModal();
+                // Clean URL to remove the join parameter
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        }, 500);
+    }
+
     async function loadSharedSong(slug) {
         try {
             // Wait for Firebase to be ready
@@ -204,10 +219,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadSongBtn = document.getElementById('loadSongButton');
         const updateSongBtn = document.getElementById('updateSongButton');
         const bulkImportBtn = document.getElementById('bulkImportButton');
+        const headerSaveSong = document.getElementById('headerSaveSong');
+        const headerLoadSong = document.getElementById('headerLoadSong');
         if (saveSongBtn) saveSongBtn.style.display = 'none';
         if (loadSongBtn) loadSongBtn.style.display = 'none';
         if (updateSongBtn) updateSongBtn.style.display = 'none';
         if (bulkImportBtn) bulkImportBtn.style.display = 'none';
+        if (headerSaveSong) headerSaveSong.style.display = 'none';
+        if (headerLoadSong) headerLoadSong.style.display = 'none';
 
         // Add "View Only" banner
         const banner = document.createElement('div');
@@ -2835,26 +2854,71 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         console.log('✨ Auto-optimizing layout for 1 page...');
 
-        // Get content length to determine optimal columns
-        const content = livePreview.textContent || '';
-        const contentLength = content.length;
-
-        // Smart defaults based on content length
-        let optimalColumns = 2; // Default to 2 columns
-        if (contentLength < 500) {
-            optimalColumns = 1; // Short content - single column
-        } else if (contentLength > 2000) {
-            optimalColumns = 3; // Long content - 3 columns
-        }
-
-        // Set optimal layout
-        columnCountSelect.value = optimalColumns;
+        // Always use 1 column for single-page overview
+        columnCountSelect.value = 1;
         pageCountSelect.value = 1;
 
-        // Apply layout settings (this will trigger autoFitContent)
-        applyLayoutSettings();
+        // Set tighter line height for better fit
+        livePreview.style.lineHeight = '1.1';
+        if (lineHeightSlider && lineHeightValue) {
+            lineHeightSlider.value = 1.1;
+            lineHeightValue.textContent = '1.1';
+        }
 
-        console.log(`✅ Auto-optimized: ${optimalColumns} columns, 1 page`);
+        // CRITICAL: Remove height and column constraints for accurate measurement
+        livePreview.style.height = 'auto';
+        livePreview.style.columns = '1';
+        livePreview.style.columnFill = 'balance';
+
+        // Target height (A4 page)
+        const A4_HEIGHT_PX = 1123;
+        const targetHeight = A4_HEIGHT_PX - 30;
+
+        // Binary search for optimal font size
+        let low = 8;
+        let high = 50;
+        let optimalFontSize = 14;
+
+        for (let i = 0; i < 25; i++) {
+            const mid = (low + high) / 2;
+            livePreview.style.fontSize = mid + 'pt';
+
+            // Force reflow
+            void livePreview.offsetHeight;
+            const contentHeight = livePreview.scrollHeight;
+
+            if (contentHeight <= targetHeight) {
+                low = mid;
+                optimalFontSize = mid;
+            } else {
+                high = mid;
+            }
+
+            if (high - low < 0.2) break;
+        }
+
+        // Apply the optimal font size
+        optimalFontSize = Math.floor(optimalFontSize * 2) / 2;
+        livePreview.style.fontSize = optimalFontSize + 'pt';
+
+        // Restore proper height for display
+        livePreview.style.height = A4_HEIGHT_PX + 'px';
+        livePreview.style.columnFill = 'auto';
+
+        // Update the font size slider
+        if (fontSizeSlider && fontSizeValue) {
+            const sliderValue = Math.min(optimalFontSize, parseFloat(fontSizeSlider.max) || 24);
+            fontSizeSlider.value = sliderValue;
+            fontSizeValue.textContent = optimalFontSize;
+        }
+
+        // Update pagination
+        setTimeout(() => {
+            updatePagination();
+            checkContentOverflow();
+        }, 100);
+
+        console.log(`✅ Auto-optimized: 1 column, 1 page, ${optimalFontSize}pt font`);
     }
 
     // Apply layout settings based on column and page count
@@ -2877,11 +2941,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         if (columns > 1) {
             livePreview.style.columnGap = '40px';
-            livePreview.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
         } else {
             livePreview.style.columnGap = '0px';
-            livePreview.style.columnRule = 'none';
         }
+        livePreview.style.columnRule = 'none';
 
         // Auto-fit content to layout
         setTimeout(() => {
@@ -2897,7 +2960,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Event listeners for dropdowns
         columnCountSelect.addEventListener('change', applyLayoutSettings);
-        pageCountSelect.addEventListener('change', applyLayoutSettings);
+        pageCountSelect.addEventListener('change', () => {
+            // When selecting 1 page, automatically switch to 1 column for overview
+            if (parseInt(pageCountSelect.value) === 1) {
+                columnCountSelect.value = '1';
+                // Dispatch change event to update any dependent UI
+                columnCountSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                applyLayoutSettings();
+            }
+        });
 
         console.log('✅ Layout dropdowns initialized');
     } else {
@@ -3330,6 +3402,25 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
+    // Header Live Preview button - enters Live Mode with Full Overview
+    const headerLivePreview = document.getElementById('headerLivePreview');
+    if (headerLivePreview) {
+        headerLivePreview.addEventListener('click', () => {
+            if (window.liveMode) {
+                // Ensure fullOverviewMode is false before entering
+                window.liveMode.fullOverviewMode = false;
+                // Enter Live Mode
+                window.liveMode.enter();
+                // Enable Full Overview mode after content loads
+                setTimeout(() => {
+                    if (!window.liveMode.fullOverviewMode) {
+                        window.liveMode.toggleFullOverview();
+                    }
+                }, 150);
+            }
+        });
+    }
+
     // ============= PRINT PREVIEW PREFERENCES =============
 
     /**
@@ -3447,11 +3538,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                     if (columns > 1) {
                         livePreview.style.columnGap = '40px';
-                        livePreview.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
                     } else {
                         livePreview.style.columnGap = '0px';
-                        livePreview.style.columnRule = 'none';
                     }
+                    livePreview.style.columnRule = 'none';
                 }
 
                 console.log('✅ Layout preferences applied successfully');
@@ -3471,6 +3561,33 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // ============= LIVE PREVIEW TOGGLE =============
     const livePreviewToggle = document.getElementById('livePreviewToggle');
+
+    if (livePreviewToggle) {
+        livePreviewToggle.addEventListener('click', () => {
+            // Enter fullscreen Live Mode with Full Overview
+            if (window.liveMode) {
+                // Close the side menu first
+                const sideMenu = document.getElementById('sideMenu');
+                const overlay = document.getElementById('overlay');
+                if (sideMenu) sideMenu.classList.remove('open');
+                if (overlay) overlay.classList.remove('visible');
+                document.body.style.overflow = '';
+
+                // Enter Live Mode
+                window.liveMode.enter();
+
+                // Enable Full Overview mode after a short delay to ensure Live Mode is ready
+                setTimeout(() => {
+                    if (!window.liveMode.fullOverviewMode) {
+                        window.liveMode.toggleFullOverview();
+                    }
+                }, 100);
+            }
+        });
+    }
+
+    // Legacy Live Preview Mode code (kept for reference but no longer used)
+    /*
     let isLivePreviewMode = false;
 
     if (livePreviewToggle) {
@@ -3534,6 +3651,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
         });
     }
+    */
 
     // ============= SUBSCRIPTION SYSTEM INTEGRATION =============
 
@@ -3572,10 +3690,26 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     }
                 }
             } else {
-                headerIndicator.style.display = 'block';
-                headerText.textContent = '✨ Pro';
-                headerIndicator.style.background = 'linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%)';
-                headerText.style.color = 'white';
+                // Pro badge now shown in side menu, hide from header
+                headerIndicator.style.display = 'none';
+            }
+        }
+
+        // Update side menu tier badge
+        const sideMenuTierBadge = document.getElementById('sideMenuTierBadge');
+        if (sideMenuTierBadge) {
+            if (summary.tier === 'PRO') {
+                sideMenuTierBadge.textContent = '✨ Pro';
+                sideMenuTierBadge.style.background = 'linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%)';
+                sideMenuTierBadge.style.color = 'white';
+            } else if (summary.tier === 'BASIC') {
+                sideMenuTierBadge.textContent = '⭐ Basic';
+                sideMenuTierBadge.style.background = 'rgba(245, 158, 11, 0.15)';
+                sideMenuTierBadge.style.color = '#f59e0b';
+            } else {
+                sideMenuTierBadge.textContent = 'Free';
+                sideMenuTierBadge.style.background = 'rgba(59, 130, 246, 0.15)';
+                sideMenuTierBadge.style.color = '#3b82f6';
             }
         }
 

@@ -13,6 +13,8 @@ const liveMode = {
     hideControlsTimeout: null,
     displayMode: 'chords',
     showBadges: true,
+    fullOverviewMode: false,
+    savedDisplaySettings: null,
 
     /**
      * Enter live mode with current song
@@ -107,6 +109,18 @@ const liveMode = {
         // Clear timeout
         if (this.hideControlsTimeout) {
             clearTimeout(this.hideControlsTimeout);
+        }
+
+        // Reset full overview mode
+        if (this.fullOverviewMode) {
+            this.fullOverviewMode = false;
+            this.savedDisplaySettings = null;
+            const btn = document.getElementById('liveModeFullOverview');
+            if (btn) {
+                btn.style.background = 'var(--button-bg)';
+                btn.style.borderColor = 'var(--border)';
+                btn.textContent = '📄 Full Overview';
+            }
         }
 
         console.log('📺 Exited Live Mode');
@@ -263,7 +277,7 @@ const liveMode = {
 
         this.hideControlsTimeout = setTimeout(() => {
             this.hideControls();
-        }, 4000);
+        }, 1000);
     },
 
     /**
@@ -375,6 +389,156 @@ const liveMode = {
         }
 
         console.log(`📺 Badges ${show ? 'shown' : 'hidden'}`);
+    },
+
+    /**
+     * Toggle full overview mode - fits entire song on screen
+     */
+    toggleFullOverview() {
+        this.fullOverviewMode = !this.fullOverviewMode;
+
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        const content = document.getElementById('liveModeContent');
+        const btn = document.getElementById('liveModeFullOverview');
+
+        if (!chartDisplay || !content) return;
+
+        if (this.fullOverviewMode) {
+            // Save current display settings
+            this.savedDisplaySettings = {
+                fontSize: chartDisplay.style.fontSize,
+                lineHeight: chartDisplay.style.lineHeight,
+                columns: chartDisplay.style.columns,
+                columnFill: chartDisplay.style.columnFill,
+                height: chartDisplay.style.height,
+                columnGap: chartDisplay.style.columnGap,
+                columnRule: chartDisplay.style.columnRule,
+                maxWidth: chartDisplay.style.maxWidth,
+                padding: content.style.padding
+            };
+
+            // Apply full overview mode - single column, auto-fit to screen
+            chartDisplay.style.columns = '1';
+            chartDisplay.style.columnFill = 'auto';
+            chartDisplay.style.height = 'auto';
+            chartDisplay.style.columnGap = '0';
+            chartDisplay.style.columnRule = 'none';
+            chartDisplay.style.maxWidth = '100%';
+
+            // Adjust padding to maximize space
+            content.style.padding = '60px 24px 140px 24px';
+
+            // Enable full overview class for CSS overrides (shows song-header with section badges)
+            chartDisplay.classList.add('full-overview-active');
+
+            // Show badges in full overview mode
+            chartDisplay.classList.remove('hide-badges');
+            const badgesCheckbox = document.getElementById('liveModeBadges');
+            if (badgesCheckbox) badgesCheckbox.checked = true;
+            this.showBadges = true;
+
+            // Re-render display to apply badge visibility
+            this.updateDisplay();
+
+            // Re-apply column settings after updateDisplay (which may reset them)
+            chartDisplay.style.columns = '1';
+            chartDisplay.style.columnFill = 'auto';
+            chartDisplay.style.height = 'auto';
+            chartDisplay.style.columnGap = '0';
+            chartDisplay.style.columnRule = 'none';
+            chartDisplay.style.maxWidth = '100%';
+
+            // Calculate optimal font size to fit all content on screen
+            this.autoFitFontSize();
+
+            // Start auto-hide timer for controls
+            this.startAutoHideTimer();
+
+            // Update button style to show active
+            if (btn) {
+                btn.style.background = 'rgba(139, 92, 246, 0.3)';
+                btn.style.borderColor = 'rgba(139, 92, 246, 0.5)';
+                btn.textContent = '📄 Exit Overview';
+            }
+
+            console.log('📺 Full Overview mode ON');
+        } else {
+            // Remove full overview class
+            chartDisplay.classList.remove('full-overview-active');
+
+            // Restore saved settings
+            if (this.savedDisplaySettings) {
+                chartDisplay.style.fontSize = this.savedDisplaySettings.fontSize || '';
+                chartDisplay.style.lineHeight = this.savedDisplaySettings.lineHeight || '';
+                chartDisplay.style.columns = this.savedDisplaySettings.columns || '';
+                chartDisplay.style.columnFill = this.savedDisplaySettings.columnFill || '';
+                chartDisplay.style.height = this.savedDisplaySettings.height || '';
+                chartDisplay.style.columnGap = this.savedDisplaySettings.columnGap || '';
+                chartDisplay.style.columnRule = this.savedDisplaySettings.columnRule || '';
+                chartDisplay.style.maxWidth = this.savedDisplaySettings.maxWidth || '800px';
+                content.style.padding = this.savedDisplaySettings.padding || '60px 20px 140px 20px';
+            }
+
+            // Re-apply saved preferences from Firebase
+            this.applySavedPreferences(chartDisplay);
+
+            // Update button style
+            if (btn) {
+                btn.style.background = 'var(--button-bg)';
+                btn.style.borderColor = 'var(--border)';
+                btn.textContent = '📄 Full Overview';
+            }
+
+            console.log('📺 Full Overview mode OFF');
+        }
+    },
+
+    /**
+     * Auto-fit font size to fit all content on screen
+     */
+    autoFitFontSize() {
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        const content = document.getElementById('liveModeContent');
+
+        if (!chartDisplay || !content) return;
+
+        // Get available viewport height (minus top and bottom bars)
+        const viewportHeight = window.innerHeight - 200; // 60px top + 140px bottom
+        const viewportWidth = content.clientWidth - 48; // padding
+
+        // Start with a large font size and reduce until content fits
+        let fontSize = 24;
+        const minFontSize = 8;
+
+        chartDisplay.style.fontSize = fontSize + 'pt';
+
+        // Binary search for optimal font size
+        let low = minFontSize;
+        let high = fontSize;
+
+        while (high - low > 0.5) {
+            const mid = (low + high) / 2;
+            chartDisplay.style.fontSize = mid + 'pt';
+
+            // Force reflow to get accurate measurements
+            const contentHeight = chartDisplay.scrollHeight;
+            const contentWidth = chartDisplay.scrollWidth;
+
+            if (contentHeight <= viewportHeight && contentWidth <= viewportWidth) {
+                low = mid; // Content fits, try larger
+            } else {
+                high = mid; // Content doesn't fit, try smaller
+            }
+        }
+
+        // Use the smaller value to ensure it fits
+        fontSize = Math.floor(low * 2) / 2; // Round to nearest 0.5
+        chartDisplay.style.fontSize = fontSize + 'pt';
+
+        // Also adjust line height for readability
+        chartDisplay.style.lineHeight = '1.4';
+
+        console.log(`📺 Auto-fit font size: ${fontSize}pt`);
     },
 
     /**
@@ -789,12 +953,18 @@ const liveMode = {
      * Apply saved user preferences from Firebase to Live Mode display
      */
     async applySavedPreferences(chartDisplay) {
+        // Skip if in Full Overview mode - it has its own layout
+        if (this.fullOverviewMode) return;
+
         const user = window.auth ? window.auth.currentUser : null;
         if (!user) return;
 
         try {
             const snapshot = await firebase.database().ref(`users/${user.uid}/printPreviewPreferences`).once('value');
             const preferences = snapshot.val();
+
+            // Check again after await - Full Overview may have been enabled while waiting
+            if (this.fullOverviewMode) return;
 
             if (preferences && chartDisplay) {
                 // Apply font size
@@ -870,6 +1040,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (window.sessionManager && window.sessionManager.activeSession) {
                     liveMode.togglePlaylist();
                 }
+            }
+        });
+
+        // Pinch-to-zoom for font size on mobile
+        let initialPinchDistance = 0;
+        let initialFontSize = 14;
+        let isPinching = false;
+
+        liveModeContent.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                isPinching = true;
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                initialPinchDistance = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                );
+                // Get current font size
+                const chartDisplay = document.getElementById('liveModeChartDisplay');
+                if (chartDisplay) {
+                    const currentSize = parseFloat(window.getComputedStyle(chartDisplay).fontSize);
+                    initialFontSize = currentSize; // in pixels
+                }
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        liveModeContent.addEventListener('touchmove', (e) => {
+            if (isPinching && e.touches.length === 2) {
+                const touch1 = e.touches[0];
+                const touch2 = e.touches[1];
+                const currentDistance = Math.hypot(
+                    touch2.clientX - touch1.clientX,
+                    touch2.clientY - touch1.clientY
+                );
+
+                // Calculate scale factor
+                const scale = currentDistance / initialPinchDistance;
+                const newFontSize = Math.max(10, Math.min(60, initialFontSize * scale));
+
+                // Apply new font size
+                const chartDisplay = document.getElementById('liveModeChartDisplay');
+                if (chartDisplay) {
+                    chartDisplay.style.fontSize = newFontSize + 'px';
+                }
+
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        liveModeContent.addEventListener('touchend', (e) => {
+            if (isPinching && e.touches.length < 2) {
+                isPinching = false;
             }
         });
     }
