@@ -1260,10 +1260,12 @@
         }
         /* Force single column in Full Overview mode */
         #liveModeChartDisplay.full-overview-active {
-            columns: 1 !important;
             column-count: 1 !important;
+            columns: auto !important;
+            column-width: auto !important;
             height: auto !important;
             max-width: 100% !important;
+            column-gap: 0 !important;
         }
     </style>
 

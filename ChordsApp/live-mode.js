@@ -429,8 +429,10 @@ const liveMode = {
                 padding: content.style.padding
             };
 
-            // Apply full overview mode - single column, auto-fit to screen
-            chartDisplay.style.columns = '1';
+            // Apply full overview mode - single column, scrollable
+            chartDisplay.style.columnCount = '1';
+            chartDisplay.style.columns = 'auto';
+            chartDisplay.style.columnWidth = 'auto';
             chartDisplay.style.columnFill = 'auto';
             chartDisplay.style.height = 'auto';
             chartDisplay.style.columnGap = '0';
@@ -453,14 +455,16 @@ const liveMode = {
             this.updateDisplay();
 
             // Re-apply column settings after updateDisplay (which may reset them)
-            chartDisplay.style.columns = '1';
+            chartDisplay.style.columnCount = '1';
+            chartDisplay.style.columns = 'auto';
+            chartDisplay.style.columnWidth = 'auto';
             chartDisplay.style.columnFill = 'auto';
             chartDisplay.style.height = 'auto';
             chartDisplay.style.columnGap = '0';
             chartDisplay.style.columnRule = 'none';
             chartDisplay.style.maxWidth = '100%';
 
-            // Calculate optimal font size to fit all content on screen
+            // Set readable font size
             this.autoFitFontSize();
 
             // Start auto-hide timer for controls
@@ -520,9 +524,10 @@ const liveMode = {
         chartDisplay.style.fontSize = fontSize + 'pt';
         chartDisplay.style.lineHeight = '1.5';
 
-        // Ensure single column stays applied
-        chartDisplay.style.columns = '1';
+        // Ensure single column stays applied (forcefully)
         chartDisplay.style.columnCount = '1';
+        chartDisplay.style.columns = 'auto';
+        chartDisplay.style.columnWidth = 'auto';
         chartDisplay.style.height = 'auto';
 
         console.log(`📺 Full Overview font size: ${fontSize}pt`);
