@@ -737,7 +737,7 @@ const liveMode = {
         const toggleBtn = document.getElementById('liveModePlaylistToggle');
 
         if (playlistSidebar) {
-            playlistSidebar.style.right = '-380px';
+            playlistSidebar.style.right = '-300px';
             this.sidebarVisible = false;
         }
 
