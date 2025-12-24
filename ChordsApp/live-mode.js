@@ -248,8 +248,14 @@ const liveMode = {
         const topBar = document.getElementById('liveModeTopBar');
         const bottomBar = document.getElementById('liveModeBottomBar');
 
-        if (topBar) topBar.style.opacity = '1';
-        if (bottomBar) bottomBar.style.opacity = '1';
+        if (topBar) {
+            topBar.style.opacity = '1';
+            topBar.style.pointerEvents = 'auto';
+        }
+        if (bottomBar) {
+            bottomBar.style.opacity = '1';
+            bottomBar.style.pointerEvents = 'auto';
+        }
 
         this.controlsVisible = true;
     },
@@ -261,8 +267,14 @@ const liveMode = {
         const topBar = document.getElementById('liveModeTopBar');
         const bottomBar = document.getElementById('liveModeBottomBar');
 
-        if (topBar) topBar.style.opacity = '0';
-        if (bottomBar) bottomBar.style.opacity = '0';
+        if (topBar) {
+            topBar.style.opacity = '0';
+            topBar.style.pointerEvents = 'none';
+        }
+        if (bottomBar) {
+            bottomBar.style.opacity = '0';
+            bottomBar.style.pointerEvents = 'none';
+        }
 
         this.controlsVisible = false;
     },
