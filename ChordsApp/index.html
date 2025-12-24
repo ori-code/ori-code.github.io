@@ -1857,41 +1857,45 @@
 
             // Live Sessions: Create Session
             const sideMenuCreateSession = document.getElementById('sideMenuCreateSession');
-            const mainCreateSession = document.getElementById('createSessionButton');
-            if (sideMenuCreateSession && mainCreateSession) {
+            if (sideMenuCreateSession) {
                 sideMenuCreateSession.addEventListener('click', () => {
                     closeMenu();
-                    mainCreateSession.click();
+                    if (window.sessionUI) {
+                        sessionUI.showCreateSessionModal();
+                    }
                 });
             }
 
             // Live Sessions: Join Session
             const sideMenuJoinSession = document.getElementById('sideMenuJoinSession');
-            const mainJoinSession = document.getElementById('joinSessionButton');
-            if (sideMenuJoinSession && mainJoinSession) {
+            if (sideMenuJoinSession) {
                 sideMenuJoinSession.addEventListener('click', () => {
                     closeMenu();
-                    mainJoinSession.click();
+                    if (window.sessionUI) {
+                        sessionUI.showJoinSessionModal();
+                    }
                 });
             }
 
             // Live Sessions: My Sessions
             const sideMenuMySessions = document.getElementById('sideMenuMySessions');
-            const mainMySessions = document.getElementById('mySessionsButton');
-            if (sideMenuMySessions && mainMySessions) {
+            if (sideMenuMySessions) {
                 sideMenuMySessions.addEventListener('click', () => {
                     closeMenu();
-                    mainMySessions.click();
+                    if (window.sessionUI) {
+                        sessionUI.showMySessionsModal();
+                    }
                 });
             }
 
             // Live Sessions: Go Live
             const sideMenuGoLive = document.getElementById('sideMenuGoLive');
-            const mainGoLive = document.getElementById('goLiveButton');
-            if (sideMenuGoLive && mainGoLive) {
+            if (sideMenuGoLive) {
                 sideMenuGoLive.addEventListener('click', () => {
                     closeMenu();
-                    mainGoLive.click();
+                    if (window.liveMode) {
+                        liveMode.enter();
+                    }
                 });
             }
 
