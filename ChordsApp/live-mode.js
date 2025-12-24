@@ -550,6 +550,11 @@ const liveMode = {
         // Also adjust line height for readability
         chartDisplay.style.lineHeight = '1.4';
 
+        // Ensure single column stays applied
+        chartDisplay.style.columns = '1';
+        chartDisplay.style.columnCount = '1';
+        chartDisplay.style.height = 'auto';
+
         console.log(`📺 Auto-fit font size: ${fontSize}pt`);
     },
 
