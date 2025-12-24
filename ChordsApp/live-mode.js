@@ -708,12 +708,12 @@ const liveMode = {
 
                     return `
                         <div onclick="liveMode.loadSongFromPlaylist('${song.id}')"
-                             style="padding: 12px 16px; background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s ease;">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <span style="color: ${numberColor}; font-weight: 600; min-width: 24px;">${index + 1}</span>
-                                <div style="flex: 1;">
-                                    <div style="color: var(--text); font-weight: ${fontWeight};">${song.name}</div>
-                                    <div style="color: var(--text-muted); font-size: 12px;">${song.originalKey || 'Unknown key'}${song.bpm ? ` • ${song.bpm} BPM` : ''}</div>
+                             style="padding: 8px 12px; background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s ease;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: ${numberColor}; font-weight: 600; min-width: 20px; font-size: 13px;">${index + 1}</span>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="color: var(--text); font-weight: ${fontWeight}; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${song.name}</div>
+                                    <div style="color: var(--text-muted); font-size: 11px;">${song.originalKey || 'Unknown key'}${song.bpm ? ` • ${song.bpm} BPM` : ''}</div>
                                 </div>
                                 ${indicator}
                             </div>
