@@ -506,56 +506,26 @@ const liveMode = {
     },
 
     /**
-     * Auto-fit font size to fit all content on screen
+     * Set font size for Full Overview mode
+     * Uses a readable default - user can pinch-to-zoom to adjust
      */
     autoFitFontSize() {
         const chartDisplay = document.getElementById('liveModeChartDisplay');
-        const content = document.getElementById('liveModeContent');
 
-        if (!chartDisplay || !content) return;
+        if (!chartDisplay) return;
 
-        // Get available viewport height (minus top and bottom bars)
-        const viewportHeight = window.innerHeight - 200; // 60px top + 140px bottom
-        const viewportWidth = content.clientWidth - 48; // padding
-
-        // Start with a large font size and reduce until content fits
-        let fontSize = 24;
-        const minFontSize = 8;
-
+        // Set a readable default font size for overview mode
+        // User can use pinch-to-zoom to adjust
+        const fontSize = 14;
         chartDisplay.style.fontSize = fontSize + 'pt';
-
-        // Binary search for optimal font size
-        let low = minFontSize;
-        let high = fontSize;
-
-        while (high - low > 0.5) {
-            const mid = (low + high) / 2;
-            chartDisplay.style.fontSize = mid + 'pt';
-
-            // Force reflow to get accurate measurements
-            const contentHeight = chartDisplay.scrollHeight;
-            const contentWidth = chartDisplay.scrollWidth;
-
-            if (contentHeight <= viewportHeight && contentWidth <= viewportWidth) {
-                low = mid; // Content fits, try larger
-            } else {
-                high = mid; // Content doesn't fit, try smaller
-            }
-        }
-
-        // Use the smaller value to ensure it fits
-        fontSize = Math.floor(low * 2) / 2; // Round to nearest 0.5
-        chartDisplay.style.fontSize = fontSize + 'pt';
-
-        // Also adjust line height for readability
-        chartDisplay.style.lineHeight = '1.4';
+        chartDisplay.style.lineHeight = '1.5';
 
         // Ensure single column stays applied
         chartDisplay.style.columns = '1';
         chartDisplay.style.columnCount = '1';
         chartDisplay.style.height = 'auto';
 
-        console.log(`📺 Auto-fit font size: ${fontSize}pt`);
+        console.log(`📺 Full Overview font size: ${fontSize}pt`);
     },
 
     /**
