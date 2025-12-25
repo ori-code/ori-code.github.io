@@ -140,6 +140,8 @@
                     <button class="header-btn" id="headerLoadSong">📂 Load</button>
                     <button class="header-btn" id="headerSaveAsImage">📷 Image</button>
                     <button class="header-btn" id="printButton">🖨️ Print</button>
+                    <button class="header-btn" id="headerAutoFit">📐 Auto Fit</button>
+                    <button class="header-btn" id="headerPadsBtn" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%); border-color: rgba(139, 92, 246, 0.4);">🎹 Pads</button>
                     <button class="header-btn" id="headerLivePreview" style="background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%); color: white; border: none;">📺 Live Preview</button>
                 </div>
             </div>
@@ -321,6 +323,38 @@
                         <button class="side-menu-btn blue" id="sideMenuJoinSession">📻 Join Session</button>
                         <button class="side-menu-btn" id="sideMenuMySessions">📋 My Sessions</button>
                         <button class="side-menu-btn purple" id="sideMenuGoLive">📺 Go Live</button>
+                    </div>
+                </div>
+
+                <!-- Pads Mini Player -->
+                <div class="side-menu-section">
+                    <h4>Worship Pads</h4>
+                    <!-- Mini 12-key grid -->
+                    <div id="miniPadsGrid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-bottom: 10px;">
+                        <button class="mini-pad-key" data-key="C">C</button>
+                        <button class="mini-pad-key" data-key="Csharp">C#</button>
+                        <button class="mini-pad-key" data-key="D">D</button>
+                        <button class="mini-pad-key" data-key="Dsharp">D#</button>
+                        <button class="mini-pad-key" data-key="E">E</button>
+                        <button class="mini-pad-key" data-key="F">F</button>
+                        <button class="mini-pad-key" data-key="Fsharp">F#</button>
+                        <button class="mini-pad-key" data-key="G">G</button>
+                        <button class="mini-pad-key" data-key="Gsharp">G#</button>
+                        <button class="mini-pad-key" data-key="A">A</button>
+                        <button class="mini-pad-key" data-key="Asharp">A#</button>
+                        <button class="mini-pad-key" data-key="B">B</button>
+                    </div>
+                    <!-- Volume slider -->
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <span style="font-size: 12px; opacity: 0.7;">🔊</span>
+                        <input type="range" id="miniPadVolume" min="0" max="100" value="70" style="flex: 1; height: 4px; accent-color: #8b5cf6;">
+                        <span id="miniPadNowPlaying" style="font-size: 11px; color: #10b981; font-weight: 600; min-width: 24px;"></span>
+                    </div>
+                    <!-- Full controls button -->
+                    <div class="side-menu-buttons">
+                        <button class="side-menu-btn" id="sideMenuOpenPads" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%); border-color: rgba(139, 92, 246, 0.4); font-size: 12px;">
+                            🎛️ Full Controls
+                        </button>
                     </div>
                 </div>
 
@@ -857,8 +891,9 @@
                 <p>Select a song from your library:</p>
 
                 <!-- Search and Filters -->
-                <div style="display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;">
+                <div style="display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; align-items: center;">
                     <input type="text" id="songSearchInput" class="modal-input" placeholder="🔍 Search songs..." style="flex: 1; min-width: 200px;">
+                    <button id="bulkSelectToggle" class="ghost-button" style="padding: 8px 14px; font-size: 0.9rem;" title="Select multiple songs">☑️ Select</button>
                     <select id="songKeyFilter" class="modal-input" style="flex: 0 0 auto; min-width: 120px;">
                         <option value="">All Keys</option>
                         <option value="C">C Major</option>
@@ -893,6 +928,18 @@
 
                 <div id="songList" style="max-height: 400px; overflow-y: auto; margin-top: 16px;">
                     <!-- Songs will be loaded here -->
+                </div>
+
+                <!-- Bulk Action Bar (hidden by default) -->
+                <div id="bulkActionBar" style="display: none; position: sticky; bottom: 0; background: linear-gradient(to top, var(--surface) 80%, transparent); padding: 16px 0 0 0; margin-top: 12px; border-top: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <span id="bulkSelectedCount" style="color: var(--text-muted); font-size: 0.9rem;">0 selected</span>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="bulkSelectAll" class="ghost-button" style="padding: 8px 14px; font-size: 0.85rem;">Select All</button>
+                            <button id="bulkAddToSession" class="primary-button" style="padding: 8px 14px; font-size: 0.85rem; background: #10b981;">➕ Add to Session</button>
+                            <button id="bulkDeleteBtn" class="primary-button" style="padding: 8px 14px; font-size: 0.85rem; background: #ef4444;">🗑️ Delete</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1091,6 +1138,249 @@
         </div>
     </div>
 
+    <!-- Pads Modal -->
+    <div id="padsModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px; padding: 0;">
+            <div class="modal-header" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%); border-bottom: 1px solid rgba(139, 92, 246, 0.3);">
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <span>🎹</span> Worship Pads
+                </h3>
+                <button class="modal-close" id="padsModalClose">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 16px;">
+                <!-- Loading indicator -->
+                <div id="padsLoading" style="text-align: center; padding: 40px; display: none;">
+                    <div style="font-size: 32px; margin-bottom: 12px;">🎵</div>
+                    <div style="color: var(--text-muted);">Loading pad sounds...</div>
+                    <div id="padsLoadingProgress" style="margin-top: 8px; color: var(--primary);">0/12</div>
+                </div>
+
+                <!-- Pad Grid -->
+                <div id="padsGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                    <button id="pad-key-C" class="pad-key-btn" onclick="padPlayer.toggle('C')">C</button>
+                    <button id="pad-key-Csharp" class="pad-key-btn" onclick="padPlayer.toggle('Csharp')">C#</button>
+                    <button id="pad-key-D" class="pad-key-btn" onclick="padPlayer.toggle('D')">D</button>
+                    <button id="pad-key-Dsharp" class="pad-key-btn" onclick="padPlayer.toggle('Dsharp')">D#</button>
+                    <button id="pad-key-E" class="pad-key-btn" onclick="padPlayer.toggle('E')">E</button>
+                    <button id="pad-key-F" class="pad-key-btn" onclick="padPlayer.toggle('F')">F</button>
+                    <button id="pad-key-Fsharp" class="pad-key-btn" onclick="padPlayer.toggle('Fsharp')">F#</button>
+                    <button id="pad-key-G" class="pad-key-btn" onclick="padPlayer.toggle('G')">G</button>
+                    <button id="pad-key-Gsharp" class="pad-key-btn" onclick="padPlayer.toggle('Gsharp')">G#</button>
+                    <button id="pad-key-A" class="pad-key-btn" onclick="padPlayer.toggle('A')">A</button>
+                    <button id="pad-key-Asharp" class="pad-key-btn" onclick="padPlayer.toggle('Asharp')">A#</button>
+                    <button id="pad-key-B" class="pad-key-btn" onclick="padPlayer.toggle('B')">B</button>
+                </div>
+
+                <!-- Audio Controls -->
+                <div style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">Pads</div>
+
+                    <!-- Crossfade -->
+                    <div class="pad-control-row">
+                        <span class="pad-control-label">Crossfade</span>
+                        <input type="range" id="padsCrossfade" min="10" max="500" value="150" class="pad-slider">
+                    </div>
+
+                    <!-- Low Pass -->
+                    <div class="pad-control-row">
+                        <span class="pad-control-label">Low Pass</span>
+                        <input type="range" id="padsLowPass" min="0" max="100" value="100" class="pad-slider">
+                    </div>
+
+                    <!-- High Pass -->
+                    <div class="pad-control-row">
+                        <span class="pad-control-label">High Pass</span>
+                        <input type="range" id="padsHighPass" min="0" max="100" value="0" class="pad-slider">
+                    </div>
+
+                    <!-- Reverb -->
+                    <div class="pad-control-row">
+                        <span class="pad-control-label">Reverb</span>
+                        <input type="range" id="padsReverb" min="0" max="100" value="30" class="pad-slider">
+                    </div>
+
+                    <!-- Pan -->
+                    <div class="pad-control-row">
+                        <span class="pad-control-label">Pan</span>
+                        <input type="range" id="padsPan" min="-100" max="100" value="0" class="pad-slider">
+                    </div>
+
+                    <!-- Volume -->
+                    <div class="pad-control-row">
+                        <span class="pad-control-label">Volume</span>
+                        <input type="range" id="padsVolume" min="0" max="100" value="70" class="pad-slider">
+                    </div>
+                </div>
+
+                <!-- Currently Playing -->
+                <div id="padsNowPlaying" style="margin-top: 16px; text-align: center; display: none;">
+                    <span style="color: var(--text-muted); font-size: 12px;">Now playing: </span>
+                    <span id="padsNowPlayingKey" style="color: #8b5cf6; font-weight: 600;"></span>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                <button class="ghost-button" id="padsStopAll" onclick="padPlayer.stopAll()">⏹️ Stop All</button>
+                <button class="ghost-button" onclick="document.getElementById('padsModal').style.display='none'">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pad Key Button Styles -->
+    <style>
+        .pad-key-btn {
+            aspect-ratio: 1;
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--text);
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pad-key-btn:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: scale(1.02);
+        }
+
+        .pad-key-btn:active {
+            transform: scale(0.98);
+        }
+
+        .pad-key-btn.playing {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+            animation: padPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes padPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); }
+        }
+
+        /* Sharp keys slightly different color */
+        .pad-key-btn[id*="sharp"] {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .pad-key-btn[id*="sharp"]:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .pad-key-btn[id*="sharp"].playing {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%);
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Mini pad keys in side menu */
+        .mini-pad-key {
+            padding: 6px 2px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 4px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mini-pad-key:hover {
+            background: rgba(139, 92, 246, 0.25);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .mini-pad-key.playing {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%);
+            border-color: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+            animation: miniPadPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes miniPadPulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 12px rgba(16, 185, 129, 0.6); }
+        }
+
+        .mini-pad-key[data-key*="sharp"] {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .mini-pad-key[data-key*="sharp"]:hover {
+            background: rgba(59, 130, 246, 0.25);
+        }
+
+        .mini-pad-key[data-key*="sharp"].playing {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%);
+            border-color: #3b82f6;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Pad control rows */
+        .pad-control-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .pad-control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .pad-control-label {
+            color: var(--text);
+            font-size: 14px;
+            min-width: 80px;
+        }
+
+        .pad-slider {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .pad-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        .pad-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        .pad-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #8b5cf6;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+    </style>
+
     <!-- Live Mode Full-Screen Overlay -->
     <div id="liveModeOverlay" style="display: none; position: fixed; inset: 0; background: var(--background); z-index: 10000; overflow: hidden;">
         <!-- Main Container with Sidebar Layout -->
@@ -1193,6 +1483,9 @@
 
     <!-- Live Mode (full-screen performance view) -->
     <script src="live-mode.js"></script>
+
+    <!-- Pad Player -->
+    <script src="pad-player.js"></script>
 
     <script src="app.js?v=42"></script>
 
@@ -1446,6 +1739,34 @@
             if (headerLoadSong && mainLoadSongBtn) {
                 headerLoadSong.addEventListener('click', () => {
                     mainLoadSongBtn.click();
+                });
+            }
+
+            // Header Pads button
+            const headerPadsBtn = document.getElementById('headerPadsBtn');
+            if (headerPadsBtn) {
+                headerPadsBtn.addEventListener('click', async () => {
+                    const padsModal = document.getElementById('padsModal');
+                    if (padsModal) {
+                        padsModal.style.display = 'flex';
+
+                        // Load sounds if not already loaded
+                        if (window.padPlayer && Object.keys(padPlayer.buffers).length === 0) {
+                            const loadingDiv = document.getElementById('padsLoading');
+                            const gridDiv = document.getElementById('padsGrid');
+                            const progressDiv = document.getElementById('padsLoadingProgress');
+
+                            if (loadingDiv) loadingDiv.style.display = 'block';
+                            if (gridDiv) gridDiv.style.opacity = '0.3';
+
+                            await padPlayer.loadSounds((loaded, total) => {
+                                if (progressDiv) progressDiv.textContent = `${loaded}/${total}`;
+                            });
+
+                            if (loadingDiv) loadingDiv.style.display = 'none';
+                            if (gridDiv) gridDiv.style.opacity = '1';
+                        }
+                    }
                 });
             }
 
@@ -1905,6 +2226,138 @@
                     if (window.liveMode) {
                         liveMode.enter();
                     }
+                });
+            }
+
+            // Pads: Mini player keys in side menu
+            const miniPadsGrid = document.getElementById('miniPadsGrid');
+            if (miniPadsGrid) {
+                miniPadsGrid.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('.mini-pad-key');
+                    if (!btn) return;
+
+                    const key = btn.dataset.key;
+                    if (!key) return;
+
+                    // Load sounds if not already loaded
+                    if (window.padPlayer && Object.keys(padPlayer.buffers).length === 0) {
+                        btn.textContent = '...';
+                        await padPlayer.loadSounds();
+                        btn.textContent = padPlayer.keyDisplayNames[key] || key;
+                    }
+
+                    padPlayer.toggle(key);
+                });
+            }
+
+            // Pads: Mini player volume slider
+            const miniPadVolume = document.getElementById('miniPadVolume');
+            if (miniPadVolume) {
+                miniPadVolume.addEventListener('input', () => {
+                    padPlayer.setVolume(miniPadVolume.value / 100);
+                    // Sync with modal volume slider
+                    const modalVolume = document.getElementById('padsVolume');
+                    if (modalVolume) modalVolume.value = miniPadVolume.value;
+                });
+            }
+
+            // Pads: Open Pads Modal (Full Controls)
+            const sideMenuOpenPads = document.getElementById('sideMenuOpenPads');
+            if (sideMenuOpenPads) {
+                sideMenuOpenPads.addEventListener('click', async () => {
+                    closeMenu();
+                    const padsModal = document.getElementById('padsModal');
+                    if (padsModal) {
+                        padsModal.style.display = 'flex';
+
+                        // Load sounds if not already loaded
+                        if (window.padPlayer && Object.keys(padPlayer.buffers).length === 0) {
+                            const loadingDiv = document.getElementById('padsLoading');
+                            const gridDiv = document.getElementById('padsGrid');
+                            const progressDiv = document.getElementById('padsLoadingProgress');
+
+                            if (loadingDiv) loadingDiv.style.display = 'block';
+                            if (gridDiv) gridDiv.style.opacity = '0.3';
+
+                            await padPlayer.loadSounds((loaded, total) => {
+                                if (progressDiv) progressDiv.textContent = `${loaded}/${total}`;
+                            });
+
+                            if (loadingDiv) loadingDiv.style.display = 'none';
+                            if (gridDiv) gridDiv.style.opacity = '1';
+                        }
+                    }
+                });
+            }
+
+            // Pads Modal: Close button
+            const padsModalClose = document.getElementById('padsModalClose');
+            if (padsModalClose) {
+                padsModalClose.addEventListener('click', () => {
+                    const padsModal = document.getElementById('padsModal');
+                    if (padsModal) padsModal.style.display = 'none';
+                });
+            }
+
+            // Pads Modal: Click outside to close
+            const padsModal = document.getElementById('padsModal');
+            if (padsModal) {
+                padsModal.addEventListener('click', (e) => {
+                    if (e.target === padsModal) {
+                        padsModal.style.display = 'none';
+                    }
+                });
+            }
+
+            // Pads Controls: Set up all sliders
+            const padsCrossfade = document.getElementById('padsCrossfade');
+            const padsLowPass = document.getElementById('padsLowPass');
+            const padsHighPass = document.getElementById('padsHighPass');
+            const padsReverb = document.getElementById('padsReverb');
+            const padsPan = document.getElementById('padsPan');
+            const padsVolume = document.getElementById('padsVolume');
+
+            if (padsCrossfade) {
+                padsCrossfade.addEventListener('input', () => {
+                    // Convert 10-500 to 0.1-5 seconds
+                    padPlayer.setCrossfade(padsCrossfade.value / 100);
+                });
+            }
+
+            if (padsLowPass) {
+                padsLowPass.addEventListener('input', () => {
+                    // 0-100 maps to filter frequency
+                    padPlayer.setLowPass(padsLowPass.value / 100);
+                });
+            }
+
+            if (padsHighPass) {
+                padsHighPass.addEventListener('input', () => {
+                    // 0-100 maps to filter frequency
+                    padPlayer.setHighPass(padsHighPass.value / 100);
+                });
+            }
+
+            if (padsReverb) {
+                padsReverb.addEventListener('input', () => {
+                    // 0-100 maps to 0-1
+                    padPlayer.setReverb(padsReverb.value / 100);
+                });
+            }
+
+            if (padsPan) {
+                padsPan.addEventListener('input', () => {
+                    // -100 to 100 maps to -1 to 1
+                    padPlayer.setPan(padsPan.value / 100);
+                });
+            }
+
+            if (padsVolume) {
+                padsVolume.addEventListener('input', () => {
+                    padPlayer.setVolume(padsVolume.value / 100);
+                    // Sync with mini player volume slider
+                    const miniVolume = document.getElementById('miniPadVolume');
+                    if (miniVolume) miniVolume.value = padsVolume.value;
                 });
             }
 

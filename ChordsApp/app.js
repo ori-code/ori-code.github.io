@@ -118,6 +118,46 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // ============= KEY NORMALIZATION HELPER =============
+    // Converts various key formats to match dropdown options (e.g., "G" → "G Major", "Gm" → "G Minor")
+    function normalizeKey(key) {
+        if (!key || typeof key !== 'string') return 'C Major';
+
+        key = key.trim();
+
+        // If already in correct format, return as-is
+        if (key.match(/^[A-G][#b]?\s+(Major|Minor)$/i)) {
+            // Capitalize properly
+            const parts = key.split(/\s+/);
+            const note = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).replace('b', 'b').replace('#', '#');
+            const quality = parts[1].charAt(0).toUpperCase() + parts[1].slice(1).toLowerCase();
+            return `${note} ${quality}`;
+        }
+
+        // Handle shorthand formats
+        const match = key.match(/^([A-G][#b]?)(m|min|minor)?$/i);
+        if (match) {
+            const note = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+            const isMinor = match[2] && match[2].toLowerCase().startsWith('m');
+            return `${note} ${isMinor ? 'Minor' : 'Major'}`;
+        }
+
+        // Handle formats like "G Major", "g major", etc.
+        const fullMatch = key.match(/^([A-G][#b]?)\s*(major|minor|maj|min)?$/i);
+        if (fullMatch) {
+            const note = fullMatch[1].charAt(0).toUpperCase() + fullMatch[1].slice(1);
+            const quality = fullMatch[2];
+            const isMinor = quality && (quality.toLowerCase() === 'minor' || quality.toLowerCase() === 'min');
+            return `${note} ${isMinor ? 'Minor' : 'Major'}`;
+        }
+
+        // Default fallback
+        return 'C Major';
+    }
+
+    // Make it globally available for other modules
+    window.normalizeKey = normalizeKey;
+
     // ============= CHECK FOR SHARED SONG URL =============
     const urlParams = new URLSearchParams(window.location.search);
     const sharedSongSlug = urlParams.get('song');
@@ -181,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Update metadata displays
-            if (keySelector) keySelector.value = song.key || '';
+            if (keySelector) keySelector.value = normalizeKey(song.key);
             if (bpmInput) bpmInput.value = song.bpm || '120';
             if (timeSignature) timeSignature.value = song.time || '4/4';
 
@@ -659,12 +699,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         if (keyMatch && keyMatch[1]) {
             const detectedKey = keyMatch[1].trim();
-            console.log('✅ Key detected:', detectedKey);
-            detectedKeySpan.textContent = detectedKey;
-            currentKey = detectedKey;
-            originalDetectedKey = detectedKey; // Store original key for transposition
+            const normalizedKey = normalizeKey(detectedKey);
+            console.log('✅ Key detected:', detectedKey, '→', normalizedKey);
+            detectedKeySpan.textContent = normalizedKey;
+            currentKey = normalizedKey;
+            originalDetectedKey = normalizedKey; // Store original key for transposition
             if (keySelector) {
-                keySelector.value = detectedKey;
+                keySelector.value = normalizedKey;
             }
             keyDetectionDiv.style.display = 'block';
 
@@ -1104,16 +1145,30 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Check if this line looks like a chord line
                 // More flexible detection: line with mostly chords and whitespace
 
-                // Strict pattern for pure chord lines
-                const hasOnlyChords = /^[\s]*([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?[\s()|\-\.]*)+[\s]*$/;
+                // Strict pattern for pure chord lines (allows optional leading/trailing parens, pipes, etc.)
+                const hasOnlyChords = /^[\s()\[\]|]*([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?[\s()|\-\.\[\]]*)+[\s()\[\]|]*$/;
 
-                // Also check: if line has multiple chord patterns and is mostly uppercase/symbols
+                // Also check: if line has chord patterns
                 const chordPattern = /[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?/g;
                 const chords = line.match(chordPattern) || [];
-                const hasMultipleChords = chords.length >= 2;
-                const isShortLine = line.trim().length < 50;
-                const hasFewLowercase = (line.match(/[a-z]/g) || []).length < 5;
-                const looksLikeChordLine = hasMultipleChords && isShortLine && hasFewLowercase;
+                const hasChords = chords.length >= 1;
+
+                // Calculate what percentage of non-whitespace content is chords
+                const nonWhitespace = line.replace(/\s/g, '');
+                const chordsText = chords.join('');
+                const chordRatio = nonWhitespace.length > 0 ? chordsText.length / nonWhitespace.length : 0;
+
+                // Check if line looks like lyrics (has many lowercase letters - common in English lyrics)
+                const lowercaseCount = (line.match(/[a-z]/g) || []).length;
+                const looksLikeLyrics = lowercaseCount > 8;
+
+                // A line is a chord line if it has chords AND:
+                // 1. Chords make up >= 40% of content, OR
+                // 2. Line is short (< 80 chars) and doesn't look like lyrics, OR
+                // 3. Has very few lowercase letters (< 5)
+                const isShortLine = line.trim().length < 80;
+                const hasFewLowercase = lowercaseCount < 5;
+                const looksLikeChordLine = hasChords && (chordRatio >= 0.4 || (isShortLine && !looksLikeLyrics) || hasFewLowercase);
 
                 if (hasOnlyChords.test(line) || looksLikeChordLine) {
                     console.log(`  📝 Line ${index} is chord line:`, line.substring(0, 60));
@@ -2972,6 +3027,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
 
         console.log('✅ Layout dropdowns initialized');
+
+        // Header Auto Fit button
+        const headerAutoFit = document.getElementById('headerAutoFit');
+        if (headerAutoFit) {
+            headerAutoFit.addEventListener('click', () => {
+                autoOptimizeLayout();
+                console.log('📐 Auto Fit triggered from header button');
+            });
+        }
     } else {
         console.log('⚠️ Layout dropdowns or livePreview not found!');
     }
@@ -3349,7 +3413,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Extract Key
                 const keyMatch = content.match(/Key:\s*([^\n\r|]+)/i);
                 if (keyMatch && keySelector) {
-                    const extractedKey = keyMatch[1].trim();
+                    const rawKey = keyMatch[1].trim();
+                    const extractedKey = normalizeKey(rawKey);
                     // Only update if different to avoid circular updates
                     if (keySelector.value !== extractedKey) {
                         keySelector.value = extractedKey;
@@ -4067,9 +4132,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Update key selector with original key
         const keySelector = document.getElementById('keySelector');
+        const normalizedKey = normalizeKey(songData.originalKey);
         if (keySelector) {
-            keySelector.value = songData.originalKey;
+            keySelector.value = normalizedKey;
         }
+        // Also update global currentKey
+        currentKey = normalizedKey;
 
         // Update BPM
         const bpmInput = document.getElementById('bpmInput');
@@ -4089,7 +4157,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Set baseline for transposition (always use original content)
         baselineChart = songData.content;
         baselineVisualContent = songData.content;
-        originalDetectedKey = songData.originalKey;
+        originalDetectedKey = normalizedKey;
         currentTransposeSteps = 0;
 
         // Regenerate preview first
@@ -4256,9 +4324,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
             visualEditor.value = song.content;
         }
 
+        const normalizedKey = normalizeKey(song.originalKey);
         if (keySelector && song.originalKey) {
-            keySelector.value = song.originalKey;
+            keySelector.value = normalizedKey;
         }
+        // Also update global currentKey
+        currentKey = normalizedKey;
 
         if (bpmInput && song.bpm) {
             bpmInput.value = song.bpm;
@@ -4273,7 +4344,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         currentSongName = song.name;
         baselineChart = song.content;
         baselineVisualContent = song.content;
-        originalDetectedKey = song.originalKey || '';
+        originalDetectedKey = normalizedKey;
         currentTransposeSteps = 0;
 
         // Regenerate preview

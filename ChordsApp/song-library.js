@@ -2,6 +2,84 @@
 (function() {
     'use strict';
 
+    // ============= BULK SELECTION STATE =============
+    let bulkSelectionMode = false;
+    let selectedSongIds = new Set();
+
+    // Function to update the bulk action bar UI
+    function updateBulkActionBar() {
+        const countEl = document.getElementById('bulkSelectedCount');
+        const actionBar = document.getElementById('bulkActionBar');
+        const selectAllBtn = document.getElementById('bulkSelectAll');
+
+        if (countEl) {
+            countEl.textContent = `${selectedSongIds.size} selected`;
+        }
+
+        // Update select all button text
+        if (selectAllBtn && window.filteredSongs) {
+            const allSelected = window.filteredSongs.length > 0 &&
+                                window.filteredSongs.every(s => selectedSongIds.has(s.id));
+            selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+        }
+    }
+
+    // Function to toggle bulk selection mode
+    function toggleBulkSelectionMode() {
+        bulkSelectionMode = !bulkSelectionMode;
+        selectedSongIds.clear();
+
+        const toggleBtn = document.getElementById('bulkSelectToggle');
+        const actionBar = document.getElementById('bulkActionBar');
+
+        if (toggleBtn) {
+            if (bulkSelectionMode) {
+                toggleBtn.textContent = '✖️ Cancel';
+                toggleBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+                toggleBtn.style.borderColor = '#ef4444';
+            } else {
+                toggleBtn.textContent = '☑️ Select';
+                toggleBtn.style.background = '';
+                toggleBtn.style.borderColor = '';
+            }
+        }
+
+        if (actionBar) {
+            actionBar.style.display = bulkSelectionMode ? 'block' : 'none';
+        }
+
+        // Re-render the list to show/hide checkboxes
+        if (window.triggerSongListRerender) {
+            window.triggerSongListRerender();
+        }
+
+        updateBulkActionBar();
+    }
+
+    // Function to reset bulk selection when modal closes
+    function resetBulkSelection() {
+        bulkSelectionMode = false;
+        selectedSongIds.clear();
+
+        const toggleBtn = document.getElementById('bulkSelectToggle');
+        const actionBar = document.getElementById('bulkActionBar');
+
+        if (toggleBtn) {
+            toggleBtn.textContent = '☑️ Select';
+            toggleBtn.style.background = '';
+            toggleBtn.style.borderColor = '';
+        }
+
+        if (actionBar) {
+            actionBar.style.display = 'none';
+        }
+    }
+
+    // Expose for external use
+    window.isBulkSelectionMode = function() { return bulkSelectionMode; };
+    window.getSelectedSongIds = function() { return selectedSongIds; };
+    window.resetBulkSelection = resetBulkSelection;
+
     // Wait for Firebase to be initialized
     function initSongLibrary() {
         const saveSongBtn = document.getElementById('saveSongButton');
@@ -398,7 +476,30 @@
         // Function to create a single song item DOM element
         function createSongItem(song, user, database) {
             const songItem = document.createElement('div');
-            songItem.style.cssText = 'padding: 16px; margin-bottom: 12px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center;';
+            const isSelected = selectedSongIds.has(song.id);
+            songItem.style.cssText = `padding: 16px; margin-bottom: 12px; background: ${isSelected ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-soft)'}; border: 1px solid ${isSelected ? '#3b82f6' : 'var(--border)'}; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center;`;
+            songItem.dataset.songId = song.id;
+
+            // Add checkbox for bulk selection mode
+            if (bulkSelectionMode) {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = isSelected;
+                checkbox.style.cssText = 'width: 20px; height: 20px; margin-right: 12px; cursor: pointer; accent-color: #3b82f6;';
+                checkbox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (checkbox.checked) {
+                        selectedSongIds.add(song.id);
+                    } else {
+                        selectedSongIds.delete(song.id);
+                    }
+                    // Update the item's visual style
+                    songItem.style.background = checkbox.checked ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-soft)';
+                    songItem.style.borderColor = checkbox.checked ? '#3b82f6' : 'var(--border)';
+                    updateBulkActionBar();
+                });
+                songItem.appendChild(checkbox);
+            }
 
             const songInfo = document.createElement('div');
             songInfo.style.cssText = 'flex: 1;';
@@ -575,8 +676,25 @@
             songItem.appendChild(shareBtn);
             songItem.appendChild(deleteBtn);
 
-            // Load song on click
+            // Load song on click (or toggle selection in bulk mode)
             songItem.addEventListener('click', () => {
+                // In bulk selection mode, toggle selection instead of loading
+                if (bulkSelectionMode) {
+                    const checkbox = songItem.querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                        if (checkbox.checked) {
+                            selectedSongIds.add(song.id);
+                        } else {
+                            selectedSongIds.delete(song.id);
+                        }
+                        songItem.style.background = checkbox.checked ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-soft)';
+                        songItem.style.borderColor = checkbox.checked ? '#3b82f6' : 'var(--border)';
+                        updateBulkActionBar();
+                    }
+                    return;
+                }
+
                 // Get the ORIGINAL baseline (untransposed) - prioritize baselineChart, fallback to content
                 const baseline = song.baselineChart || song.content || song.songbookFormat || '';
 
@@ -786,12 +904,137 @@
 
         // Close Load Song Modal
         loadSongClose.addEventListener('click', () => {
+            resetBulkSelection();
             loadSongModal.style.display = 'none';
         });
 
         loadSongCancel.addEventListener('click', () => {
+            resetBulkSelection();
             loadSongModal.style.display = 'none';
         });
+
+        // ============= BULK SELECTION BUTTON HANDLERS =============
+        const bulkSelectToggle = document.getElementById('bulkSelectToggle');
+        const bulkSelectAll = document.getElementById('bulkSelectAll');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const bulkAddToSession = document.getElementById('bulkAddToSession');
+
+        if (bulkSelectToggle) {
+            bulkSelectToggle.addEventListener('click', toggleBulkSelectionMode);
+        }
+
+        if (bulkSelectAll) {
+            bulkSelectAll.addEventListener('click', () => {
+                const displaySongs = window.filteredSongs || window.allLoadedSongs || [];
+                const allSelected = displaySongs.length > 0 &&
+                                    displaySongs.every(s => selectedSongIds.has(s.id));
+
+                if (allSelected) {
+                    // Deselect all
+                    displaySongs.forEach(s => selectedSongIds.delete(s.id));
+                } else {
+                    // Select all visible songs
+                    displaySongs.forEach(s => selectedSongIds.add(s.id));
+                }
+
+                // Re-render to update checkboxes
+                if (window.triggerSongListRerender) {
+                    window.triggerSongListRerender();
+                }
+                updateBulkActionBar();
+            });
+        }
+
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.addEventListener('click', async () => {
+                if (selectedSongIds.size === 0) {
+                    showMessage('Info', 'No songs selected', 'info');
+                    return;
+                }
+
+                const count = selectedSongIds.size;
+                if (!confirm(`Are you sure you want to delete ${count} song${count > 1 ? 's' : ''}? This cannot be undone.`)) {
+                    return;
+                }
+
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    showMessage('Error', 'Please sign in to delete songs', 'error');
+                    return;
+                }
+
+                const database = firebase.database();
+                let successCount = 0;
+                let errorCount = 0;
+
+                for (const songId of selectedSongIds) {
+                    try {
+                        await database.ref('users/' + user.uid + '/songs/' + songId).remove();
+                        successCount++;
+                        // Remove from global array
+                        window.allLoadedSongs = window.allLoadedSongs.filter(s => s.id !== songId);
+                    } catch (error) {
+                        console.error('Error deleting song:', songId, error);
+                        errorCount++;
+                    }
+                }
+
+                // Clear selection
+                selectedSongIds.clear();
+                updateBulkActionBar();
+
+                // Re-render list
+                if (window.triggerSongListRerender) {
+                    window.triggerSongListRerender();
+                }
+
+                if (errorCount > 0) {
+                    showMessage('Warning', `Deleted ${successCount}, failed ${errorCount}`, 'error');
+                } else {
+                    showMessage('Success', `${successCount} song${successCount > 1 ? 's' : ''} deleted`, 'success');
+                }
+            });
+        }
+
+        if (bulkAddToSession) {
+            bulkAddToSession.addEventListener('click', () => {
+                if (selectedSongIds.size === 0) {
+                    showMessage('Info', 'No songs selected', 'info');
+                    return;
+                }
+
+                // Get selected songs data
+                const selectedSongs = window.allLoadedSongs.filter(s => selectedSongIds.has(s.id));
+
+                // Store songs for batch add
+                window.pendingSongsToAdd = selectedSongs.map(song => ({
+                    name: song.name,
+                    title: song.title || song.name || 'Untitled',
+                    author: song.author || '',
+                    key: song.key || song.originalKey || 'Unknown',
+                    bpm: song.bpm || null,
+                    timeSignature: song.timeSignature || '',
+                    content: song.baselineChart || song.content || song.songbookFormat,
+                    originalKey: song.originalKey || 'Unknown'
+                }));
+
+                // Close load song modal
+                resetBulkSelection();
+                loadSongModal.style.display = 'none';
+
+                // Open My Sessions modal
+                const mySessionsModal = document.getElementById('mySessionsModal');
+                if (mySessionsModal) {
+                    mySessionsModal.style.display = 'flex';
+                    if (window.loadMySessions) {
+                        window.loadMySessions();
+                    }
+                    showMessage('Info', `Select a session to add ${selectedSongs.length} song${selectedSongs.length > 1 ? 's' : ''}`, 'info');
+                } else {
+                    showMessage('Error', 'Sessions modal not found', 'error');
+                }
+            });
+        }
 
         // Close modals on outside click
         saveSongModal.addEventListener('click', (e) => {

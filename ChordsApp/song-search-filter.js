@@ -45,10 +45,12 @@
 
         let filtered = [...window.allLoadedSongs];
 
-        // Apply search filter
+        // Apply search filter (searches in name AND content/lyrics)
         if (searchTerm) {
             filtered = filtered.filter(song => {
-                return song.name.toLowerCase().includes(searchTerm);
+                const nameMatch = song.name.toLowerCase().includes(searchTerm);
+                const contentMatch = song.content && song.content.toLowerCase().includes(searchTerm);
+                return nameMatch || contentMatch;
             });
         }
 

@@ -39,14 +39,25 @@ const liveMode = {
         // Get current song data from editor (if available)
         if (hasEditorContent) {
             this.currentSongContent = visualEditor.value;
-            this.currentKey = keySelector ? keySelector.value : 'C Major';
+
+            // Try to extract key from content's metadata line first (e.g., "Key: G • BPM: 120")
+            let extractedKey = null;
+            const keyMatch = visualEditor.value.match(/Key:\s*([A-G][#b]?(?:\s*(?:Major|Minor|m|maj|min))?)/i);
+            if (keyMatch && keyMatch[1]) {
+                extractedKey = keyMatch[1].trim();
+            }
+
+            // Use extracted key, or keySelector value, with normalization
+            const rawKey = extractedKey || (keySelector && keySelector.value) || 'C Major';
+            this.currentKey = window.normalizeKey ? window.normalizeKey(rawKey) : rawKey;
+
             this.currentTransposeSteps = window.currentTransposeSteps || 0;
             this.currentSongName = window.currentSongName || 'Untitled';
             this.currentSongId = window.currentSongId || null;
         } else {
             // No editor content but in session - show empty state, user will tap to see playlist
             this.currentSongContent = '\n\n\n        Tap to view playlist\n        and select a song';
-            this.currentKey = '';
+            this.currentKey = 'C Major';
             this.currentTransposeSteps = 0;
             this.currentSongName = 'Select a Song';
             this.currentSongId = null;
@@ -223,9 +234,11 @@ const liveMode = {
         }
 
         if (currentKeyEl) {
-            // Extract just the note from the key (e.g., "C Major" -> "C")
-            const keyNote = this.currentKey.split(' ')[0];
-            currentKeyEl.textContent = keyNote;
+            // Extract the note and show "m" suffix for minor keys (e.g., "A Minor" -> "Am", "C Major" -> "C")
+            const keyParts = this.currentKey.split(' ');
+            const keyNote = keyParts[0];
+            const isMinor = keyParts[1] && keyParts[1].toLowerCase() === 'minor';
+            currentKeyEl.textContent = isMinor ? `${keyNote}m` : keyNote;
         }
     },
 
@@ -289,7 +302,7 @@ const liveMode = {
 
         this.hideControlsTimeout = setTimeout(() => {
             this.hideControls();
-        }, 1000);
+        }, 2000);
     },
 
     /**
@@ -768,12 +781,13 @@ const liveMode = {
             }
 
             if (keySelector && (songData.key || songData.originalKey)) {
-                keySelector.value = songData.key || songData.originalKey;
+                const normalizedKey = window.normalizeKey ? window.normalizeKey(songData.key || songData.originalKey) : (songData.key || songData.originalKey);
+                keySelector.value = normalizedKey;
             }
 
             // ✅ UPDATE LIVE MODE STATE WITH NEW STRUCTURED FIELDS
             this.currentSongContent = songData.content || '';
-            this.currentKey = songData.key || songData.originalKey || 'C Major';
+            this.currentKey = window.normalizeKey ? window.normalizeKey(songData.key || songData.originalKey) : (songData.key || songData.originalKey || 'C Major');
             this.currentSongId = songId;
             this.currentTransposeSteps = 0;
 
@@ -836,7 +850,7 @@ const liveMode = {
 
         // ✅ USE NEW STRUCTURED METADATA FIELDS
         this.currentSongContent = songData.content || '';
-        this.currentKey = songData.key || songData.originalKey || 'C Major';
+        this.currentKey = window.normalizeKey ? window.normalizeKey(songData.key || songData.originalKey) : (songData.key || songData.originalKey || 'C Major');
         this.currentSongId = songData.songId;
         this.currentTransposeSteps = 0;
 

@@ -69,8 +69,9 @@ class SessionUI {
         if (modal) {
             modal.style.display = 'none';
         }
-        // Clear any pending song to add
+        // Clear any pending song(s) to add
         window.pendingSongToAdd = null;
+        window.pendingSongsToAdd = null;
     }
 
     /**
@@ -106,7 +107,9 @@ class SessionUI {
                                 ${session.isOwner ? `
                                     <button onclick="sessionUI.addCurrentSongToSession('${session.id}')"
                                             style="padding: 6px 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;">
-                                        ➕ Add Current Song
+                                        ${window.pendingSongsToAdd && window.pendingSongsToAdd.length > 0
+                                            ? `➕ Add ${window.pendingSongsToAdd.length} Song${window.pendingSongsToAdd.length > 1 ? 's' : ''}`
+                                            : (window.pendingSongToAdd ? '➕ Add Selected Song' : '➕ Add Current Song')}
                                     </button>
                                     <button onclick="sessionUI.reactivateSession('${session.id}')"
                                             style="padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
@@ -448,7 +451,54 @@ class SessionUI {
             let songData;
             let defaultName = '';
 
-            // Check if there's a pending song from library
+            // Check if there are MULTIPLE pending songs from bulk selection
+            if (window.pendingSongsToAdd && window.pendingSongsToAdd.length > 0) {
+                const songs = window.pendingSongsToAdd;
+                const count = songs.length;
+
+                // Confirm bulk add
+                if (!confirm(`Add ${count} song${count > 1 ? 's' : ''} to this session?`)) {
+                    window.pendingSongsToAdd = null;
+                    return;
+                }
+
+                // Get current playlist to determine starting order
+                const playlistSnapshot = await firebase.database().ref(`sessions/${sessionId}/playlist`).once('value');
+                const playlist = playlistSnapshot.val() || {};
+                let order = Object.keys(playlist).length;
+
+                let successCount = 0;
+                for (const song of songs) {
+                    try {
+                        const songId = `song_${Date.now()}_${successCount}`;
+                        const playlistRef = firebase.database().ref(`sessions/${sessionId}/playlist/${songId}`);
+
+                        await playlistRef.set({
+                            name: song.title || song.name || 'Untitled',
+                            content: song.content || '',
+                            originalKey: song.originalKey || 'Unknown',
+                            bpm: song.bpm || null,
+                            addedAt: Date.now(),
+                            order: order++
+                        });
+                        successCount++;
+                    } catch (error) {
+                        console.error('Error adding song:', song.name, error);
+                    }
+                }
+
+                window.pendingSongsToAdd = null;
+                this.showToast(`✅ Added ${successCount} song${successCount > 1 ? 's' : ''} to session`);
+
+                // Refresh playlist if visible
+                const playlistEl = document.getElementById(`playlist-${sessionId}`);
+                if (playlistEl && playlistEl.style.display !== 'none') {
+                    await this.loadSessionPlaylist(sessionId, playlistEl);
+                }
+                return;
+            }
+
+            // Check if there's a SINGLE pending song from library
             if (window.pendingSongToAdd) {
                 // Use the pending song data
                 defaultName = window.pendingSongToAdd.name || '';
