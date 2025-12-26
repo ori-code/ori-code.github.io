@@ -238,8 +238,8 @@ exports.analyzeChart = functions
                 text: BASE_PROMPT
             });
 
-            // Set max tokens based on mode
-            const maxTokens = intenseMode ? 5000 : 2000;
+            // Set max tokens based on mode - increased for complete transcriptions
+            const maxTokens = intenseMode ? 8192 : 4096;
 
             // Call Anthropic Claude API
             const response = await anthropic.messages.create({
