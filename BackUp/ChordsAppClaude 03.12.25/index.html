@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChordsApp Claude | The Faith Sound</title>
+
+    <link rel="icon" type="image/png" href="../images/FaithSoundLogo.png">
+    <link rel="apple-touch-icon" href="../images/FaithSoundLogo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://www.paypal.com/sdk/js?client-id=AUjr_VTe9_mnojYbrv2wEhvIlYN3nXES7HG2hIfHpNhZchdcNGCh6WeHJtxwXkDBqS09gb2RjX-HAYEK&vault=true&intent=subscription&currency=USD"></script>
+
+    <!-- PDF.js for PDF preview -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // Set PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <a href="../index.html" class="nav-logo">THE FAITH <span>SOUND</span></a>
+            <div class="header-actions">
+                <!-- Usage Indicator -->
+                <div id="headerUsageIndicator" style="display: none; margin-right: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.15); border-radius: 6px; font-size: 13px; color: #3b82f6; white-space: nowrap;">
+                    <span id="headerUsageText">Loading...</span>
+                </div>
+
+                <!-- Upgrade Button (for free/basic users) -->
+                <button class="ghost-button" id="upgradeButton" type="button" style="display: none; background: linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%); color: white; font-weight: 600; border: none;">
+                    ⭐ Upgrade
+                </button>
+
+                <div style="position: relative;">
+                    <button class="ghost-button" id="signInButton" type="button">Sign In</button>
+                    <div id="profileMenu" style="display: none; position: absolute; top: 45px; right: 0; background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; min-width: 150px; z-index: 1000;">
+                        <button id="mySubscriptionBtn" style="width: 100%; padding: 8px 12px; background: transparent; color: var(--text); border: none; text-align: left; cursor: pointer; border-radius: 4px; transition: background 0.2s;">My Subscription</button>
+                        <button id="signOutBtn" style="width: 100%; padding: 8px 12px; background: transparent; color: var(--text); border: none; text-align: left; cursor: pointer; border-radius: 4px; transition: background 0.2s;">Sign Out</button>
+                    </div>
+                </div>
+                <button class="ghost-button" id="themeToggle" type="button" title="Toggle theme">
+                    <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Moon icon (for dark mode) -->
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero" id="top">
+            <div class="hero-text">
+                <h1>Turn any chord sheet into a clean, printable chart.</h1>
+                <p>Upload a handwritten sheet or photo, let AI extract the music, refine the result, transpose to any key, then print with confidence.</p>
+                <div class="hero-actions">
+                    <label class="primary-action" for="chartFileInput">Start with an upload</label>
+                </div>
+            </div>
+        </section>
+
+        <section class="workflow" id="workflow">
+            <h2>Three simple steps</h2>
+            <div class="workflow-grid">
+                <article class="step-card">
+                    <span class="step-number">1</span>
+                    <h3>Upload your chart</h3>
+                    <p>Accepts images (JPG, PNG, HEIC) and PDFs. High contrast photos deliver the best recognition results.</p>
+                    <label class="upload-tile" for="chartFileInput">
+                        <span class="upload-icon">⬆︎</span>
+                        <span class="upload-label">Choose a file</span>
+                        <span class="upload-note">Drag &amp; drop coming soon</span>
+                    </label>
+                    <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
+                    <div class="preview-panel" id="uploadPreview">
+                        <img id="previewImage" alt="Uploaded chart preview">
+                        <p class="preview-placeholder">No file selected yet. Supported: JPG, PNG, HEIC, PDF.</p>
+                    </div>
+                </article>
+                <article class="step-card">
+                    <span class="step-number">2</span>
+                    <h3>AI transcription ready!</h3>
+                    <p>Edit visually in the bottom Editor.</p>
+                    <button id="analyzeButton" class="primary-action" disabled>Analyze</button>
+                    <label id="intenseScanOption" style="display: none; margin-top: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="intenseScanCheckbox" style="margin-right: 6px; cursor: pointer;">
+                        <span style="color: #f59e0b;">⚡</span> Intense Scan <span style="color: var(--text-muted); font-size: 0.75rem;">(Pro - better for hard scans)</span>
+                    </label>
+                    <div class="status-panel" id="analysisStatus" role="status" aria-live="polite">
+                        <span class="status-dot idle"></span>
+                        <span class="status-text">Waiting for an upload…</span>
+                    </div>
+                    <small class="status-hint">Analysis typically takes 15-60 seconds. Supports all languages texts. If the result is not good, try to run analyze again. AI processing costs us money - please consider <a href="#support" style="color: var(--primary); text-decoration: underline;">donating</a> to keep this free tool running.</small>
+                </article>
+                <article class="step-card">
+                    <span class="step-number">3</span>
+                    <h3>Refine, transpose &amp; print</h3>
+                    <p>Edit chords visually in the editor. The SongBook format (under the editor) updates automatically. AI original stays on the right for reference.</p>
+                    <ul class="feature-list">
+                        <li>Visual editing - move chords with spaces</li>
+                        <li>Transpose to any key</li>
+                        <li>Auto-converts to SongBook format</li>
+                        <li>Print or export as PDF</li>
+                    </ul>
+                    <div class="ai-reference-preview" id="aiReferencePreview">
+                        <h4>AI Original (reference)</h4>
+                        <p class="reference-subtitle">Original AI extraction</p>
+                        <div class="reference-content" id="aiReferenceContent">
+                            <p class="preview-placeholder">AI transcription will appear here after analysis.</p>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="editor" id="editor">
+            <div class="editor-header">
+                <h2>Chord workspace</h2>
+            </div>
+            <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
+                <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
+                <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
+            </div>
+            <div class="editor-panel">
+                <header class="visual-editor-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0;">Visual Editor (edit here)</h3>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                            <input type="checkbox" id="proEditorToggle" style="cursor: pointer;">
+                            <span style="font-size: 0.9rem; font-weight: 500;">Pro Editor Mode</span>
+                        </label>
+                    </div>
+                    <div class="mini-preview" id="miniWorkspacePreview">
+                        <img id="miniWorkspacePreviewImage" alt="Uploaded chart preview">
+                        <span class="mini-preview-placeholder">Preview appears here after upload.</span>
+                    </div>
+                    <div class="reanalyze-block">
+                        <label for="reanalyzeFeedback">Need a better pass? Tell the AI what to fix.</label>
+                        <textarea id="reanalyzeFeedback" placeholder="Example: Verse 1 chords drift left; please align with lyrics and double-check key."></textarea>
+                        <button class="ghost-button" id="reanalyzeButton" disabled>Re-analyze with feedback</button>
+                    </div>
+                    <small class="visual-editor-subtitle">Chords above lyrics - adjust spacing freely</small>
+                </header>
+                <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
+            </div>
+
+            <!-- Editor actions moved below textarea -->
+            <div class="editor-actions" style="margin: 20px 0; padding: 10px 14px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; flex-wrap: nowrap; gap: 8px; align-items: center; overflow-x: auto; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px;">
+                    <span style="font-size: 0.85rem; opacity: 0.8;">🔢</span>
+                    <select id="nashvilleMode" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 6px; font-size: 0.875rem; cursor: pointer; font-weight: 500;">
+                        <option value="chords" selected>Chords</option>
+                        <option value="both">Nashville + Chords</option>
+                        <option value="numbers">Nashville Only</option>
+                    </select>
+                </div>
+                <div id="keyDetection" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(255, 59, 92, 0.08); border: 1px solid rgba(255, 59, 92, 0.2); border-radius: 8px;">
+                    <span style="font-size: 0.85rem; opacity: 0.8;">🎹</span>
+                    <select id="keySelector" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--primary); border: 1px solid rgba(255, 59, 92, 0.25); border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                        <optgroup label="Major Keys">
+                            <option value="C Major" selected>C Major</option>
+                            <option value="C# Major">C# Major</option>
+                            <option value="D Major">D Major</option>
+                            <option value="D# Major">D# Major</option>
+                            <option value="E Major">E Major</option>
+                            <option value="F Major">F Major</option>
+                            <option value="F# Major">F# Major</option>
+                            <option value="G Major">G Major</option>
+                            <option value="G# Major">G# Major</option>
+                            <option value="A Major">A Major</option>
+                            <option value="A# Major">A# Major</option>
+                            <option value="B Major">B Major</option>
+                        </optgroup>
+                        <optgroup label="Minor Keys">
+                            <option value="C Minor">C Minor</option>
+                            <option value="C# Minor">C# Minor</option>
+                            <option value="D Minor">D Minor</option>
+                            <option value="D# Minor">D# Minor</option>
+                            <option value="E Minor">E Minor</option>
+                            <option value="F Minor">F Minor</option>
+                            <option value="F# Minor">F# Minor</option>
+                            <option value="G Minor">G Minor</option>
+                            <option value="G# Minor">G# Minor</option>
+                            <option value="A Minor">A Minor</option>
+                            <option value="A# Minor">A# Minor</option>
+                            <option value="B Minor">B Minor</option>
+                        </optgroup>
+                    </select>
+                    <span id="detectedKey" style="display: none;"></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 8px;">
+                    <span style="font-size: 0.85rem; opacity: 0.8;">🎵</span>
+                    <input type="number" id="bpmInput" value="120" min="40" max="240" style="width: 55px; padding: 5px 8px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(249, 115, 22, 0.25); border-radius: 6px; font-size: 0.875rem; text-align: center; font-weight: 500;" required>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 8px;">
+                    <span style="font-size: 0.85rem; opacity: 0.8;">⏱️</span>
+                    <select id="timeSignature" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(34, 211, 238, 0.25); border-radius: 6px; font-size: 0.875rem; cursor: pointer; font-weight: 500;">
+                        <option value="4/4" selected>4/4</option>
+                        <option value="3/4">3/4</option>
+                        <option value="6/8">6/8</option>
+                        <option value="2/4">2/4</option>
+                        <option value="5/4">5/4</option>
+                        <option value="7/8">7/8</option>
+                        <option value="12/8">12/8</option>
+                    </select>
+                </div>
+                <button class="ghost-button" id="saveSongButton" style="padding: 6px 14px; font-size: 0.875rem;">💾 Save</button>
+                <button class="ghost-button" id="loadSongButton" style="padding: 6px 14px; font-size: 0.875rem;">📂 Load</button>
+                <button class="ghost-button" id="updateSongButton" style="padding: 6px 14px; font-size: 0.875rem;">🔄 Update</button>
+                <button class="ghost-button" id="copyToClipboard" style="display: none;">Copy text</button>
+            </div>
+
+            <!-- Live Session Controls -->
+            <div class="session-controls" style="margin: 20px 0; padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px;">
+                <!-- Session Status Indicator (shown when in session) -->
+                <div id="sessionStatusIndicator" style="display: none; margin-bottom: 12px;"></div>
+
+                <!-- Now Playing Banner (shown when in session) -->
+                <div id="liveSessionBanner" style="display: none; margin-bottom: 12px; padding: 12px 16px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; align-items: center; justify-content: space-between; gap: 12px;">
+                    <span id="nowPlayingLabel" style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                        <span style="animation: pulse 2s infinite;">🎵</span>
+                        <span>Now Playing: <strong id="nowPlayingSong" style="color: var(--primary);">-</strong></span>
+                    </span>
+                    <button id="returnToLiveBtn" onclick="window.returnToLeaderSong()" style="display: none; padding: 6px 12px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                        ↩ Return to Live
+                    </button>
+                </div>
+
+                <!-- Session Action Buttons (shown when not in session) -->
+                <div id="sessionActionButtons" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+                    <button class="ghost-button" id="createSessionBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; display: none;">
+                        📡 Create Live Session (PRO)
+                    </button>
+                    <button class="ghost-button" id="joinSessionBtn" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; display: none;">
+                        📻 Join Session (Basic)
+                    </button>
+                    <button class="ghost-button" id="mySessionsBtn" style="display: none;">
+                        📋 My Sessions
+                    </button>
+                    <button class="ghost-button" id="goLiveButton" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; display: none;">
+                        📺 Go Live
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="preview-section" id="previewSection">
+            <div class="preview-header">
+                <h2>Print Preview & Transpose</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="primary-action" id="printButton">Print chart</button>
+                    <button class="secondary-action" id="saveLayoutButton" style="background: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">Save Layout</button>
+                </div>
+            </div>
+            <div class="preview-controls-row">
+                <div class="preview-controls">
+                    <label class="font-size-control">
+                        Font Size: <span id="fontSizeValue">10</span>pt
+                        <input type="range" id="fontSizeSlider" min="8" max="14" value="10" step="0.5">
+                    </label>
+                    <label class="line-height-control">
+                        Line Spacing: <span id="lineHeightValue">1.3</span>
+                        <input type="range" id="lineHeightSlider" min="1.0" max="2.0" value="1.3" step="0.1">
+                    </label>
+                    <div class="column-layout-control" style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.9rem; color: var(--text-muted);">Layout:</span>
+                        <button class="ghost-button column-btn" data-columns="2">2 Columns</button>
+                        <button class="ghost-button column-btn active" data-columns="1">1 Column</button>
+                    </div>
+                    <div class="transpose-controls">
+                        <button class="ghost-button" data-shift="-1">–1</button>
+                        <button class="ghost-button" data-shift="1">+1</button>
+                        <label class="transpose-label">
+                            Steps
+                            <input type="number" id="transposeStepInput" value="0" min="-11" max="11">
+                        </label>
+                        <button class="ghost-button" id="applyTranspose">Apply</button>
+                        <button class="ghost-button" id="resetTranspose">Reset</button>
+                    </div>
+                </div>
+            </div>
+            <div class="preview-container" style="position: relative; padding: 0;">
+                <div id="pageCounter" style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">Page 1 of 1 (A4)</div>
+                <div id="pagesWrapper" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="preview-page" data-page="1">
+                        <div id="livePreview" class="live-preview" style="min-height: 1123px; border: none; border-radius: 4px; padding: 20px; width: 100%; max-width: 210mm;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="editor-workspace">
+            <div class="editor-panel">
+                <header>
+                    <h3>SongBook Format (auto-updated)</h3>
+                    <small>Copy this to SongBook app</small>
+                </header>
+                <textarea id="songbookOutput" readonly placeholder="SongBook format with [C] brackets will appear here..."></textarea>
+            </div>
+        </section>
+
+        <section class="support-section" id="support" style="max-width: 600px; margin: 60px auto 80px; padding: 30px 20px; text-align: center;">
+            <h2 style="font-size: 2rem; margin-bottom: 20px;">Support ChordsApp</h2>
+            <p style="font-size: 1.1rem; color: var(--text-muted, #999); margin-bottom: 30px; line-height: 1.6;">
+                Love ChordsApp? Upgrade to Basic ($0.99/mo) or Pro ($1.99/mo) to unlock more features and support ongoing development!
+            </p>
+            <button class="primary-action" onclick="document.getElementById('subscriptionModal').style.display='flex'" style="padding: 14px 32px; font-size: 1.1rem;">
+                ⭐ View Plans
+            </button>
+        </section>
+        <section class="visualizer-promo" style="max-width: 800px; margin: 80px auto 60px; padding: 40px 30px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; text-align: center;">
+            <h2 style="font-size: 2rem; margin-bottom: 16px; color: var(--text);">Check Out Visualizer 1.0</h2>
+            <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; line-height: 1.6;">
+                A revolutionary VST plugin that provides seamless, real-time visual feedback for your MIDI controller. Perfect for worship leaders and music producers who want complete control over their sound.
+            </p>
+            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                <a href="../index.html#features" style="background: transparent; color: var(--text); padding: 12px 28px; border-radius: 8px; border: 2px solid var(--primary); text-decoration: none; font-weight: 600; transition: all 0.3s ease; display: inline-block;">Learn More</a>
+                <a href="../index.html#pricing" style="background: var(--primary); color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.3s ease; display: inline-block; box-shadow: 0 4px 15px rgba(255, 59, 92, 0.4);">Get Visualizer 1.0</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; <span id="year"></span> The Faith Sound. Built with love for worship leaders and musicians. <span style="opacity: 0.7;">| v1.5 - 21/11/2025 09:30</span></p>
+    </footer>
+
+    <!-- Hidden print-only formatted version -->
+    <div id="printPreview" class="print-only" style="display: none;"></div>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">Modal Title</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Modal message goes here.</p>
+                <input type="number" id="modalInput" class="modal-input" placeholder="10" min="1" step="0.01" style="display: none;">
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" id="modalCancel">Cancel</button>
+                <button class="primary-action" id="modalConfirm">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Message Display -->
+    <div id="authMessage" style="position: fixed; top: 80px; right: 20px; max-width: 400px; padding: 16px 20px; border-radius: 8px; display: none; z-index: 10000; font-weight: 500;"></div>
+
+    <!-- Authentication Modal -->
+    <div id="authModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: var(--surface); border-radius: 20px; padding: 40px; max-width: 450px; width: 90%; position: relative; border: 1px solid rgba(255,255,255,0.1);">
+            <button id="closeAuthModal" style="position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: var(--text-muted); font-size: 28px; cursor: pointer; line-height: 1; padding: 0;">&times;</button>
+
+            <!-- Login Form -->
+            <div id="loginFormContainer">
+                <h2 style="margin-bottom: 10px; color: var(--text); font-size: 1.8rem;">Welcome Back</h2>
+                <p style="color: var(--text-muted); margin-bottom: 30px;">Sign in to continue to ChordsApp</p>
+
+                <form id="loginForm">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Email Address</label>
+                        <input type="email" id="loginEmail" placeholder="you@example.com" required style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
+                    </div>
+
+                    <button type="submit" style="width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px;">Sign In</button>
+
+                    <button type="button" class="google-signin-btn" style="width: 100%; padding: 14px; background: white; color: #333; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><path d="M17.6 9.2l-.1-1.8H9v3.4h4.8C13.6 12 13 13 12 13.6v2.2h3a8.8 8.8 0 0 0 2.6-6.6z" fill="#4285F4"/><path d="M9 18c2.4 0 4.5-.8 6-2.2l-3-2.2a5.4 5.4 0 0 1-8-2.9H1V13a9 9 0 0 0 8 5z" fill="#34A853"/><path d="M4 10.7a5.4 5.4 0 0 1 0-3.4V5H1a9 9 0 0 0 0 8l3-2.3z" fill="#FBBC05"/><path d="M9 3.6c1.3 0 2.5.4 3.4 1.3L15 2.3A9 9 0 0 0 1 5l3 2.4a5.4 5.4 0 0 1 5-3.7z" fill="#EA4335"/></g></svg>
+                        Continue with Google
+                    </button>
+
+                    <div style="text-align: center; margin-top: 20px; color: var(--text-muted);">
+                        Don't have an account? <a href="#" id="switchToSignup" style="color: var(--primary); text-decoration: none; font-weight: 500;">Sign up</a>
+                        <br><a href="#" id="switchToReset" style="color: var(--primary); text-decoration: none; font-weight: 500;">Forgot password?</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupFormContainer" style="display: none;">
+                <h2 style="margin-bottom: 10px; color: var(--text); font-size: 1.8rem;">Create Account</h2>
+                <p style="color: var(--text-muted); margin-bottom: 30px;">Join ChordsApp community</p>
+
+                <form id="signupForm">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Full Name</label>
+                        <input type="text" id="signupName" placeholder="John Doe" required style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Email Address</label>
+                        <input type="email" id="signupEmail" placeholder="you@example.com" required style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Password</label>
+                        <input type="password" id="signupPassword" placeholder="At least 6 characters" required style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
+                    </div>
+
+                    <button type="submit" style="width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px;">Create Account</button>
+
+                    <button type="button" class="google-signin-btn" style="width: 100%; padding: 14px; background: white; color: #333; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><path d="M17.6 9.2l-.1-1.8H9v3.4h4.8C13.6 12 13 13 12 13.6v2.2h3a8.8 8.8 0 0 0 2.6-6.6z" fill="#4285F4"/><path d="M9 18c2.4 0 4.5-.8 6-2.2l-3-2.2a5.4 5.4 0 0 1-8-2.9H1V13a9 9 0 0 0 8 5z" fill="#34A853"/><path d="M4 10.7a5.4 5.4 0 0 1 0-3.4V5H1a9 9 0 0 0 0 8l3-2.3z" fill="#FBBC05"/><path d="M9 3.6c1.3 0 2.5.4 3.4 1.3L15 2.3A9 9 0 0 0 1 5l3 2.4a5.4 5.4 0 0 1 5-3.7z" fill="#EA4335"/></g></svg>
+                        Sign up with Google
+                    </button>
+
+                    <div style="text-align: center; margin-top: 20px; color: var(--text-muted);">
+                        Already have an account? <a href="#" class="switchToLogin" style="color: var(--primary); text-decoration: none; font-weight: 500;">Sign in</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Reset Password Form -->
+            <div id="resetFormContainer" style="display: none;">
+                <h2 style="margin-bottom: 10px; color: var(--text); font-size: 1.8rem;">Reset Password</h2>
+                <p style="color: var(--text-muted); margin-bottom: 30px;">Enter your email to receive a reset link</p>
+
+                <form id="resetForm">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Email Address</label>
+                        <input type="email" id="resetEmail" placeholder="you@example.com" required style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
+                    </div>
+
+                    <button type="submit" style="width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px;">Send Reset Link</button>
+
+                    <div style="text-align: center; margin-top: 20px; color: var(--text-muted);">
+                        Remember your password? <a href="#" class="switchToLogin" style="color: var(--primary); text-decoration: none; font-weight: 500;">Sign in</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Song Modal -->
+    <div id="saveSongModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>💾 Save Song to Library</h3>
+                <button class="modal-close" id="saveSongClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Enter a name for this song:</p>
+                <input type="text" id="songNameInput" class="modal-input" placeholder="Song name (e.g., Amazing Grace)" style="display: block;">
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" id="saveSongCancel">Cancel</button>
+                <button class="primary-action" id="saveSongConfirm">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Song Modal -->
+    <div id="loadSongModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>📂 Load Song from Library</h3>
+                <button class="modal-close" id="loadSongClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select a song from your library:</p>
+
+                <!-- Search and Filters -->
+                <div style="display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;">
+                    <input type="text" id="songSearchInput" class="modal-input" placeholder="🔍 Search songs..." style="flex: 1; min-width: 200px;">
+                    <select id="songKeyFilter" class="modal-input" style="flex: 0 0 auto; min-width: 120px;">
+                        <option value="">All Keys</option>
+                        <option value="C">C Major</option>
+                        <option value="C#">C# Major</option>
+                        <option value="Db">Db Major</option>
+                        <option value="D">D Major</option>
+                        <option value="Eb">Eb Major</option>
+                        <option value="E">E Major</option>
+                        <option value="F">F Major</option>
+                        <option value="F#">F# Major</option>
+                        <option value="Gb">Gb Major</option>
+                        <option value="G">G Major</option>
+                        <option value="Ab">Ab Major</option>
+                        <option value="A">A Major</option>
+                        <option value="Bb">Bb Major</option>
+                        <option value="B">B Major</option>
+                        <option value="Am">A Minor</option>
+                        <option value="Bm">B Minor</option>
+                        <option value="Cm">C Minor</option>
+                        <option value="Dm">D Minor</option>
+                        <option value="Em">E Minor</option>
+                        <option value="Fm">F Minor</option>
+                        <option value="Gm">G Minor</option>
+                    </select>
+                    <select id="songSortBy" class="modal-input" style="flex: 0 0 auto; min-width: 120px;">
+                        <option value="date">Latest First</option>
+                        <option value="name">A-Z</option>
+                        <option value="bpm">BPM</option>
+                        <option value="key">Key</option>
+                    </select>
+                </div>
+
+                <div id="songList" style="max-height: 400px; overflow-y: auto; margin-top: 16px;">
+                    <!-- Songs will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" id="loadSongCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div id="subscriptionModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Choose Your Plan</h3>
+                <button class="modal-close" id="subscriptionModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Usage Indicator (for logged-in users) -->
+                <div id="usageIndicator" style="display: none; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+                    <p id="usageText" style="margin: 0; color: #3b82f6; font-size: 14px;"></p>
+                </div>
+
+                <!-- Pricing Tiers -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <!-- Free Tier -->
+                    <div class="pricing-card" style="border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px; background: var(--surface);">
+                        <h3 style="margin: 0 0 8px 0; color: var(--text);">Free</h3>
+                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 16px;">$0</div>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8;">
+                            <li>✓ 3 AI analyses/month</li>
+                            <li>✓ Transpose</li>
+                            <li>✓ Print/Export</li>
+                            <li style="opacity: 0.5;">✗ Save to Library</li>
+                            <li style="opacity: 0.5;">✗ Nashville Numbers</li>
+                        </ul>
+                        <button class="ghost-button" style="width: 100%; opacity: 0.5;" disabled>Current Plan</button>
+                    </div>
+
+                    <!-- Basic Tier -->
+                    <div class="pricing-card" style="border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 12px; padding: 24px; background: var(--surface);">
+                        <h3 style="margin: 0 0 8px 0; color: #3b82f6;">Basic</h3>
+                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$0.99<span style="font-size: 16px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">3-day free trial</div>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8;">
+                            <li>✓ 20 AI analyses/month</li>
+                            <li>✓ Save to Library</li>
+                            <li>✓ Transpose</li>
+                            <li>✓ Print/Export</li>
+                            <li style="opacity: 0.5;">✗ Nashville Numbers</li>
+                        </ul>
+                        <div id="paypal-basic-button" style="min-height: 45px;"></div>
+                    </div>
+
+                    <!-- Pro Tier -->
+                    <div class="pricing-card" style="border: 2px solid var(--primary); border-radius: 12px; padding: 24px; background: var(--surface); position: relative;">
+                        <div style="position: absolute; top: -12px; right: 20px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">POPULAR</div>
+                        <h3 style="margin: 0 0 8px 0; color: var(--primary);">Pro</h3>
+                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$1.99<span style="font-size: 16px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">3-day free trial</div>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8;">
+                            <li>✓ Unlimited AI analyses</li>
+                            <li>✓ Save to Library</li>
+                            <li>✓ Nashville Numbers</li>
+                            <li>✓ Transpose</li>
+                            <li>✓ Print/Export</li>
+                        </ul>
+                        <div id="paypal-pro-button" style="min-height: 45px;"></div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; font-size: 12px; color: var(--text-secondary);">
+                    <p>All plans include 3-day free trial. Cancel anytime. Secure payment via PayPal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Session Modal -->
+    <div id="createSessionModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📡 Create Live Session</h3>
+                <button class="modal-close" onclick="sessionUI.hideCreateSessionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--text-muted);">Create a live session to broadcast songs to your band in real-time.</p>
+                <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600;">Session Title</label>
+                <input type="text" id="sessionTitleInput" class="modal-input" placeholder="e.g., Sunday Worship Set 14.11.25" style="display: block; margin-bottom: 16px;">
+                <p style="font-size: 13px; color: var(--text-muted);">💡 Tip: Share the session code with your band members so they can join and follow along.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" onclick="sessionUI.hideCreateSessionModal()">Cancel</button>
+                <button class="primary-action" onclick="sessionUI.handleCreateSession()">Create Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Session Modal -->
+    <div id="joinSessionModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📻 Join Session</h3>
+                <button class="modal-close" onclick="sessionUI.hideJoinSessionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--text-muted);">Enter the session code provided by your worship leader.</p>
+                <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600;">Session Code</label>
+                <input type="text" id="sessionCodeInput" class="modal-input" placeholder="e.g., A3F-7K2" maxlength="7" style="display: block; margin-bottom: 16px; text-transform: uppercase; font-family: monospace; font-size: 18px; letter-spacing: 2px; text-align: center;">
+                <p style="font-size: 13px; color: var(--text-muted);">💡 Tip: You'll be able to adjust font size and transpose locally while following the leader's song selection.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" onclick="sessionUI.hideJoinSessionModal()">Cancel</button>
+                <button class="primary-action" onclick="sessionUI.handleJoinSession()">Join Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Sessions Modal -->
+    <div id="mySessionsModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>📋 My Sessions</h3>
+                <button class="modal-close" onclick="sessionUI.hideMySessionsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 16px; color: var(--text-muted);">Your saved and recent sessions</p>
+                <div id="sessionsList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Sessions will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" onclick="sessionUI.hideMySessionsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Controls Modal -->
+    <div id="sessionControlsModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Session Controls</h3>
+                <button class="modal-close" onclick="sessionUI.hideSessionControls()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <!-- Participants Panel -->
+                    <div>
+                        <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            👥 Participants
+                        </h4>
+                        <div id="participantsList" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Participants will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Playlist Panel -->
+                    <div>
+                        <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                            🎵 Playlist
+                        </h4>
+                        <div id="sessionPlaylist" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Playlist will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Player Controls (BASIC users) -->
+                <div class="player-only" style="padding: 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; margin-bottom: 12px; display: none;">
+                    <button class="ghost-button" id="toggleLiveModeBtn" onclick="sessionUI.toggleLiveMode()" style="width: 100%;">
+                        📻 Follow Leader: ON
+                    </button>
+                    <p style="margin: 8px 0 0 0; font-size: 12px; color: var(--text-muted); text-align: center;">
+                        Transpose to your key - it's saved per song!
+                    </p>
+                </div>
+
+                <!-- Leader Controls (PRO users) -->
+                <div class="leader-only" style="padding: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; display: none;">
+                    <p style="margin: 0; font-size: 13px; color: var(--text-muted); text-align: center;">
+                        💡 Change songs in the editor to broadcast to all participants
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: space-between;">
+                <button class="ghost-button leader-only" onclick="sessionUI.endSession()" style="background: var(--primary); color: white; display: none;">
+                    🛑 End Session
+                </button>
+                <button class="ghost-button player-only" onclick="sessionUI.leaveSession()" style="display: none;">
+                    👋 Leave Session
+                </button>
+                <button class="ghost-button" onclick="sessionUI.hideSessionControls()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Mode Full-Screen Overlay -->
+    <div id="liveModeOverlay" style="display: none; position: fixed; inset: 0; background: var(--background); z-index: 10000; overflow: hidden;">
+        <!-- Main Container with Sidebar Layout -->
+        <div style="display: flex; height: 100%; width: 100%;">
+            <!-- Song Display Area (tap to toggle sidebar) -->
+            <div id="liveModeContent" style="flex: 1; height: 100%; overflow-y: auto; padding: 60px 20px 140px 20px; box-sizing: border-box; cursor: pointer; display: flex; justify-content: center; transition: margin-right 0.3s ease;">
+                <div id="liveModeChartDisplay" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: var(--text); margin: 0; max-width: 800px; text-align: left;"></div>
+            </div>
+
+            <!-- Playlist Sidebar (slide in from right) -->
+            <div id="liveModePlaylistSidebar" style="position: absolute; top: 0; right: -380px; width: 380px; height: 100%; background: var(--card-bg); border-left: 1px solid var(--border); overflow-y: auto; padding: 60px 16px 140px 16px; box-sizing: border-box; transition: right 0.3s ease; z-index: 10002;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="margin: 0; color: var(--text); font-size: 18px;">Playlist</h3>
+                    <button onclick="liveMode.hidePlaylist()" style="background: var(--button-bg); border: none; color: var(--text); width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 18px;">&times;</button>
+                </div>
+                <div id="liveModePlaylistContent">
+                    <!-- Playlist items will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Bar (song info) - auto-hides -->
+        <div id="liveModeTopBar" style="position: absolute; top: 0; left: 0; right: 0; padding: 12px 20px; background: var(--card-bg); display: flex; justify-content: space-between; align-items: center; z-index: 10003; border-bottom: 1px solid var(--border); transition: opacity 0.3s ease;">
+            <div>
+                <div id="liveModeSongName" style="font-size: 18px; font-weight: 600; color: var(--text);"></div>
+                <div id="liveModeSongKey" style="font-size: 14px; color: var(--text-muted);"></div>
+            </div>
+            <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="background: rgba(239, 68, 68, 0.9); border: none; color: white; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+                Exit
+            </button>
+        </div>
+
+        <!-- Bottom Controls Bar - auto-hides -->
+        <div id="liveModeBottomBar" style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 20px; background: var(--card-bg); z-index: 10003; transition: opacity 0.3s ease;">
+            <!-- Transpose Controls -->
+            <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 12px;">
+                <button onclick="liveMode.transpose(-1)" style="padding: 12px 24px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                    - Transpose
+                </button>
+                <div id="liveModeCurrentKey" style="padding: 12px 20px; background: var(--primary); color: white; border-radius: 8px; font-weight: 600; min-width: 60px; text-align: center;">
+                    C
+                </div>
+                <button onclick="liveMode.transpose(1)" style="padding: 12px 24px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                    Transpose +
+                </button>
+            </div>
+
+            <!-- Session Info & Playlist Button (if in session) -->
+            <div id="liveModeSessionControls" style="display: none; text-align: center;">
+                <div style="display: flex; justify-content: center; gap: 12px; align-items: center;">
+                    <button id="liveModePlaylistToggle" onclick="liveMode.togglePlaylist()" style="padding: 10px 20px; background: rgba(59, 130, 246, 0.3); border: 1px solid rgba(59, 130, 246, 0.5); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px;">
+                        Show Playlist
+                    </button>
+                    <!-- Follow Leader toggle (players only) -->
+                    <label id="liveModeFollowLeader" style="display: none; cursor: pointer; padding: 10px 16px; background: rgba(16, 185, 129, 0.3); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 6px; font-size: 13px; color: var(--text);">
+                        <input type="checkbox" id="followLeaderCheckbox" checked onchange="liveMode.toggleFollowLeader(this.checked)" style="margin-right: 6px;">
+                        Follow Leader
+                    </label>
+                </div>
+                <div id="liveModeSessionInfo" style="margin-top: 8px; font-size: 12px; color: var(--text-muted);"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Toggle -->
+    <script src="theme.js"></script>
+
+    <!-- Firebase Configuration and Auth -->
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+
+    <!-- Subscription System -->
+    <script src="subscription.js"></script>
+    <script src="paypal-subscription.js"></script>
+
+    <!-- Song Library -->
+    <script src="song-library.js"></script>
+    <script src="song-search-filter.js"></script>
+
+    <!-- Live Sessions -->
+    <script src="session-manager.js"></script>
+    <script src="session-ui.js"></script>
+
+    <!-- Live Mode (full-screen performance view) -->
+    <script src="live-mode.js"></script>
+
+    <script src="app.js?v=38"></script>
+
+    <style>
+        #authMessage.success {
+            background: rgba(52, 211, 153, 0.1);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+        #authMessage.error {
+            background: rgba(255, 59, 92, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(255, 59, 92, 0.3);
+        }
+        #authMessage.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        #profileMenu button:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Live Mode theme-aware solid backgrounds */
+        [data-theme="dark"] #liveModeOverlay {
+            background: #000000 !important;
+        }
+        [data-theme="light"] #liveModeOverlay {
+            background: #ffffff !important;
+        }
+        [data-theme="dark"] #liveModeContent {
+            background: #000000 !important;
+        }
+        [data-theme="light"] #liveModeContent {
+            background: #ffffff !important;
+        }
+        [data-theme="dark"] #liveModeBottomBar {
+            background: #000000 !important;
+        }
+        [data-theme="light"] #liveModeBottomBar {
+            background: #ffffff !important;
+        }
+        [data-theme="dark"] #liveModeTopBar {
+            background: #000000 !important;
+        }
+        [data-theme="light"] #liveModeTopBar {
+            background: #ffffff !important;
+        }
+        [data-theme="dark"] #liveModePlaylistSidebar {
+            background: #000000 !important;
+        }
+        [data-theme="light"] #liveModePlaylistSidebar {
+            background: #ffffff !important;
+        }
+    </style>
+
+    <script>
+        // Custom Modal System
+        const modal = {
+            overlay: document.getElementById('customModal'),
+            title: document.getElementById('modalTitle'),
+            message: document.getElementById('modalMessage'),
+            input: document.getElementById('modalInput'),
+            confirmBtn: document.getElementById('modalConfirm'),
+            cancelBtn: document.getElementById('modalCancel'),
+            closeBtn: document.getElementById('modalClose'),
+
+            show: function(title, message, showInput = false) {
+                return new Promise((resolve, reject) => {
+                    this.title.textContent = title;
+                    this.message.textContent = message;
+                    this.input.style.display = showInput ? 'block' : 'none';
+                    if (showInput) this.input.value = '10';
+                    this.overlay.style.display = 'flex';
+
+                    const handleConfirm = () => {
+                        if (showInput) {
+                            const value = parseFloat(this.input.value);
+                            if (!value || value <= 0) {
+                                this.input.style.borderColor = 'var(--primary)';
+                                setTimeout(() => {
+                                    this.input.style.borderColor = '';
+                                }, 500);
+                                return;
+                            }
+                            this.close();
+                            resolve(value);
+                        } else {
+                            this.close();
+                            resolve(true);
+                        }
+                    };
+
+                    const handleCancel = () => {
+                        this.close();
+                        resolve(null);
+                    };
+
+                    this.confirmBtn.onclick = handleConfirm;
+                    this.cancelBtn.onclick = handleCancel;
+                    this.closeBtn.onclick = handleCancel;
+                    this.overlay.onclick = (e) => {
+                        if (e.target === this.overlay) handleCancel();
+                    };
+
+                    // Enter key support
+                    const handleEnter = (e) => {
+                        if (e.key === 'Enter') {
+                            handleConfirm();
+                            document.removeEventListener('keydown', handleEnter);
+                        }
+                    };
+                    document.addEventListener('keydown', handleEnter);
+                });
+            },
+
+            close: function() {
+                this.overlay.style.display = 'none';
+                this.input.style.borderColor = '';
+            }
+        };
+
+    </script>
+</body>
+</html>

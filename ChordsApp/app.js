@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const API_URL = isLocalDev
         ? `http://${window.location.hostname}:3002/api/analyze-chart`
-        : 'https://ori-code-github-io.vercel.app/api/analyze-chart';
+        : 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/analyzeChart';
 
     // Nashville Number System state - default key is C Major
     let currentKey = 'C Major';

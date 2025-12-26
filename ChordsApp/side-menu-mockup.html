@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChordsApp - Side Menu Mockup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d0c12;
+            --bg-soft: #1b1a22;
+            --bg-card: rgba(33, 32, 43, 0.95);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.15);
+            --primary: #ff3b5c;
+            --primary-soft: rgba(255, 59, 92, 0.18);
+            --text: #f5f5f5;
+            --text-muted: #a6a6b7;
+            --green: #22c55e;
+            --blue: #3b82f6;
+            --purple: #a855f7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top right, rgba(255, 59, 92, 0.12), transparent 40%), var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Header with hamburger */
+        .preview-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hamburger-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--primary);
+        }
+
+        .hamburger-btn span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        .preview-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Overlay backdrop */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 998;
+        }
+
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Side Menu Panel */
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 340px;
+            height: 100vh;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-strong);
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-menu.active {
+            transform: translateX(0);
+        }
+
+        .menu-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .menu-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .menu-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+        }
+
+        .menu-content {
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Menu Sections */
+        .menu-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .menu-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        /* Action Buttons Row */
+        .action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .action-btn {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: none;
+            font-family: inherit;
+        }
+
+        .action-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            filter: brightness(1.1);
+        }
+
+        .action-btn.secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .action-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .action-btn.green {
+            background: var(--green);
+            color: white;
+        }
+
+        .action-btn.blue {
+            background: var(--blue);
+            color: white;
+        }
+
+        .action-btn.purple {
+            background: var(--purple);
+            color: white;
+        }
+
+        .action-btn.full {
+            grid-column: 1 / -1;
+        }
+
+        /* Dropdowns and Inputs */
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .control-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            min-width: 70px;
+        }
+
+        .control-select {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .control-select:hover {
+            border-color: var(--border-strong);
+        }
+
+        .control-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        /* Sliders */
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .slider-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .slider-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            min-width: 45px;
+        }
+
+        .slider-value {
+            font-size: 0.85rem;
+            color: var(--text);
+            font-weight: 500;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--primary);
+            height: 4px;
+        }
+
+        /* Transpose Keys Grid */
+        .key-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .key-btn {
+            padding: 8px 4px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            border: 1px solid var(--border);
+            font-family: inherit;
+        }
+
+        .key-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--primary);
+        }
+
+        .key-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .transpose-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .transpose-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .transpose-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--primary);
+        }
+
+        .steps-display {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .steps-display span {
+            color: var(--text-muted);
+        }
+
+        /* Toggle/Checkbox */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+
+        .toggle-label {
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: var(--primary);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.2s;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+
+        /* Main Content Preview */
+        .main-content {
+            padding: 24px;
+        }
+
+        .preview-container {
+            background: white;
+            border-radius: 12px;
+            min-height: 600px;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            color: #1a1a1a;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: #666;
+            padding: 100px 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .side-menu {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay -->
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Side Menu Panel -->
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">
+            <h3>Chart Options</h3>
+            <button class="menu-close" id="menuClose">&times;</button>
+        </div>
+
+        <div class="menu-content">
+            <!-- Quick Actions -->
+            <div class="menu-section">
+                <div class="menu-section-title">Quick Actions</div>
+                <div class="action-row">
+                    <button class="action-btn primary">Print Chart</button>
+                    <button class="action-btn secondary">Quick Print</button>
+                </div>
+                <div class="action-row">
+                    <button class="action-btn green">Save Layout</button>
+                    <button class="action-btn green">Live Preview</button>
+                </div>
+            </div>
+
+            <!-- Display Options -->
+            <div class="menu-section">
+                <div class="menu-section-title">Display</div>
+                <div class="control-row">
+                    <span class="control-label">Mode</span>
+                    <select class="control-select">
+                        <option>Chords</option>
+                        <option>Lyrics Only</option>
+                        <option>Chords + Lyrics</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Key</span>
+                    <select class="control-select">
+                        <option>C Major</option>
+                        <option>G Major</option>
+                        <option>D Major</option>
+                        <option>A Major</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <span class="control-label">BPM</span>
+                    <input type="number" class="control-input" value="120" style="width: 80px;">
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show Badges</span>
+                    <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                </div>
+            </div>
+
+            <!-- Layout -->
+            <div class="menu-section">
+                <div class="menu-section-title">Layout</div>
+                <div class="slider-row">
+                    <span class="slider-label">Font</span>
+                    <input type="range" min="8" max="20" value="14">
+                    <span class="slider-value">14pt</span>
+                </div>
+                <div class="slider-row">
+                    <span class="slider-label">Line</span>
+                    <input type="range" min="10" max="25" value="15">
+                    <span class="slider-value">1.5</span>
+                </div>
+                <div class="slider-row">
+                    <span class="slider-label">Spacing</span>
+                    <input type="range" min="0" max="20" value="5">
+                    <span class="slider-value">0.5px</span>
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Columns</span>
+                    <select class="control-select">
+                        <option>1 Column</option>
+                        <option selected>2 Columns</option>
+                        <option>3 Columns</option>
+                    </select>
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Pages</span>
+                    <select class="control-select">
+                        <option selected>1 Page</option>
+                        <option>2 Pages</option>
+                        <option>Auto</option>
+                    </select>
+                </div>
+                <button class="action-btn purple full" style="margin-top: 8px;">Auto-fit to 1 Page</button>
+            </div>
+
+            <!-- Transpose -->
+            <div class="menu-section">
+                <div class="menu-section-title">Transpose</div>
+                <div class="key-grid">
+                    <button class="key-btn active">C</button>
+                    <button class="key-btn">D</button>
+                    <button class="key-btn">E</button>
+                    <button class="key-btn">F</button>
+                    <button class="key-btn">G</button>
+                    <button class="key-btn">A</button>
+                    <button class="key-btn">B</button>
+                    <button class="key-btn">Bb</button>
+                </div>
+                <div class="transpose-row">
+                    <button class="transpose-btn">-1</button>
+                    <button class="transpose-btn">+1</button>
+                    <div class="steps-display"><span>Steps:</span> 0</div>
+                    <button class="action-btn secondary" style="padding: 8px 16px;">Apply</button>
+                    <button class="action-btn secondary" style="padding: 8px 16px;">Reset</button>
+                </div>
+            </div>
+
+            <!-- Library Actions -->
+            <div class="menu-section">
+                <div class="menu-section-title">Library</div>
+                <div class="action-row">
+                    <button class="action-btn secondary">Load</button>
+                    <button class="action-btn secondary">Bulk Import</button>
+                </div>
+                <div class="action-row">
+                    <button class="action-btn primary">Save</button>
+                    <button class="action-btn blue">Update</button>
+                </div>
+            </div>
+
+            <!-- Live Sessions -->
+            <div class="menu-section">
+                <div class="menu-section-title">Live Sessions</div>
+                <div class="action-row">
+                    <button class="action-btn purple">Create Session (PRO)</button>
+                    <button class="action-btn green">Join Session</button>
+                </div>
+                <div class="action-row">
+                    <button class="action-btn secondary full">My Sessions</button>
+                </div>
+                <button class="action-btn green full" style="margin-top: 8px;">Go Live</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Page Content -->
+    <div class="preview-header">
+        <button class="hamburger-btn" id="hamburgerBtn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h2>Print Preview & Transpose</h2>
+    </div>
+
+    <div class="main-content">
+        <div class="preview-container">
+            <div class="preview-placeholder">
+                <h3>Live Preview Area</h3>
+                <p style="margin-top: 12px; font-size: 14px;">Your chord chart will appear here</p>
+                <p style="margin-top: 8px; font-size: 12px; color: #999;">Click the hamburger menu to open chart options</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sideMenu = document.getElementById('sideMenu');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuClose = document.getElementById('menuClose');
+
+        function openMenu() {
+            sideMenu.classList.add('active');
+            menuOverlay.classList.add('active');
+            hamburgerBtn.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMenu() {
+            sideMenu.classList.remove('active');
+            menuOverlay.classList.remove('active');
+            hamburgerBtn.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        hamburgerBtn.addEventListener('click', () => {
+            if (sideMenu.classList.contains('active')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        menuOverlay.addEventListener('click', closeMenu);
+        menuClose.addEventListener('click', closeMenu);
+
+        // Key buttons interaction
+        document.querySelectorAll('.key-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.key-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Slider value updates
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const value = e.target.value;
+                const valueDisplay = e.target.nextElementSibling;
+                if (valueDisplay) {
+                    if (valueDisplay.textContent.includes('pt')) {
+                        valueDisplay.textContent = value + 'pt';
+                    } else if (valueDisplay.textContent.includes('px')) {
+                        valueDisplay.textContent = (value / 10).toFixed(1) + 'px';
+                    } else {
+                        valueDisplay.textContent = (value / 10).toFixed(1);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

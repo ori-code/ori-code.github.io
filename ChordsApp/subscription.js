@@ -219,7 +219,7 @@ class SubscriptionManager {
 
             const API_URL = isLocalDev
                 ? `http://${window.location.hostname}:3002/api/increment-analysis`
-                : 'https://ori-code-github-io.vercel.app/api/increment-analysis';
+                : 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/incrementAnalysis';
 
             const response = await fetch(API_URL, {
                 method: 'POST',
