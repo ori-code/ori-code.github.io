@@ -220,9 +220,12 @@ class ChordsAuthManager {
             'auth/invalid-email': 'Invalid email address.',
             'auth/user-not-found': 'No account found with this email.',
             'auth/wrong-password': 'Incorrect password.',
+            'auth/invalid-login-credentials': 'Invalid email or password. Please check and try again.',
+            'auth/invalid-credential': 'Invalid email or password. Please check and try again.',
             'auth/weak-password': 'Password should be at least 6 characters.',
             'auth/too-many-requests': 'Too many attempts. Try again later.',
             'auth/popup-closed-by-user': 'Sign-in popup was closed.',
+            'auth/cancelled-popup-request': 'Sign-in was cancelled.',
             'auth/network-request-failed': 'Network error. Check your connection.'
         };
         return errorMessages[errorCode] || 'An error occurred. Please try again.';
