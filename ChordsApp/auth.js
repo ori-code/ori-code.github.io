@@ -7,20 +7,6 @@ class ChordsAuthManager {
     }
 
     init() {
-        // Handle redirect result (for Google sign-in)
-        auth.getRedirectResult().then((result) => {
-            if (result && result.user) {
-                this.showMessage('Signed in with Google successfully!', 'success');
-                this.closeAuthModal();
-                console.log('Redirect sign-in successful:', result.user.email);
-            }
-        }).catch((error) => {
-            if (error.code) {
-                console.error('Redirect sign-in error:', error);
-                this.showMessage(this.getErrorMessage(error.code), 'error');
-            }
-        });
-
         // Listen for auth state changes
         auth.onAuthStateChanged((user) => {
             this.currentUser = user;
@@ -66,10 +52,13 @@ class ChordsAuthManager {
     async signInWithGoogle() {
         try {
             const provider = new firebase.auth.GoogleAuthProvider();
-            // Use redirect for better compatibility (works on mobile & avoids popup blockers)
-            await auth.signInWithRedirect(provider);
-            // Note: The page will redirect, so the code below won't execute immediately
-            // The auth state listener will handle the successful sign-in when the page reloads
+            // Use popup for GitHub Pages hosting (redirect requires Firebase Hosting)
+            const result = await auth.signInWithPopup(provider);
+            if (result && result.user) {
+                this.showMessage('Signed in with Google successfully!', 'success');
+                this.closeAuthModal();
+                console.log('Google sign-in successful:', result.user.email);
+            }
         } catch (error) {
             this.showMessage(this.getErrorMessage(error.code), 'error');
             throw error;
