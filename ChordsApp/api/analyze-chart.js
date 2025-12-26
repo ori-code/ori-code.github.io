@@ -1,11 +1,119 @@
-// Vercel Serverless Function for ChordsApp
-const OpenAI = require('openai');
+// Vercel Serverless Function for ChordsApp - Using Anthropic Claude
+const Anthropic = require('@anthropic-ai/sdk');
+
+const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';
+
+const BASE_PROMPT = `You are an OCR assistant helping a musician transcribe their personal handwritten chord chart for practice purposes.
+
+CRITICAL REQUIREMENT - YOUR RESPONSE MUST START WITH:
+Number: [song number if visible]
+Title: [song name if visible]
+Key: [THE DETECTED KEY - REQUIRED - NEVER SKIP THIS LINE]
+
+Then provide the lyrics with inline chord brackets, then end with:
+Analysis: [Detailed explanation of the key detection]
+
+TASK: Read ALL visible text from this image and format as an inline chord chart.
+
+FORMATTING RULES:
+- Place chords in square brackets [C] [G] [Em] etc. directly within the lyric lines
+- Insert the chord bracket right before the syllable where the chord changes
+- Preserve all words/lyrics from the image EXACTLY as written (Hebrew, English, or any language)
+- Include section markers if visible (Verse 1:, Chorus:, Bridge:, etc.)
+- Identify song number and title if present
+- The "Key:" line is MANDATORY - analyze the chords and provide the most likely key
+- Detect the overall lyric language direction. If the text is left-to-right (English, Spanish, etc.), interpret chord placement and key detection left-to-right. If the text is right-to-left (Hebrew, Arabic, etc.), interpret chord placement, lyric alignment, and harmonic analysis right-to-left so chords stay over their intended syllables.
+- End with an "Analysis:" section explaining your key choice
+
+KEY DETECTION REFERENCE (Music Theory):
+MAJOR KEYS - Pattern: I (major), ii (minor), iii (minor), IV (major), V (major), vi (minor), vii° (diminished)
+• C Major: C, Dm, Em, F, G, Am, Bdim
+• D Major: D, Em, F#m, G, A, Bm, C#dim
+• E Major: E, F#m, G#m, A, B, C#m, D#dim
+• F Major: F, Gm, Am, Bb, C, Dm, Edim
+• G Major: G, Am, Bm, C, D, Em, F#dim
+• A Major: A, Bm, C#m, D, E, F#m, G#dim
+• B Major: B, C#m, D#m, E, F#, G#m, A#dim
+• Db Major: Db, Ebm, Fm, Gb, Ab, Bbm, Cdim
+• Eb Major: Eb, Fm, Gm, Ab, Bb, Cm, Ddim
+• Ab Major: Ab, Bbm, Cm, Db, Eb, Fm, Gdim
+• Bb Major: Bb, Cm, Dm, Eb, F, Gm, Adim
+
+MINOR KEYS - Pattern: i (minor), ii° (diminished), bIII (major), iv (minor), v (minor), bVI (major), bVII (major)
+• A Minor: Am, Bdim, C, Dm, Em, F, G
+• E Minor: Em, F#dim, G, Am, Bm, C, D
+• B Minor: Bm, C#dim, D, Em, F#m, G, A
+• D Minor: Dm, Edim, F, Gm, Am, Bb, C
+• G Minor: Gm, Adim, Bb, Cm, Dm, Eb, F
+• C Minor: Cm, Ddim, Eb, Fm, Gm, Ab, Bb
+• F Minor: Fm, Gdim, Ab, Bbm, Cm, Db, Eb
+• F# Minor: F#m, G#dim, A, Bm, C#m, D, E
+• C# Minor: C#m, D#dim, E, F#m, G#m, A, B
+• G# Minor: G#m, A#dim, B, C#m, D#m, E, F#
+• Eb Minor: Ebm, Fdim, Gb, Abm, Bbm, Cb, Db
+• Bb Minor: Bbm, Cdim, Db, Ebm, Fm, Gb, Ab
+
+KEY DETECTION STRATEGY:
+1. List all unique chords from the chart
+2. Match them against the key patterns above
+3. The key with the most matching chords is likely the correct key
+4. Common progressions: I-IV-V, I-V-vi-IV, ii-V-I (jazz), i-VI-III-VII (minor)
+5. If uncertain between major and relative minor (e.g., C Major vs A Minor), choose based on:
+   - Which chord appears most frequently or starts/ends the song
+   - Starting and ending chords (these often indicate tonal center)
+   - Chord progression patterns and resolution points
+   - Where the harmony feels most "at rest"
+6. Note any modal characteristics or borrowed chords if present
+7. If there are multiple key possibilities, choose the most likely one based on harmonic analysis
+8. ALWAYS provide a key - make your best educated guess based on the chord patterns
+
+EXAMPLE FORMAT (English):
+Title: Song Name
+Artist: Artist Name
+Key: C Major (determined by C-G-Am-F progression - I-V-vi-IV in C Major)
+
+[Intro]
+[C]    [G]    [Am]    [F]
+
+Verse 1:
+Come [C]over here and [G]tell me everything I [Am]wanna [F]hear
+I'll pre[C]tend that I don't [G]see the reason you're [Am]back over [F]here
+
+Chorus:
+So [C]kiss me one more [G]time, cross every [Am]T and dot every [F]I
+Of that [C]pretty little [G]lie
+
+EXAMPLE FORMAT (Hebrew/Other Languages):
+Number: 171
+Title: Hineni (Here I Am)
+Key: B Major
+
+[Verse]
+[B]הנני [A]כאן ל[B]פני[C#m]ך
+[B]כל [F#m]עולמי [B]בידך[A]ותיך, [B]כולי [E]שלך [A]לנצח
+
+Analysis: B Major determined by B-A-B-C#m-B-E progression. Song starts and ends on B (tonic). The A natural (instead of A#) gives mixolydian flavor common in Hebrew worship. Progression is I-VII-I-ii-I-IV in B Major.
+
+CRITICAL FORMATTING RULES:
+1. The "Key:" line MUST appear near the top, after Number/Title
+2. Put ONLY the key name on the "Key:" line (e.g., "Key: B Major" or "Key: E Minor")
+3. Add detailed analysis AFTER the lyrics as a separate "Analysis:" section
+4. Format:
+   Number: [if visible]
+   Title: [song name]
+   Key: [KEY NAME ONLY - NO EXPLANATION HERE]
+
+   [lyrics with chords]
+
+   Analysis: [Detailed explanation of why this key, chord progressions, modal characteristics, etc.]
+
+Simply read the text and format with inline [chord] brackets. Preserve the exact language of the lyrics. This is OCR of the user's personal handwritten practice notes.`;
 
 module.exports = async (req, res) => {
     // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     // Handle OPTIONS request for CORS
     if (req.method === 'OPTIONS') {
@@ -18,115 +126,95 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY
+        const anthropic = new Anthropic({
+            apiKey: process.env.ANTHROPIC_API_KEY
         });
 
-        // Get file from request
-        const { imageData, mimeType, intenseMode } = req.body;
+        // Get data from request
+        const { imageData, mimeType, feedback, previousTranscription, intenseMode } = req.body;
 
         if (!imageData) {
             return res.status(400).json({ error: 'No image data provided' });
         }
 
-        // Set max tokens based on mode: regular (2000) or intense (5000)
-        const maxTokens = intenseMode ? 5000 : 2000;
+        // Build message content
+        const instructionContent = [];
 
-        // Call OpenAI Vision API with low temperature for precise output
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [{
-                role: "user",
-                content: [{
-                    type: "text",
-                    text: `You are an expert music OCR assistant specialized in extracting chord charts from images. Your task is to transcribe chord charts with MAXIMUM PRECISION in ChordPro format.
+        if (previousTranscription) {
+            instructionContent.push({
+                type: 'text',
+                text: `Previous transcription (for reference):\n${previousTranscription}`
+            });
+        }
 
-OUTPUT FORMAT - ChordPro Standard:
-Return the transcription in ChordPro format with metadata tags and section blocks:
+        if (feedback) {
+            instructionContent.push({
+                type: 'text',
+                text: `User feedback requesting corrections: ${feedback}`
+            });
+        }
 
-{title: [Extract song title from image]}
-{author: [Extract artist/composer if visible, or leave blank if not shown]}
-{key: [Extract key signature - e.g., "G Major", "Am", "F"]}
-{tempo: [Extract BPM if shown, or estimate based on genre - optional]}
-{time: [Extract time signature if shown, e.g., "4/4", "3/4" - optional]}
+        // Determine content type based on mime type
+        const contentType = mimeType === 'application/pdf' ? 'document' : 'image';
 
-{comment: VERSE 1}
-O [G]come all ye [D]faithful, [G]joyful and tri[C]umphant
-O [Em]come ye, O [Am]come ye to [D]Bethle[G]hem
-
-{comment: CHORUS}
-O [G]come let us a[D]dore [Em]Him
-O [C]come let us a[G]dore Him
-
-CRITICAL: CHORD PLACEMENT ACCURACY (MOST IMPORTANT)
-- Each chord must be placed EXACTLY at the syllable/character it appears above in the image
-- Count character positions VERY carefully - chords align with specific syllables, not word starts
-- If a chord is above "ha" in "hazeh", place it as "ha[C]zeh", NOT "[C]hazeh" or "hazeh[C]"
-- Look at the VERTICAL ALIGNMENT in the image - the chord is directly above specific letters
-- For transliterated Hebrew: "la'" counts as 3 characters, "sha" as 3, etc.
-
-METADATA EXTRACTION:
-1. {title: } - Extract song title from top of chart (required)
-2. {author: } - Extract artist/composer name if visible (optional)
-3. {key: } - Look for key signature in title (e.g., [F], [G], [Am]) or marked as "Key: X" (required)
-4. {tempo: } - Extract BPM if shown, or estimate: slow hymns ~70, worship ~80-100, upbeat ~120+ (optional)
-5. {time: } - Extract time signature if shown, default to 4/4 for most songs (optional)
-
-SECTION BLOCKS:
-- Wrap each section with {comment: SECTION NAME} using UPPERCASE
-- ALLOWED SECTION NAMES (use these EXACT names):
-  INTRO, VERSE 1, VERSE 2, VERSE 3, VERSE 4, PRE-CHORUS, PRE-CHORUS 1, PRE-CHORUS 2,
-  CHORUS, CHORUS 1, CHORUS 2, BRIDGE, BRIDGE 1, BRIDGE 2, INTERLUDE, TAG, CODA, OUTRO
-- Map common abbreviations: V1→VERSE 1, V2→VERSE 2, C→CHORUS, B→BRIDGE, PC→PRE-CHORUS, I→INTRO, O→OUTRO
-- Detect section headers like "Verse 1:", "Chorus:", "V1:", "C:", etc. and convert to standard format
-- Each section should be separated by blank lines
-
-CHORD PLACEMENT EXAMPLES:
-- Image shows "F" above "o" in "la'olam": Output "la'[F]olam"
-- Image shows "Gm" above "ze" in "hazeh": Output "ha[Gm]zeh"
-- Image shows "C" above "vat" in "ahavat": Output "aha[C]vat"
-- Chords are NOT always at word beginnings - check vertical alignment carefully!
-
-FORMATTING RULES:
-1. Use INLINE BRACKET FORMAT: Insert [chord] directly BEFORE the syllable/character it's above
-2. Preserve exact text, spelling, and language (Hebrew, Arabic, English, etc.)
-3. For chord-only sections: {comment: Intro}\n[Em] [D] [C] [G]
-4. Maintain proper spacing and line breaks between sections
-
-VERIFICATION STEP:
-Before finalizing, double-check each chord placement by verifying the character directly below the chord in the image matches where you placed [chord] in the text.
-
-OUTPUT REQUIREMENTS:
-- Return ONLY the ChordPro formatted chord chart with metadata and section blocks
-- DO NOT include any analysis, commentary, or explanations
-- DO NOT add bullet points analyzing chord progressions, harmonic movement, or musical theory
-- DO NOT include "Analysis:" sections or numbered observations
-- Just the clean chord chart with lyrics and chords
-
-This is the user's own chord sheet for personal practice.`
-                }, {
-                    type: "image_url",
-                    image_url: {
-                        url: `data:${mimeType};base64,${imageData}`
-                    }
-                }]
-            }],
-            max_tokens: maxTokens,
-            temperature: 0.2
+        instructionContent.push({
+            type: contentType,
+            source: {
+                type: 'base64',
+                media_type: mimeType,
+                data: imageData
+            }
         });
 
-        const transcription = response.choices[0].message.content.trim();
+        instructionContent.push({
+            type: 'text',
+            text: BASE_PROMPT
+        });
+
+        // Set max tokens based on mode
+        const maxTokens = intenseMode ? 5000 : 2000;
+
+        // Call Anthropic Claude API
+        const response = await anthropic.messages.create({
+            model: CLAUDE_MODEL,
+            max_tokens: maxTokens,
+            messages: [
+                {
+                    role: 'user',
+                    content: instructionContent
+                }
+            ]
+        });
+
+        const transcription = response.content?.[0]?.text || '';
+
+        console.log('=== CLAUDE RESPONSE ===');
+        console.log('First 500 chars:', transcription.substring(0, 500));
+        console.log('Has Key line?:', transcription.includes('Key:'));
+        console.log('Transcription successful');
 
         return res.status(200).json({
             success: true,
-            transcription: transcription
+            transcription: transcription,
+            metadata: {
+                model: CLAUDE_MODEL,
+                feedbackApplied: Boolean(feedback)
+            }
         });
 
     } catch (error) {
-        console.error('Error:', error);
-        return res.status(500).json({
-            success: false,
-            error: error.message || 'Failed to process image'
+        console.error('Error analyzing chart:', error);
+
+        const status = error.status || 500;
+        let message = error.message || 'Failed to analyze chart';
+
+        if (error.error?.type === 'not_found_error') {
+            message = `Anthropic model "${CLAUDE_MODEL}" is unavailable. Check ANTHROPIC_MODEL/.env configuration or account access.`;
+        }
+
+        return res.status(status).json({
+            error: 'Failed to analyze chart',
+            message
         });
     }
 };
