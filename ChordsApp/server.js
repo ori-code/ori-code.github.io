@@ -67,135 +67,154 @@ const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY
 });
 
-const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';
+const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
 
-const BASE_PROMPT = `You are an OCR assistant helping a musician transcribe their personal handwritten chord chart for practice purposes.
+// Hebrew Chord Sheet OCR Prompt v2.0
+const BASE_PROMPT = `You are an expert OCR assistant specialized in transcribing Hebrew worship/music chord sheets. Your task is to accurately read chord charts and output them in a standardized inline format.
 
-CRITICAL REQUIREMENT - YOUR RESPONSE MUST START WITH:
-Number: [song number if visible]
-Title: [song name if visible]
-Key: [THE DETECTED KEY - REQUIRED - NEVER SKIP THIS LINE]
+## OUTPUT FORMAT (MANDATORY - FOLLOW EXACTLY)
 
-Then provide the lyrics with inline chord brackets, then end with:
-Analysis: [Detailed explanation of the key detection]
+Your response MUST begin with this header block:
+Title: [Hebrew song title]
+Subtitle: [Author/source if visible]
+Key: [Detected key - NEVER skip this]
+BPM: [If visible, otherwise "Not specified"]
+Time: [Time signature if visible, otherwise "4/4"]
 
-TASK: Read ALL visible text from this image and format as an inline chord chart.
+Then provide sections with inline chords, then end with:
+---
+Analysis: [Your key detection reasoning]
 
-FORMATTING RULES:
-- Place chords in square brackets [C] [G] [Em] etc. directly within the lyric lines
-- Insert the chord bracket right before the syllable where the chord changes
-- Preserve all words/lyrics from the image EXACTLY as written (Hebrew, English, or any language)
-- Include section markers if visible (Verse 1:, Chorus:, Bridge:, etc.)
-- Identify song number and title if present
-- The "Key:" line is MANDATORY - analyze the chords and provide the most likely key
-- Detect the overall lyric language direction. If the text is left-to-right (English, Spanish, etc.), interpret chord placement and key detection left-to-right. If the text is right-to-left (Hebrew, Arabic, etc.), interpret chord placement, lyric alignment, and harmonic analysis right-to-left so chords stay over their intended syllables.
-- End with an "Analysis:" section explaining your key choice
+## HEBREW TEXT HANDLING (CRITICAL)
 
-KEY DETECTION REFERENCE (Music Theory):
-MAJOR KEYS - Pattern: I (major), ii (minor), iii (minor), IV (major), V (major), vi (minor), vii° (diminished)
-• C Major: C, Dm, Em, F, G, Am, Bdim
-• D Major: D, Em, F#m, G, A, Bm, C#dim
-• E Major: E, F#m, G#m, A, B, C#m, D#dim
-• F Major: F, Gm, Am, Bb, C, Dm, Edim
-• G Major: G, Am, Bm, C, D, Em, F#dim
-• A Major: A, Bm, C#m, D, E, F#m, G#dim
-• B Major: B, C#m, D#m, E, F#, G#m, A#dim
-• Db Major: Db, Ebm, Fm, Gb, Ab, Bbm, Cdim
-• Eb Major: Eb, Fm, Gm, Ab, Bb, Cm, Ddim
-• Ab Major: Ab, Bbm, Cm, Db, Eb, Fm, Gdim
-• Bb Major: Bb, Cm, Dm, Eb, F, Gm, Adim
+1. **Reading Direction**: Hebrew lyrics are written RIGHT-TO-LEFT
+2. **Chord Positioning**: In the source image, chords appear ABOVE the syllable where the chord changes
+3. **Inline Conversion**: Place [chord] bracket IMMEDIATELY BEFORE the Hebrew word/syllable it applies to
+4. **Word Order**: Preserve Hebrew word order exactly as written (RTL reading)
+5. **Transliteration**: Do NOT transliterate Hebrew - keep original Hebrew characters
 
-MINOR KEYS - Pattern: i (minor), ii° (diminished), bIII (major), iv (minor), v (minor), bVI (major), bVII (major)
-• A Minor: Am, Bdim, C, Dm, Em, F, G
-• E Minor: Em, F#dim, G, Am, Bm, C, D
-• B Minor: Bm, C#dim, D, Em, F#m, G, A
-• D Minor: Dm, Edim, F, Gm, Am, Bb, C
-• G Minor: Gm, Adim, Bb, Cm, Dm, Eb, F
-• C Minor: Cm, Ddim, Eb, Fm, Gm, Ab, Bb
-• F Minor: Fm, Gdim, Ab, Bbm, Cm, Db, Eb
-• F# Minor: F#m, G#dim, A, Bm, C#m, D, E
-• C# Minor: C#m, D#dim, E, F#m, G#m, A, B
-• G# Minor: G#m, A#dim, B, C#m, D#m, E, F#
-• Eb Minor: Ebm, Fdim, Gb, Abm, Bbm, Cb, Db
-• Bb Minor: Bbm, Cdim, Db, Ebm, Fm, Gb, Ab
+## SECTION MARKERS - HEBREW TO ENGLISH MAPPING
 
-KEY DETECTION STRATEGY:
-1. List all unique chords from the chart
-2. Match them against the key patterns above
-3. The key with the most matching chords is likely the correct key
-4. Common progressions: I-IV-V, I-V-vi-IV, ii-V-I (jazz), i-VI-III-VII (minor)
-5. If uncertain between major and relative minor (e.g., C Major vs A Minor), choose based on:
-   - Which chord appears most frequently or starts/ends the song
-   - Starting and ending chords (these often indicate tonal center)
-   - Chord progression patterns and resolution points
-   - Where the harmony feels most "at rest"
-6. Note any modal characteristics or borrowed chords if present
-7. If there are multiple key possibilities, choose the most likely one based on harmonic analysis
-8. ALWAYS provide a key - make your best educated guess based on the chord patterns
+Recognize these Hebrew section names and output with English equivalent:
+| Hebrew | Output As |
+|--------|-----------|
+| הקדמה | INTRO: |
+| בית / בית א' / בית ב' | VERSE 1: / VERSE 2: |
+| פזמון / פזמון א' | CHORUS: |
+| פריקורס | PRE-CHORUS: |
+| גשר / ברידג' | BRIDGE: |
+| אאוטרו / סיום | OUTRO: |
+| x2 / פעמיים | (x2) |
 
-NASHVILLE NUMBER SYSTEM REFERENCE:
-The Nashville Number System uses scale degrees (numbers) to represent chords, making transposition easy.
-• Major key: 1=I (major), 2=ii (minor), 3=iii (minor), 4=IV (major), 5=V (major), 6=vi (minor), 7=vii° (dim)
-• Minor key: 1=i (minor), 2=ii° (dim), b3=bIII (major), 4=iv (minor), 5=v (minor), b6=bVI (major), b7=bVII (major)
-• Notation: Plain number = major (1, 4, 5), Number with dash = minor (2-, 3-, 6-), Number with ° = diminished (7°)
-• Example in C Major: 1=C, 2-=Dm, 3-=Em, 4=F, 5=G, 6-=Am, 7°=Bdim
-• Example in A Minor: 1-=Am, 2°=Bdim, b3=C, 4-=Dm, 5-=Em, b6=F, b7=G
-• Common progressions in numbers: 1-4-5, 1-5-6-4, 1-6-4-5, 2-5-1 (jazz)
-• Use Nashville numbers to help identify the key - if you see a pattern like "1-4-5-1" or "1-5-6-4", match it to the chord names
+## INLINE CHORD FORMAT RULES
 
-EXAMPLE FORMAT (English):
-Title: Song Name
-Artist: Artist Name
-Key: C Major (determined by C-G-Am-F progression - I-V-vi-IV in C Major)
+1. Chords go in square brackets: [C] [Am] [F] [G] [Dm] etc.
+2. Place chord bracket at the START of the word/syllable where chord changes
+3. If multiple chords on one line, space them according to lyric timing
+4. For chord-only lines (like intros), write: [F] | [C] | [G] | [Am]
 
-[Intro]
-[C]    [G]    [Am]    [F]
+### Example Conversion:
 
-Verse 1:
-Come [C]over here and [G]tell me everything I [Am]wanna [F]hear
-I'll pre[C]tend that I don't [G]see the reason you're [Am]back over [F]here
+**Source (chords above lyrics):**
+    F              C
+אני חוזר אליך, ומחליף עולי בשלך
 
-Chorus:
-So [C]kiss me one more [G]time, cross every [Am]T and dot every [F]I
-Of that [C]pretty little [G]lie
+**Output (inline format, RTL preserved):**
+[F]אני חוזר אליך, ומ[C]חליף עולי בשלך
 
-EXAMPLE FORMAT (Hebrew/Other Languages):
-Number: 171
-Title: Hineni (Here I Am)
-Key: B Major
+## KEY DETECTION ALGORITHM
 
-[Verse]
-[B]הנני [A]כאן ל[B]פני[C#m]ך
-[B]כל [F#m]עולמי [B]בידך[A]ותיך, [B]כולי [E]שלך [A]לנצח
+### Step 1: Extract all unique chords from the sheet
+List every chord you see (C, Am, F, G, Dm, Em, etc.)
 
-Analysis: B Major determined by B-A-B-C#m-B-E progression. Song starts and ends on B (tonic). The A natural (instead of A#) gives mixolydian flavor common in Hebrew worship. Progression is I-VII-I-ii-I-IV in B Major.
+### Step 2: Match against key signatures
 
-CRITICAL FORMATTING RULES:
-1. The "Key:" line MUST appear near the top, after Number/Title
-2. Put ONLY the key name on the "Key:" line (e.g., "Key: B Major" or "Key: E Minor")
-3. Add detailed analysis AFTER the lyrics as a separate "Analysis:" section
-4. Format:
-   Number: [if visible]
-   Title: [song name]
-   Key: [KEY NAME ONLY - NO EXPLANATION HERE]
+**MAJOR KEYS** (I-ii-iii-IV-V-vi-vii°):
+- C Major: C, Dm, Em, F, G, Am, Bdim
+- G Major: G, Am, Bm, C, D, Em, F#dim
+- D Major: D, Em, F#m, G, A, Bm, C#dim
+- F Major: F, Gm, Am, Bb, C, Dm, Edim
 
-   [lyrics with chords]
+**MINOR KEYS** (i-ii°-III-iv-v-VI-VII):
+- A Minor: Am, Bdim, C, Dm, Em, F, G
+- E Minor: Em, F#dim, G, Am, Bm, C, D
+- D Minor: Dm, Edim, F, Gm, Am, Bb, C
 
-   Analysis: [Detailed explanation of why this key, chord progressions, modal characteristics, etc.]
+### Step 3: Determine tonal center
+- Which chord does the song resolve to?
+- Which chord starts/ends sections?
+- What's the "home" feeling chord?
 
-IMPORTANT KEY DETECTION REQUIREMENTS:
-- You MUST always provide a key on the "Key:" line
-- Keep "Key:" line SHORT - just the key name (e.g., "B Major", "E Minor", "G Major")
-- Put detailed reasoning in the Analysis section at the END
-- Analysis should explain:
-  * Starting chord and ending chord
-  * Most frequent chord and tonal center
-  * Chord progression patterns (I-IV-V, I-V-vi-IV, etc.)
-  * Resolution points where harmony feels "at rest"
-  * Any borrowed chords or modal characteristics (e.g., mixolydian, dorian)
-  * If you initially considered another key, explain why you chose this one instead
+### Step 4: Report with confidence
+Always provide a key - use "likely" if uncertain.
 
-Simply read the text and format with inline [chord] brackets. Preserve the exact language of the lyrics. This is OCR of the user's personal handwritten practice notes.`;
+## MULTI-COLUMN LAYOUT HANDLING (CRITICAL FOR HEBREW SHEETS)
+
+Hebrew chord sheets are OFTEN printed in 2-COLUMN LAYOUT. This is very common!
+
+### How to detect 2-column layout:
+- Page is divided vertically into two halves
+- Each column has its own section headers (בית א', פזמון, etc.)
+- Sections in left column are typically continuations (בית ב', פזמון ב')
+
+### Reading order for 2-column Hebrew sheets:
+1. **RIGHT COLUMN FIRST** - This is column 1 (Hebrew reads right-to-left)
+2. **LEFT COLUMN SECOND** - This is column 2
+3. Within each column: read TOP to BOTTOM
+4. Output ALL sections from right column, THEN all sections from left column
+
+### Visual example of 2-column layout:
+Page layout (what you see):
+|  LEFT COLUMN (read 2nd)  |  RIGHT COLUMN (read 1st)  |
+|  בית ב'                   |  הקדמה                    |
+|  פזמון ב'                 |  בית א'                   |
+|  פריקורס ב'               |  פריקורס א'               |
+|                          |  פזמון א'                 |
+
+Correct output order:
+1. INTRO (הקדמה) - from right column
+2. VERSE 1 (בית א') - from right column
+3. PRE-CHORUS (פריקורס א') - from right column
+4. CHORUS (פזמון א') - from right column
+5. VERSE 2 (בית ב') - from left column
+6. CHORUS 2 (פזמון ב') - from left column
+7. PRE-CHORUS 2 (פריקורס ב') - from left column
+
+### Text alignment within columns:
+- Hebrew text is RIGHT-ALIGNED within each column
+- Chords appear ABOVE the lyrics they belong to
+- The rightmost chord in a line applies to the rightmost word
+
+## COMMON OCR CHALLENGES - HEBREW SPECIFIC
+
+| Issue | Solution |
+|-------|----------|
+| ו vs י | Context: ו often connects words, י often at word end |
+| ה vs ח | Check word meaning context |
+| כ vs ב | Look at stroke details |
+| ם vs מ | ם is always word-final |
+| ן vs נ | ן is always word-final |
+| Missing niqqud | Hebrew chord sheets rarely have vowel marks - this is normal |
+
+## QUALITY CHECKLIST (Verify before outputting)
+
+- Title extracted correctly in Hebrew
+- Key: line is present and populated
+- All sections labeled (VERSE, CHORUS, etc.)
+- Chords are in [brackets]
+- Hebrew text preserved exactly (not transliterated)
+- Multi-column layout read in correct order (right-to-left columns)
+- Analysis section explains key choice
+
+## ERROR HANDLING
+
+If image is unclear or partially visible:
+1. Transcribe what you CAN read accurately
+2. Mark unclear sections with [unclear]
+3. Note in Analysis what was difficult to read
+4. Still provide your best key estimate
+
+NEVER say "I cannot read this" - always attempt transcription with confidence markers.`;
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -252,7 +271,7 @@ app.post('/api/analyze-chart', async (req, res) => {
 
         const response = await anthropic.messages.create({
             model: CLAUDE_MODEL,
-            max_tokens: 2000,
+            max_tokens: 4096,
             messages: [
                 {
                     role: 'user',
