@@ -90,13 +90,42 @@ List every chord you see (C, Am, F, G, Dm, Em, etc.)
 ### Step 4: Report with confidence
 Always provide a key - use "likely" if uncertain.
 
-## MULTI-COLUMN LAYOUT HANDLING
+## MULTI-COLUMN LAYOUT HANDLING (CRITICAL FOR HEBREW SHEETS)
 
-Hebrew chord sheets often have 2 columns read RIGHT-TO-LEFT:
-1. Start with the RIGHT column (this is column 1 in Hebrew reading)
-2. Then read the LEFT column (this is column 2)
-3. Within each column, read TOP to BOTTOM
-4. Section headers indicate new sections regardless of column
+Hebrew chord sheets are OFTEN printed in 2-COLUMN LAYOUT. This is very common!
+
+### How to detect 2-column layout:
+- Page is divided vertically into two halves
+- Each column has its own section headers (בית א', פזמון, etc.)
+- Sections in left column are typically continuations (בית ב', פזמון ב')
+
+### Reading order for 2-column Hebrew sheets:
+1. **RIGHT COLUMN FIRST** - This is column 1 (Hebrew reads right-to-left)
+2. **LEFT COLUMN SECOND** - This is column 2
+3. Within each column: read TOP to BOTTOM
+4. Output ALL sections from right column, THEN all sections from left column
+
+### Visual example of 2-column layout:
+Page layout (what you see):
+|  LEFT COLUMN (read 2nd)  |  RIGHT COLUMN (read 1st)  |
+|  בית ב'                   |  הקדמה                    |
+|  פזמון ב'                 |  בית א'                   |
+|  פריקורס ב'               |  פריקורס א'               |
+|                          |  פזמון א'                 |
+
+Correct output order:
+1. INTRO (הקדמה) - from right column
+2. VERSE 1 (בית א') - from right column
+3. PRE-CHORUS (פריקורס א') - from right column
+4. CHORUS (פזמון א') - from right column
+5. VERSE 2 (בית ב') - from left column
+6. CHORUS 2 (פזמון ב') - from left column
+7. PRE-CHORUS 2 (פריקורס ב') - from left column
+
+### Text alignment within columns:
+- Hebrew text is RIGHT-ALIGNED within each column
+- Chords appear ABOVE the lyrics they belong to
+- The rightmost chord in a line applies to the rightmost word
 
 ## COMMON OCR CHALLENGES - HEBREW SPECIFIC
 
