@@ -8,8 +8,8 @@ const cors = require('cors')({ origin: true });
 admin.initializeApp();
 const db = admin.database();
 
-// Claude model configuration
-const CLAUDE_MODEL = 'claude-3-5-haiku-20241022';
+// Claude model configuration - Sonnet for best OCR accuracy
+const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
 // Base prompt for OCR
 const BASE_PROMPT = `You are an OCR assistant helping a musician transcribe their personal handwritten chord chart for practice purposes.
@@ -83,7 +83,9 @@ async function verifyToken(req) {
  * analyzeChart - Main OCR endpoint using Anthropic Claude
  * POST request with { imageData, mimeType, feedback?, previousTranscription?, intenseMode? }
  */
-exports.analyzeChart = functions.https.onRequest((req, res) => {
+exports.analyzeChart = functions
+    .runWith({ secrets: ['ANTHROPIC_API_KEY'] })
+    .https.onRequest((req, res) => {
     cors(req, res, async () => {
         if (req.method !== 'POST') {
             return res.status(405).json({ error: 'Method not allowed' });

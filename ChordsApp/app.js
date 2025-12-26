@@ -69,6 +69,38 @@ window.styledPrompt = (message, defaultValue = '', title = 'Enter value') => {
     });
 };
 
+// ============= SUCCESS TOAST NOTIFICATION =============
+window.showSuccessToast = (message = 'Analysis complete!') => {
+    // Remove existing toast if any
+    const existingToast = document.querySelector('.success-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = 'success-toast';
+    toast.innerHTML = `
+        <div class="success-toast-content">
+            <span class="success-toast-icon">✓</span>
+            <span>${message}</span>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Show toast with animation
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, 3000);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('chartFileInput');
     const previewPanel = document.getElementById('uploadPreview');
@@ -1027,6 +1059,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 setStatus('success', 'AI transcription ready! Edit visually on the left.');
 
+                // Show success toast notification
+                window.showSuccessToast('AI transcription complete!');
+
                 // Increment analysis counter
                 if (window.subscriptionManager) {
                     await window.subscriptionManager.incrementAnalysisCount();
@@ -1780,6 +1815,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                         transposeStepInput.value = 0;
                         setStatus('success', 'Re-analysis applied! Review the updated chart.');
+
+                        // Show success toast notification
+                        window.showSuccessToast('Re-analysis complete!');
 
                         updateLivePreview();
 
