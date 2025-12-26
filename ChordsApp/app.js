@@ -1142,6 +1142,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     return line;
                 }
 
+                // Skip section header lines (VERSE, CHORUS, BRIDGE, etc.)
+                // Matches: [VERSE 1], CHORUS:, BRIDGE 2:, Pre-Chorus, etc.
+                const sectionHeaderPattern = /^[\s\[\]]*(?:VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE[- ]?CHORUS|INTERLUDE|INSTRUMENTAL|ENDING|TAG|REFRAIN|HOOK|CODA|VAMP|TURN(?:AROUND)?|SOLO)[\s\d\[\]:]*$/i;
+                if (sectionHeaderPattern.test(line.trim())) {
+                    console.log(`  ⏭️ Line ${index} is section header, skipping:`, line.substring(0, 60));
+                    return line;
+                }
+
                 // Check if this line looks like a chord line
                 // More flexible detection: line with mostly chords and whitespace
 
@@ -1274,6 +1282,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const cleanLine = line.replace(/<[^>]*>/g, '').trim(); // Remove HTML tags
             const sectionPattern = /^(?:[IVBCOTPC]+\d*\s*){3,}$/; // At least 3 section notations
             if (sectionPattern.test(cleanLine)) {
+                result.push(line);
+                continue;
+            }
+
+            // Skip section header lines (VERSE, CHORUS, BRIDGE, etc.)
+            const sectionHeaderPattern = /^[\s\[\]]*(?:VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE[- ]?CHORUS|INTERLUDE|INSTRUMENTAL|ENDING|TAG|REFRAIN|HOOK|CODA|VAMP|TURN(?:AROUND)?|SOLO)[\s\d\[\]:]*$/i;
+            if (sectionHeaderPattern.test(cleanLine)) {
                 result.push(line);
                 continue;
             }

@@ -1750,15 +1750,15 @@ a {
     border-radius: 8px;
 }
 
-/* Song Section Blocks - Invisible until selected */
+/* Song Section Blocks - Minimal spacing for space efficiency */
 .song-section-block {
-    margin: 16px 0;
-    padding: 8px;
-    border: 2px dashed #f97316; /* ORANGE DASHED BORDER - section blocks */
-    border-radius: 8px;
+    margin: 1px 0;
+    padding: 2px 4px;
+    border: 1px dashed #f97316; /* ORANGE DASHED BORDER - section blocks */
+    border-radius: 3px;
     cursor: pointer;
     transition: background-color 0.15s ease;
-    background-color: rgba(249, 115, 22, 0.05); /* Light orange tint */
+    background-color: rgba(249, 115, 22, 0.02); /* Very subtle orange tint */
     /* Keep each section block together - don't split across columns/pages */
     break-inside: avoid;
     -webkit-column-break-inside: avoid;
@@ -1770,30 +1770,32 @@ a {
     background-color: rgba(139, 92, 246, 0.05);
 }
 
-/* Selected section - blinking animation */
+/* Selected section - soft 2-second blinking animation */
 .song-section-block.section-selected {
-    border-color: rgba(139, 92, 246, 0.9);
-    background: rgba(139, 92, 246, 0.12);
-    animation: sectionBlink 1.5s ease-in-out infinite;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+    border-color: rgba(139, 92, 246, 1);
+    border-width: 2px;
+    background: rgba(139, 92, 246, 0.15);
+    animation: sectionBlink 1s ease-in-out 2;
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
 }
 
 @keyframes sectionBlink {
     0%, 100% {
-        border-color: rgba(139, 92, 246, 0.9);
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+        background: rgba(139, 92, 246, 0.08);
+        box-shadow: 0 0 4px rgba(139, 92, 246, 0.3);
     }
     50% {
-        border-color: rgba(139, 92, 246, 1);
-        box-shadow: 0 0 0 5px rgba(139, 92, 246, 0.35);
+        background: rgba(139, 92, 246, 0.25);
+        box-shadow: 0 0 12px rgba(139, 92, 246, 0.6);
     }
 }
 
 /* Static border after animation - subtle but visible */
 .song-section-block.section-selected-static {
     border-color: rgba(139, 92, 246, 0.7);
+    border-width: 2px;
     background: transparent;
-    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
+    box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.1);
 }
 
 /* Overflow Notification Toast */
