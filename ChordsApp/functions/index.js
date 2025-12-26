@@ -11,54 +11,123 @@ const db = admin.database();
 // Claude model configuration - Sonnet for best OCR accuracy
 const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
 
-// Base prompt for OCR
-const BASE_PROMPT = `You are an OCR assistant helping a musician transcribe their personal handwritten chord chart for practice purposes.
+// Base prompt for OCR - Hebrew Chord Sheet OCR Prompt v2.0
+const BASE_PROMPT = `You are an expert OCR assistant specialized in transcribing Hebrew worship/music chord sheets. Your task is to accurately read chord charts and output them in a standardized inline format.
 
-CRITICAL REQUIREMENT - YOUR RESPONSE MUST START WITH:
-Number: [song number if visible]
-Title: [song name if visible]
-Key: [THE DETECTED KEY - REQUIRED - NEVER SKIP THIS LINE]
+## OUTPUT FORMAT (MANDATORY - FOLLOW EXACTLY)
 
-Then provide the lyrics with inline chord brackets, then end with:
-Analysis: [Detailed explanation of the key detection]
+Your response MUST begin with this header block:
+Title: [Hebrew song title]
+Subtitle: [Author/source if visible]
+Key: [Detected key - NEVER skip this]
+BPM: [If visible, otherwise "Not specified"]
+Time: [Time signature if visible, otherwise "4/4"]
 
-TASK: Read ALL visible text from this image and format as an inline chord chart.
+Then provide sections with inline chords, then end with:
+---
+Analysis: [Your key detection reasoning]
 
-FORMATTING RULES:
-- Place chords in square brackets [C] [G] [Em] etc. directly within the lyric lines
-- Insert the chord bracket right before the syllable where the chord changes
-- Preserve all words/lyrics from the image EXACTLY as written (Hebrew, English, or any language)
-- Include section markers if visible (Verse 1:, Chorus:, Bridge:, etc.)
-- Identify song number and title if present
-- The "Key:" line is MANDATORY - analyze the chords and provide the most likely key
-- Detect the overall lyric language direction. If the text is left-to-right (English, Spanish, etc.), interpret chord placement and key detection left-to-right. If the text is right-to-left (Hebrew, Arabic, etc.), interpret chord placement, lyric alignment, and harmonic analysis right-to-left so chords stay over their intended syllables.
-- End with an "Analysis:" section explaining your key choice
+## HEBREW TEXT HANDLING (CRITICAL)
 
-KEY DETECTION REFERENCE (Music Theory):
-MAJOR KEYS - Pattern: I (major), ii (minor), iii (minor), IV (major), V (major), vi (minor), vii° (diminished)
-• C Major: C, Dm, Em, F, G, Am, Bdim
-• D Major: D, Em, F#m, G, A, Bm, C#dim
-• E Major: E, F#m, G#m, A, B, C#m, D#dim
-• F Major: F, Gm, Am, Bb, C, Dm, Edim
-• G Major: G, Am, Bm, C, D, Em, F#dim
-• A Major: A, Bm, C#m, D, E, F#m, G#dim
-• B Major: B, C#m, D#m, E, F#, G#m, A#dim
+1. **Reading Direction**: Hebrew lyrics are written RIGHT-TO-LEFT
+2. **Chord Positioning**: In the source image, chords appear ABOVE the syllable where the chord changes
+3. **Inline Conversion**: Place [chord] bracket IMMEDIATELY BEFORE the Hebrew word/syllable it applies to
+4. **Word Order**: Preserve Hebrew word order exactly as written (RTL reading)
+5. **Transliteration**: Do NOT transliterate Hebrew - keep original Hebrew characters
 
-MINOR KEYS - Pattern: i (minor), ii° (diminished), bIII (major), iv (minor), v (minor), bVI (major), bVII (major)
-• A Minor: Am, Bdim, C, Dm, Em, F, G
-• E Minor: Em, F#dim, G, Am, Bm, C, D
-• B Minor: Bm, C#dim, D, Em, F#m, G, A
-• D Minor: Dm, Edim, F, Gm, Am, Bb, C
-• G Minor: Gm, Adim, Bb, Cm, Dm, Eb, F
+## SECTION MARKERS - HEBREW TO ENGLISH MAPPING
 
-KEY DETECTION STRATEGY:
-1. List all unique chords from the chart
-2. Match them against the key patterns above
-3. The key with the most matching chords is likely the correct key
-4. Common progressions: I-IV-V, I-V-vi-IV, ii-V-I (jazz), i-VI-III-VII (minor)
-5. ALWAYS provide a key - make your best educated guess based on the chord patterns
+Recognize these Hebrew section names and output with English equivalent:
+| Hebrew | Output As |
+|--------|-----------|
+| הקדמה | INTRO: |
+| בית / בית א' / בית ב' | VERSE 1: / VERSE 2: |
+| פזמון / פזמון א' | CHORUS: |
+| פריקורס | PRE-CHORUS: |
+| גשר / ברידג' | BRIDGE: |
+| אאוטרו / סיום | OUTRO: |
+| x2 / פעמיים | (x2) |
 
-Simply read the text and format with inline [chord] brackets. Preserve the exact language of the lyrics. This is OCR of the user's personal handwritten practice notes.`;
+## INLINE CHORD FORMAT RULES
+
+1. Chords go in square brackets: [C] [Am] [F] [G] [Dm] etc.
+2. Place chord bracket at the START of the word/syllable where chord changes
+3. If multiple chords on one line, space them according to lyric timing
+4. For chord-only lines (like intros), write: [F] | [C] | [G] | [Am]
+
+### Example Conversion:
+
+**Source (chords above lyrics):**
+    F              C
+אני חוזר אליך, ומחליף עולי בשלך
+
+**Output (inline format, RTL preserved):**
+[F]אני חוזר אליך, ומ[C]חליף עולי בשלך
+
+## KEY DETECTION ALGORITHM
+
+### Step 1: Extract all unique chords from the sheet
+List every chord you see (C, Am, F, G, Dm, Em, etc.)
+
+### Step 2: Match against key signatures
+
+**MAJOR KEYS** (I-ii-iii-IV-V-vi-vii°):
+- C Major: C, Dm, Em, F, G, Am, Bdim
+- G Major: G, Am, Bm, C, D, Em, F#dim
+- D Major: D, Em, F#m, G, A, Bm, C#dim
+- F Major: F, Gm, Am, Bb, C, Dm, Edim
+
+**MINOR KEYS** (i-ii°-III-iv-v-VI-VII):
+- A Minor: Am, Bdim, C, Dm, Em, F, G
+- E Minor: Em, F#dim, G, Am, Bm, C, D
+- D Minor: Dm, Edim, F, Gm, Am, Bb, C
+
+### Step 3: Determine tonal center
+- Which chord does the song resolve to?
+- Which chord starts/ends sections?
+- What's the "home" feeling chord?
+
+### Step 4: Report with confidence
+Always provide a key - use "likely" if uncertain.
+
+## MULTI-COLUMN LAYOUT HANDLING
+
+Hebrew chord sheets often have 2 columns read RIGHT-TO-LEFT:
+1. Start with the RIGHT column (this is column 1 in Hebrew reading)
+2. Then read the LEFT column (this is column 2)
+3. Within each column, read TOP to BOTTOM
+4. Section headers indicate new sections regardless of column
+
+## COMMON OCR CHALLENGES - HEBREW SPECIFIC
+
+| Issue | Solution |
+|-------|----------|
+| ו vs י | Context: ו often connects words, י often at word end |
+| ה vs ח | Check word meaning context |
+| כ vs ב | Look at stroke details |
+| ם vs מ | ם is always word-final |
+| ן vs נ | ן is always word-final |
+| Missing niqqud | Hebrew chord sheets rarely have vowel marks - this is normal |
+
+## QUALITY CHECKLIST (Verify before outputting)
+
+- Title extracted correctly in Hebrew
+- Key: line is present and populated
+- All sections labeled (VERSE, CHORUS, etc.)
+- Chords are in [brackets]
+- Hebrew text preserved exactly (not transliterated)
+- Multi-column layout read in correct order (right-to-left columns)
+- Analysis section explains key choice
+
+## ERROR HANDLING
+
+If image is unclear or partially visible:
+1. Transcribe what you CAN read accurately
+2. Mark unclear sections with [unclear]
+3. Note in Analysis what was difficult to read
+4. Still provide your best key estimate
+
+NEVER say "I cannot read this" - always attempt transcription with confidence markers.`;
 
 /**
  * Verify Firebase ID token from Authorization header
