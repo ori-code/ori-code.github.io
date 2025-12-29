@@ -1687,6 +1687,15 @@
                     <input type="checkbox" id="liveModeBadges" checked onchange="liveMode.toggleBadges(this.checked)" style="accent-color: var(--primary); cursor: pointer; width: 16px; height: 16px;">
                     <span>Badges</span>
                 </label>
+                <!-- Layout Toggle Buttons -->
+                <div style="display: flex; gap: 2px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px; overflow: hidden;">
+                    <button id="liveModeLayout1" onclick="liveMode.setColumnLayout(1)" style="padding: 7px 12px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease;" title="1 Column">
+                        ☰
+                    </button>
+                    <button id="liveModeLayout2" onclick="liveMode.setColumnLayout(2)" style="padding: 7px 12px; background: var(--primary); border: none; color: white; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease;" title="2 Columns">
+                        ❘❘
+                    </button>
+                </div>
                 <button id="liveModeFullOverview" onclick="liveMode.toggleFullOverview()" style="padding: 7px 12px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease;">
                     📄 Full Overview
                 </button>

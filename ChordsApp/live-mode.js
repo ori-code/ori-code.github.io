@@ -15,6 +15,7 @@ const liveMode = {
     showBadges: true,
     fullOverviewMode: false,
     savedDisplaySettings: null,
+    currentColumnLayout: 2,
 
     /**
      * Enter live mode with current song
@@ -417,6 +418,73 @@ const liveMode = {
     },
 
     /**
+     * Set column layout (1 or 2 columns)
+     */
+    setColumnLayout(columns) {
+        this.currentColumnLayout = columns;
+
+        // Exit full overview mode if active
+        if (this.fullOverviewMode) {
+            this.fullOverviewMode = false;
+            const btn = document.getElementById('liveModeFullOverview');
+            if (btn) {
+                btn.style.background = 'var(--button-bg)';
+                btn.style.color = 'var(--text)';
+            }
+        }
+
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (!chartDisplay) return;
+
+        // Apply column layout
+        const A4_HEIGHT_PX = 1123;
+        chartDisplay.style.columns = columns.toString();
+        chartDisplay.style.columnFill = 'auto';
+        chartDisplay.style.height = A4_HEIGHT_PX + 'px';
+
+        if (columns > 1) {
+            chartDisplay.style.columnGap = '40px';
+            chartDisplay.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
+        } else {
+            chartDisplay.style.columnGap = '0px';
+            chartDisplay.style.columnRule = 'none';
+        }
+
+        // Update button styles
+        const btn1 = document.getElementById('liveModeLayout1');
+        const btn2 = document.getElementById('liveModeLayout2');
+
+        if (btn1) {
+            btn1.style.background = columns === 1 ? 'var(--primary)' : 'transparent';
+            btn1.style.color = columns === 1 ? 'white' : 'var(--text-muted)';
+        }
+        if (btn2) {
+            btn2.style.background = columns === 2 ? 'var(--primary)' : 'transparent';
+            btn2.style.color = columns === 2 ? 'white' : 'var(--text-muted)';
+        }
+
+        console.log(`📺 Layout set to ${columns} column(s)`);
+    },
+
+    /**
+     * Update layout button styles based on current column layout
+     */
+    updateLayoutButtons() {
+        const btn1 = document.getElementById('liveModeLayout1');
+        const btn2 = document.getElementById('liveModeLayout2');
+        const columns = this.currentColumnLayout;
+
+        if (btn1) {
+            btn1.style.background = columns === 1 ? 'var(--primary)' : 'transparent';
+            btn1.style.color = columns === 1 ? 'white' : 'var(--text-muted)';
+        }
+        if (btn2) {
+            btn2.style.background = columns === 2 ? 'var(--primary)' : 'transparent';
+            btn2.style.color = columns === 2 ? 'white' : 'var(--text-muted)';
+        }
+    },
+
+    /**
      * Toggle full overview mode - fits entire song on screen
      */
     toggleFullOverview() {
@@ -511,12 +579,15 @@ const liveMode = {
             // Re-apply saved preferences from Firebase
             this.applySavedPreferences(chartDisplay);
 
-            // Update button style
+            // Update Full Overview button style
             if (btn) {
                 btn.style.background = 'var(--button-bg)';
                 btn.style.borderColor = 'var(--border)';
                 btn.textContent = '📄 Full Overview';
             }
+
+            // Update layout buttons to reflect current state
+            this.updateLayoutButtons();
 
             console.log('📺 Full Overview mode OFF');
         }
@@ -575,6 +646,15 @@ const liveMode = {
                 chartDisplay.classList.add('hide-badges');
             }
         }
+
+        // Sync column layout from main editor
+        const mainColumnCount = document.getElementById('columnCount');
+        if (mainColumnCount) {
+            this.currentColumnLayout = parseInt(mainColumnCount.value) || 2;
+            // Limit to 1 or 2 for live mode (mobile-friendly)
+            if (this.currentColumnLayout > 2) this.currentColumnLayout = 2;
+        }
+        this.updateLayoutButtons();
     },
 
     /**
@@ -988,6 +1068,10 @@ const liveMode = {
                 const pages = preferences.pageCount || 1;
                 const A4_HEIGHT_PX = 1123;
                 const height = A4_HEIGHT_PX * pages;
+
+                // Update current column layout (limit to 2 for Live Mode UI)
+                this.currentColumnLayout = Math.min(columns, 2);
+                this.updateLayoutButtons();
 
                 chartDisplay.style.columns = columns.toString();
                 chartDisplay.style.columnFill = 'auto';
