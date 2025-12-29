@@ -16,11 +16,72 @@ const liveMode = {
     fullOverviewMode: false,
     savedDisplaySettings: null,
     currentColumnLayout: 2,
+    currentFontSize: 14,
+
+    /**
+     * Save Live Mode preferences to Firebase
+     */
+    async saveLiveModePreferences() {
+        const user = window.auth?.currentUser;
+        if (!user) return;
+
+        const prefs = {
+            columnLayout: this.currentColumnLayout,
+            fontSize: this.currentFontSize || 14,
+            displayMode: this.displayMode,
+            showBadges: this.showBadges,
+            savedAt: Date.now()
+        };
+
+        try {
+            await firebase.database().ref(`users/${user.uid}/liveModePreferences`).set(prefs);
+            console.log('✅ Live Mode preferences saved:', prefs);
+        } catch (error) {
+            console.error('❌ Error saving Live Mode preferences:', error);
+        }
+    },
+
+    /**
+     * Load Live Mode preferences from Firebase
+     */
+    async loadLiveModePreferences() {
+        const user = window.auth?.currentUser;
+        if (!user) return null;
+
+        try {
+            const snapshot = await firebase.database().ref(`users/${user.uid}/liveModePreferences`).once('value');
+            return snapshot.val();
+        } catch (error) {
+            console.error('❌ Error loading Live Mode preferences:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Set font size for Live Mode display
+     */
+    setFontSize(size) {
+        this.currentFontSize = size;
+
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            chartDisplay.style.fontSize = size + 'pt';
+        }
+
+        // Update zoom display
+        const zoomValue = document.getElementById('liveModeZoomValue');
+        if (zoomValue) zoomValue.textContent = size + 'pt';
+
+        // Auto-save preference
+        this.saveLiveModePreferences();
+
+        console.log(`📺 Font size set to ${size}pt`);
+    },
 
     /**
      * Enter live mode with current song
      */
-    enter() {
+    async enter() {
         const visualEditor = document.getElementById('visualEditor');
         const keySelector = document.getElementById('keySelector');
 
@@ -66,6 +127,27 @@ const liveMode = {
 
         // Sync display options from main editor
         this.syncDisplayOptions();
+
+        // Load and apply saved Live Mode preferences (override synced options)
+        const savedPrefs = await this.loadLiveModePreferences();
+        if (savedPrefs) {
+            if (savedPrefs.columnLayout) this.currentColumnLayout = savedPrefs.columnLayout;
+            if (savedPrefs.fontSize) this.currentFontSize = savedPrefs.fontSize;
+            if (savedPrefs.displayMode) {
+                this.displayMode = savedPrefs.displayMode;
+                const liveModeDropdown = document.getElementById('liveModeDisplayMode');
+                if (liveModeDropdown) liveModeDropdown.value = savedPrefs.displayMode;
+            }
+            if (savedPrefs.showBadges !== undefined) {
+                this.showBadges = savedPrefs.showBadges;
+                const liveModeBadgesCheckbox = document.getElementById('liveModeBadges');
+                if (liveModeBadgesCheckbox) liveModeBadgesCheckbox.checked = savedPrefs.showBadges;
+            }
+            this.updateLayoutButtons();
+            // Update zoom display
+            const zoomValue = document.getElementById('liveModeZoomValue');
+            if (zoomValue) zoomValue.textContent = (this.currentFontSize || 14) + 'pt';
+        }
 
         // Update display
         this.updateDisplay();
@@ -213,6 +295,11 @@ const liveMode = {
                 chartDisplay.classList.remove('hide-badges');
             } else {
                 chartDisplay.classList.add('hide-badges');
+            }
+
+            // Apply saved Live Mode font size (overrides printPreviewPreferences)
+            if (this.currentFontSize) {
+                chartDisplay.style.fontSize = this.currentFontSize + 'pt';
             }
 
             // Apply RTL/LTR direction based on content
@@ -396,6 +483,9 @@ const liveMode = {
         // Update display (syncing happens inside updateDisplay now)
         this.updateDisplay();
 
+        // Auto-save preference
+        this.saveLiveModePreferences();
+
         console.log(`📺 Display mode set to: ${mode}`);
     },
 
@@ -413,6 +503,9 @@ const liveMode = {
                 chartDisplay.classList.add('hide-badges');
             }
         }
+
+        // Auto-save preference
+        this.saveLiveModePreferences();
 
         console.log(`📺 Badges ${show ? 'shown' : 'hidden'}`);
     },
@@ -462,6 +555,9 @@ const liveMode = {
             btn2.style.background = columns === 2 ? 'var(--primary)' : 'transparent';
             btn2.style.color = columns === 2 ? 'white' : 'var(--text-muted)';
         }
+
+        // Auto-save preference
+        this.saveLiveModePreferences();
 
         console.log(`📺 Layout set to ${columns} column(s)`);
     },

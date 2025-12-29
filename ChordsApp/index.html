@@ -1696,6 +1696,12 @@
                         ❘❘
                     </button>
                 </div>
+                <!-- Zoom Control -->
+                <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px;">
+                    <button onclick="liveMode.setFontSize(Math.max(8, liveMode.currentFontSize - 1))" style="background: none; border: none; color: var(--text); cursor: pointer; font-size: 16px; padding: 2px 6px; line-height: 1;">−</button>
+                    <span id="liveModeZoomValue" style="font-size: 11px; color: var(--text); min-width: 30px; text-align: center;">14pt</span>
+                    <button onclick="liveMode.setFontSize(Math.min(24, liveMode.currentFontSize + 1))" style="background: none; border: none; color: var(--text); cursor: pointer; font-size: 16px; padding: 2px 6px; line-height: 1;">+</button>
+                </div>
                 <button id="liveModeFullOverview" onclick="liveMode.toggleFullOverview()" style="padding: 7px 12px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease;">
                     📄 Full Overview
                 </button>
