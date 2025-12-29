@@ -25,28 +25,47 @@
 
         .header {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         h1 {
-            color: #667eea;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 8px;
         }
 
         .subtitle {
-            color: #666;
-            font-size: 14px;
+            color: #6b7280;
+            font-size: 15px;
         }
 
         .auth-section {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
         }
 
         .input-group {
@@ -99,28 +118,54 @@
 
         .stat-card {
             background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
         }
 
         .stat-value {
-            font-size: 32px;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 4px;
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
         }
 
         .stat-label {
             font-size: 14px;
-            color: #666;
+            color: #6b7280;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .users-section {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
             display: none;
         }
 
@@ -128,9 +173,52 @@
             display: block;
         }
 
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .refresh-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
         .table-container {
             overflow-x: auto;
             margin-top: 20px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
         }
 
         table {
@@ -139,58 +227,199 @@
         }
 
         th {
-            background: #f5f5f5;
-            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 16px 12px;
             text-align: left;
             font-weight: 600;
-            color: #333;
-            border-bottom: 2px solid #e0e0e0;
+            color: white;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th:first-child {
+            border-radius: 11px 0 0 0;
+        }
+
+        th:last-child {
+            border-radius: 0 11px 0 0;
         }
 
         td {
-            padding: 12px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
         }
 
         tr:hover {
-            background: #f9f9f9;
+            background: #f0f4ff;
+            transition: background 0.2s ease;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:last-child td:first-child {
+            border-radius: 0 0 0 11px;
+        }
+
+        tr:last-child td:last-child {
+            border-radius: 0 0 11px 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .user-email {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .user-id {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 11px;
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #6b7280;
         }
 
         .tier-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .tier-FREE {
-            background: #e0e0e0;
-            color: #666;
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+            color: #4b5563;
         }
 
         .tier-BASIC {
-            background: #bbdefb;
-            color: #1976d2;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1d4ed8;
+            box-shadow: 0 2px 4px rgba(29, 78, 216, 0.15);
         }
 
         .tier-PRO {
-            background: #c8e6c9;
-            color: #388e3c;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #047857;
+            box-shadow: 0 2px 4px rgba(4, 120, 87, 0.15);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .stat-number {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .actions-cell {
+            padding: 8px 12px;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: flex-start;
         }
 
         .action-btn {
-            padding: 6px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
             font-size: 12px;
-            background: #667eea;
+            font-weight: 500;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .action-btn:hover {
-            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-bonus {
+            background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
+        }
+
+        .btn-bonus:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #4c51bf 100%);
+        }
+
+        .btn-upgrade {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-upgrade:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .btn-password {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .btn-password:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        }
+
+        .btn-devices {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+
+        .btn-devices:hover {
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+        }
+
+        .btn-remove {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-remove:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
         }
 
         .error-message {
@@ -219,7 +448,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
             z-index: 1000;
         }
 
@@ -227,39 +457,329 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            animation: modalFadeIn 0.2s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .modal-content {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            max-width: 400px;
+            border-radius: 16px;
+            padding: 0;
+            max-width: 420px;
             width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: modalSlideIn 0.2s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-header {
             font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
+            font-weight: 700;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
         }
 
         .modal-body {
-            margin-bottom: 20px;
+            padding: 24px;
         }
 
         .modal-footer {
             display: flex;
             gap: 12px;
             justify-content: flex-end;
+            padding: 16px 24px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .modal-footer button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
         }
 
         .btn-secondary {
-            background: #e0e0e0;
-            color: #333;
+            background: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #d1d5db;
         }
 
         .btn-secondary:hover {
-            background: #d0d0d0;
+            background: #e5e7eb;
+        }
+
+        /* Modal header variants */
+        .modal-header-upgrade {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .modal-header-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .modal-header-password {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .modal-header-devices {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+
+        /* Modal body elements */
+        .modal-info {
+            margin-bottom: 12px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .modal-info strong {
+            color: #374151;
+        }
+
+        .modal-warning {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #fef2f2;
+            border-radius: 8px;
+            color: #dc2626;
+            font-weight: 600;
+            border-left: 4px solid #ef4444;
+        }
+
+        .modal-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-input-number {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .modal-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .modal-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-list {
+            margin: 12px 0 12px 20px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .modal-list li {
+            margin-bottom: 6px;
+        }
+
+        .modal-hint {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* Modal action buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b3fa0 100%);
+        }
+
+        .btn-bonus-action {
+            background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
+        }
+
+        .btn-upgrade-action {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .btn-upgrade-action:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .btn-remove-action {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-remove-action:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .btn-password-action {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .btn-password-action:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        }
+
+        .btn-devices-action {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+
+        .btn-devices-action:hover {
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+        }
+
+        /* Orphan Users Section */
+        .orphan-section {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .orphan-section.visible {
+            display: block;
+        }
+
+        .orphan-info {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #fef3c7;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .orphan-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .orphan-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+        }
+
+        .orphan-card-info {
+            flex: 1;
+        }
+
+        .orphan-email {
+            font-weight: 600;
+            color: #dc2626;
+            font-size: 15px;
+        }
+
+        .orphan-meta {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .orphan-uid {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 10px;
+            background: #fee2e2;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #991b1b;
+        }
+
+        .btn-delete-orphan {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-delete-orphan:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-1px);
+        }
+
+        .orphan-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f0f4ff;
+            border-radius: 8px;
+        }
+
+        .orphan-stat {
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .orphan-stat strong {
+            color: #667eea;
+        }
+
+        .no-orphans {
+            text-align: center;
+            padding: 24px;
+            color: #059669;
+            font-weight: 600;
+            background: #d1fae5;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -302,9 +822,9 @@
 
         <!-- Users Table -->
         <div class="users-section" id="usersSection">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h2>All Users</h2>
-                <button onclick="loadDashboard()">🔄 Refresh</button>
+            <div class="section-header">
+                <h2 class="section-title">All Users</h2>
+                <button class="refresh-btn" onclick="loadDashboard()">🔄 Refresh</button>
             </div>
             <div class="table-container">
                 <table>
@@ -329,19 +849,31 @@
                 </table>
             </div>
         </div>
+
+        <!-- Orphan Users Section -->
+        <div class="orphan-section" id="orphanSection">
+            <div class="section-header">
+                <h2 class="section-title">Orphan Users (Auth Only)</h2>
+                <button class="refresh-btn" onclick="findOrphanUsers()">🔍 Find Orphan Users</button>
+            </div>
+            <p class="orphan-info">Users that exist in Firebase Auth but have no database entry. These can't sign in properly and should be cleaned up.</p>
+            <div id="orphanContent">
+                <p style="text-align: center; color: #6b7280; padding: 20px;">Click "Find Orphan Users" to scan for orphan accounts</p>
+            </div>
+        </div>
     </div>
 
     <!-- Give Bonus Modal -->
     <div id="bonusModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">Give Bonus Analyses</div>
+            <div class="modal-header">🎁 Give Bonus Analyses</div>
             <div class="modal-body">
-                <p style="margin-bottom: 12px; color: #666;">User ID: <strong id="modalUserId"></strong></p>
-                <input type="number" id="bonusCount" placeholder="Number of bonus analyses" min="1" style="width: 100%;">
+                <p class="modal-info">User ID: <strong id="modalUserId"></strong></p>
+                <input type="number" id="bonusCount" placeholder="Number of bonus analyses" min="1" class="modal-input">
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeBonusModal()">Cancel</button>
-                <button onclick="giveBonusAnalyses()">Give Bonus</button>
+                <button class="btn-primary btn-bonus-action" onclick="giveBonusAnalyses()">🎁 Give Bonus</button>
             </div>
         </div>
     </div>
@@ -349,12 +881,12 @@
     <!-- Upgrade User Modal -->
     <div id="upgradeModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">Upgrade User Tier</div>
+            <div class="modal-header modal-header-upgrade">⬆️ Upgrade User Tier</div>
             <div class="modal-body">
-                <p style="margin-bottom: 12px; color: #666;">User ID: <strong id="upgradeModalUserId"></strong></p>
-                <p style="margin-bottom: 12px; color: #666;">Current Tier: <strong id="currentTier"></strong></p>
-                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600;">Select New Tier:</label>
-                <select id="tierSelect" style="width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                <p class="modal-info">User ID: <strong id="upgradeModalUserId"></strong></p>
+                <p class="modal-info">Current Tier: <strong id="currentTier"></strong></p>
+                <label class="modal-label">Select New Tier:</label>
+                <select id="tierSelect" class="modal-select">
                     <option value="FREE">FREE - $0 (3 analyses/month)</option>
                     <option value="BASIC">BASIC - $0.99/mo (20 analyses/month, Save songs)</option>
                     <option value="PRO">PRO - $1.99/mo (Unlimited analyses, Nashville Numbers)</option>
@@ -362,7 +894,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeUpgradeModal()">Cancel</button>
-                <button onclick="upgradeUser()" style="background: #10b981;">Upgrade</button>
+                <button class="btn-primary btn-upgrade-action" onclick="upgradeUser()">⬆️ Upgrade</button>
             </div>
         </div>
     </div>
@@ -370,13 +902,13 @@
     <!-- Remove User Modal -->
     <div id="removeModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header" style="background: #ef4444;">⚠️ Remove User</div>
+            <div class="modal-header modal-header-danger">⚠️ Remove User</div>
             <div class="modal-body">
-                <p style="margin-bottom: 12px; color: #ef4444; font-weight: 600;">Warning: This action cannot be undone!</p>
-                <p style="margin-bottom: 12px; color: #666;">User: <strong id="removeModalUserName"></strong></p>
-                <p style="margin-bottom: 12px; color: #666;">User ID: <strong id="removeModalUserId"></strong></p>
-                <p style="color: #666;">This will permanently delete:</p>
-                <ul style="margin: 12px 0 12px 24px; color: #666;">
+                <p class="modal-warning">Warning: This action cannot be undone!</p>
+                <p class="modal-info">User: <strong id="removeModalUserName"></strong></p>
+                <p class="modal-info">User ID: <strong id="removeModalUserId"></strong></p>
+                <p class="modal-info">This will permanently delete:</p>
+                <ul class="modal-list">
                     <li>User account and authentication</li>
                     <li>All saved songs</li>
                     <li>Usage statistics</li>
@@ -385,7 +917,46 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeRemoveModal()">Cancel</button>
-                <button onclick="removeUser()" style="background: #ef4444;">🗑️ Remove User</button>
+                <button class="btn-primary btn-remove-action" onclick="removeUser()">🗑️ Remove User</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header modal-header-password">🔐 Reset Password</div>
+            <div class="modal-body">
+                <p class="modal-info">User: <strong id="passwordModalUserName"></strong></p>
+                <p class="modal-info">User ID: <strong id="passwordModalUserId"></strong></p>
+                <div class="modal-input-group">
+                    <input type="password" id="newPasswordInput" placeholder="Enter new password (min 6 chars)..." class="modal-input">
+                    <input type="password" id="confirmPasswordInput" placeholder="Confirm new password..." class="modal-input">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closePasswordModal()">Cancel</button>
+                <button class="btn-primary btn-password-action" onclick="resetPassword()">🔐 Reset Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Max Devices Modal -->
+    <div id="devicesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header modal-header-devices">📱 Max Devices</div>
+            <div class="modal-body">
+                <p class="modal-info">User: <strong id="devicesModalUserName"></strong></p>
+                <p class="modal-info">Set how many devices can be logged in simultaneously.</p>
+                <div class="modal-input-group">
+                    <label class="modal-label">Max simultaneous devices:</label>
+                    <input type="number" id="maxDevicesInput" min="1" max="10" value="1" class="modal-input modal-input-number">
+                    <p class="modal-hint">Default is 1 (single device). Max is 10.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeDevicesModal()">Cancel</button>
+                <button class="btn-primary btn-devices-action" onclick="saveMaxDevices()">💾 Save</button>
             </div>
         </div>
     </div>
@@ -438,6 +1009,7 @@
 
                 document.getElementById('statsSection').style.display = 'grid';
                 document.getElementById('usersSection').classList.add('visible');
+                document.getElementById('orphanSection').classList.add('visible');
 
             } catch (error) {
                 console.error('Error loading dashboard:', error);
@@ -476,27 +1048,36 @@
                 const userId = user.userId.substring(0, 8) + '...';
                 const displayName = user.displayName || 'N/A';
                 const email = user.email || 'N/A';
+                const statusClass = status === 'active' ? 'status-active' : 'status-inactive';
 
                 return `
                     <tr>
-                        <td>${displayName}</td>
-                        <td title="${email}">${email.length > 25 ? email.substring(0, 25) + '...' : email}</td>
-                        <td title="${user.userId}">${userId}</td>
+                        <td><span class="user-name">${displayName}</span></td>
+                        <td><span class="user-email" title="${email}">${email.length > 25 ? email.substring(0, 25) + '...' : email}</span></td>
+                        <td><span class="user-id" title="${user.userId}">${userId}</span></td>
                         <td><span class="tier-badge tier-${tier}">${tier}</span></td>
-                        <td>${status}</td>
-                        <td>${analysesUsed}</td>
-                        <td>${bonus}</td>
-                        <td>${songs}</td>
-                        <td>
-                            <button class="action-btn" onclick="openBonusModal('${user.userId}')">
-                                🎁 Give Bonus
-                            </button>
-                            <button class="action-btn" onclick="openUpgradeModal('${user.userId}', '${tier}')" style="background: #10b981; margin-left: 8px;">
-                                ⬆️ Upgrade
-                            </button>
-                            <button class="action-btn" onclick="openRemoveModal('${user.userId}', '${displayName}')" style="background: #ef4444; margin-left: 8px;">
-                                🗑️ Remove
-                            </button>
+                        <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        <td><span class="stat-number">${analysesUsed}</span></td>
+                        <td><span class="stat-number">${bonus}</span></td>
+                        <td><span class="stat-number">${songs}</span></td>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <button class="action-btn btn-bonus" onclick="openBonusModal('${user.userId}')">
+                                    🎁 Bonus
+                                </button>
+                                <button class="action-btn btn-upgrade" onclick="openUpgradeModal('${user.userId}', '${tier}')">
+                                    ⬆️ Upgrade
+                                </button>
+                                <button class="action-btn btn-password" onclick="openPasswordModal('${user.userId}', '${displayName}')">
+                                    🔐 Password
+                                </button>
+                                <button class="action-btn btn-devices" onclick="openDevicesModal('${user.userId}', '${displayName}', ${user.maxSessions || 1})">
+                                    📱 Devices
+                                </button>
+                                <button class="action-btn btn-remove" onclick="openRemoveModal('${user.userId}', '${displayName}')">
+                                    🗑️ Remove
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -676,6 +1257,131 @@
             }
         }
 
+        // ============= PASSWORD RESET FUNCTIONS =============
+        function openPasswordModal(userId, userName) {
+            currentUserId = userId;
+            currentUserName = userName;
+            document.getElementById('passwordModalUserName').textContent = userName;
+            document.getElementById('passwordModalUserId').textContent = userId.substring(0, 20) + '...';
+            document.getElementById('newPasswordInput').value = '';
+            document.getElementById('confirmPasswordInput').value = '';
+            document.getElementById('passwordModal').classList.add('visible');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('visible');
+            document.getElementById('newPasswordInput').value = '';
+            document.getElementById('confirmPasswordInput').value = '';
+        }
+
+        async function resetPassword() {
+            const newPassword = document.getElementById('newPasswordInput').value;
+            const confirmPassword = document.getElementById('confirmPasswordInput').value;
+
+            if (!newPassword || newPassword.length < 6) {
+                alert('❌ Password must be at least 6 characters');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert('❌ Passwords do not match');
+                return;
+            }
+
+            try {
+                // Detect local development
+                const isLocalDev = window.location.hostname === 'localhost' ||
+                                   window.location.hostname.startsWith('192.168.') ||
+                                   window.location.hostname.startsWith('10.') ||
+                                   window.location.hostname.startsWith('172.');
+                const apiBase = isLocalDev
+                    ? `http://${window.location.hostname}:3002`
+                    : 'https://ori-code-github-io.vercel.app';
+
+                const response = await fetch(`${apiBase}/api/admin/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        newPassword: newPassword,
+                        adminKey: currentAdminKey
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to reset password');
+                }
+
+                alert(`✅ Password reset successfully for ${currentUserName}`);
+                closePasswordModal();
+
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                alert('❌ Failed to reset password: ' + error.message);
+            }
+        }
+
+        // ============= MAX DEVICES FUNCTIONS =============
+        function openDevicesModal(userId, userName, currentMax) {
+            currentUserId = userId;
+            currentUserName = userName;
+            document.getElementById('devicesModalUserName').textContent = userName;
+            document.getElementById('maxDevicesInput').value = currentMax || 1;
+            document.getElementById('devicesModal').classList.add('visible');
+        }
+
+        function closeDevicesModal() {
+            document.getElementById('devicesModal').classList.remove('visible');
+        }
+
+        async function saveMaxDevices() {
+            const maxDevices = parseInt(document.getElementById('maxDevicesInput').value);
+
+            if (!maxDevices || maxDevices < 1 || maxDevices > 10) {
+                alert('❌ Please enter a number between 1 and 10');
+                return;
+            }
+
+            try {
+                // Detect local development
+                const isLocalDev = window.location.hostname === 'localhost' ||
+                                   window.location.hostname.startsWith('192.168.') ||
+                                   window.location.hostname.startsWith('10.') ||
+                                   window.location.hostname.startsWith('172.');
+                const apiBase = isLocalDev
+                    ? `http://${window.location.hostname}:3002`
+                    : 'https://ori-code-github-io.vercel.app';
+
+                const response = await fetch(`${apiBase}/api/admin/set-max-devices`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        maxDevices: maxDevices,
+                        adminKey: currentAdminKey
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to update max devices');
+                }
+
+                alert(`✅ Max devices set to ${maxDevices} for ${currentUserName}`);
+                closeDevicesModal();
+                loadDashboard(); // Refresh data
+
+            } catch (error) {
+                console.error('Error setting max devices:', error);
+                alert('❌ Failed to set max devices: ' + error.message);
+            }
+        }
+
         // Allow Enter key to login
         document.getElementById('adminKeyInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -701,6 +1407,142 @@
                 closeRemoveModal();
             }
         });
+
+        document.getElementById('passwordModal').addEventListener('click', (e) => {
+            if (e.target.id === 'passwordModal') {
+                closePasswordModal();
+            }
+        });
+
+        document.getElementById('devicesModal').addEventListener('click', (e) => {
+            if (e.target.id === 'devicesModal') {
+                closeDevicesModal();
+            }
+        });
+
+        // ============= ORPHAN USERS FUNCTIONS =============
+        async function findOrphanUsers() {
+            const orphanContent = document.getElementById('orphanContent');
+            orphanContent.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">🔍 Scanning for orphan users...</p>';
+
+            try {
+                // Detect local development
+                const isLocalDev = window.location.hostname === 'localhost' ||
+                                   window.location.hostname.startsWith('192.168.') ||
+                                   window.location.hostname.startsWith('10.') ||
+                                   window.location.hostname.startsWith('172.');
+                const apiBase = isLocalDev
+                    ? `http://${window.location.hostname}:3002`
+                    : 'https://ori-code-github-io.vercel.app';
+
+                const response = await fetch(`${apiBase}/api/admin/orphan-users?adminKey=${currentAdminKey}`);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayOrphanUsers(data);
+
+            } catch (error) {
+                console.error('Error finding orphan users:', error);
+                orphanContent.innerHTML = `<p style="text-align: center; color: #ef4444; padding: 20px;">❌ Error: ${error.message}</p>`;
+            }
+        }
+
+        function displayOrphanUsers(data) {
+            const orphanContent = document.getElementById('orphanContent');
+
+            if (data.orphanCount === 0) {
+                orphanContent.innerHTML = `
+                    <div class="orphan-stats">
+                        <span class="orphan-stat">Total Auth Users: <strong>${data.totalAuthUsers}</strong></span>
+                        <span class="orphan-stat">Total DB Users: <strong>${data.totalDbUsers}</strong></span>
+                    </div>
+                    <div class="no-orphans">✅ No orphan users found! All accounts are properly synced.</div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="orphan-stats">
+                    <span class="orphan-stat">Total Auth Users: <strong>${data.totalAuthUsers}</strong></span>
+                    <span class="orphan-stat">Total DB Users: <strong>${data.totalDbUsers}</strong></span>
+                    <span class="orphan-stat" style="color: #dc2626;">Orphan Users: <strong>${data.orphanCount}</strong></span>
+                </div>
+                <div class="orphan-list">
+            `;
+
+            data.orphanUsers.forEach(user => {
+                html += `
+                    <div class="orphan-card" id="orphan-${user.uid}">
+                        <div class="orphan-card-info">
+                            <div class="orphan-email">📧 ${user.email}</div>
+                            <div class="orphan-meta">
+                                Name: ${user.displayName} | Created: ${new Date(user.createdAt).toLocaleDateString()}
+                            </div>
+                            <div class="orphan-meta">
+                                UID: <span class="orphan-uid">${user.uid}</span>
+                            </div>
+                        </div>
+                        <button class="btn-delete-orphan" onclick="deleteOrphanUser('${user.uid}', '${user.email}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            orphanContent.innerHTML = html;
+        }
+
+        async function deleteOrphanUser(uid, email) {
+            if (!confirm(`Delete orphan user "${email}"?\n\nThis will remove them from Firebase Authentication.`)) {
+                return;
+            }
+
+            try {
+                // Detect local development
+                const isLocalDev = window.location.hostname === 'localhost' ||
+                                   window.location.hostname.startsWith('192.168.') ||
+                                   window.location.hostname.startsWith('10.') ||
+                                   window.location.hostname.startsWith('172.');
+                const apiBase = isLocalDev
+                    ? `http://${window.location.hostname}:3002`
+                    : 'https://ori-code-github-io.vercel.app';
+
+                const response = await fetch(`${apiBase}/api/admin/delete-orphan-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        uid: uid,
+                        adminKey: currentAdminKey
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete orphan user');
+                }
+
+                alert(`✅ Orphan user "${email}" has been deleted!`);
+
+                // Remove the card from UI
+                const card = document.getElementById(`orphan-${uid}`);
+                if (card) {
+                    card.remove();
+                }
+
+                // Re-scan to update counts
+                findOrphanUsers();
+
+            } catch (error) {
+                console.error('Error deleting orphan user:', error);
+                alert('❌ Failed to delete orphan user: ' + error.message);
+            }
+        }
     </script>
 </body>
 </html>

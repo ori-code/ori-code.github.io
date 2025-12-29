@@ -49,10 +49,7 @@
                     <span id="headerUsageText">Loading...</span>
                 </div>
 
-                <!-- Upgrade Button (for free/basic users) -->
-                <button class="ghost-button" id="upgradeButton" type="button" style="display: none; background: linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%); color: white; font-weight: 600; border: none;">
-                    ⭐ Upgrade
-                </button>
+                <!-- Upgrade Button moved to side menu -->
 
                 <div style="position: relative;">
                     <button class="ghost-button" id="signInButton" type="button">Sign In</button>
@@ -118,8 +115,9 @@
                 <article class="step-card">
                     <span class="step-number">3</span>
                     <h3>Refine, transpose &amp; print</h3>
-                    <p>Edit chords visually in the editor. The SongBook format (under the editor) updates automatically. AI original stays on the right for reference.</p>
-                    <div class="ai-reference-preview" id="aiReferencePreview" style="flex: 1;">
+                    <p>Edit chords visually, transpose to any key, and <strong>enjoy playing</strong> and <strong>singing</strong> your favorite worship songs beautifully!</p>
+                    <button id="showAllFeaturesBtn" class="primary-action" style="width: 100%; background: linear-gradient(135deg, var(--primary) 0%, #c53030 100%);">✨ Show All Features</button>
+                    <div class="ai-reference-preview" id="aiReferencePreview" style="flex: 1; display: none;">
                         <h4>AI Original (reference)</h4>
                         <div class="reference-content" id="aiReferenceContent">
                             <p class="preview-placeholder">AI transcription will appear here after analysis.</p>
@@ -387,6 +385,14 @@
                             <div id="sideMenuTierBadge" style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-top: 4px; background: rgba(59, 130, 246, 0.15); color: #3b82f6;">Free</div>
                         </div>
                     </div>
+                    <!-- Usage Indicator -->
+                    <div id="sideMenuUsageIndicator" style="margin-top: 12px; padding: 10px 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; text-align: center;">
+                        <span id="sideMenuUsageText" style="font-size: 13px; color: #3b82f6; font-weight: 500;">Loading...</span>
+                    </div>
+                    <!-- Upgrade Button -->
+                    <button id="sideMenuUpgradeButton" class="side-menu-btn" style="margin-top: 10px; width: 100%; background: linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%); color: white; font-weight: 600; border: none; display: none;">
+                        ⭐ Upgrade
+                    </button>
                     <div style="margin-top: 12px; display: flex; gap: 8px;">
                         <button id="sideMenuMySubscription" class="side-menu-btn" style="flex: 1; font-size: 12px;">My Subscription</button>
                         <button id="sideMenuSignOut" class="side-menu-btn" style="flex: 1; font-size: 12px; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #ef4444;">Sign Out</button>
@@ -1018,7 +1024,7 @@
 
     <!-- Subscription Modal -->
     <div id="subscriptionModal" class="modal-overlay">
-        <div class="modal-container" style="max-width: 800px;">
+        <div class="modal-container" style="max-width: 800px; background: linear-gradient(135deg, #ffffff 0%, #fff8f8 100%);">
             <div class="modal-header">
                 <h3>Choose Your Plan</h3>
                 <button class="modal-close" id="subscriptionModalClose">&times;</button>
@@ -1032,7 +1038,78 @@
                 <!-- Pricing Tiers -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
                     <!-- Free Tier -->
-                    <div id="pricing-card-free" class="pricing-card" style="border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px; background: var(--surface);">
+                    <div id="pricing-card-free" class="pricing-card" style="border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 24px; background: var(--surface); display: flex; flex-direction: column;">
+                        <h3 style="margin: 0 0 8px 0; color: var(--text);">Free</h3>
+                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 16px;">$0</div>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8; flex: 1;">
+                            <li>✓ 3 AI analyses/month</li>
+                            <li>✓ Transpose</li>
+                            <li>✓ Print/Export</li>
+                            <li style="opacity: 0.5;">✗ Save to Library</li>
+                            <li style="opacity: 0.5;">✗ Nashville Numbers</li>
+                        </ul>
+                        <div id="pricing-free-action" style="margin-top: auto;"></div>
+                    </div>
+
+                    <!-- Basic Tier -->
+                    <div id="pricing-card-basic" class="pricing-card" style="border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 12px; padding: 24px; background: var(--surface); display: flex; flex-direction: column;">
+                        <h3 style="margin: 0 0 8px 0; color: #3b82f6;">Basic</h3>
+                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$0.99<span style="font-size: 16px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">3-day free trial</div>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8; flex: 1;">
+                            <li>✓ 20 AI analyses/month</li>
+                            <li>✓ Save to Library</li>
+                            <li>✓ Transpose</li>
+                            <li>✓ Print/Export</li>
+                            <li style="opacity: 0.5;">✗ Nashville Numbers</li>
+                        </ul>
+                        <div id="pricing-basic-action" style="margin-top: auto;">
+                            <div id="paypal-basic-button" style="min-height: 45px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Pro Tier -->
+                    <div id="pricing-card-pro" class="pricing-card" style="border: 2px solid #ef4444; border-radius: 12px; padding: 24px; background: rgba(239, 68, 68, 0.1); position: relative; display: flex; flex-direction: column;">
+                        <div style="position: absolute; top: -12px; right: 20px; background: #ef4444; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">POPULAR</div>
+                        <h3 style="margin: 0 0 8px 0; color: #ef4444;">Pro</h3>
+                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$1.99<span style="font-size: 16px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">3-day free trial</div>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8; flex: 1;">
+                            <li>✓ Unlimited AI analyses</li>
+                            <li>✓ Save to Library</li>
+                            <li>✓ Nashville Numbers</li>
+                            <li>✓ Transpose</li>
+                            <li>✓ Print/Export</li>
+                        </ul>
+                        <div id="pricing-pro-action" style="margin-top: auto;">
+                            <div id="paypal-pro-button" style="min-height: 45px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; font-size: 12px; color: var(--text-secondary);">
+                    <p>All plans include 3-day free trial. Cancel anytime. Secure payment via PayPal.</p>
+                    <p id="subscriptionSignInLink" style="display: none; margin-top: 12px;">
+                        <span style="font-size: 13px;">Already have an account? </span>
+                        <a href="#" id="subscriptionLoginLink" style="font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none;">Sign In</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Prompt Modal (for non-logged-in users) -->
+    <div id="registrationPromptModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Choose Your Plan</h3>
+                <button class="modal-close" id="registrationPromptClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Pricing Tiers Grid -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <!-- Free Tier -->
+                    <div style="border: 2px solid #10b981; border-radius: 12px; padding: 24px; background: var(--surface);">
                         <h3 style="margin: 0 0 8px 0; color: var(--text);">Free</h3>
                         <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 16px;">$0</div>
                         <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8;">
@@ -1042,14 +1119,16 @@
                             <li style="opacity: 0.5;">✗ Save to Library</li>
                             <li style="opacity: 0.5;">✗ Nashville Numbers</li>
                         </ul>
-                        <div id="pricing-free-action"></div>
+                        <button id="registerFreeBtn" style="width: 100%; padding: 12px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                            Start Free
+                        </button>
                     </div>
 
                     <!-- Basic Tier -->
-                    <div id="pricing-card-basic" class="pricing-card" style="border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 12px; padding: 24px; background: var(--surface);">
+                    <div style="border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 12px; padding: 24px; background: var(--surface);">
                         <h3 style="margin: 0 0 8px 0; color: #3b82f6;">Basic</h3>
-                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$0.99<span style="font-size: 16px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">3-day free trial</div>
+                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$0.99<span style="font-size: 14px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
+                        <p style="margin: 0 0 12px 0; font-size: 12px; color: var(--text-secondary);">3-day free trial</p>
                         <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8;">
                             <li>✓ 20 AI analyses/month</li>
                             <li>✓ Save to Library</li>
@@ -1057,17 +1136,17 @@
                             <li>✓ Print/Export</li>
                             <li style="opacity: 0.5;">✗ Nashville Numbers</li>
                         </ul>
-                        <div id="pricing-basic-action">
-                            <div id="paypal-basic-button" style="min-height: 45px;"></div>
-                        </div>
+                        <button class="register-basic-btn" style="width: 100%; padding: 12px 16px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                            Start Basic
+                        </button>
                     </div>
 
                     <!-- Pro Tier -->
-                    <div id="pricing-card-pro" class="pricing-card" style="border: 2px solid var(--primary); border-radius: 12px; padding: 24px; background: var(--surface); position: relative;">
-                        <div style="position: absolute; top: -12px; right: 20px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">POPULAR</div>
+                    <div style="border: 2px solid var(--primary); border-radius: 12px; padding: 24px; background: var(--surface); position: relative;">
+                        <span style="position: absolute; top: -10px; right: 16px; background: var(--primary); color: white; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 12px;">POPULAR</span>
                         <h3 style="margin: 0 0 8px 0; color: var(--primary);">Pro</h3>
-                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$1.99<span style="font-size: 16px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">3-day free trial</div>
+                        <div style="font-size: 32px; font-weight: 700; color: var(--text); margin-bottom: 4px;">$1.99<span style="font-size: 14px; font-weight: 400; color: var(--text-secondary);">/mo</span></div>
+                        <p style="margin: 0 0 12px 0; font-size: 12px; color: var(--text-secondary);">3-day free trial</p>
                         <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8;">
                             <li>✓ Unlimited AI analyses</li>
                             <li>✓ Save to Library</li>
@@ -1075,14 +1154,114 @@
                             <li>✓ Transpose</li>
                             <li>✓ Print/Export</li>
                         </ul>
-                        <div id="pricing-pro-action">
-                            <div id="paypal-pro-button" style="min-height: 45px;"></div>
-                        </div>
+                        <button class="register-pro-btn" style="width: 100%; padding: 12px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                            Start Pro
+                        </button>
                     </div>
                 </div>
 
-                <div style="text-align: center; font-size: 12px; color: var(--text-secondary);">
-                    <p>All plans include 3-day free trial. Cancel anytime. Secure payment via PayPal.</p>
+                <!-- Footer -->
+                <div style="text-align: center; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <p style="margin: 0 0 12px 0; font-size: 13px; color: var(--text-secondary);">All paid plans include 3-day free trial. Cancel anytime.</p>
+                    <span style="font-size: 13px; color: var(--text-secondary);">Already have an account? </span>
+                    <a href="#" id="loginFromPrompt" style="font-size: 13px; color: var(--primary); font-weight: 600; text-decoration: none;">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Modal -->
+    <div id="featuresModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 750px; background: #ffffff;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ff6b6b 0%, #a855f7 100%); border-radius: 12px 12px 0 0;">
+                <h3>✨ Everything You Need to Lead Worship</h3>
+                <button class="modal-close" id="featuresModalClose">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding: 24px;">
+                <!-- Intro -->
+                <p style="text-align: center; font-size: 15px; color: #64748b; margin: 0 0 24px 0; line-height: 1.6;">
+                    ChordsApp transforms any chord sheet image into a beautiful, editable, print-ready format in seconds.<br>
+                    <strong style="color: #334155;">No more manual typing. No more messy printouts.</strong>
+                </p>
+
+                <!-- AI Analysis -->
+                <div style="margin-bottom: 20px; padding: 20px; background: #fff5f5; border-radius: 12px; border-left: 4px solid #f87171;">
+                    <h4 style="margin: 0 0 8px 0; color: #dc2626; font-size: 17px;">🎵 Instant AI Chord Recognition</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                        Simply snap a photo or upload any chord sheet image. Our advanced AI instantly recognizes chords, lyrics, and song structure - even from blurry photos or handwritten notes!
+                    </p>
+                    <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
+                        <li>✓ <strong>Works with any image</strong> - photos, screenshots, PDFs, scanned sheets</li>
+                        <li>✓ <strong>Multi-language support</strong> - Hebrew, English, Spanish, Portuguese & more</li>
+                        <li>✓ <strong>Smart detection</strong> - automatically finds key, BPM, and time signature</li>
+                        <li>✓ <strong>Handles complex chords</strong> - slash chords, extensions, alterations</li>
+                    </ul>
+                </div>
+
+                <!-- Editing & Customization -->
+                <div style="margin-bottom: 20px; padding: 20px; background: #faf5ff; border-radius: 12px; border-left: 4px solid #c084fc;">
+                    <h4 style="margin: 0 0 8px 0; color: #9333ea; font-size: 17px;">✏️ Powerful Visual Editor</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                        Perfect your charts with our intuitive click-to-edit interface. No more struggling with text formatting - just click any chord and change it instantly.
+                    </p>
+                    <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
+                        <li>✓ <strong>One-click transpose</strong> - change keys instantly for any vocalist</li>
+                        <li>✓ <strong>Nashville Numbers</strong> - switch between chord names and numbers (Pro)</li>
+                        <li>✓ <strong>Full customization</strong> - fonts, sizes, spacing, columns, margins</li>
+                        <li>✓ <strong>Auto-fit to page</strong> - perfect formatting for any paper size</li>
+                    </ul>
+                </div>
+
+                <!-- Export & Live -->
+                <div style="margin-bottom: 20px; padding: 20px; background: #fef2f8; border-radius: 12px; border-left: 4px solid #f472b6;">
+                    <h4 style="margin: 0 0 8px 0; color: #db2777; font-size: 17px;">📺 Share, Print & Present Live</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                        From practice to performance - share your charts however you need them. Print beautiful copies, project on screen, or share with your whole band in real-time.
+                    </p>
+                    <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
+                        <li>✓ <strong>Print-ready output</strong> - professional quality every time</li>
+                        <li>✓ <strong>Save as image</strong> - high-resolution PNG for sharing</li>
+                        <li>✓ <strong>Live Preview mode</strong> - full-screen display for projectors & screens</li>
+                        <li>✓ <strong>Real-time sessions</strong> - band members see changes instantly</li>
+                    </ul>
+                </div>
+
+                <!-- Song Library -->
+                <div style="margin-bottom: 20px; padding: 20px; background: #fdf4ff; border-radius: 12px; border-left: 4px solid #e879f9;">
+                    <h4 style="margin: 0 0 8px 0; color: #c026d3; font-size: 17px;">📚 Your Personal Song Library</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                        Build your ultimate worship collection. Save every song, organize by service or event, and access your library from anywhere. Never lose a chart again!
+                    </p>
+                    <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
+                        <li>✓ <strong>Unlimited songs</strong> - save your entire repertoire</li>
+                        <li>✓ <strong>Custom songbooks</strong> - organize by service, event, or theme</li>
+                        <li>✓ <strong>Smart search</strong> - find songs by title, lyrics, or key</li>
+                        <li>✓ <strong>Cloud sync</strong> - access from any device, anytime</li>
+                    </ul>
+                    <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8; font-style: italic;">Available with Basic & Pro plans</p>
+                </div>
+
+                <!-- Worship Tools -->
+                <div style="margin-bottom: 20px; padding: 20px; background: #fff1f3; border-radius: 12px; border-left: 4px solid #fb7185;">
+                    <h4 style="margin: 0 0 8px 0; color: #e11d48; font-size: 17px;">🎹 Ambient Worship Pads</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                        Create the perfect atmosphere for worship. Our built-in ambient pads provide beautiful, continuous background music that matches your song's key automatically.
+                    </p>
+                    <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
+                        <li>✓ <strong>Key-matched pads</strong> - automatically syncs to your song</li>
+                        <li>✓ <strong>Multiple sounds</strong> - warm, bright, atmospheric options</li>
+                        <li>✓ <strong>Perfect for transitions</strong> - smooth flow between songs</li>
+                    </ul>
+                </div>
+
+                <!-- Get Started CTA -->
+                <div style="text-align: center; padding: 24px; background: linear-gradient(135deg, #fff5f5 0%, #fdf4ff 100%); border-radius: 12px; margin-top: 8px;">
+                    <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: #1e293b;">Ready to transform your worship experience?</p>
+                    <p style="margin: 0 0 16px 0; font-size: 14px; color: #64748b;">Start free with 3 analyses. Upgrade anytime for unlimited access.</p>
+                    <button id="featuresModalUpgrade" style="padding: 14px 40px; background: linear-gradient(135deg, #ef4444 0%, #a855f7 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(239, 68, 68, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(239, 68, 68, 0.3)';">
+                        View Plans & Pricing
+                    </button>
+                    <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Plans start at just $0.99/month</p>
                 </div>
             </div>
         </div>
@@ -1471,12 +1650,12 @@
         </div>
 
         <!-- Top Bar (song info) - auto-hides -->
-        <div id="liveModeTopBar" style="position: absolute; top: 0; left: 0; right: 0; padding: 12px 20px; background: var(--card-bg); display: flex; justify-content: space-between; align-items: center; z-index: 10003; border-bottom: 1px solid var(--border); transition: opacity 0.3s ease;">
+        <div id="liveModeTopBar" style="position: absolute; top: 0; left: 0; right: 0; padding: 6px 16px; background: var(--card-bg); display: flex; justify-content: space-between; align-items: center; z-index: 10003; border-bottom: 1px solid var(--border); transition: opacity 0.3s ease;">
             <div>
-                <div id="liveModeSongName" style="font-size: 18px; font-weight: 600; color: var(--text);"></div>
-                <div id="liveModeSongKey" style="font-size: 14px; color: var(--text-muted);"></div>
+                <div id="liveModeSongName" style="font-size: 14px; font-weight: 600; color: var(--text);"></div>
+                <div id="liveModeSongKey" style="font-size: 12px; color: var(--text-muted);"></div>
             </div>
-            <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="background: rgba(239, 68, 68, 0.9); border: none; color: white; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">
+            <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="background: rgba(239, 68, 68, 0.9); border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
                 Exit
             </button>
         </div>
@@ -1888,14 +2067,13 @@
                 hamburgerBtn.classList.add('active');
                 sideMenuPanel.classList.add('active');
                 sideMenuOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
+                // Allow scrolling main content while menu is open
             }
 
             function closeMenu() {
                 hamburgerBtn.classList.remove('active');
                 sideMenuPanel.classList.remove('active');
                 sideMenuOverlay.classList.remove('active');
-                document.body.style.overflow = '';
             }
 
             if (hamburgerBtn) {
@@ -1920,6 +2098,40 @@
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && sideMenuPanel.classList.contains('active')) {
                     closeMenu();
+                }
+            });
+
+            // Triple-click on empty area opens menu
+            let clickCount = 0;
+            let clickTimer = null;
+            const TRIPLE_CLICK_DELAY = 500; // ms between clicks
+
+            document.addEventListener('click', (e) => {
+                // Check if click is on an "empty" area (not interactive elements)
+                const target = e.target;
+                const isInteractive = target.closest('button, a, input, select, textarea, [onclick], .modal, .side-menu-panel, .song-item, .clickable, [role="button"]');
+
+                if (isInteractive) {
+                    clickCount = 0;
+                    if (clickTimer) clearTimeout(clickTimer);
+                    return;
+                }
+
+                clickCount++;
+
+                if (clickTimer) clearTimeout(clickTimer);
+
+                if (clickCount >= 3) {
+                    // Triple click detected - open menu
+                    clickCount = 0;
+                    if (!sideMenuPanel.classList.contains('active')) {
+                        openMenu();
+                    }
+                } else {
+                    // Reset after delay
+                    clickTimer = setTimeout(() => {
+                        clickCount = 0;
+                    }, TRIPLE_CLICK_DELAY);
                 }
             });
 

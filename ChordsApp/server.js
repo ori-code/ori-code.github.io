@@ -587,7 +587,8 @@ app.get('/api/admin/list-all-users', async (req, res) => {
                 subscription: userData.subscription || { tier: 'FREE', status: 'active' },
                 usage: userData.usage || { analysesThisMonth: 0, monthStartDate: new Date().toISOString() },
                 bonusAnalyses: userData.bonusAnalyses || 0,
-                songCount: userData.songs ? Object.keys(userData.songs).length : 0
+                songCount: userData.songs ? Object.keys(userData.songs).length : 0,
+                maxSessions: userData.maxSessions || 1
             };
         }));
 
@@ -645,6 +646,179 @@ app.post('/api/admin/remove-user', async (req, res) => {
     } catch (error) {
         console.error('Error removing user:', error);
         res.status(500).json({ error: 'Server error while removing user' });
+    }
+});
+
+/**
+ * POST /api/admin/reset-password
+ * Reset a user's password (ADMIN ONLY)
+ * Body: { userId: string, newPassword: string, adminKey: string }
+ */
+app.post('/api/admin/reset-password', async (req, res) => {
+    const { userId, newPassword, adminKey } = req.body;
+
+    // Verify admin key
+    if (adminKey !== process.env.ADMIN_KEY) {
+        return res.status(403).json({ error: 'Invalid admin key' });
+    }
+
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    try {
+        // Update user password using Firebase Admin SDK
+        await admin.auth().updateUser(userId, {
+            password: newPassword
+        });
+
+        console.log(`✅ Password reset for user ${userId}`);
+
+        res.json({
+            success: true,
+            message: `Password has been reset for user ${userId}`
+        });
+
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ error: 'Failed to reset password: ' + error.message });
+    }
+});
+
+/**
+ * POST /api/admin/set-max-devices
+ * Set maximum allowed devices for a user (ADMIN ONLY)
+ * Body: { userId: string, maxDevices: number, adminKey: string }
+ */
+app.post('/api/admin/set-max-devices', async (req, res) => {
+    const { userId, maxDevices, adminKey } = req.body;
+
+    // Verify admin key
+    if (adminKey !== process.env.ADMIN_KEY) {
+        return res.status(403).json({ error: 'Invalid admin key' });
+    }
+
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const devices = parseInt(maxDevices);
+    if (!devices || devices < 1 || devices > 10) {
+        return res.status(400).json({ error: 'Max devices must be between 1 and 10' });
+    }
+
+    try {
+        // Update maxSessions in Firebase Realtime Database
+        await db.ref(`users/${userId}/maxSessions`).set(devices);
+
+        console.log(`✅ Max devices set to ${devices} for user ${userId}`);
+
+        res.json({
+            success: true,
+            message: `Max devices set to ${devices}`,
+            maxDevices: devices
+        });
+
+    } catch (error) {
+        console.error('Error setting max devices:', error);
+        res.status(500).json({ error: 'Failed to set max devices: ' + error.message });
+    }
+});
+
+/**
+ * GET /api/admin/orphan-users
+ * Find users that exist in Firebase Auth but not in the database (ADMIN ONLY)
+ * These are "orphan" users that can't be managed through the normal admin panel
+ */
+app.get('/api/admin/orphan-users', async (req, res) => {
+    const { adminKey } = req.query;
+
+    // Verify admin key
+    if (adminKey !== process.env.ADMIN_KEY) {
+        return res.status(403).json({ error: 'Invalid admin key' });
+    }
+
+    try {
+        // Get all users from Firebase Auth
+        const listUsersResult = await admin.auth().listUsers(1000); // Max 1000 users
+        const authUsers = listUsersResult.users;
+
+        // Get all users from database
+        const dbSnapshot = await db.ref('users').once('value');
+        const dbUsers = dbSnapshot.val() || {};
+        const dbUserIds = new Set(Object.keys(dbUsers));
+
+        // Find orphan users (in Auth but not in DB)
+        const orphanUsers = authUsers
+            .filter(user => !dbUserIds.has(user.uid))
+            .map(user => ({
+                uid: user.uid,
+                email: user.email || 'No email',
+                displayName: user.displayName || 'No name',
+                createdAt: user.metadata.creationTime,
+                lastSignIn: user.metadata.lastSignInTime
+            }));
+
+        console.log(`Found ${orphanUsers.length} orphan users out of ${authUsers.length} total auth users`);
+
+        res.json({
+            success: true,
+            totalAuthUsers: authUsers.length,
+            totalDbUsers: dbUserIds.size,
+            orphanCount: orphanUsers.length,
+            orphanUsers
+        });
+
+    } catch (error) {
+        console.error('Error finding orphan users:', error);
+        res.status(500).json({ error: 'Failed to find orphan users: ' + error.message });
+    }
+});
+
+/**
+ * POST /api/admin/delete-orphan-user
+ * Delete an orphan user from Firebase Auth only (ADMIN ONLY)
+ * Body: { uid: string, adminKey: string }
+ */
+app.post('/api/admin/delete-orphan-user', async (req, res) => {
+    const { uid, adminKey } = req.body;
+
+    // Verify admin key
+    if (adminKey !== process.env.ADMIN_KEY) {
+        return res.status(403).json({ error: 'Invalid admin key' });
+    }
+
+    if (!uid) {
+        return res.status(400).json({ error: 'User UID is required' });
+    }
+
+    try {
+        // Get user info before deleting
+        let userEmail = 'unknown';
+        try {
+            const userRecord = await admin.auth().getUser(uid);
+            userEmail = userRecord.email || 'no-email';
+        } catch (e) {
+            // User might not exist
+        }
+
+        // Delete user from Firebase Auth
+        await admin.auth().deleteUser(uid);
+        console.log(`✅ Deleted orphan user ${uid} (${userEmail}) from Firebase Auth`);
+
+        res.json({
+            success: true,
+            message: `Orphan user ${userEmail} has been deleted from Firebase Auth`,
+            uid
+        });
+
+    } catch (error) {
+        console.error('Error deleting orphan user:', error);
+        res.status(500).json({ error: 'Failed to delete orphan user: ' + error.message });
     }
 });
 

@@ -989,7 +989,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return;
         }
 
-        // Check subscription limits
+        // Check if user is logged in first
+        const currentUser = firebase.auth().currentUser;
+        if (!currentUser) {
+            // Show registration prompt for non-logged-in users
+            setStatus('info', 'Sign up for free to start analyzing!');
+            window.showRegistrationPrompt();
+            return;
+        }
+
+        // Check subscription limits (user is logged in)
         if (window.subscriptionManager) {
             if (!window.subscriptionManager.canAnalyze()) {
                 const summary = window.subscriptionManager.getUsageSummary();
@@ -4061,15 +4070,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Update header usage indicator
         const headerIndicator = document.getElementById('headerUsageIndicator');
         const headerText = document.getElementById('headerUsageText');
+        const currentUser = firebase.auth().currentUser;
 
         if (headerIndicator && headerText) {
-            if (summary.tier === 'FREE' || summary.tier === 'BASIC') {
+            // Only show for logged-in users with FREE or BASIC tier
+            if (currentUser && (summary.tier === 'FREE' || summary.tier === 'BASIC')) {
                 headerIndicator.style.display = 'block';
                 const remaining = summary.analysesRemaining;
                 if (remaining === 'Unlimited') {
-                    headerText.textContent = '∞ Analyses';
+                    headerText.textContent = '∞';
                 } else {
-                    headerText.textContent = `${remaining}/${summary.analysesLimit} analyses left`;
+                    headerText.textContent = `${remaining}/${summary.analysesLimit}`;
 
                     // Change color if running low
                     if (remaining <= 1) {
@@ -4081,7 +4092,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     }
                 }
             } else {
-                // Pro badge now shown in side menu, hide from header
+                // Hide for non-logged-in users or Pro users
                 headerIndicator.style.display = 'none';
             }
         }
@@ -4104,13 +4115,53 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
         }
 
+        // Update side menu usage indicator
+        const sideMenuUsageText = document.getElementById('sideMenuUsageText');
+        const sideMenuUpgradeButton = document.getElementById('sideMenuUpgradeButton');
+
+        if (sideMenuUsageText) {
+            if (summary.tier === 'PRO') {
+                sideMenuUsageText.textContent = '∞ Unlimited analyses';
+            } else {
+                const remaining = summary.analysesRemaining;
+                sideMenuUsageText.textContent = `${remaining}/${summary.analysesLimit} analyses left`;
+            }
+        }
+
+        if (sideMenuUpgradeButton) {
+            sideMenuUpgradeButton.style.display = (summary.tier === 'FREE' || summary.tier === 'BASIC') ? 'block' : 'none';
+        }
+
         // Update usage text in subscription modal
         const usageIndicator = document.getElementById('usageIndicator');
         const usageText = document.getElementById('usageText');
 
         if (usageIndicator && usageText) {
+            const currentUser = firebase.auth().currentUser;
             usageIndicator.style.display = 'block';
-            usageText.textContent = `Current: ${summary.tierName} Plan | Analyses used this month: ${summary.analysesUsed}/${summary.analysesLimit === -1 ? '∞' : summary.analysesLimit}`;
+
+            if (currentUser && window.subscriptionManager) {
+                // Logged-in user: show current plan and usage
+                usageText.textContent = `Current: ${summary.tierName} Plan | Analyses used this month: ${summary.analysesUsed}/${summary.analysesLimit === -1 ? '∞' : summary.analysesLimit}`;
+
+                // Change to red when limit reached (not for unlimited Pro users)
+                const atLimit = summary.analysesLimit !== -1 && summary.analysesUsed >= summary.analysesLimit;
+                if (atLimit) {
+                    usageIndicator.style.background = 'rgba(239, 68, 68, 0.1)';
+                    usageIndicator.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                    usageText.style.color = '#dc2626';
+                } else {
+                    usageIndicator.style.background = 'rgba(59, 130, 246, 0.1)';
+                    usageIndicator.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                    usageText.style.color = '';
+                }
+            } else {
+                // Non-logged-in user: show welcome message
+                usageText.textContent = 'Sign up to start your free plan with 3 AI analyses/month';
+                usageIndicator.style.background = 'rgba(16, 185, 129, 0.1)';
+                usageIndicator.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                usageText.style.color = '#059669';
+            }
         }
 
         // Show/hide upgrade button
@@ -4139,13 +4190,22 @@ Our [Em7]hearts will cry, these bones will [D]sing
      * Initialize subscription buttons and modals
      */
     function initSubscriptionUI() {
-        // Upgrade button click
+        // Upgrade button click (header)
         const upgradeButton = document.getElementById('upgradeButton');
         if (upgradeButton) {
             upgradeButton.addEventListener('click', () => {
-                const modal = document.getElementById('subscriptionModal');
-                if (modal) {
-                    modal.style.display = 'flex';
+                window.showSubscriptionModal();
+            });
+        }
+
+        // Side menu upgrade button click
+        const sideMenuUpgradeButton = document.getElementById('sideMenuUpgradeButton');
+        if (sideMenuUpgradeButton) {
+            sideMenuUpgradeButton.addEventListener('click', () => {
+                window.showSubscriptionModal();
+                // Close side menu when opening subscription modal
+                if (typeof closeSideMenu === 'function') {
+                    closeSideMenu();
                 }
             });
         }
@@ -4154,10 +4214,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const mySubscriptionBtn = document.getElementById('mySubscriptionBtn');
         if (mySubscriptionBtn) {
             mySubscriptionBtn.addEventListener('click', () => {
-                const modal = document.getElementById('subscriptionModal');
-                if (modal) {
-                    modal.style.display = 'flex';
-                }
+                window.showSubscriptionModal();
             });
         }
 
@@ -4179,6 +4236,41 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 if (e.target === subscriptionModal) {
                     subscriptionModal.style.display = 'none';
                 }
+            });
+        }
+
+        // Features Modal
+        const showAllFeaturesBtn = document.getElementById('showAllFeaturesBtn');
+        if (showAllFeaturesBtn) {
+            showAllFeaturesBtn.addEventListener('click', () => {
+                const modal = document.getElementById('featuresModal');
+                if (modal) modal.style.display = 'flex';
+            });
+        }
+
+        const featuresModalClose = document.getElementById('featuresModalClose');
+        if (featuresModalClose) {
+            featuresModalClose.addEventListener('click', () => {
+                const modal = document.getElementById('featuresModal');
+                if (modal) modal.style.display = 'none';
+            });
+        }
+
+        const featuresModal = document.getElementById('featuresModal');
+        if (featuresModal) {
+            featuresModal.addEventListener('click', (e) => {
+                if (e.target === featuresModal) {
+                    featuresModal.style.display = 'none';
+                }
+            });
+        }
+
+        const featuresModalUpgrade = document.getElementById('featuresModalUpgrade');
+        if (featuresModalUpgrade) {
+            featuresModalUpgrade.addEventListener('click', () => {
+                const featuresModal = document.getElementById('featuresModal');
+                if (featuresModal) featuresModal.style.display = 'none';
+                window.showSubscriptionModal();
             });
         }
     }
@@ -4209,19 +4301,28 @@ Our [Em7]hearts will cry, these bones will [D]sing
     /**
      * Update subscription modal to show current plan
      */
-    function updateSubscriptionModal() {
+    async function updateSubscriptionModal() {
         try {
-            if (!window.subscriptionManager) return;
-
-            const currentTier = window.subscriptionManager.getCurrentTier() || 'FREE';
+            const currentUser = firebase.auth().currentUser;
+            const isLoggedIn = !!currentUser;
+            const currentTier = isLoggedIn && window.subscriptionManager ? window.subscriptionManager.getCurrentTier() || 'FREE' : null;
             const tiers = ['free', 'basic', 'pro'];
+
+            // Ensure PayPal SDK is loaded before creating buttons (only for logged-in users)
+            if (isLoggedIn && window.paypalSubscriptionManager && !window.paypalSubscriptionManager.isSDKLoaded) {
+                try {
+                    await window.paypalSubscriptionManager.init();
+                } catch (e) {
+                    console.error('Failed to initialize PayPal SDK:', e);
+                }
+            }
 
             tiers.forEach(tier => {
                 const card = document.getElementById(`pricing-card-${tier}`);
                 const actionDiv = document.getElementById(`pricing-${tier}-action`);
                 if (!card || !actionDiv) return;
 
-                const isCurrentPlan = tier.toUpperCase() === currentTier;
+                const isCurrentPlan = isLoggedIn && tier.toUpperCase() === currentTier;
 
                 // Highlight current plan card
                 if (isCurrentPlan) {
@@ -4230,16 +4331,32 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 } else {
                     // Reset to default styles
                     if (tier === 'free') {
-                        card.style.border = '2px solid rgba(255, 255, 255, 0.1)';
+                        // Green border for Free tier when not logged in (recommended option)
+                        if (!isLoggedIn) {
+                            card.style.border = '2px solid #10b981';
+                            card.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.2)';
+                        } else {
+                            card.style.border = '2px solid rgba(255, 255, 255, 0.1)';
+                            card.style.boxShadow = 'none';
+                        }
                     } else if (tier === 'basic') {
                         card.style.border = '2px solid rgba(59, 130, 246, 0.5)';
+                        card.style.boxShadow = 'none';
                     } else if (tier === 'pro') {
                         card.style.border = '2px solid var(--primary)';
+                        card.style.boxShadow = 'none';
                     }
-                    card.style.boxShadow = 'none';
                 }
 
-                if (isCurrentPlan) {
+                if (!isLoggedIn) {
+                    // Non-logged-in user: show signup buttons
+                    if (tier === 'free') {
+                        actionDiv.innerHTML = '<button class="signup-free-btn" style="width: 100%; padding: 12px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">Register Now for Free</button>';
+                    } else {
+                        const btnColor = tier === 'basic' ? '#3b82f6' : 'var(--primary)';
+                        actionDiv.innerHTML = `<button class="signup-${tier}-btn" style="width: 100%; padding: 12px 16px; background: ${btnColor}; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">Sign Up to Start</button>`;
+                    }
+                } else if (isCurrentPlan) {
                     // Show "Current Plan" button
                     actionDiv.innerHTML = '<button class="ghost-button" style="width: 100%; background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981;" disabled>✓ Current Plan</button>';
                 } else if (tier === 'free') {
@@ -4254,6 +4371,45 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     }
                 }
             });
+
+            // Show/hide sign-in link based on login state
+            const signInLink = document.getElementById('subscriptionSignInLink');
+            const loginLink = document.getElementById('subscriptionLoginLink');
+            if (signInLink) {
+                signInLink.style.display = isLoggedIn ? 'none' : 'block';
+            }
+            if (loginLink) {
+                loginLink.onclick = (e) => {
+                    e.preventDefault();
+                    document.getElementById('subscriptionModal').style.display = 'none';
+                    if (window.chordsAuth) window.chordsAuth.showAuthModal('login');
+                };
+            }
+
+            // Add click handlers for signup buttons (non-logged-in users)
+            if (!isLoggedIn) {
+                document.querySelectorAll('.signup-free-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        document.getElementById('subscriptionModal').style.display = 'none';
+                        window.pendingPlanAfterSignup = null;
+                        if (window.chordsAuth) window.chordsAuth.showAuthModal('signup');
+                    };
+                });
+                document.querySelectorAll('.signup-basic-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        document.getElementById('subscriptionModal').style.display = 'none';
+                        window.pendingPlanAfterSignup = 'BASIC';
+                        if (window.chordsAuth) window.chordsAuth.showAuthModal('signup');
+                    };
+                });
+                document.querySelectorAll('.signup-pro-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        document.getElementById('subscriptionModal').style.display = 'none';
+                        window.pendingPlanAfterSignup = 'PRO';
+                        if (window.chordsAuth) window.chordsAuth.showAuthModal('signup');
+                    };
+                });
+            }
         } catch (error) {
             console.error('Error updating subscription modal:', error);
         }
@@ -4263,13 +4419,100 @@ Our [Em7]hearts will cry, these bones will [D]sing
     window.updateSubscriptionModal = updateSubscriptionModal;
 
     // Global function to show subscription modal
-    window.showSubscriptionModal = function() {
+    window.showSubscriptionModal = async function() {
         const modal = document.getElementById('subscriptionModal');
         if (modal) {
+            // Refresh usage data from Firebase before showing modal
+            if (window.subscriptionManager) {
+                await window.subscriptionManager.refreshUserUsage();
+                updateUsageDisplay();
+            }
             modal.style.display = 'flex';
-            updateSubscriptionModal();
+            await updateSubscriptionModal();
         }
     };
+
+    // Global function to show registration prompt for non-logged-in users
+    // Now shows the subscription modal directly with all plans
+    window.showRegistrationPrompt = function() {
+        window.showSubscriptionModal();
+    };
+
+    // Hide registration prompt
+    function hideRegistrationPrompt() {
+        const modal = document.getElementById('registrationPromptModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Setup registration prompt modal event listeners
+    (function setupRegistrationPromptModal() {
+        // Close button
+        const closeBtn = document.getElementById('registrationPromptClose');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', hideRegistrationPrompt);
+        }
+
+        // Register for FREE button
+        const registerFreeBtn = document.getElementById('registerFreeBtn');
+        if (registerFreeBtn) {
+            registerFreeBtn.addEventListener('click', () => {
+                hideRegistrationPrompt();
+                window.pendingPlanAfterSignup = null; // Free plan, no PayPal needed
+                if (window.chordsAuth) {
+                    window.chordsAuth.showAuthModal('signup');
+                }
+            });
+        }
+
+        // Register for BASIC button
+        const registerBasicBtns = document.querySelectorAll('.register-basic-btn');
+        registerBasicBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                hideRegistrationPrompt();
+                window.pendingPlanAfterSignup = 'BASIC'; // Will show subscription modal after signup
+                if (window.chordsAuth) {
+                    window.chordsAuth.showAuthModal('signup');
+                }
+            });
+        });
+
+        // Register for PRO button
+        const registerProBtns = document.querySelectorAll('.register-pro-btn');
+        registerProBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                hideRegistrationPrompt();
+                window.pendingPlanAfterSignup = 'PRO'; // Will show subscription modal after signup
+                if (window.chordsAuth) {
+                    window.chordsAuth.showAuthModal('signup');
+                }
+            });
+        });
+
+        // Login link
+        const loginFromPrompt = document.getElementById('loginFromPrompt');
+        if (loginFromPrompt) {
+            loginFromPrompt.addEventListener('click', (e) => {
+                e.preventDefault();
+                hideRegistrationPrompt();
+                // Open auth modal in login mode
+                if (window.chordsAuth) {
+                    window.chordsAuth.showAuthModal('login');
+                }
+            });
+        }
+
+        // Close on overlay click
+        const modal = document.getElementById('registrationPromptModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideRegistrationPrompt();
+                }
+            });
+        }
+    })();
 
     /**
      * Handle subscription changes
@@ -4317,6 +4560,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 // Initialize PayPal buttons
                 await initPayPalButtons();
+
+                // Check if user selected a paid plan before signup
+                if (window.pendingPlanAfterSignup) {
+                    const selectedPlan = window.pendingPlanAfterSignup;
+                    window.pendingPlanAfterSignup = null; // Clear the pending plan
+                    // Show subscription modal so they can complete the purchase
+                    setTimeout(() => {
+                        window.showSubscriptionModal();
+                    }, 500);
+                }
             } else {
                 // User is signed out
                 await window.subscriptionManager.init(null);

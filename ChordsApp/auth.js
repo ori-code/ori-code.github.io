@@ -3,16 +3,181 @@
 class ChordsAuthManager {
     constructor() {
         this.currentUser = null;
+        this.sessionId = null;
+        this.sessionListener = null;
+        this.DEFAULT_MAX_SESSIONS = 1; // Default: 1 device per user (admin can increase)
         this.init();
     }
 
     init() {
         // Listen for auth state changes
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
             this.currentUser = user;
             this.updateUI();
             console.log('Auth state changed:', user ? user.email : 'Not logged in');
+
+            if (user) {
+                // Check if this is a returning user (page refresh) with no local session
+                const localSessionId = localStorage.getItem('chordsapp_session_id');
+                if (!localSessionId) {
+                    // Returning user - register a new session
+                    await this.registerSession(user.uid);
+                }
+                // Start listening for session changes
+                this.startSessionListener(user.uid);
+            } else {
+                // Stop listening when logged out
+                this.stopSessionListener();
+            }
         });
+    }
+
+    // Generate unique session ID
+    generateSessionId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    }
+
+    // Get max sessions allowed for user (admin-configurable)
+    async getMaxSessions(userId) {
+        try {
+            const snapshot = await firebase.database().ref(`users/${userId}/maxSessions`).once('value');
+            return snapshot.val() || this.DEFAULT_MAX_SESSIONS;
+        } catch (error) {
+            console.error('Error getting maxSessions:', error);
+            return this.DEFAULT_MAX_SESSIONS;
+        }
+    }
+
+    // Register new session in Firebase (may kick out oldest device if over limit)
+    async registerSession(userId) {
+        this.sessionId = this.generateSessionId();
+        localStorage.setItem('chordsapp_session_id', this.sessionId);
+
+        try {
+            const database = firebase.database();
+            const sessionsRef = database.ref(`users/${userId}/activeSessions`);
+
+            // Get current sessions and max allowed
+            const [sessionsSnapshot, maxSessions] = await Promise.all([
+                sessionsRef.once('value'),
+                this.getMaxSessions(userId)
+            ]);
+
+            let sessions = sessionsSnapshot.val() || {};
+            let sessionsArray = Object.entries(sessions).map(([key, val]) => ({ key, ...val }));
+
+            // Sort by timestamp (oldest first)
+            sessionsArray.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+            // Remove oldest sessions if we're at or over the limit
+            while (sessionsArray.length >= maxSessions) {
+                const oldest = sessionsArray.shift();
+                if (oldest) {
+                    await database.ref(`users/${userId}/activeSessions/${oldest.key}`).remove();
+                    console.log('Removed oldest session:', oldest.key);
+                }
+            }
+
+            // Add new session
+            const newSessionRef = sessionsRef.push();
+            await newSessionRef.set({
+                sessionId: this.sessionId,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                userAgent: navigator.userAgent.substring(0, 100)
+            });
+
+            console.log('Session registered:', this.sessionId, `(max: ${maxSessions})`);
+        } catch (error) {
+            console.error('Error registering session:', error);
+        }
+    }
+
+    // Start listening for session changes (to detect if this session was kicked out)
+    startSessionListener(userId) {
+        // Stop any existing listener first
+        this.stopSessionListener();
+
+        const localSessionId = localStorage.getItem('chordsapp_session_id');
+        if (!localSessionId) return;
+
+        this.sessionListener = firebase.database().ref(`users/${userId}/activeSessions`);
+        this.sessionListener.on('value', (snapshot) => {
+            const sessions = snapshot.val();
+
+            // Check if our session still exists
+            if (sessions) {
+                const sessionExists = Object.values(sessions).some(s => s.sessionId === localSessionId);
+                if (!sessionExists) {
+                    // Our session was removed - we've been kicked out
+                    console.log('Session no longer valid - kicked out by another device');
+                    this.forceLogout();
+                }
+            } else {
+                // No sessions at all - force logout
+                console.log('No active sessions found');
+                this.forceLogout();
+            }
+        });
+    }
+
+    // Stop session listener
+    stopSessionListener() {
+        if (this.sessionListener) {
+            this.sessionListener.off();
+            this.sessionListener = null;
+        }
+    }
+
+    // Remove current session from Firebase on logout
+    async removeCurrentSession(userId) {
+        const localSessionId = localStorage.getItem('chordsapp_session_id');
+        if (!localSessionId || !userId) return;
+
+        try {
+            const sessionsRef = firebase.database().ref(`users/${userId}/activeSessions`);
+            const snapshot = await sessionsRef.once('value');
+            const sessions = snapshot.val();
+
+            if (sessions) {
+                for (const [key, session] of Object.entries(sessions)) {
+                    if (session.sessionId === localSessionId) {
+                        await firebase.database().ref(`users/${userId}/activeSessions/${key}`).remove();
+                        console.log('Session removed on logout:', localSessionId);
+                        break;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error removing session:', error);
+        }
+    }
+
+    // Force logout (called when this device is kicked out)
+    async forceLogout() {
+        this.stopSessionListener();
+        localStorage.removeItem('chordsapp_session_id');
+
+        try {
+            await auth.signOut();
+        } catch (error) {
+            console.error('Error during force logout:', error);
+        }
+
+        // Show notification to user
+        this.showKickedOutModal();
+    }
+
+    // Show modal when user is kicked out
+    showKickedOutModal() {
+        // Use existing showMessage or create alert
+        const message = 'You have been logged out because the maximum number of devices was reached.';
+
+        // Try to use the app's showMessage function
+        if (typeof showMessage === 'function') {
+            showMessage('Session Ended', message, 'info');
+        } else {
+            alert(message);
+        }
     }
 
     // Sign up with email and password
@@ -25,6 +190,9 @@ class ChordsAuthManager {
                     displayName: displayName
                 });
             }
+
+            // Register session for single-device login
+            await this.registerSession(userCredential.user.uid);
 
             this.showMessage('Account created successfully!', 'success');
             this.closeAuthModal();
@@ -39,6 +207,10 @@ class ChordsAuthManager {
     async signIn(email, password) {
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
+
+            // Register session for single-device login (kicks out other devices)
+            await this.registerSession(userCredential.user.uid);
+
             this.showMessage('Signed in successfully!', 'success');
             this.closeAuthModal();
             return userCredential.user;
@@ -55,6 +227,9 @@ class ChordsAuthManager {
             // Use popup for GitHub Pages hosting (redirect requires Firebase Hosting)
             const result = await auth.signInWithPopup(provider);
             if (result && result.user) {
+                // Register session for single-device login (kicks out other devices)
+                await this.registerSession(result.user.uid);
+
                 this.showMessage('Signed in with Google successfully!', 'success');
                 this.closeAuthModal();
                 console.log('Google sign-in successful:', result.user.email);
@@ -68,6 +243,16 @@ class ChordsAuthManager {
     // Sign out
     async signOut() {
         try {
+            // Remove session from Firebase before signing out
+            if (this.currentUser) {
+                await this.removeCurrentSession(this.currentUser.uid);
+            }
+
+            // Clean up session
+            this.stopSessionListener();
+            localStorage.removeItem('chordsapp_session_id');
+            this.sessionId = null;
+
             await auth.signOut();
             this.showMessage('Signed out successfully!', 'success');
         } catch (error) {
@@ -123,8 +308,13 @@ class ChordsAuthManager {
             }
             if (sideMenuMySubscription) {
                 sideMenuMySubscription.onclick = () => {
-                    const modal = document.getElementById('subscriptionModal');
-                    if (modal) modal.style.display = 'flex';
+                    // Use global function to refresh usage data before showing modal
+                    if (window.showSubscriptionModal) {
+                        window.showSubscriptionModal();
+                    } else {
+                        const modal = document.getElementById('subscriptionModal');
+                        if (modal) modal.style.display = 'flex';
+                    }
                 };
             }
         } else {

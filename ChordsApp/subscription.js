@@ -340,6 +340,15 @@ class SubscriptionManager {
     }
 
     /**
+     * Refresh user usage data from Firebase (useful before showing modals)
+     */
+    async refreshUserUsage() {
+        if (!this.currentUser) return;
+        await this.loadUserUsage();
+        this.checkAndResetMonthlyUsage();
+    }
+
+    /**
      * Get usage summary for display
      */
     getUsageSummary() {
