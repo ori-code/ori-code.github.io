@@ -182,8 +182,8 @@
                     </div>
                     <div class="side-menu-row">
                         <label>Font Size:</label>
-                        <input type="range" id="sideMenuFontSize" min="8" max="28" value="11" step="0.5">
-                        <span id="sideMenuFontSizeVal">11pt</span>
+                        <input type="range" id="sideMenuFontSize" min="8" max="28" value="8.5" step="0.5">
+                        <span id="sideMenuFontSizeVal">8.5pt</span>
                     </div>
                     <div class="side-menu-row">
                         <label>Line Spacing:</label>
@@ -199,6 +199,12 @@
                         <label class="side-menu-checkbox">
                             <input type="checkbox" id="sideMenuBadges" checked>
                             <span>Show Badges</span>
+                        </label>
+                    </div>
+                    <div class="side-menu-row">
+                        <label class="side-menu-checkbox">
+                            <input type="checkbox" id="followArrangementBtn">
+                            <span>Follow Arrangement</span>
                         </label>
                     </div>
                     <div class="side-menu-row">
@@ -507,8 +513,8 @@
                     <!-- Row 1: Sliders + Layout + Pages (all in same line) -->
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
                         <label class="font-size-control" style="flex: 1 1 120px; min-width: 120px;">
-                            Font Size: <span id="fontSizeValue">11</span>pt
-                            <input type="range" id="fontSizeSlider" min="8" max="28" value="11" step="0.5">
+                            Font Size: <span id="fontSizeValue">8.5</span>pt
+                            <input type="range" id="fontSizeSlider" min="8" max="28" value="8.5" step="0.5">
                         </label>
                         <label class="line-height-control" style="flex: 1 1 130px; min-width: 130px;">
                             Line Spacing: <span id="lineHeightValue">1.2</span>
@@ -588,11 +594,8 @@
             <section id="editor" class="editor" style="display: none;">
                 <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h2 style="margin: 0;">Edit workspace</h2>
-                    <button id="toggleChordWorkspace" class="ghost-button" style="padding: 8px 16px; font-size: 0.9rem; background: rgba(139, 92, 246, 0.1); color: var(--primary); border: 1px solid rgba(139, 92, 246, 0.3);">
-                        ▼ Expand
-                    </button>
                 </div>
-                <div id="chordWorkspaceContent" style="display: none;">
+                <div id="chordWorkspaceContent">
                     <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
                         <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
                         <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
@@ -629,6 +632,13 @@
                 <div id="pageCounter" style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">Page 1 of 1 (A4)</div>
                 <div id="pagesWrapper" style="display: flex; flex-direction: column; gap: 20px;">
                     <div class="preview-page" data-page="1">
+                        <!-- The Faith Sound Logo - positioned by CSS based on text direction -->
+                        <div id="previewLogo" class="preview-logo">
+                            <svg viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg" style="height: 24px; width: auto;">
+                                <text x="0" y="15" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" fill="#1a1a1a">THE FAITH</text>
+                                <text x="0" y="34" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="bold" fill="#e84667">SOUND</text>
+                            </svg>
+                        </div>
                         <div id="livePreview" class="live-preview" style="min-height: 1123px; border: none; padding: 20px 20px 20px 20px; width: 100%; max-width: 210mm;"></div>
                     </div>
                 </div>
@@ -890,6 +900,15 @@
             <div class="modal-body">
                 <p>Select a song from your library:</p>
 
+                <!-- Book Selector -->
+                <div style="display: flex; gap: 8px; margin: 12px 0; align-items: center;">
+                    <select id="bookFilter" class="modal-input" style="flex: 1; font-size: 1rem; padding: 10px 12px;">
+                        <option value="all">📚 All Songs</option>
+                        <!-- Books populated dynamically -->
+                    </select>
+                    <button id="manageBooksBtn" class="ghost-button" style="padding: 10px 14px; font-size: 1rem;" title="Manage Books">📖 Books</button>
+                </div>
+
                 <!-- Search and Filters -->
                 <div style="display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; align-items: center;">
                     <input type="text" id="songSearchInput" class="modal-input" placeholder="🔍 Search songs..." style="flex: 1; min-width: 200px;">
@@ -936,6 +955,7 @@
                         <span id="bulkSelectedCount" style="color: var(--text-muted); font-size: 0.9rem;">0 selected</span>
                         <div style="display: flex; gap: 8px;">
                             <button id="bulkSelectAll" class="ghost-button" style="padding: 8px 14px; font-size: 0.85rem;">Select All</button>
+                            <button id="bulkAddToBook" class="primary-button" style="padding: 8px 14px; font-size: 0.85rem; background: #8b5cf6;">📖 Add to Book</button>
                             <button id="bulkAddToSession" class="primary-button" style="padding: 8px 14px; font-size: 0.85rem; background: #10b981;">➕ Add to Session</button>
                             <button id="bulkDeleteBtn" class="primary-button" style="padding: 8px 14px; font-size: 0.85rem; background: #ef4444;">🗑️ Delete</button>
                         </div>
@@ -944,6 +964,54 @@
             </div>
             <div class="modal-footer">
                 <button class="ghost-button" id="loadSongCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Books Management Modal -->
+    <div id="booksModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📚 My Books</h3>
+                <button class="modal-close" id="booksClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); margin-bottom: 16px;">Organize your songs into books for easy access.</p>
+
+                <!-- Create New Book Form -->
+                <div id="newBookForm" style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <input type="text" id="newBookName" class="modal-input" placeholder="New book name..." style="flex: 1;">
+                    <button id="createBookBtn" class="primary-button" style="padding: 10px 16px;">Create</button>
+                </div>
+
+                <!-- Books List -->
+                <div id="booksList" style="max-height: 300px; overflow-y: auto;">
+                    <!-- Books will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" id="booksModalCancel">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add to Book Selection Modal -->
+    <div id="addToBookModal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>📖 Select Book</h3>
+                <button class="modal-close" id="addToBookClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); margin-bottom: 16px;">Choose a book to add the selected songs:</p>
+
+                <!-- Books Selection List -->
+                <div id="addToBookList" style="max-height: 300px; overflow-y: auto;">
+                    <!-- Books will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="ghost-button" id="addToBookCancel">Cancel</button>
             </div>
         </div>
     </div>
@@ -2398,6 +2466,28 @@
                     const show = sideMenuShowControls.checked;
                     setMainControlsVisibility(show);
                     localStorage.setItem('chordsapp-show-controls', show);
+                });
+            }
+
+            // Display: Follow Arrangement toggle
+            const followArrangementBtn = document.getElementById('followArrangementBtn');
+            if (followArrangementBtn) {
+                // Load saved preference or use default (unchecked)
+                const savedFollowArrangement = localStorage.getItem('chordsapp-follow-arrangement');
+                const followArrangement = savedFollowArrangement === 'true';
+                followArrangementBtn.checked = followArrangement;
+
+                // Initialize the state in app.js if toggle function exists
+                if (followArrangement && window.toggleFollowArrangement) {
+                    window.toggleFollowArrangement(true);
+                }
+
+                followArrangementBtn.addEventListener('change', () => {
+                    const enabled = followArrangementBtn.checked;
+                    localStorage.setItem('chordsapp-follow-arrangement', enabled);
+                    if (window.toggleFollowArrangement) {
+                        window.toggleFollowArrangement(enabled);
+                    }
                 });
             }
 

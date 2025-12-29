@@ -2,6 +2,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors')({ origin: true });
 
 // Initialize Firebase Admin
@@ -16,14 +17,17 @@ const BASE_PROMPT = `You are an expert OCR assistant specialized in transcribing
 
 ## OUTPUT FORMAT (MANDATORY - FOLLOW EXACTLY)
 
-Your response MUST begin with this header block:
-Title: [Hebrew song title]
-Subtitle: [Author/source if visible]
-Key: [Detected key - NEVER skip this]
-BPM: [If visible, otherwise "Not specified"]
-Time: [Time signature if visible, otherwise "4/4"]
+Your response MUST begin with EXACTLY these 2 lines (no extra lines between them):
+Title: [Song title in original language]
+Key: [Key like "C Major" or "Am"] | BPM: [number or "Not specified"] | Time: [like "4/4"]
 
-Then provide sections with inline chords, then end with:
+IMPORTANT: The second line MUST combine Key, BPM, and Time on ONE line separated by " | " (pipe with spaces).
+
+Example correct format:
+Title: שיר הללויה
+Key: G Major | BPM: 120 | Time: 4/4
+
+Then provide sections with inline chords. End with:
 ---
 Analysis: [Your key detection reasoning]
 
@@ -263,6 +267,83 @@ exports.analyzeChart = functions
 
         } catch (error) {
             console.error('Error analyzing chart:', error);
+            return res.status(500).json({
+                error: 'Failed to analyze chart',
+                message: error.message
+            });
+        }
+    });
+});
+
+/**
+ * analyzeChartGemini - OCR endpoint using Google Gemini
+ * POST request with { imageData, mimeType, feedback?, previousTranscription?, intenseMode? }
+ */
+exports.analyzeChartGemini = functions
+    .runWith({
+        secrets: ['GOOGLE_AI_API_KEY'],
+        timeoutSeconds: 120,
+        memory: '512MB'
+    })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            // Get API key from Firebase secrets
+            const apiKey = process.env.GOOGLE_AI_API_KEY;
+            if (!apiKey) {
+                throw new Error('GOOGLE_AI_API_KEY not configured');
+            }
+
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+
+            const { imageData, mimeType, feedback, previousTranscription, intenseMode } = req.body;
+
+            if (!imageData) {
+                return res.status(400).json({ error: 'No image data provided' });
+            }
+
+            // Build prompt with context
+            let fullPrompt = BASE_PROMPT;
+
+            if (previousTranscription) {
+                fullPrompt = `Previous transcription (for reference):\n${previousTranscription}\n\n` + fullPrompt;
+            }
+
+            if (feedback) {
+                fullPrompt = `User feedback requesting corrections: ${feedback}\n\n` + fullPrompt;
+            }
+
+            // Prepare image part for Gemini
+            const imagePart = {
+                inlineData: {
+                    data: imageData,
+                    mimeType: mimeType
+                }
+            };
+
+            // Call Gemini API
+            const result = await model.generateContent([fullPrompt, imagePart]);
+            const response = await result.response;
+            const transcription = response.text() || '';
+
+            console.log('Gemini transcription successful, length:', transcription.length);
+
+            return res.status(200).json({
+                success: true,
+                transcription: transcription,
+                metadata: {
+                    model: 'gemini-2.0-flash-exp',
+                    feedbackApplied: Boolean(feedback)
+                }
+            });
+
+        } catch (error) {
+            console.error('Error analyzing chart with Gemini:', error);
             return res.status(500).json({
                 error: 'Failed to analyze chart',
                 message: error.message

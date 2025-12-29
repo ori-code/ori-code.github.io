@@ -6,6 +6,10 @@
     let bulkSelectionMode = false;
     let selectedSongIds = new Set();
 
+    // ============= BOOKS STATE =============
+    let currentBookFilter = 'all'; // 'all' or bookId
+    let userBooks = [];            // Array of user's books
+
     // Function to update the bulk action bar UI
     function updateBulkActionBar() {
         const countEl = document.getElementById('bulkSelectedCount');
@@ -79,6 +83,299 @@
     window.isBulkSelectionMode = function() { return bulkSelectionMode; };
     window.getSelectedSongIds = function() { return selectedSongIds; };
     window.resetBulkSelection = resetBulkSelection;
+
+    // ============= BOOKS MANAGEMENT FUNCTIONS =============
+
+    // Load all books for current user
+    async function loadUserBooks() {
+        const user = firebase.auth().currentUser;
+        if (!user) return [];
+
+        try {
+            const database = firebase.database();
+            const snapshot = await database.ref(`users/${user.uid}/books`).once('value');
+            const books = snapshot.val();
+
+            userBooks = books ? Object.entries(books).map(([id, data]) => ({id, ...data})) : [];
+            return userBooks;
+        } catch (error) {
+            console.error('Error loading books:', error);
+            return [];
+        }
+    }
+
+    // Populate the book filter dropdown
+    function populateBookFilter() {
+        const bookFilter = document.getElementById('bookFilter');
+        if (!bookFilter) return;
+
+        // Get the saved selection (from window or current state)
+        const savedSelection = window.selectedBookId || currentBookFilter || 'all';
+
+        // Clear existing options except "All Songs"
+        bookFilter.innerHTML = '<option value="all">📚 All Songs</option>';
+
+        // Add user books
+        userBooks.forEach(book => {
+            const option = document.createElement('option');
+            option.value = book.id;
+            option.textContent = `📖 ${book.name}`;
+            if (book.id === savedSelection) {
+                option.selected = true;
+            }
+            bookFilter.appendChild(option);
+        });
+
+        // Update current state
+        currentBookFilter = savedSelection;
+    }
+
+    // Create a new book
+    async function createBook(name) {
+        const user = firebase.auth().currentUser;
+        if (!user) return null;
+
+        try {
+            const database = firebase.database();
+            const bookRef = database.ref(`users/${user.uid}/books`).push();
+
+            await bookRef.set({
+                name: name.trim(),
+                songIds: [],
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // Reload books and refresh UI
+            await loadUserBooks();
+            populateBookFilter();
+            renderBooksList();
+
+            return bookRef.key;
+        } catch (error) {
+            console.error('Error creating book:', error);
+            return null;
+        }
+    }
+
+    // Delete a book
+    async function deleteBook(bookId) {
+        const user = firebase.auth().currentUser;
+        if (!user) return false;
+
+        try {
+            await firebase.database().ref(`users/${user.uid}/books/${bookId}`).remove();
+
+            // If we were viewing this book, switch to All Songs
+            if (currentBookFilter === bookId) {
+                currentBookFilter = 'all';
+            }
+
+            // Reload books and refresh UI
+            await loadUserBooks();
+            populateBookFilter();
+            renderBooksList();
+
+            if (window.triggerSongListRerender) {
+                window.triggerSongListRerender();
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error deleting book:', error);
+            return false;
+        }
+    }
+
+    // Add song(s) to a book
+    async function addSongsToBook(bookId, songIds) {
+        const user = firebase.auth().currentUser;
+        if (!user) return false;
+
+        try {
+            const database = firebase.database();
+            const bookRef = database.ref(`users/${user.uid}/books/${bookId}`);
+            const snapshot = await bookRef.once('value');
+            const book = snapshot.val();
+
+            if (!book) return false;
+
+            const existingSongIds = book.songIds || [];
+            const newSongIds = [...new Set([...existingSongIds, ...songIds])];
+
+            await bookRef.update({
+                songIds: newSongIds,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // Reload books to update local state
+            await loadUserBooks();
+
+            return true;
+        } catch (error) {
+            console.error('Error adding songs to book:', error);
+            return false;
+        }
+    }
+
+    // Remove song from a book
+    async function removeSongFromBook(bookId, songId) {
+        const user = firebase.auth().currentUser;
+        if (!user) return false;
+
+        try {
+            const database = firebase.database();
+            const bookRef = database.ref(`users/${user.uid}/books/${bookId}`);
+            const snapshot = await bookRef.once('value');
+            const book = snapshot.val();
+
+            if (!book) return false;
+
+            const updatedSongIds = (book.songIds || []).filter(id => id !== songId);
+
+            await bookRef.update({
+                songIds: updatedSongIds,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // Reload books and refresh UI
+            await loadUserBooks();
+
+            if (window.triggerSongListRerender) {
+                window.triggerSongListRerender();
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error removing song from book:', error);
+            return false;
+        }
+    }
+
+    // Render books list in the management modal
+    function renderBooksList() {
+        const booksList = document.getElementById('booksList');
+        if (!booksList) return;
+
+        if (userBooks.length === 0) {
+            booksList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No books yet. Create your first book above!</p>';
+            return;
+        }
+
+        booksList.innerHTML = '';
+
+        userBooks.forEach(book => {
+            const bookItem = document.createElement('div');
+            bookItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px;';
+
+            const bookInfo = document.createElement('div');
+            bookInfo.innerHTML = `
+                <div style="font-weight: 600; color: var(--text);">📖 ${book.name}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">${(book.songIds || []).length} songs</div>
+            `;
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease;';
+            deleteBtn.title = 'Delete book';
+
+            deleteBtn.addEventListener('click', async () => {
+                if (confirm(`Delete book "${book.name}"? (Songs will NOT be deleted)`)) {
+                    const success = await deleteBook(book.id);
+                    if (success) {
+                        showMessage('Success', `Book "${book.name}" deleted`, 'success');
+                    } else {
+                        showMessage('Error', 'Failed to delete book', 'error');
+                    }
+                }
+            });
+
+            deleteBtn.addEventListener('mouseenter', () => {
+                deleteBtn.style.background = 'rgba(255, 59, 92, 0.2)';
+            });
+
+            deleteBtn.addEventListener('mouseleave', () => {
+                deleteBtn.style.background = 'transparent';
+            });
+
+            bookItem.appendChild(bookInfo);
+            bookItem.appendChild(deleteBtn);
+            booksList.appendChild(bookItem);
+        });
+    }
+
+    // Show "Add to Book" selection modal
+    function showAddToBookModal(songIds) {
+        // If no books exist, prompt to create one
+        if (userBooks.length === 0) {
+            showMessage('Info', 'Create a book first before adding songs', 'info');
+            const booksModal = document.getElementById('booksModal');
+            if (booksModal) {
+                booksModal.style.display = 'flex';
+                renderBooksList();
+            }
+            return;
+        }
+
+        const addToBookModal = document.getElementById('addToBookModal');
+        const addToBookList = document.getElementById('addToBookList');
+
+        if (!addToBookModal || !addToBookList) return;
+
+        addToBookList.innerHTML = '';
+
+        userBooks.forEach(book => {
+            const bookOption = document.createElement('div');
+            bookOption.style.cssText = 'padding: 14px; margin-bottom: 8px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s ease;';
+
+            bookOption.innerHTML = `
+                <div style="font-weight: 600; color: var(--text);">📖 ${book.name}</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">${(book.songIds || []).length} songs</div>
+            `;
+
+            bookOption.addEventListener('click', async () => {
+                const success = await addSongsToBook(book.id, songIds);
+                if (success) {
+                    showMessage('Success', `Added ${songIds.length} song${songIds.length > 1 ? 's' : ''} to "${book.name}"`, 'success');
+                    addToBookModal.style.display = 'none';
+
+                    // Reset bulk selection
+                    if (window.resetBulkSelection) {
+                        window.resetBulkSelection();
+                    }
+                    if (window.triggerSongListRerender) {
+                        window.triggerSongListRerender();
+                    }
+                } else {
+                    showMessage('Error', 'Failed to add songs to book', 'error');
+                }
+            });
+
+            bookOption.addEventListener('mouseenter', () => {
+                bookOption.style.background = 'var(--primary-soft)';
+                bookOption.style.borderColor = 'var(--primary)';
+            });
+
+            bookOption.addEventListener('mouseleave', () => {
+                bookOption.style.background = 'var(--bg-soft)';
+                bookOption.style.borderColor = 'var(--border)';
+            });
+
+            addToBookList.appendChild(bookOption);
+        });
+
+        addToBookModal.style.display = 'flex';
+    }
+
+    // Expose book functions for external use
+    window.loadUserBooks = loadUserBooks;
+    window.createBook = createBook;
+    window.deleteBook = deleteBook;
+    window.addSongsToBook = addSongsToBook;
+    window.removeSongFromBook = removeSongFromBook;
+    window.showAddToBookModal = showAddToBookModal;
+    window.getCurrentBookFilter = function() { return currentBookFilter; };
+    window.getUserBooks = function() { return userBooks; };
 
     // Wait for Firebase to be initialized
     function initSongLibrary() {
@@ -291,6 +588,21 @@
                 const database = firebase.database();
                 const songRef = database.ref('users/' + user.uid + '/songs').push();
 
+                // Get all current layout settings
+                const fontSizeSlider = document.getElementById('fontSizeSlider');
+                const lineHeightSlider = document.getElementById('lineHeightSlider');
+                const charSpacingSlider = document.getElementById('charSpacingSlider');
+                const columnCountSelect = document.getElementById('columnCount');
+                const pageCountSelect = document.getElementById('pageCount');
+
+                const layoutSettings = {
+                    fontSize: fontSizeSlider ? parseFloat(fontSizeSlider.value) : 8.5,
+                    lineHeight: lineHeightSlider ? parseFloat(lineHeightSlider.value) : 1.5,
+                    charSpacing: charSpacingSlider ? parseFloat(charSpacingSlider.value) : 0,
+                    columnCount: columnCountSelect ? columnCountSelect.value : '2',
+                    pageCount: pageCountSelect ? pageCountSelect.value : '1'
+                };
+
                 await songRef.set({
                     // Legacy field for backwards compatibility
                     name: songName,
@@ -311,12 +623,29 @@
                     transposeSteps: actualTransposeSteps, // Current transpose state
                     originalKey: originalKey, // Key from selector (required)
 
+                    // Display/Layout settings
+                    fontSize: layoutSettings.fontSize,
+                    lineHeight: layoutSettings.lineHeight,
+                    charSpacing: layoutSettings.charSpacing,
+                    columnCount: layoutSettings.columnCount,
+                    pageCount: layoutSettings.pageCount,
+
                     // Timestamps
                     createdAt: firebase.database.ServerValue.TIMESTAMP,
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
 
-                showMessage('Success', `"${songName}" saved to your library!`, 'success');
+                // If a book is selected, automatically add the song to that book
+                const bookFilter = document.getElementById('bookFilter');
+                const selectedBookId = bookFilter ? bookFilter.value : 'all';
+                if (selectedBookId && selectedBookId !== 'all') {
+                    await addSongsToBook(selectedBookId, [songRef.key]);
+                    const selectedBook = userBooks.find(b => b.id === selectedBookId);
+                    const bookName = selectedBook ? selectedBook.name : 'book';
+                    showMessage('Success', `"${songName}" saved to "${bookName}"!`, 'success');
+                } else {
+                    showMessage('Success', `"${songName}" saved to your library!`, 'success');
+                }
                 saveSongModal.style.display = 'none';
             } catch (error) {
                 console.error('Error saving song:', error);
@@ -445,6 +774,21 @@
                 const database = firebase.database();
                 const songRef = database.ref('users/' + user.uid + '/songs/' + songToUpdate.id);
 
+                // Get all current layout settings
+                const fontSizeSlider = document.getElementById('fontSizeSlider');
+                const lineHeightSlider = document.getElementById('lineHeightSlider');
+                const charSpacingSlider = document.getElementById('charSpacingSlider');
+                const columnCountSelect = document.getElementById('columnCount');
+                const pageCountSelect = document.getElementById('pageCount');
+
+                const layoutSettings = {
+                    fontSize: fontSizeSlider ? parseFloat(fontSizeSlider.value) : 8.5,
+                    lineHeight: lineHeightSlider ? parseFloat(lineHeightSlider.value) : 1.5,
+                    charSpacing: charSpacingSlider ? parseFloat(charSpacingSlider.value) : 0,
+                    columnCount: columnCountSelect ? columnCountSelect.value : '2',
+                    pageCount: pageCountSelect ? pageCountSelect.value : '1'
+                };
+
                 await songRef.update({
                     // ✅ UPDATE STRUCTURED METADATA FIELDS
                     title: title,
@@ -461,6 +805,13 @@
                     // Transpose state
                     transposeSteps: actualTransposeSteps,
                     originalKey: originalKey,
+
+                    // Display/Layout settings
+                    fontSize: layoutSettings.fontSize,
+                    lineHeight: layoutSettings.lineHeight,
+                    charSpacing: layoutSettings.charSpacing,
+                    columnCount: layoutSettings.columnCount,
+                    pageCount: layoutSettings.pageCount,
 
                     // Timestamp
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
@@ -753,7 +1104,13 @@
                             originalKey: song.originalKey || '',
                             bpm: song.bpm || null,
                             timeSignature: song.timeSignature || '4/4',
-                            songName: song.name
+                            songName: song.name,
+                            // Layout settings
+                            fontSize: song.fontSize || null,
+                            lineHeight: song.lineHeight || null,
+                            charSpacing: song.charSpacing !== undefined ? song.charSpacing : null,
+                            columnCount: song.columnCount || null,
+                            pageCount: song.pageCount || null
                         }
                     }));
                 } else {
@@ -777,7 +1134,13 @@
                             // Dispatch event with reconstructed baseline
                             window.dispatchEvent(new CustomEvent('songLoaded', {
                                 detail: {
-                                    baselineChart: reconstructedBaseline
+                                    baselineChart: reconstructedBaseline,
+                                    // Layout settings
+                                    fontSize: song.fontSize || null,
+                                    lineHeight: song.lineHeight || null,
+                                    charSpacing: song.charSpacing !== undefined ? song.charSpacing : null,
+                                    columnCount: song.columnCount || null,
+                                    pageCount: song.pageCount || null
                                 }
                             }));
 
@@ -894,6 +1257,10 @@
                     // Render with filters applied
                     window.triggerSongListRerender();
                 }
+
+                // Load and populate books
+                await loadUserBooks();
+                populateBookFilter();
 
                 loadSongModal.style.display = 'flex';
             } catch (error) {
@@ -1036,6 +1403,110 @@
             });
         }
 
+        // ============= BOOKS MANAGEMENT EVENT HANDLERS =============
+        const bulkAddToBook = document.getElementById('bulkAddToBook');
+        const manageBooksBtn = document.getElementById('manageBooksBtn');
+        const booksModal = document.getElementById('booksModal');
+        const booksClose = document.getElementById('booksClose');
+        const booksModalCancel = document.getElementById('booksModalCancel');
+        const createBookBtn = document.getElementById('createBookBtn');
+        const newBookNameInput = document.getElementById('newBookName');
+        const addToBookModal = document.getElementById('addToBookModal');
+        const addToBookClose = document.getElementById('addToBookClose');
+        const addToBookCancel = document.getElementById('addToBookCancel');
+
+        // Bulk Add to Book button
+        if (bulkAddToBook) {
+            bulkAddToBook.addEventListener('click', () => {
+                if (selectedSongIds.size === 0) {
+                    showMessage('Info', 'No songs selected', 'info');
+                    return;
+                }
+
+                showAddToBookModal(Array.from(selectedSongIds));
+            });
+        }
+
+        // Manage Books button - opens books modal
+        if (manageBooksBtn) {
+            manageBooksBtn.addEventListener('click', () => {
+                if (booksModal) {
+                    renderBooksList();
+                    booksModal.style.display = 'flex';
+                }
+            });
+        }
+
+        // Close Books Modal
+        if (booksClose) {
+            booksClose.addEventListener('click', () => {
+                if (booksModal) booksModal.style.display = 'none';
+            });
+        }
+
+        if (booksModalCancel) {
+            booksModalCancel.addEventListener('click', () => {
+                if (booksModal) booksModal.style.display = 'none';
+            });
+        }
+
+        // Create Book button
+        if (createBookBtn && newBookNameInput) {
+            createBookBtn.addEventListener('click', async () => {
+                const bookName = newBookNameInput.value.trim();
+                if (!bookName) {
+                    showMessage('Error', 'Please enter a book name', 'error');
+                    return;
+                }
+
+                const bookId = await createBook(bookName);
+                if (bookId) {
+                    showMessage('Success', `Book "${bookName}" created!`, 'success');
+                    newBookNameInput.value = '';
+                } else {
+                    showMessage('Error', 'Failed to create book', 'error');
+                }
+            });
+
+            // Allow Enter key to create book
+            newBookNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    createBookBtn.click();
+                }
+            });
+        }
+
+        // Close Add to Book Modal
+        if (addToBookClose) {
+            addToBookClose.addEventListener('click', () => {
+                if (addToBookModal) addToBookModal.style.display = 'none';
+            });
+        }
+
+        if (addToBookCancel) {
+            addToBookCancel.addEventListener('click', () => {
+                if (addToBookModal) addToBookModal.style.display = 'none';
+            });
+        }
+
+        // Close modals on outside click - Books Modal
+        if (booksModal) {
+            booksModal.addEventListener('click', (e) => {
+                if (e.target === booksModal) {
+                    booksModal.style.display = 'none';
+                }
+            });
+        }
+
+        // Close modals on outside click - Add to Book Modal
+        if (addToBookModal) {
+            addToBookModal.addEventListener('click', (e) => {
+                if (e.target === addToBookModal) {
+                    addToBookModal.style.display = 'none';
+                }
+            });
+        }
+
         // Close modals on outside click
         saveSongModal.addEventListener('click', (e) => {
             if (e.target === saveSongModal) {
@@ -1171,6 +1642,12 @@
                     bpm: song.bpm || '120',
                     time: song.timeSignature || '4/4',
                     author: song.author || '',
+                    // Layout settings
+                    fontSize: song.fontSize || 8.5,
+                    lineHeight: song.lineHeight || 1.5,
+                    charSpacing: song.charSpacing !== undefined ? song.charSpacing : 0,
+                    columnCount: song.columnCount || '2',
+                    pageCount: song.pageCount || '1',
                     ownerUid: user.uid,
                     sharedAt: firebase.database.ServerValue.TIMESTAMP
                 };

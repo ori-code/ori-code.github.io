@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
-const Anthropic = require('@anthropic-ai/sdk');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
 require('dotenv').config();
 
@@ -62,26 +62,26 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Serve static files from the current directory
 app.use(express.static(__dirname));
 
-// Initialize Anthropic Claude
-const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY
-});
-
-const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
+// Initialize Google Gemini
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
+const GEMINI_MODEL = 'gemini-2.0-flash-exp';
 
 // Hebrew Chord Sheet OCR Prompt v2.0
 const BASE_PROMPT = `You are an expert OCR assistant specialized in transcribing Hebrew worship/music chord sheets. Your task is to accurately read chord charts and output them in a standardized inline format.
 
 ## OUTPUT FORMAT (MANDATORY - FOLLOW EXACTLY)
 
-Your response MUST begin with this header block:
-Title: [Hebrew song title]
-Subtitle: [Author/source if visible]
-Key: [Detected key - NEVER skip this]
-BPM: [If visible, otherwise "Not specified"]
-Time: [Time signature if visible, otherwise "4/4"]
+Your response MUST begin with EXACTLY these 2 lines (no extra lines between them):
+Title: [Song title in original language]
+Key: [Key like "C Major" or "Am"] | BPM: [number or "Not specified"] | Time: [like "4/4"]
 
-Then provide sections with inline chords, then end with:
+IMPORTANT: The second line MUST combine Key, BPM, and Time on ONE line separated by " | " (pipe with spaces).
+
+Example correct format:
+Title: שיר הללויה
+Key: G Major | BPM: 120 | Time: 4/4
+
+Then provide sections with inline chords. End with:
 ---
 Analysis: [Your key detection reasoning]
 
@@ -221,7 +221,7 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'ChordsAppClaude API is running' });
 });
 
-// Main OCR endpoint
+// Main OCR endpoint - Using Google Gemini
 app.post('/api/analyze-chart', async (req, res) => {
     try {
         let base64Image, mimeType;
@@ -236,53 +236,34 @@ app.post('/api/analyze-chart', async (req, res) => {
             return res.status(400).json({ error: 'No image data provided. Expected imageData and mimeType in JSON body.' });
         }
 
-        const instructionContent = [];
+        // Build prompt with context
+        let fullPrompt = BASE_PROMPT;
 
         if (previousTranscription) {
-            instructionContent.push({
-                type: 'text',
-                text: `Previous transcription (for reference):\n${previousTranscription}`
-            });
+            fullPrompt = `Previous transcription (for reference):\n${previousTranscription}\n\n` + fullPrompt;
         }
 
         if (feedback) {
-            instructionContent.push({
-                type: 'text',
-                text: `User feedback requesting corrections: ${feedback}`
-            });
+            fullPrompt = `User feedback requesting corrections: ${feedback}\n\n` + fullPrompt;
         }
 
-        // Determine content type based on mime type
-        const contentType = mimeType === 'application/pdf' ? 'document' : 'image';
+        // Initialize Gemini model
+        const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
-        instructionContent.push({
-            type: contentType,
-            source: {
-                type: 'base64',
-                media_type: mimeType,
-                data: base64Image
+        // Prepare image part for Gemini
+        const imagePart = {
+            inlineData: {
+                data: base64Image,
+                mimeType: mimeType
             }
-        });
+        };
 
-        instructionContent.push({
-            type: 'text',
-            text: BASE_PROMPT
-        });
+        // Call Gemini API
+        const result = await model.generateContent([fullPrompt, imagePart]);
+        const response = await result.response;
+        const extractedText = response.text() || '';
 
-        const response = await anthropic.messages.create({
-            model: CLAUDE_MODEL,
-            max_tokens: 4096,
-            messages: [
-                {
-                    role: 'user',
-                    content: instructionContent
-                }
-            ]
-        });
-
-        const extractedText = response.content?.[0]?.text || '';
-
-        console.log('=== CLAUDE RESPONSE ===');
+        console.log('=== GEMINI RESPONSE ===');
         console.log('First 500 chars:', extractedText.substring(0, 500));
         console.log('Has Key line?:', extractedText.includes('Key:'));
         console.log('Has Analysis line?:', extractedText.includes('Analysis:'));
@@ -292,7 +273,7 @@ app.post('/api/analyze-chart', async (req, res) => {
             success: true,
             transcription: extractedText,
             metadata: {
-                model: CLAUDE_MODEL,
+                model: GEMINI_MODEL,
                 feedbackApplied: Boolean(feedback)
             }
         });
@@ -302,10 +283,6 @@ app.post('/api/analyze-chart', async (req, res) => {
 
         const status = error.response?.status || 500;
         let message = error.message || 'Failed to analyze chart';
-
-        if (error.response?.data?.error?.type === 'not_found_error') {
-            message = `Anthropic model "${CLAUDE_MODEL}" is unavailable. Check ANTHROPIC_MODEL/.env configuration or account access.`;
-        }
 
         res.status(status).json({
             error: 'Failed to analyze chart',

@@ -36,14 +36,28 @@
         const searchInput = document.getElementById('songSearchInput');
         const keyFilter = document.getElementById('songKeyFilter');
         const sortBySelect = document.getElementById('songSortBy');
+        const bookFilter = document.getElementById('bookFilter');
 
         if (!searchInput || !keyFilter || !sortBySelect) return window.allLoadedSongs;
 
         const searchTerm = searchInput.value.toLowerCase().trim();
         const selectedKey = keyFilter.value;
         const sortBy = sortBySelect.value;
+        const selectedBook = bookFilter ? bookFilter.value : 'all';
 
         let filtered = [...window.allLoadedSongs];
+
+        // Apply book filter first
+        if (selectedBook && selectedBook !== 'all') {
+            const userBooks = window.getUserBooks ? window.getUserBooks() : [];
+            const book = userBooks.find(b => b.id === selectedBook);
+            if (book && book.songIds && book.songIds.length > 0) {
+                filtered = filtered.filter(song => book.songIds.includes(song.id));
+            } else {
+                // Book has no songs
+                filtered = [];
+            }
+        }
 
         // Apply search filter (searches in name AND content/lyrics)
         if (searchTerm) {
@@ -85,11 +99,12 @@
         return filtered;
     };
 
-    // Reset filters when modal opens
+    // Reset filters when modal opens (but keep book selection)
     window.resetSongFilters = function() {
         const searchInput = document.getElementById('songSearchInput');
         const keyFilter = document.getElementById('songKeyFilter');
         const sortBySelect = document.getElementById('songSortBy');
+        // NOTE: Don't reset bookFilter - user's book selection should persist
 
         if (searchInput) searchInput.value = '';
         if (keyFilter) keyFilter.value = '';
@@ -101,6 +116,7 @@
         const searchInput = document.getElementById('songSearchInput');
         const keyFilter = document.getElementById('songKeyFilter');
         const sortBySelect = document.getElementById('songSortBy');
+        const bookFilter = document.getElementById('bookFilter');
 
         if (!searchInput || !keyFilter || !sortBySelect) {
             console.warn('Search/filter elements not found, retrying...');
@@ -127,6 +143,17 @@
                 window.triggerSongListRerender();
             }
         });
+
+        // Book filter change listener
+        if (bookFilter) {
+            bookFilter.addEventListener('change', () => {
+                // Store the selection for persistence
+                window.selectedBookId = bookFilter.value;
+                if (window.triggerSongListRerender) {
+                    window.triggerSongListRerender();
+                }
+            });
+        }
     }
 
     // Initialize when DOM is ready

@@ -260,6 +260,55 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set the visualEditor (for transpose to work)
             visualEditor.value = visualFormat;
 
+            // Apply saved layout settings if available
+            if (livePreview) {
+                // Font Size
+                if (song.fontSize && fontSizeSlider && fontSizeValue) {
+                    fontSizeSlider.value = song.fontSize;
+                    fontSizeValue.textContent = song.fontSize;
+                    livePreview.style.fontSize = song.fontSize + 'pt';
+                    const sideMenuFontSize = document.getElementById('sideMenuFontSize');
+                    const sideMenuFontSizeVal = document.getElementById('sideMenuFontSizeVal');
+                    if (sideMenuFontSize) sideMenuFontSize.value = song.fontSize;
+                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = song.fontSize + 'pt';
+                }
+
+                // Line Height
+                if (song.lineHeight) {
+                    const lineHeightSlider = document.getElementById('lineHeightSlider');
+                    const lineHeightValue = document.getElementById('lineHeightValue');
+                    if (lineHeightSlider) lineHeightSlider.value = song.lineHeight;
+                    if (lineHeightValue) lineHeightValue.textContent = song.lineHeight;
+                    livePreview.style.lineHeight = song.lineHeight;
+                }
+
+                // Char Spacing
+                if (song.charSpacing !== null && song.charSpacing !== undefined) {
+                    const charSpacingSlider = document.getElementById('charSpacingSlider');
+                    const charSpacingValue = document.getElementById('charSpacingValue');
+                    if (charSpacingSlider) charSpacingSlider.value = song.charSpacing;
+                    if (charSpacingValue) charSpacingValue.textContent = song.charSpacing;
+                    livePreview.style.letterSpacing = song.charSpacing + 'px';
+                }
+
+                // Column Count
+                if (song.columnCount) {
+                    const columnCountSelect = document.getElementById('columnCount');
+                    if (columnCountSelect) {
+                        columnCountSelect.value = song.columnCount;
+                        livePreview.style.columns = song.columnCount;
+                    }
+                }
+
+                // Page Count
+                if (song.pageCount) {
+                    const pageCountSelect = document.getElementById('pageCount');
+                    if (pageCountSelect) {
+                        pageCountSelect.value = song.pageCount;
+                    }
+                }
+            }
+
             // Store for transpose
             window.setBaselineChart && window.setBaselineChart(content);
 
@@ -319,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const API_URL = isLocalDev
         ? `http://${window.location.hostname}:3002/api/analyze-chart`
-        : 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/analyzeChart';
+        : 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/analyzeChartGemini';
 
     // Nashville Number System state - default key is C Major
     let currentKey = 'C Major';
@@ -471,6 +520,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Session live mode state
     let currentSessionSongId = null; // ID of the song currently being displayed
     let isFollowingLeader = true; // Whether user is following the leader's song
+
+    // Follow arrangement tags state
+    let followArrangementEnabled = false; // Toggle for arrangement following in preview
 
     // Expose currentSongName to window for session-ui.js
     Object.defineProperty(window, 'currentSongName', {
@@ -1068,6 +1120,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     updateUsageDisplay();
                 }
 
+                // Reset font size to default 8.5pt for new analysis
+                if (fontSizeSlider && fontSizeValue && livePreview) {
+                    fontSizeSlider.value = 8.5;
+                    fontSizeValue.textContent = '8.5';
+                    livePreview.style.fontSize = '8.5pt';
+                    // Also sync side menu slider
+                    const sideMenuFontSize = document.getElementById('sideMenuFontSize');
+                    const sideMenuFontSizeVal = document.getElementById('sideMenuFontSizeVal');
+                    if (sideMenuFontSize) sideMenuFontSize.value = 8.5;
+                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = '8.5pt';
+                }
+
                 // Update the live preview
                 updateLivePreview();
 
@@ -1548,32 +1612,6 @@ Our [Em7]hearts will cry, these bones will [D]sing
         if (savedMode === 'custom') {
             advancedControls.style.display = 'flex';
             toggleLayoutMode.textContent = '← Quick Print';
-        }
-    }
-
-    // Chord workspace collapse toggle
-    const toggleChordWorkspace = document.getElementById('toggleChordWorkspace');
-    const chordWorkspaceContent = document.getElementById('chordWorkspaceContent');
-    if (toggleChordWorkspace && chordWorkspaceContent) {
-        toggleChordWorkspace.addEventListener('click', () => {
-            const isHidden = chordWorkspaceContent.style.display === 'none';
-            chordWorkspaceContent.style.display = isHidden ? 'block' : 'none';
-            toggleChordWorkspace.textContent = isHidden ? '▲ Collapse' : '▼ Expand';
-
-            // Store preference
-            localStorage.setItem('chordWorkspaceState', isHidden ? 'expanded' : 'collapsed');
-            console.log('📝 Edit workspace:', isHidden ? 'Expanded' : 'Collapsed');
-        });
-
-        // Restore state preference on load (default: collapsed)
-        const savedState = localStorage.getItem('chordWorkspaceState');
-        if (savedState === 'expanded') {
-            chordWorkspaceContent.style.display = 'block';
-            toggleChordWorkspace.textContent = '▲ Collapse';
-        } else {
-            // Default state: collapsed
-            chordWorkspaceContent.style.display = 'none';
-            toggleChordWorkspace.textContent = '▼ Expand';
         }
     }
 
@@ -2058,6 +2096,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Ensure mixed-language content renders in natural order
         element.style.unicodeBidi = 'plaintext';
+
+        // Also set direction on parent preview-page for logo positioning
+        const previewPage = element.closest('.preview-page');
+        if (previewPage) {
+            previewPage.setAttribute('dir', direction);
+        }
     }
 
     // Expose setDirectionalLayout globally for live-mode.js
@@ -2409,6 +2453,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         let visualContent = visualEditor.value;
         console.log('Updating live preview with content length:', visualContent.length);
+
+        // Apply arrangement order if enabled
+        if (followArrangementEnabled) {
+            visualContent = rebuildByArrangement(visualContent);
+            console.log('Applied arrangement order, new length:', visualContent.length);
+        }
 
         // Always make chords bold (skip Nashville numbers for clean print preview)
         visualContent = makeChordsBold(visualContent);
@@ -3147,6 +3197,229 @@ Our [Em7]hearts will cry, these bones will [D]sing
         lines.splice(insertIndex, 0, '', arrangementLine, '');
         return lines.join('\n');
     }
+
+    // ============= FOLLOW ARRANGEMENT TAGS FEATURE =============
+
+    // Tag to section name mapping
+    const TAG_TO_SECTION = {
+        'I': 'INTRO',
+        'V1': 'VERSE 1', 'V2': 'VERSE 2', 'V3': 'VERSE 3', 'V4': 'VERSE 4',
+        'PC': 'PRE-CHORUS', 'PC1': 'PRE-CHORUS', 'PC2': 'PRE-CHORUS 2',
+        'C': 'CHORUS', 'C1': 'CHORUS', 'C2': 'CHORUS 2',
+        'B': 'BRIDGE', 'B1': 'BRIDGE', 'B2': 'BRIDGE 2',
+        'INT': 'INTERLUDE',
+        'TAG': 'TAG',
+        'CODA': 'CODA',
+        'O': 'OUTRO'
+    };
+
+    /**
+     * Extract arrangement tags from content
+     * Returns array like ['I', 'V1', 'PC', 'C', 'V2', 'PC', 'C', 'B', 'C', 'O']
+     */
+    function getArrangementTags(content) {
+        const lines = content.split('\n');
+
+        for (const line of lines) {
+            // Check if line is an arrangement line (contains multiple tags like "(V1) (C) (V2)")
+            const cleanLine = line.replace(/<[^>]*>/g, '').trim();
+            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|[VBICOT])\d*\)/i.test(cleanLine);
+            const onlyInlineNotation = /^[\s\(VBICOTPCD\d\)|INTAGCOD]+$/i.test(cleanLine) && hasInlineNotation;
+
+            if (onlyInlineNotation) {
+                // Extract all tags from this line
+                const tagMatches = [...cleanLine.matchAll(/\(([A-Z\d]+)\)/gi)];
+                return tagMatches.map(m => m[1].toUpperCase());
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Parse content into sections map
+     * Returns: { 'INTRO': 'content...', 'VERSE 1': 'content...', 'CHORUS': 'content...' }
+     */
+    function parseSectionsFromContent(content) {
+        const lines = content.split('\n');
+        const sections = {};
+        let currentSectionName = null;
+        let currentSectionContent = [];
+        let metadataLines = [];
+        let arrangementLine = '';
+        let inMetadata = true;
+
+        const sectionPattern = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|INTERLUDE|TAG|CODA)\s*(\d*):?$/i;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmedLine = line.trim();
+
+            // Check if it's an arrangement line
+            const cleanLine = trimmedLine.replace(/<[^>]*>/g, '');
+            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|[VBICOT])\d*\)/i.test(cleanLine);
+            const isArrangementLine = /^[\s\(VBICOTPCD\d\)|INTAGCOD]+$/i.test(cleanLine) && hasInlineNotation;
+
+            if (isArrangementLine) {
+                arrangementLine = line;
+                continue;
+            }
+
+            // Check if it's metadata
+            const isMetadata = /^(Title|Key|BPM|Tempo|Time|Authors?|Artists?):/i.test(trimmedLine) ||
+                              trimmedLine.includes('Key:') || trimmedLine.includes('BPM:') ||
+                              trimmedLine.startsWith('{');
+
+            if (inMetadata && isMetadata) {
+                metadataLines.push(line);
+                continue;
+            }
+
+            // Check if it's a section header
+            const sectionMatch = trimmedLine.match(sectionPattern);
+            if (sectionMatch) {
+                inMetadata = false;
+
+                // Save previous section if exists
+                if (currentSectionName && currentSectionContent.length > 0) {
+                    sections[currentSectionName] = currentSectionContent.join('\n');
+                }
+
+                // Start new section
+                const sectionType = sectionMatch[1].toUpperCase();
+                const sectionNum = sectionMatch[2] || '';
+                currentSectionName = sectionNum ? `${sectionType} ${sectionNum}` : sectionType;
+                currentSectionContent = [line]; // Include header
+                continue;
+            }
+
+            // Add line to current section
+            if (currentSectionName) {
+                currentSectionContent.push(line);
+            } else if (!inMetadata && trimmedLine) {
+                // Content before any section header - treat as unnamed section
+                inMetadata = false;
+            }
+        }
+
+        // Save last section
+        if (currentSectionName && currentSectionContent.length > 0) {
+            sections[currentSectionName] = currentSectionContent.join('\n');
+        }
+
+        return {
+            metadata: metadataLines.join('\n'),
+            arrangementLine: arrangementLine,
+            sections: sections
+        };
+    }
+
+    /**
+     * Rebuild content following arrangement tag order
+     * Tags like (C) appearing multiple times = CHORUS repeated
+     * On repeat: only show section header (tag), not full content - saves space
+     */
+    function rebuildByArrangement(content) {
+        const tags = getArrangementTags(content);
+        if (tags.length === 0) {
+            console.log('No arrangement tags found, returning original content');
+            return content;
+        }
+
+        const parsed = parseSectionsFromContent(content);
+        const { metadata, arrangementLine, sections } = parsed;
+
+        console.log('Arrangement tags:', tags);
+        console.log('Available sections:', Object.keys(sections));
+
+        // Build new content following tag order
+        const rebuiltParts = [];
+        const shownSections = new Set(); // Track sections already shown in full
+
+        // Add metadata first
+        if (metadata) {
+            rebuiltParts.push(metadata);
+        }
+
+        // Add arrangement line
+        if (arrangementLine) {
+            rebuiltParts.push('');
+            rebuiltParts.push(arrangementLine);
+        }
+
+        // Add sections in arrangement order
+        for (const tag of tags) {
+            const sectionName = TAG_TO_SECTION[tag];
+            if (!sectionName) {
+                console.log(`Unknown tag: ${tag}`);
+                continue;
+            }
+
+            // Try to find the section (exact match or base match)
+            let sectionContent = sections[sectionName];
+            let actualSectionName = sectionName;
+
+            // If not found, try without number (e.g., "CHORUS" instead of "CHORUS 1")
+            if (!sectionContent) {
+                const baseName = sectionName.replace(/\s*\d+$/, '');
+                sectionContent = sections[baseName];
+                if (sectionContent) actualSectionName = baseName;
+            }
+
+            // If still not found for numbered tags, try the base section
+            if (!sectionContent && /\d/.test(tag)) {
+                const baseTag = tag.replace(/\d+$/, '');
+                const baseSectionName = TAG_TO_SECTION[baseTag];
+                if (baseSectionName) {
+                    sectionContent = sections[baseSectionName];
+                    if (sectionContent) actualSectionName = baseSectionName;
+                }
+            }
+
+            if (sectionContent) {
+                rebuiltParts.push('');
+
+                // Check if this section was already shown
+                if (shownSections.has(actualSectionName)) {
+                    // Only show the header/tag for repeat
+                    rebuiltParts.push(`${actualSectionName}:`);
+                } else {
+                    // Show full content on first appearance
+                    rebuiltParts.push(sectionContent);
+                    shownSections.add(actualSectionName);
+                }
+            } else {
+                console.log(`Section not found for tag: ${tag} (${sectionName})`);
+            }
+        }
+
+        return rebuiltParts.join('\n');
+    }
+
+    // Expose toggle/set function for UI
+    // If newState is provided, set to that value; otherwise toggle
+    window.toggleFollowArrangement = (newState) => {
+        if (typeof newState === 'boolean') {
+            followArrangementEnabled = newState;
+        } else {
+            followArrangementEnabled = !followArrangementEnabled;
+        }
+        console.log('Follow arrangement:', followArrangementEnabled ? 'ON' : 'OFF');
+        updateLivePreview();
+
+        // Update checkbox visual state
+        const btn = document.getElementById('followArrangementBtn');
+        if (btn && btn.checked !== followArrangementEnabled) {
+            btn.checked = followArrangementEnabled;
+        }
+
+        return followArrangementEnabled;
+    };
+
+    // Expose getter for current state
+    window.isFollowArrangementEnabled = () => followArrangementEnabled;
+
+    // ============= END FOLLOW ARRANGEMENT TAGS FEATURE =============
 
     /**
      * Normalize spacing around pipe characters in metadata lines
@@ -4462,6 +4735,55 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 extractAndDisplayKey(loadedBaseline);
             }
 
+            // Apply saved layout settings if available
+            if (livePreview) {
+                // Font Size
+                if (detail.fontSize && fontSizeSlider && fontSizeValue) {
+                    fontSizeSlider.value = detail.fontSize;
+                    fontSizeValue.textContent = detail.fontSize;
+                    livePreview.style.fontSize = detail.fontSize + 'pt';
+                    const sideMenuFontSize = document.getElementById('sideMenuFontSize');
+                    const sideMenuFontSizeVal = document.getElementById('sideMenuFontSizeVal');
+                    if (sideMenuFontSize) sideMenuFontSize.value = detail.fontSize;
+                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = detail.fontSize + 'pt';
+                }
+
+                // Line Height
+                if (detail.lineHeight) {
+                    const lineHeightSlider = document.getElementById('lineHeightSlider');
+                    const lineHeightValue = document.getElementById('lineHeightValue');
+                    if (lineHeightSlider) lineHeightSlider.value = detail.lineHeight;
+                    if (lineHeightValue) lineHeightValue.textContent = detail.lineHeight;
+                    livePreview.style.lineHeight = detail.lineHeight;
+                }
+
+                // Char Spacing
+                if (detail.charSpacing !== null && detail.charSpacing !== undefined) {
+                    const charSpacingSlider = document.getElementById('charSpacingSlider');
+                    const charSpacingValue = document.getElementById('charSpacingValue');
+                    if (charSpacingSlider) charSpacingSlider.value = detail.charSpacing;
+                    if (charSpacingValue) charSpacingValue.textContent = detail.charSpacing;
+                    livePreview.style.letterSpacing = detail.charSpacing + 'px';
+                }
+
+                // Column Count
+                if (detail.columnCount) {
+                    const columnCountSelect = document.getElementById('columnCount');
+                    if (columnCountSelect) {
+                        columnCountSelect.value = detail.columnCount;
+                        livePreview.style.columns = detail.columnCount;
+                    }
+                }
+
+                // Page Count
+                if (detail.pageCount) {
+                    const pageCountSelect = document.getElementById('pageCount');
+                    if (pageCountSelect) {
+                        pageCountSelect.value = detail.pageCount;
+                    }
+                }
+            }
+
             // Update live preview
             updateLivePreview();
             updateEditorBadges();
@@ -4746,9 +5068,24 @@ Our [Em7]hearts will cry, these bones will [D]sing
         font-weight: 600;
     `;
 
+    const arrangementRemoveButton = document.createElement('button');
+    arrangementRemoveButton.textContent = 'Remove Tag';
+    arrangementRemoveButton.style.cssText = `
+        margin-top: 6px;
+        width: 100%;
+        padding: 8px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+    `;
+
     arrangementEditorOverlay.appendChild(arrangementSelectLabel);
     arrangementEditorOverlay.appendChild(arrangementSelect);
     arrangementEditorOverlay.appendChild(arrangementApplyButton);
+    arrangementEditorOverlay.appendChild(arrangementRemoveButton);
     document.body.appendChild(arrangementEditorOverlay);
 
     let currentEditingTag = null;
@@ -4827,6 +5164,45 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Apply button click
     arrangementApplyButton.addEventListener('click', applyArrangementTagChange);
 
+    // Remove tag function
+    function removeArrangementTag() {
+        if (!currentEditingTagPosition || !visualEditor) return;
+
+        const lines = visualEditor.value.split('\n');
+        const { lineIndex, tagIndex } = currentEditingTagPosition;
+
+        if (lineIndex < 0 || lineIndex >= lines.length) return;
+
+        const line = lines[lineIndex];
+        // Split line into tags (each tag is like "(V1)" or "(C)")
+        const tagMatches = [...line.matchAll(/\([A-Z\d]+\)/g)];
+
+        if (tagIndex < 0 || tagIndex >= tagMatches.length) return;
+
+        const match = tagMatches[tagIndex];
+        const startPos = match.index;
+        const endPos = startPos + match[0].length;
+
+        // Remove the tag and any trailing space
+        let newLine = line.substring(0, startPos) + line.substring(endPos);
+        // Clean up extra spaces
+        newLine = newLine.replace(/\s+/g, ' ').trim();
+
+        lines[lineIndex] = newLine;
+
+        visualEditor.value = lines.join('\n');
+
+        // Trigger update
+        updateSongBookFromVisual();
+        updateLivePreview();
+        updateEditorBadges();
+
+        hideArrangementEditor();
+    }
+
+    // Remove button click
+    arrangementRemoveButton.addEventListener('click', removeArrangementTag);
+
     // Enter key to apply
     arrangementSelect.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -4834,6 +5210,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
             applyArrangementTagChange();
         } else if (e.key === 'Escape') {
             hideArrangementEditor();
+        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+            // Allow Delete/Backspace to remove tag
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                removeArrangementTag();
+            }
         }
     });
 
