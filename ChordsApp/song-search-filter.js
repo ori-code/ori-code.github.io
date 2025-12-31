@@ -31,6 +31,10 @@
         return root;
     };
 
+    // Cache for public songs
+    window.publicSongsCache = [];
+    window.isShowingPublicSongs = false;
+
     // Function to filter and sort songs
     window.filterAndSortSongs = function() {
         const searchInput = document.getElementById('songSearchInput');
@@ -45,17 +49,26 @@
         const sortBy = sortBySelect.value;
         const selectedBook = bookFilter ? bookFilter.value : 'all';
 
-        let filtered = [...window.allLoadedSongs];
+        let filtered;
 
-        // Apply book filter first
-        if (selectedBook && selectedBook !== 'all') {
-            const userBooks = window.getUserBooks ? window.getUserBooks() : [];
-            const book = userBooks.find(b => b.id === selectedBook);
-            if (book && book.songIds && book.songIds.length > 0) {
-                filtered = filtered.filter(song => book.songIds.includes(song.id));
-            } else {
-                // Book has no songs
-                filtered = [];
+        // Check if viewing public songs
+        if (selectedBook === '__PUBLIC__') {
+            window.isShowingPublicSongs = true;
+            filtered = [...window.publicSongsCache];
+        } else {
+            window.isShowingPublicSongs = false;
+            filtered = [...window.allLoadedSongs];
+
+            // Apply book filter for user books
+            if (selectedBook && selectedBook !== 'all') {
+                const userBooks = window.getUserBooks ? window.getUserBooks() : [];
+                const book = userBooks.find(b => b.id === selectedBook);
+                if (book && book.songIds && book.songIds.length > 0) {
+                    filtered = filtered.filter(song => book.songIds.includes(song.id));
+                } else {
+                    // Book has no songs
+                    filtered = [];
+                }
             }
         }
 
@@ -146,9 +159,23 @@
 
         // Book filter change listener
         if (bookFilter) {
-            bookFilter.addEventListener('change', () => {
+            bookFilter.addEventListener('change', async () => {
                 // Store the selection for persistence
                 window.selectedBookId = bookFilter.value;
+
+                // If switching to Public Songs, load them first
+                if (bookFilter.value === '__PUBLIC__') {
+                    if (window.loadPublicSongs) {
+                        try {
+                            window.publicSongsCache = await window.loadPublicSongs();
+                            console.log('🌐 Loaded', window.publicSongsCache.length, 'public songs');
+                        } catch (error) {
+                            console.error('Error loading public songs:', error);
+                            window.publicSongsCache = [];
+                        }
+                    }
+                }
+
                 if (window.triggerSongListRerender) {
                     window.triggerSongListRerender();
                 }

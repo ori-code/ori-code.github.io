@@ -17,6 +17,8 @@ const liveMode = {
     savedDisplaySettings: null,
     currentColumnLayout: 2,
     currentFontSize: 14,
+    isSingerMode: false, // Singer mode: lyrics only, limited controls
+    isPublicViewMode: false, // Public view mode: viewing shared public song
 
     /**
      * Save Live Mode preferences to Firebase
@@ -58,6 +60,74 @@ const liveMode = {
     },
 
     /**
+     * Save per-song preferences to Firebase (fontSize, transpose, columns)
+     */
+    async saveSongPreferences(songId, prefs = {}) {
+        const user = window.auth?.currentUser;
+        if (!user || !songId) return;
+
+        try {
+            // Load existing preferences first to merge
+            const existing = await this.loadSongPreferences(songId) || {};
+            const merged = { ...existing, ...prefs, savedAt: Date.now() };
+
+            await firebase.database()
+                .ref(`users/${user.uid}/liveModePreferences/songPreferences/${songId}`)
+                .set(merged);
+            console.log(`✅ Saved preferences for song ${songId}:`, merged);
+        } catch (error) {
+            console.error('❌ Error saving song preferences:', error);
+        }
+    },
+
+    /**
+     * Load per-song preferences from Firebase
+     */
+    async loadSongPreferences(songId) {
+        const user = window.auth?.currentUser;
+        if (!user || !songId) return null;
+
+        try {
+            const snapshot = await firebase.database()
+                .ref(`users/${user.uid}/liveModePreferences/songPreferences/${songId}`)
+                .once('value');
+            return snapshot.val();
+        } catch (error) {
+            console.error('❌ Error loading song preferences:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Save per-song font size (convenience method)
+     */
+    async saveSongFontSize(songId, fontSize) {
+        await this.saveSongPreferences(songId, { fontSize });
+    },
+
+    /**
+     * Load per-song font size (convenience method)
+     */
+    async loadSongFontSize(songId) {
+        const prefs = await this.loadSongPreferences(songId);
+        return prefs?.fontSize || null;
+    },
+
+    /**
+     * Save per-song column layout (convenience method)
+     */
+    async saveSongColumnLayout(songId, columns) {
+        await this.saveSongPreferences(songId, { columns });
+    },
+
+    /**
+     * Save per-song transpose (convenience method)
+     */
+    async saveSongTranspose(songId, transposeSteps) {
+        await this.saveSongPreferences(songId, { transposeSteps });
+    },
+
+    /**
      * Set font size for Live Mode display
      */
     setFontSize(size) {
@@ -72,10 +142,14 @@ const liveMode = {
         const zoomValue = document.getElementById('liveModeZoomValue');
         if (zoomValue) zoomValue.textContent = size + 'pt';
 
-        // Auto-save preference
-        this.saveLiveModePreferences();
+        // Save per-song font size if we have a current song, otherwise save global
+        if (this.currentSongId) {
+            this.saveSongFontSize(this.currentSongId, size);
+        } else {
+            this.saveLiveModePreferences();
+        }
 
-        console.log(`📺 Font size set to ${size}pt`);
+        console.log(`📺 Font size set to ${size}pt${this.currentSongId ? ` for song ${this.currentSongId}` : ''}`);
     },
 
     /**
@@ -167,6 +241,11 @@ const liveMode = {
             document.body.style.overflow = 'hidden';
         }
 
+        // Enable Full Overview mode by default
+        if (!this.fullOverviewMode) {
+            this.toggleFullOverview();
+        }
+
         // Update session controls visibility
         this.updateSessionControls();
 
@@ -217,7 +296,178 @@ const liveMode = {
             }
         }
 
+        // Reset singer mode - restore hidden controls
+        if (this.isSingerMode) {
+            this.isSingerMode = false;
+            const controlsToRestore = [
+                'liveModeDisplayMode',
+                'liveModeTransposeRow',
+                'liveModePlaylistBtn',
+                'liveModeLayout1',
+                'liveModeLayout2',
+                'liveModeFullOverview',
+                'liveModeBadges',
+                'liveModeCurrentKey'
+            ];
+            controlsToRestore.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = '';
+            });
+            // Also restore badges label
+            const badgesCheckbox = document.getElementById('liveModeBadges');
+            if (badgesCheckbox && badgesCheckbox.parentElement) {
+                badgesCheckbox.parentElement.style.display = '';
+            }
+        }
+
+        // Reset public view mode - restore hidden controls
+        if (this.isPublicViewMode) {
+            this.isPublicViewMode = false;
+            // Restore playlist button
+            const playlistBtn = document.getElementById('liveModePlaylistBtn');
+            if (playlistBtn) playlistBtn.style.display = '';
+            // Restore follow checkbox
+            const followCheckbox = document.getElementById('followLeaderCheckbox');
+            if (followCheckbox && followCheckbox.parentElement) {
+                followCheckbox.parentElement.style.display = '';
+            }
+        }
+
         console.log('📺 Exited Live Mode');
+    },
+
+    /**
+     * Enter Singer Mode - simplified lyrics-only view for anonymous users
+     * Hides all chord-related controls, locks to lyrics display mode
+     */
+    async enterSingerMode() {
+        this.isSingerMode = true;
+        this.displayMode = 'lyrics'; // Lock to lyrics only
+
+        // Force the dropdown to lyrics mode so updateDisplay uses it
+        const displayDropdown = document.getElementById('liveModeDisplayMode');
+        if (displayDropdown) displayDropdown.value = 'lyrics';
+
+        // Also sync the main editor dropdown for makeChordsBold
+        const nashvilleDropdown = document.getElementById('nashvilleMode');
+        if (nashvilleDropdown) nashvilleDropdown.value = 'lyrics';
+
+        // Show overlay first
+        const overlay = document.getElementById('liveModeOverlay');
+        if (overlay) {
+            overlay.style.display = 'block';
+            this.isActive = true;
+            this.sidebarVisible = false;
+
+            // Lock body scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Hide controls that singers shouldn't see (only transpose and display mode)
+        const controlsToHide = [
+            'liveModeDisplayMode',       // No display mode dropdown (locked to lyrics)
+            'liveModeTransposeRow'       // Hide entire transpose row (-1, key, +1)
+        ];
+
+        controlsToHide.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // Update UI to show singer mode
+        const songNameEl = document.getElementById('liveModeSongName');
+        if (songNameEl) {
+            songNameEl.textContent = 'Waiting for leader...';
+        }
+
+        // Show simplified controls
+        this.showControls();
+
+        // Load saved font size preference (singers can still zoom)
+        const savedPrefs = await this.loadLiveModePreferences();
+        if (savedPrefs && savedPrefs.fontSize) {
+            this.currentFontSize = savedPrefs.fontSize;
+            const zoomValue = document.getElementById('liveModeZoomValue');
+            if (zoomValue) zoomValue.textContent = this.currentFontSize + 'pt';
+        }
+
+        console.log('🎤 Entered Singer Mode (lyrics only)');
+    },
+
+    /**
+     * Enter Public View Mode - for viewing shared public songs
+     * Shows all controls except playlist (single song view)
+     */
+    async enterPublicViewMode(songData, songId) {
+        this.isPublicViewMode = true;
+
+        // Set song data
+        this.currentSongContent = songData.content || songData.baselineChart || '';
+        this.currentSongId = songId;
+        this.currentKey = songData.key || 'C Major';
+        this.currentTransposeSteps = 0;
+        this.displayMode = 'chords'; // Default to chords view
+
+        // Build song name from structured fields
+        const title = songData.title || songData.name || 'Untitled';
+        const author = songData.author ? ` - ${songData.author}` : '';
+        this.currentSongName = `${title}${author}`;
+
+        // Sync key selector for formatForPreview to work correctly
+        const keySelector = document.getElementById('keySelector');
+        if (keySelector && this.currentKey) {
+            keySelector.value = this.currentKey;
+        }
+
+        // Sync display mode dropdowns
+        const displayDropdown = document.getElementById('liveModeDisplayMode');
+        if (displayDropdown) displayDropdown.value = this.displayMode;
+        const nashvilleDropdown = document.getElementById('nashvilleMode');
+        if (nashvilleDropdown) nashvilleDropdown.value = this.displayMode;
+
+        // Show overlay
+        const overlay = document.getElementById('liveModeOverlay');
+        if (overlay) {
+            overlay.style.display = 'block';
+            this.isActive = true;
+            this.sidebarVisible = false;
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Hide ONLY playlist button (single song view, no session)
+        const playlistBtn = document.getElementById('liveModePlaylistBtn');
+        if (playlistBtn) playlistBtn.style.display = 'none';
+
+        // Hide session-only elements
+        const followCheckbox = document.getElementById('followLeaderCheckbox');
+        if (followCheckbox && followCheckbox.parentElement) {
+            followCheckbox.parentElement.style.display = 'none';
+        }
+        const roleDisplay = document.querySelector('#liveModeOverlay .role-display');
+        if (roleDisplay) roleDisplay.style.display = 'none';
+
+        // Apply font size from song data or default
+        this.currentFontSize = songData.fontSize || 14;
+        this.currentColumnLayout = parseInt(songData.columnCount) || 2;
+
+        // Apply font size to chart display BEFORE updateDisplay
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            chartDisplay.style.fontSize = this.currentFontSize + 'pt';
+        }
+
+        // Show controls and update display
+        this.showControls();
+        this.updateDisplay();
+
+        // Update zoom display
+        const zoomValue = document.getElementById('liveModeZoomValue');
+        if (zoomValue) zoomValue.textContent = this.currentFontSize + 'pt';
+
+        // Update column layout buttons
+        this.setColumnLayout(this.currentColumnLayout);
+
+        console.log('🌐 Entered Public View Mode:', this.currentSongName);
     },
 
     /**
@@ -236,6 +486,11 @@ const liveMode = {
         const songNameEl = document.getElementById('liveModeSongName');
         const songKeyEl = document.getElementById('liveModeSongKey');
         const currentKeyEl = document.getElementById('liveModeCurrentKey');
+
+        // Force lyrics mode for singers
+        if (this.isSingerMode) {
+            this.displayMode = 'lyrics';
+        }
 
         if (chartDisplay) {
             // Use formatted print preview HTML if available
@@ -403,6 +658,28 @@ const liveMode = {
             const visualEditor = document.getElementById('visualEditor');
             const keySelector = document.getElementById('keySelector');
 
+            // In Public View Mode, use currentSongContent directly (visualEditor is empty)
+            if (this.isPublicViewMode) {
+                if (this.currentSongContent && keySelector) {
+                    const transposed = window.transposeChart(this.currentSongContent, steps);
+
+                    // Update current key
+                    const newKey = this.calculateNewKey(this.currentKey, steps);
+                    keySelector.value = newKey;
+
+                    // Update live mode state
+                    this.currentSongContent = transposed;
+                    this.currentKey = newKey;
+                    this.currentTransposeSteps += steps;
+
+                    // Update display
+                    this.updateDisplay();
+
+                    console.log(`🎵 Public song transposed ${steps > 0 ? '+' : ''}${steps} to ${newKey}`);
+                }
+                return;
+            }
+
             if (visualEditor && keySelector) {
                 // Get current content and transpose
                 const currentContent = visualEditor.value;
@@ -424,13 +701,18 @@ const liveMode = {
                 // Update display
                 this.updateDisplay();
 
-                // If in session as player, save local transpose preference
+                // Save per-song transpose preference for ALL users (leader and player)
+                if (this.currentSongId) {
+                    this.saveSongTranspose(this.currentSongId, this.currentTransposeSteps);
+                }
+
+                // Also keep session manager sync for live session features
                 if (window.sessionManager && window.sessionManager.activeSession && !window.sessionManager.isLeader) {
                     const songId = this.currentSongId || 'current';
                     window.sessionManager.setLocalTranspose(songId, this.currentTransposeSteps);
                 }
 
-                console.log(`🎵 Transposed ${steps > 0 ? '+' : ''}${steps} to ${newKey}`);
+                console.log(`🎵 Transposed ${steps > 0 ? '+' : ''}${steps} to ${newKey}${this.currentSongId ? ` for song ${this.currentSongId}` : ''}`);
             }
         } else {
             console.warn('transposeChart function not available');
@@ -516,18 +798,32 @@ const liveMode = {
     setColumnLayout(columns) {
         this.currentColumnLayout = columns;
 
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        const content = document.getElementById('liveModeContent');
+        if (!chartDisplay) return;
+
         // Exit full overview mode if active
         if (this.fullOverviewMode) {
             this.fullOverviewMode = false;
+            chartDisplay.classList.remove('full-overview-active');
+
+            // Reset Full Overview button
             const btn = document.getElementById('liveModeFullOverview');
             if (btn) {
                 btn.style.background = 'var(--button-bg)';
-                btn.style.color = 'var(--text)';
+                btn.style.borderColor = 'var(--border)';
+                btn.textContent = '📄 Full Overview';
+            }
+
+            // Reset padding
+            if (content) {
+                content.style.padding = '60px 20px 140px 20px';
             }
         }
 
-        const chartDisplay = document.getElementById('liveModeChartDisplay');
-        if (!chartDisplay) return;
+        // Clear any conflicting Full Overview styles
+        chartDisplay.style.columnCount = '';
+        chartDisplay.style.columnWidth = '';
 
         // Apply column layout
         const A4_HEIGHT_PX = 1123;
@@ -536,7 +832,7 @@ const liveMode = {
         chartDisplay.style.height = A4_HEIGHT_PX + 'px';
 
         if (columns > 1) {
-            chartDisplay.style.columnGap = '40px';
+            chartDisplay.style.columnGap = '20px';
             chartDisplay.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
         } else {
             chartDisplay.style.columnGap = '0px';
@@ -556,10 +852,14 @@ const liveMode = {
             btn2.style.color = columns === 2 ? 'white' : 'var(--text-muted)';
         }
 
-        // Auto-save preference
-        this.saveLiveModePreferences();
+        // Save per-song column layout if we have a current song, otherwise save global
+        if (this.currentSongId) {
+            this.saveSongColumnLayout(this.currentSongId, columns);
+        } else {
+            this.saveLiveModePreferences();
+        }
 
-        console.log(`📺 Layout set to ${columns} column(s)`);
+        console.log(`📺 Layout set to ${columns} column(s)${this.currentSongId ? ` for song ${this.currentSongId}` : ''}`);
     },
 
     /**
@@ -622,11 +922,12 @@ const liveMode = {
             // Enable full overview class for CSS overrides (shows song-header with section badges)
             chartDisplay.classList.add('full-overview-active');
 
-            // Show badges in full overview mode
-            chartDisplay.classList.remove('hide-badges');
-            const badgesCheckbox = document.getElementById('liveModeBadges');
-            if (badgesCheckbox) badgesCheckbox.checked = true;
-            this.showBadges = true;
+            // Respect current badge setting (don't force badges on/off)
+            if (this.showBadges) {
+                chartDisplay.classList.remove('hide-badges');
+            } else {
+                chartDisplay.classList.add('hide-badges');
+            }
 
             // Re-render display to apply badge visibility
             this.updateDisplay();
@@ -695,22 +996,67 @@ const liveMode = {
      */
     autoFitFontSize() {
         const chartDisplay = document.getElementById('liveModeChartDisplay');
+        const content = document.getElementById('liveModeContent');
 
-        if (!chartDisplay) return;
+        if (!chartDisplay || !content) return;
 
-        // Set a readable default font size for overview mode
-        // User can use pinch-to-zoom to adjust
-        const fontSize = 14;
-        chartDisplay.style.fontSize = fontSize + 'pt';
-        chartDisplay.style.lineHeight = '1.5';
-
-        // Ensure single column stays applied (forcefully)
+        // Ensure single column layout for measuring
         chartDisplay.style.columnCount = '1';
         chartDisplay.style.columns = 'auto';
         chartDisplay.style.columnWidth = 'auto';
         chartDisplay.style.height = 'auto';
+        chartDisplay.style.lineHeight = '1.4';
 
-        console.log(`📺 Full Overview font size: ${fontSize}pt`);
+        // Get available viewport height (minus top bar and bottom controls)
+        const viewportHeight = window.innerHeight;
+        const topPadding = 50;  // Space for header/title
+        const bottomPadding = 120; // Space for bottom controls
+        const availableHeight = viewportHeight - topPadding - bottomPadding;
+
+        // Binary search for optimal font size
+        let minFont = 6;
+        let maxFont = 24;
+        let optimalFont = 14;
+
+        // Start with a reference font size to measure
+        chartDisplay.style.fontSize = '14pt';
+
+        // Measure content height at reference size
+        const referenceHeight = chartDisplay.scrollHeight;
+
+        if (referenceHeight <= availableHeight) {
+            // Content already fits, try larger fonts
+            while (maxFont - minFont > 0.5) {
+                const testFont = (minFont + maxFont) / 2;
+                chartDisplay.style.fontSize = testFont + 'pt';
+
+                if (chartDisplay.scrollHeight <= availableHeight) {
+                    minFont = testFont;
+                    optimalFont = testFont;
+                } else {
+                    maxFont = testFont;
+                }
+            }
+        } else {
+            // Content too large, find smaller font
+            while (maxFont - minFont > 0.5) {
+                const testFont = (minFont + maxFont) / 2;
+                chartDisplay.style.fontSize = testFont + 'pt';
+
+                if (chartDisplay.scrollHeight <= availableHeight) {
+                    minFont = testFont;
+                    optimalFont = testFont;
+                } else {
+                    maxFont = testFont;
+                }
+            }
+        }
+
+        // Apply optimal font size (round to 1 decimal)
+        optimalFont = Math.round(optimalFont * 10) / 10;
+        chartDisplay.style.fontSize = optimalFont + 'pt';
+
+        console.log(`📺 Auto-fit font size: ${optimalFont}pt (viewport: ${availableHeight}px, content: ${chartDisplay.scrollHeight}px)`);
     },
 
     /**
@@ -974,19 +1320,56 @@ const liveMode = {
             const timeInfo = songData.timeSignature ? ` | ${songData.timeSignature}` : '';
             this.currentSongName = `${title}${author}${bpmInfo}${timeInfo}`;
 
-            // Check for local transpose preference
-            if (!window.sessionManager.isLeader) {
-                const localTranspose = window.sessionManager.getLocalTranspose(songId);
-                if (localTranspose !== 0) {
-                    // Apply local transpose
-                    for (let i = 0; i < Math.abs(localTranspose); i++) {
-                        this.transpose(localTranspose > 0 ? 1 : -1);
+            // Load ALL per-song preferences (fontSize, columns, transpose)
+            const savedPrefs = await this.loadSongPreferences(songId);
+            if (savedPrefs) {
+                console.log(`📺 Loaded per-song preferences for ${songId}:`, savedPrefs);
+
+                // Apply font size
+                if (savedPrefs.fontSize) {
+                    this.currentFontSize = savedPrefs.fontSize;
+                }
+
+                // Apply columns
+                if (savedPrefs.columns) {
+                    this.currentColumnLayout = savedPrefs.columns;
+                }
+
+                // Apply transpose (use saved preference, overrides session manager)
+                if (savedPrefs.transposeSteps && savedPrefs.transposeSteps !== 0) {
+                    for (let i = 0; i < Math.abs(savedPrefs.transposeSteps); i++) {
+                        this.transpose(savedPrefs.transposeSteps > 0 ? 1 : -1);
+                    }
+                }
+            } else {
+                // Fallback to session manager local transpose for players (backwards compatibility)
+                if (!window.sessionManager.isLeader) {
+                    const localTranspose = window.sessionManager.getLocalTranspose(songId);
+                    if (localTranspose !== 0) {
+                        for (let i = 0; i < Math.abs(localTranspose); i++) {
+                            this.transpose(localTranspose > 0 ? 1 : -1);
+                        }
                     }
                 }
             }
 
             // Update display
             this.updateDisplay();
+
+            // Apply per-song preferences after display update
+            const chartDisplay = document.getElementById('liveModeChartDisplay');
+            if (chartDisplay) {
+                if (this.currentFontSize) {
+                    chartDisplay.style.fontSize = this.currentFontSize + 'pt';
+                }
+            }
+            const zoomValue = document.getElementById('liveModeZoomValue');
+            if (zoomValue) zoomValue.textContent = (this.currentFontSize || 14) + 'pt';
+
+            // Apply column layout if not in Full Overview mode
+            if (!this.fullOverviewMode && this.currentColumnLayout) {
+                this.setColumnLayout(this.currentColumnLayout);
+            }
 
             // Hide playlist
             this.hidePlaylist();
@@ -1017,7 +1400,7 @@ const liveMode = {
      * Update with new song data (called when receiving broadcast from leader)
      * @param {object} songData - Song data from leader
      */
-    updateFromBroadcast(songData) {
+    async updateFromBroadcast(songData) {
         console.log('📺 updateFromBroadcast called, isActive:', this.isActive, 'songData:', songData?.name);
         if (!this.isActive) {
             console.log('📺 Live Mode not active, skipping update');
@@ -1052,8 +1435,54 @@ const liveMode = {
             }
         }
 
+        // Load player's own per-song preferences (fontSize, columns, transpose)
+        const savedPrefs = await this.loadSongPreferences(songData.songId);
+        if (savedPrefs) {
+            console.log(`📺 Loaded per-song preferences for ${songData.songId}:`, savedPrefs);
+
+            // Apply font size
+            if (savedPrefs.fontSize) {
+                this.currentFontSize = savedPrefs.fontSize;
+            }
+
+            // Apply column layout
+            if (savedPrefs.columns) {
+                this.currentColumnLayout = savedPrefs.columns;
+            }
+
+            // Apply transpose (on top of any local transpose already applied)
+            if (savedPrefs.transposeSteps && savedPrefs.transposeSteps !== 0 && this.currentTransposeSteps === 0) {
+                // Only apply if we haven't already applied transpose from sessionManager
+                if (typeof window.transposeChart === 'function') {
+                    this.currentSongContent = window.transposeChart(this.currentSongContent, savedPrefs.transposeSteps);
+                    this.currentKey = this.calculateNewKey(this.currentKey, savedPrefs.transposeSteps);
+                    this.currentTransposeSteps = savedPrefs.transposeSteps;
+                }
+            }
+        }
+
         // Update display
         this.updateDisplay();
+
+        // Apply per-song preferences after display update
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            if (this.currentFontSize) {
+                chartDisplay.style.fontSize = this.currentFontSize + 'pt';
+            }
+            // Apply column layout
+            if (this.currentColumnLayout) {
+                chartDisplay.style.columnCount = this.currentColumnLayout;
+                chartDisplay.style.columnGap = '2em';
+            }
+        }
+        const zoomValue = document.getElementById('liveModeZoomValue');
+        if (zoomValue) zoomValue.textContent = (this.currentFontSize || 14) + 'pt';
+
+        // Update column layout buttons
+        document.querySelectorAll('.column-layout-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.columns) === this.currentColumnLayout);
+        });
 
         // Refresh playlist sidebar if visible (to update Leader indicator)
         console.log('📺 Checking playlist refresh, sidebarVisible:', this.sidebarVisible);
@@ -1138,54 +1567,29 @@ const liveMode = {
         // Skip if in Full Overview mode - it has its own layout
         if (this.fullOverviewMode) return;
 
-        const user = window.auth ? window.auth.currentUser : null;
-        if (!user) return;
+        if (!chartDisplay) return;
 
-        try {
-            const snapshot = await firebase.database().ref(`users/${user.uid}/printPreviewPreferences`).once('value');
-            const preferences = snapshot.val();
+        // In Live Mode, use the CURRENT column layout set by user (not Firebase printPreviewPreferences)
+        // This ensures column selection persists when changing songs
+        const columns = this.currentColumnLayout || 2;
+        const A4_HEIGHT_PX = 1123;
 
-            // Check again after await - Full Overview may have been enabled while waiting
-            if (this.fullOverviewMode) return;
+        chartDisplay.style.columns = columns.toString();
+        chartDisplay.style.columnFill = 'auto';
+        chartDisplay.style.height = A4_HEIGHT_PX + 'px';
 
-            if (preferences && chartDisplay) {
-                // Apply font size
-                if (preferences.fontSize) {
-                    chartDisplay.style.fontSize = `${preferences.fontSize}pt`;
-                }
-
-                // Apply line height
-                if (preferences.lineHeight) {
-                    chartDisplay.style.lineHeight = preferences.lineHeight;
-                }
-
-                // Apply column layout with page count
-                const columns = preferences.columnCount || preferences.columnLayout || 2; // Support both old and new field
-                const pages = preferences.pageCount || 1;
-                const A4_HEIGHT_PX = 1123;
-                const height = A4_HEIGHT_PX * pages;
-
-                // Update current column layout (limit to 2 for Live Mode UI)
-                this.currentColumnLayout = Math.min(columns, 2);
-                this.updateLayoutButtons();
-
-                chartDisplay.style.columns = columns.toString();
-                chartDisplay.style.columnFill = 'auto';
-                chartDisplay.style.height = height + 'px';
-
-                if (columns > 1) {
-                    chartDisplay.style.columnGap = '40px';
-                    chartDisplay.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
-                } else {
-                    chartDisplay.style.columnGap = '0px';
-                    chartDisplay.style.columnRule = 'none';
-                }
-
-                console.log('✅ Applied saved preferences to Live Mode:', preferences, `(${columns} columns × ${pages} pages)`);
-            }
-        } catch (error) {
-            console.error('❌ Error applying saved preferences to Live Mode:', error);
+        if (columns > 1) {
+            chartDisplay.style.columnGap = '20px';
+            chartDisplay.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
+        } else {
+            chartDisplay.style.columnGap = '0px';
+            chartDisplay.style.columnRule = 'none';
         }
+
+        // Update layout buttons to reflect current state
+        this.updateLayoutButtons();
+
+        console.log(`✅ Applied Live Mode column layout: ${columns} column(s)`);
     }
 };
 
@@ -1270,6 +1674,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const chartDisplay = document.getElementById('liveModeChartDisplay');
                 if (chartDisplay) {
                     chartDisplay.style.fontSize = newFontSize + 'px';
+
+                    // Show live font size value (convert px to pt for display)
+                    const ptSize = Math.round(newFontSize * 0.75);
+                    const zoomValue = document.getElementById('liveModeZoomValue');
+                    if (zoomValue) zoomValue.textContent = ptSize + 'pt';
                 }
 
                 e.preventDefault();
@@ -1279,6 +1688,21 @@ document.addEventListener('DOMContentLoaded', () => {
         liveModeContent.addEventListener('touchend', (e) => {
             if (isPinching && e.touches.length < 2) {
                 isPinching = false;
+
+                // Get final font size and convert to pt, then save
+                const chartDisplay = document.getElementById('liveModeChartDisplay');
+                if (chartDisplay) {
+                    const finalPxSize = parseFloat(window.getComputedStyle(chartDisplay).fontSize);
+                    // Convert px to pt (1pt = 1.333px, so pt = px * 0.75)
+                    const finalPtSize = Math.round(finalPxSize * 0.75);
+                    // Clamp to valid range
+                    const clampedSize = Math.max(8, Math.min(24, finalPtSize));
+
+                    // Use setFontSize to save per-song (if song loaded) or global
+                    liveMode.setFontSize(clampedSize);
+
+                    console.log(`📺 Pinch zoom: ${finalPtSize}pt (clamped to ${clampedSize}pt)`);
+                }
             }
         });
     }

@@ -6,6 +6,7 @@ class SessionManager {
         this.currentUser = null;
         this.activeSession = null;
         this.isLeader = false;
+        this.isSinger = false; // Singer mode (anonymous, lyrics only)
         this.listeners = [];
         this.inLiveMode = true; // Players follow leader by default
         this.localTransposeMap = {}; // { songId: transposeSteps } - user's transpose per song
@@ -61,7 +62,8 @@ class SessionManager {
                 leaderName: this.currentUser.displayName || this.currentUser.email,
                 sessionCode: sessionCode,
                 createdAt: Date.now(),
-                status: 'active'
+                status: 'active',
+                allowSingers: false // Leader can enable to allow anonymous singers
             },
             currentSong: null,
             playlist: {},
@@ -159,6 +161,95 @@ class SessionManager {
             joinedAt: Date.now(),
             status: 'connected'
         });
+    }
+
+    /**
+     * Join a session as singer (anonymous, lyrics only)
+     * @param {string} sessionCode - 6-character code (e.g., "A3F-7K2")
+     */
+    async joinAsSinger(sessionCode) {
+        // Find session by code
+        const sessionsRef = this.database.ref('sessions');
+        const snapshot = await sessionsRef.orderByChild('metadata/sessionCode').equalTo(sessionCode).once('value');
+
+        if (!snapshot.exists()) {
+            throw new Error('Session not found. Check the code and try again.');
+        }
+
+        const sessionData = snapshot.val();
+        const sessionId = Object.keys(sessionData)[0];
+        const session = sessionData[sessionId];
+
+        if (session.metadata.status !== 'active') {
+            throw new Error('This session has ended');
+        }
+
+        if (!session.metadata.allowSingers) {
+            throw new Error('This session does not allow singers. Ask the leader to enable it.');
+        }
+
+        // Count existing singers to generate name
+        const participants = session.participants || {};
+        let singerCount = 0;
+        for (const uid in participants) {
+            if (participants[uid].type === 'singer') {
+                singerCount++;
+            }
+        }
+        const singerName = `Singer ${singerCount + 1}`;
+
+        // Get current anonymous user
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            throw new Error('Anonymous authentication required');
+        }
+        this.currentUser = user;
+
+        // Start listening to session updates
+        this.listenToSessionUpdates(sessionId);
+
+        // Set as active session
+        this.activeSession = sessionId;
+        this.isLeader = false;
+        this.isSinger = true;
+        this.inLiveMode = true;
+
+        // Add as singer participant
+        await this.database.ref(`sessions/${sessionId}/participants/${user.uid}`).set({
+            name: singerName,
+            type: 'singer',
+            joinedAt: Date.now(),
+            status: 'connected'
+        });
+
+        console.log(`🎤 Joined session as ${singerName}`);
+
+        return { sessionId, session, singerName };
+    }
+
+    /**
+     * Toggle allow singers setting (LEADER only)
+     * @param {boolean} allow - Whether to allow anonymous singers
+     */
+    async toggleAllowSingers(allow) {
+        if (!this.isLeader || !this.activeSession) {
+            throw new Error('Only the session leader can change singer settings');
+        }
+
+        await this.database.ref(`sessions/${this.activeSession}/metadata/allowSingers`).set(allow);
+        console.log(`🎤 Singers ${allow ? 'enabled' : 'disabled'}`);
+
+        return allow;
+    }
+
+    /**
+     * Get whether singers are allowed in current session
+     */
+    async getAllowSingers() {
+        if (!this.activeSession) return false;
+
+        const snapshot = await this.database.ref(`sessions/${this.activeSession}/metadata/allowSingers`).once('value');
+        return snapshot.val() || false;
     }
 
     /**
@@ -506,6 +597,7 @@ class SessionManager {
         this.listeners = [];
         this.activeSession = null;
         this.isLeader = false;
+        this.isSinger = false;
         this.inLiveMode = true;
         this.localTransposeMap = {};
         this.leaderCurrentSong = null;

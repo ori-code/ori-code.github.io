@@ -115,6 +115,22 @@
         // Clear existing options except "All Songs"
         bookFilter.innerHTML = '<option value="all">📚 All Songs</option>';
 
+        // Add Public Songs option (special global book)
+        const publicOption = document.createElement('option');
+        publicOption.value = '__PUBLIC__';
+        publicOption.textContent = '🌐 Public Songs';
+        publicOption.style.cssText = 'font-weight: bold; color: #22c55e;';
+        if (savedSelection === '__PUBLIC__') {
+            publicOption.selected = true;
+        }
+        bookFilter.appendChild(publicOption);
+
+        // Add separator (disabled option)
+        const separator = document.createElement('option');
+        separator.disabled = true;
+        separator.textContent = '──────────────';
+        bookFilter.appendChild(separator);
+
         // Add user books
         userBooks.forEach(book => {
             const option = document.createElement('option');
@@ -1003,6 +1019,26 @@
                 deleteBtn.style.background = 'transparent';
             });
 
+            // Public toggle button (globe icon)
+            const publicBtn = document.createElement('button');
+            const isPublic = song.isPublic === true;
+            publicBtn.textContent = '🌐';
+            publicBtn.style.cssText = `background: ${isPublic ? 'rgba(34, 197, 94, 0.2)' : 'transparent'}; border: ${isPublic ? '1px solid #22c55e' : 'none'}; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease; margin-right: 4px;`;
+            publicBtn.title = isPublic ? 'Make private (click to unpublish)' : 'Make public (share with everyone)';
+
+            publicBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await togglePublicSong(song, user, !isPublic);
+            });
+
+            publicBtn.addEventListener('mouseenter', () => {
+                publicBtn.style.background = isPublic ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.2)';
+            });
+
+            publicBtn.addEventListener('mouseleave', () => {
+                publicBtn.style.background = isPublic ? 'rgba(34, 197, 94, 0.2)' : 'transparent';
+            });
+
             // Share button
             const shareBtn = document.createElement('button');
             shareBtn.textContent = '🔗';
@@ -1023,9 +1059,42 @@
             });
 
             songItem.appendChild(songInfo);
-            songItem.appendChild(addToSessionBtn);
-            songItem.appendChild(shareBtn);
-            songItem.appendChild(deleteBtn);
+
+            // Different buttons for public songs vs user's own songs
+            if (song.isPublicSong) {
+                // Public songs: show only "Open in Live Mode" button
+                const openBtn = document.createElement('button');
+                openBtn.textContent = '▶️ Open';
+                openBtn.style.cssText = 'background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #22c55e; font-size: 0.9rem; cursor: pointer; padding: 8px 16px; border-radius: 6px; transition: background 0.2s ease; font-weight: 500;';
+                openBtn.title = 'Open in Live Mode';
+
+                openBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    // Enter public view mode
+                    if (window.liveMode && window.liveMode.enterPublicViewMode) {
+                        loadSongModal.style.display = 'none';
+                        await window.liveMode.enterPublicViewMode(song, song.id);
+                    } else {
+                        console.error('Live Mode not available');
+                    }
+                });
+
+                openBtn.addEventListener('mouseenter', () => {
+                    openBtn.style.background = 'rgba(34, 197, 94, 0.3)';
+                });
+
+                openBtn.addEventListener('mouseleave', () => {
+                    openBtn.style.background = 'rgba(34, 197, 94, 0.2)';
+                });
+
+                songItem.appendChild(openBtn);
+            } else {
+                // User's own songs: show all action buttons
+                songItem.appendChild(addToSessionBtn);
+                songItem.appendChild(publicBtn);
+                songItem.appendChild(shareBtn);
+                songItem.appendChild(deleteBtn);
+            }
 
             // Load song on click (or toggle selection in bulk mode)
             songItem.addEventListener('click', () => {
@@ -1627,6 +1696,14 @@
         // ============= SHARE SONG FUNCTIONALITY =============
         async function shareSong(song, user) {
             try {
+                // If song is already public, just copy the public link
+                if (song.isPublic) {
+                    const publicUrl = `${window.location.origin}${window.location.pathname}?public=${song.id}`;
+                    await navigator.clipboard.writeText(publicUrl);
+                    showMessage('Copied!', 'Public song link copied to clipboard.', 'success');
+                    return;
+                }
+
                 const database = firebase.database();
 
                 // Generate unique slug (8 chars)
@@ -1669,6 +1746,87 @@
                 showMessage('Error', 'Failed to share song: ' + error.message, 'error');
             }
         }
+
+        // ============= PUBLIC SONGS FUNCTIONALITY =============
+
+        // Toggle a song's public status
+        async function togglePublicSong(song, user, makePublic) {
+            try {
+                const database = firebase.database();
+
+                if (makePublic) {
+                    // Copy song to public-songs using same songId
+                    const publicSongData = {
+                        title: song.title || song.name,
+                        author: song.author || '',
+                        content: song.content || song.baselineChart || '',
+                        baselineChart: song.baselineChart || song.content || '',
+                        key: song.key || song.originalKey || '',
+                        bpm: song.bpm || '120',
+                        timeSignature: song.timeSignature || '4/4',
+                        fontSize: song.fontSize || 8.5,
+                        lineHeight: song.lineHeight || 1.5,
+                        columnCount: song.columnCount || '2',
+                        ownerUid: user.uid,
+                        publishedAt: firebase.database.ServerValue.TIMESTAMP
+                    };
+
+                    await database.ref(`public-songs/${song.id}`).set(publicSongData);
+
+                    // Mark in user's song as public
+                    await database.ref(`users/${user.uid}/songs/${song.id}/isPublic`).set(true);
+
+                    // Generate and copy public link
+                    const publicUrl = `${window.location.origin}${window.location.pathname}?public=${song.id}`;
+                    await navigator.clipboard.writeText(publicUrl);
+
+                    showMessage('Success', 'Song is now public! Link copied to clipboard.', 'success');
+                    console.log('🌐 Published song:', song.name, 'URL:', publicUrl);
+                } else {
+                    // Unpublish - remove from public-songs
+                    await database.ref(`public-songs/${song.id}`).remove();
+                    await database.ref(`users/${user.uid}/songs/${song.id}/isPublic`).set(false);
+
+                    showMessage('Success', 'Song is now private.', 'success');
+                    console.log('🔒 Unpublished song:', song.name);
+                }
+
+                // Update song in memory
+                song.isPublic = makePublic;
+
+                // Re-render list to update button state
+                if (window.triggerSongListRerender) {
+                    window.triggerSongListRerender();
+                }
+
+            } catch (error) {
+                console.error('Error toggling public status:', error);
+                showMessage('Error', 'Failed to update public status: ' + error.message, 'error');
+            }
+        }
+
+        // Load all public songs from public-songs collection
+        async function loadPublicSongs() {
+            try {
+                const database = firebase.database();
+                const snapshot = await database.ref('public-songs').once('value');
+                const publicSongs = snapshot.val() || {};
+
+                // Convert to array with IDs
+                return Object.entries(publicSongs).map(([id, data]) => ({
+                    id,
+                    ...data,
+                    name: data.title, // Use title as name for display
+                    isPublicSong: true // Flag to identify public songs
+                }));
+            } catch (error) {
+                console.error('Error loading public songs:', error);
+                return [];
+            }
+        }
+
+        // Expose for external use
+        window.loadPublicSongs = loadPublicSongs;
 
         // Generate unique 8-character slug
         function generateSlug() {

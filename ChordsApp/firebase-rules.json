@@ -1,0 +1,64 @@
+{
+  "rules": {
+    "public-songs": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "users": {
+      "$uid": {
+        "subscription": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
+        "usage": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
+        "printPreviewPreferences": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
+        "liveModePreferences": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
+        "bonusAnalyses": {
+          ".read": "$uid === auth.uid",
+          ".write": false
+        },
+        "songs": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
+        "sessions": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
+        "books": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
+        "activeSessions": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
+        "maxSessions": {
+          ".read": "$uid === auth.uid",
+          ".write": false
+        }
+      }
+    },
+    "sessions": {
+      ".read": "auth != null",
+      ".indexOn": ["metadata/sessionCode"],
+      "$sessionId": {
+        ".write": "auth != null && (!data.exists() || data.child('metadata/leaderId').val() === auth.uid)",
+        "participants": {
+          "$participantUid": {
+            ".write": "auth != null && $participantUid === auth.uid"
+          }
+        }
+      }
+    }
+  }
+}

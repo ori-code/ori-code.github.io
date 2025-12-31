@@ -213,6 +213,155 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
     }
 
+    // ============= CHECK FOR SINGER JOIN URL =============
+    const singerSessionCode = urlParams.get('singer');
+    if (singerSessionCode) {
+        // Join as singer (anonymous, lyrics only)
+        joinAsSinger(singerSessionCode.toUpperCase());
+    }
+
+    // ============= CHECK FOR PUBLIC SONG URL =============
+    const publicSongId = urlParams.get('public');
+    if (publicSongId) {
+        // Load public song in Live Mode view
+        loadPublicSongFromUrl(publicSongId);
+    }
+
+    /**
+     * Load a public song from URL parameter
+     */
+    async function loadPublicSongFromUrl(songId) {
+        try {
+            console.log('🌐 Loading public song:', songId);
+
+            // Wait for Firebase to be ready
+            await new Promise(resolve => {
+                if (typeof firebase !== 'undefined' && firebase.database) {
+                    resolve();
+                } else {
+                    const checkFirebase = setInterval(() => {
+                        if (typeof firebase !== 'undefined' && firebase.database) {
+                            clearInterval(checkFirebase);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Load song from public-songs
+            const snapshot = await firebase.database().ref(`public-songs/${songId}`).once('value');
+            const song = snapshot.val();
+
+            if (!song) {
+                alert('Song not found or has been unpublished.');
+                // Clean URL
+                window.history.replaceState({}, '', window.location.pathname);
+                return;
+            }
+
+            // Wait for live mode to be ready
+            await new Promise(resolve => {
+                if (window.liveMode) {
+                    resolve();
+                } else {
+                    const checkLiveMode = setInterval(() => {
+                        if (window.liveMode) {
+                            clearInterval(checkLiveMode);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+
+            // Enter public view mode
+            await window.liveMode.enterPublicViewMode(song, songId);
+
+            console.log('🌐 Loaded public song:', song.title);
+
+        } catch (error) {
+            console.error('Error loading public song:', error);
+            alert('Failed to load song: ' + error.message);
+        }
+    }
+
+    /**
+     * Join session as singer (anonymous auth, lyrics only)
+     */
+    async function joinAsSinger(sessionCode) {
+        try {
+            console.log('🎤 Attempting to join as singer with code:', sessionCode);
+
+            // Wait for Firebase to be ready
+            await new Promise(resolve => {
+                if (typeof firebase !== 'undefined' && firebase.auth) {
+                    resolve();
+                } else {
+                    const checkFirebase = setInterval(() => {
+                        if (typeof firebase !== 'undefined' && firebase.auth) {
+                            clearInterval(checkFirebase);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Sign in anonymously
+            console.log('🎤 Signing in anonymously...');
+            await firebase.auth().signInAnonymously();
+            console.log('🎤 Anonymous sign-in successful');
+
+            // Wait for session manager to be ready
+            await new Promise(resolve => {
+                if (window.sessionManager) {
+                    resolve();
+                } else {
+                    const checkManager = setInterval(() => {
+                        if (window.sessionManager) {
+                            clearInterval(checkManager);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Join the session as singer
+            const result = await window.sessionManager.joinAsSinger(sessionCode);
+            console.log('🎤 Joined as singer:', result.singerName);
+
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+
+            // Wait for live mode to be ready, then enter singer mode
+            await new Promise(resolve => {
+                if (window.liveMode) {
+                    resolve();
+                } else {
+                    const checkLiveMode = setInterval(() => {
+                        if (window.liveMode) {
+                            clearInterval(checkLiveMode);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Enter singer mode (lyrics only, limited controls)
+            await window.liveMode.enterSingerMode();
+
+            // Show welcome toast
+            if (window.sessionUI) {
+                window.sessionUI.showToast(`🎤 Joined as ${result.singerName}`);
+            }
+
+        } catch (error) {
+            console.error('🎤 Error joining as singer:', error);
+            alert('Could not join session: ' + error.message);
+        }
+    }
+
     async function loadSharedSong(slug) {
         try {
             // Wait for Firebase to be ready

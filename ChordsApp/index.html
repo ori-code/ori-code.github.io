@@ -1356,6 +1356,11 @@
                     </div>
                 </div>
 
+                <!-- Singer Toggle (Leader only) -->
+                <div id="singerToggleContainer" class="leader-only" style="display: none;">
+                    <!-- Will be populated by sessionUI.updateSingerToggle() -->
+                </div>
+
                 <!-- Player Controls (BASIC users) -->
                 <div class="player-only" style="padding: 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; margin-bottom: 12px; display: none;">
                     <button class="ghost-button" id="toggleLiveModeBtn" onclick="sessionUI.toggleLiveMode()" style="width: 100%;">
@@ -1663,7 +1668,7 @@
         <!-- Bottom Controls Bar - auto-hides -->
         <div id="liveModeBottomBar" style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 16px; background: var(--card-bg); z-index: 10003; transition: opacity 0.3s ease;">
             <!-- Transpose Controls -->
-            <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 8px;">
+            <div id="liveModeTransposeRow" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 8px;">
                 <button onclick="liveMode.transpose(-1)" style="padding: 8px 16px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
                     -1
                 </button>
@@ -1702,6 +1707,7 @@
                     <span id="liveModeZoomValue" style="font-size: 11px; color: var(--text); min-width: 30px; text-align: center;">14pt</span>
                     <button onclick="liveMode.setFontSize(Math.min(24, liveMode.currentFontSize + 1))" style="background: none; border: none; color: var(--text); cursor: pointer; font-size: 16px; padding: 2px 6px; line-height: 1;">+</button>
                 </div>
+                <!-- Full Overview Button -->
                 <button id="liveModeFullOverview" onclick="liveMode.toggleFullOverview()" style="padding: 7px 12px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease;">
                     📄 Full Overview
                 </button>
@@ -1804,14 +1810,24 @@
             background: #ffffff !important;
         }
 
-        /* Hide song header in live mode (title/key shown in top bar) */
-        #liveModeChartDisplay .song-header {
+        /* Hide song title/meta in live mode (shown in top bar) but keep badges row visible */
+        #liveModeChartDisplay .song-header .song-title,
+        #liveModeChartDisplay .song-header .song-meta {
             display: none;
         }
-        /* Show song header in Full Overview mode */
-        #liveModeChartDisplay.full-overview-active .song-header {
+        /* Always show section badges row in Live Mode (unless hide-badges is set) */
+        #liveModeChartDisplay .section-badges-row {
+            display: flex;
+            margin-bottom: 12px;
+        }
+        #liveModeChartDisplay.hide-badges .section-badges-row {
+            display: none;
+        }
+        /* Show full song header in Full Overview mode */
+        #liveModeChartDisplay.full-overview-active .song-header .song-title,
+        #liveModeChartDisplay.full-overview-active .song-header .song-meta {
             display: block;
-            margin-bottom: 16px;
+            margin-bottom: 8px;
         }
         /* Force single column in Full Overview mode */
         #liveModeChartDisplay.full-overview-active {

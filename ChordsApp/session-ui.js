@@ -725,7 +725,14 @@ class SessionUI {
         try {
             const participants = await window.sessionManager.getParticipants();
 
-            participantsList.innerHTML = participants.map(p => {
+            // Separate singers and regular participants
+            const singers = participants.filter(p => p.type === 'singer');
+            const regulars = participants.filter(p => p.type !== 'singer');
+
+            let html = '';
+
+            // Regular participants
+            html += regulars.map(p => {
                 const statusIcon = p.status === 'connected' ? '🟢' : '⚪';
                 const tierBadge = p.tier === 'PRO' ? '👑' : p.tier === 'BASIC' ? '⭐' : '🆓';
 
@@ -737,6 +744,27 @@ class SessionUI {
                     </div>
                 `;
             }).join('');
+
+            // Singers section (if any)
+            if (singers.length > 0) {
+                html += `
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">🎤 Singers (${singers.length})</div>
+                        ${singers.map(p => {
+                            const statusIcon = p.status === 'connected' ? '🟢' : '⚪';
+                            return `
+                                <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(139, 92, 246, 0.1); border-radius: 6px; margin-bottom: 4px;">
+                                    <span>${statusIcon}</span>
+                                    <span style="flex: 1; color: var(--text); font-size: 13px; opacity: 0.8;">${p.name}</span>
+                                    <span style="font-size: 11px; color: #8b5cf6;">Lyrics only</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            participantsList.innerHTML = html;
 
         } catch (error) {
             console.error('Error loading participants:', error);
@@ -948,6 +976,69 @@ class SessionUI {
         playerControls.forEach(el => {
             el.style.display = isLeader ? 'none' : 'block';
         });
+
+        // Update singer toggle if leader
+        if (isLeader) {
+            this.updateSingerToggle();
+        }
+    }
+
+    /**
+     * Update singer toggle UI (leader only)
+     */
+    async updateSingerToggle() {
+        const singerToggleContainer = document.getElementById('singerToggleContainer');
+        if (!singerToggleContainer) return;
+
+        const allowSingers = await window.sessionManager.getAllowSingers();
+        const sessionCode = window.sessionManager.activeSession ?
+            (await firebase.database().ref(`sessions/${window.sessionManager.activeSession}/metadata/sessionCode`).once('value')).val() : null;
+
+        // Generate singer link
+        const baseUrl = window.location.origin + window.location.pathname;
+        const singerLink = sessionCode ? `${baseUrl}?singer=${sessionCode}` : '';
+
+        singerToggleContainer.innerHTML = `
+            <div style="padding: 12px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: ${allowSingers ? '12px' : '0'};">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
+                        <input type="checkbox" id="allowSingersCheckbox" ${allowSingers ? 'checked' : ''}
+                               onchange="sessionUI.handleSingerToggle(this.checked)"
+                               style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+                        <span style="color: var(--text); font-size: 14px;">🎤 Allow Singers</span>
+                    </label>
+                    <span style="font-size: 12px; color: var(--text-muted);">Lyrics only, no account</span>
+                </div>
+                ${allowSingers ? `
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 6px; padding: 8px;">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Singer Link:</div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" value="${singerLink}" readonly
+                                   style="flex: 1; padding: 6px 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text); font-size: 12px; font-family: monospace;"
+                                   onclick="this.select(); navigator.clipboard.writeText(this.value); sessionUI.showToast('📋 Singer link copied!');">
+                            <button onclick="navigator.clipboard.writeText('${singerLink}'); sessionUI.showToast('📋 Singer link copied!');"
+                                    style="padding: 6px 12px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    /**
+     * Handle singer toggle change
+     */
+    async handleSingerToggle(allow) {
+        try {
+            await window.sessionManager.toggleAllowSingers(allow);
+            this.showToast(allow ? '🎤 Singers enabled' : '🎤 Singers disabled');
+            await this.updateSingerToggle();
+        } catch (error) {
+            console.error('Error toggling singers:', error);
+            this.showToast('❌ Failed to update singer settings');
+        }
     }
 }
 
