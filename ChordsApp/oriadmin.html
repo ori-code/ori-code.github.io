@@ -984,14 +984,8 @@
             currentAdminKey = adminKey;
 
             try {
-                // Detect local development (localhost or local network IP)
-                const isLocalDev = window.location.hostname === 'localhost' ||
-                                   window.location.hostname.startsWith('192.168.') ||
-                                   window.location.hostname.startsWith('10.') ||
-                                   window.location.hostname.startsWith('172.');
-                const apiBase = isLocalDev
-                    ? `http://${window.location.hostname}:3002`
-                    : 'https://ori-code-github-io.vercel.app';
+                // Always use deployed Vercel API
+                const apiBase = 'https://ori-code-github-io.vercel.app';
 
                 const response = await fetch(`${apiBase}/api/admin/list-all-users?adminKey=${adminKey}`);
 
@@ -1105,14 +1099,8 @@
             }
 
             try {
-                // Detect local development
-                const isLocalDev = window.location.hostname === 'localhost' ||
-                                   window.location.hostname.startsWith('192.168.') ||
-                                   window.location.hostname.startsWith('10.') ||
-                                   window.location.hostname.startsWith('172.');
-                const apiBase = isLocalDev
-                    ? `http://${window.location.hostname}:3002`
-                    : 'https://ori-code-github-io.vercel.app';
+                // Always use deployed Vercel API
+                const apiBase = 'https://ori-code-github-io.vercel.app';
 
                 const response = await fetch(`${apiBase}/api/admin/give-bonus-analyses`, {
                     method: 'POST',
@@ -1164,14 +1152,8 @@
             }
 
             try {
-                // Detect local development
-                const isLocalDev = window.location.hostname === 'localhost' ||
-                                   window.location.hostname.startsWith('192.168.') ||
-                                   window.location.hostname.startsWith('10.') ||
-                                   window.location.hostname.startsWith('172.');
-                const apiBase = isLocalDev
-                    ? `http://${window.location.hostname}:3002`
-                    : 'https://ori-code-github-io.vercel.app';
+                // Always use deployed Vercel API
+                const apiBase = 'https://ori-code-github-io.vercel.app';
 
                 const response = await fetch(`${apiBase}/api/admin/upgrade-user`, {
                     method: 'POST',
@@ -1221,14 +1203,8 @@
             }
 
             try {
-                // Detect local development
-                const isLocalDev = window.location.hostname === 'localhost' ||
-                                   window.location.hostname.startsWith('192.168.') ||
-                                   window.location.hostname.startsWith('10.') ||
-                                   window.location.hostname.startsWith('172.');
-                const apiBase = isLocalDev
-                    ? `http://${window.location.hostname}:3002`
-                    : 'https://ori-code-github-io.vercel.app';
+                // Always use deployed Vercel API
+                const apiBase = 'https://ori-code-github-io.vercel.app';
 
                 const response = await fetch(`${apiBase}/api/admin/remove-user`, {
                     method: 'POST',
@@ -1289,14 +1265,8 @@
             }
 
             try {
-                // Detect local development
-                const isLocalDev = window.location.hostname === 'localhost' ||
-                                   window.location.hostname.startsWith('192.168.') ||
-                                   window.location.hostname.startsWith('10.') ||
-                                   window.location.hostname.startsWith('172.');
-                const apiBase = isLocalDev
-                    ? `http://${window.location.hostname}:3002`
-                    : 'https://ori-code-github-io.vercel.app';
+                // Always use deployed Vercel API
+                const apiBase = 'https://ori-code-github-io.vercel.app';
 
                 const response = await fetch(`${apiBase}/api/admin/reset-password`, {
                     method: 'POST',
@@ -1346,14 +1316,8 @@
             }
 
             try {
-                // Detect local development
-                const isLocalDev = window.location.hostname === 'localhost' ||
-                                   window.location.hostname.startsWith('192.168.') ||
-                                   window.location.hostname.startsWith('10.') ||
-                                   window.location.hostname.startsWith('172.');
-                const apiBase = isLocalDev
-                    ? `http://${window.location.hostname}:3002`
-                    : 'https://ori-code-github-io.vercel.app';
+                // Always use deployed Vercel API
+                const apiBase = 'https://ori-code-github-io.vercel.app';
 
                 const response = await fetch(`${apiBase}/api/admin/set-max-devices`, {
                     method: 'POST',
@@ -1426,14 +1390,8 @@
             orphanContent.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">🔍 Scanning for orphan users...</p>';
 
             try {
-                // Detect local development
-                const isLocalDev = window.location.hostname === 'localhost' ||
-                                   window.location.hostname.startsWith('192.168.') ||
-                                   window.location.hostname.startsWith('10.') ||
-                                   window.location.hostname.startsWith('172.');
-                const apiBase = isLocalDev
-                    ? `http://${window.location.hostname}:3002`
-                    : 'https://ori-code-github-io.vercel.app';
+                // Always use deployed Vercel API
+                const apiBase = 'https://ori-code-github-io.vercel.app';
 
                 const response = await fetch(`${apiBase}/api/admin/orphan-users?adminKey=${currentAdminKey}`);
 
@@ -1503,14 +1461,8 @@
             }
 
             try {
-                // Detect local development
-                const isLocalDev = window.location.hostname === 'localhost' ||
-                                   window.location.hostname.startsWith('192.168.') ||
-                                   window.location.hostname.startsWith('10.') ||
-                                   window.location.hostname.startsWith('172.');
-                const apiBase = isLocalDev
-                    ? `http://${window.location.hostname}:3002`
-                    : 'https://ori-code-github-io.vercel.app';
+                // Always use deployed Vercel API
+                const apiBase = 'https://ori-code-github-io.vercel.app';
 
                 const response = await fetch(`${apiBase}/api/admin/delete-orphan-user`, {
                     method: 'POST',

@@ -16,6 +16,16 @@ class ThemeManager {
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => this.toggleTheme());
         }
+
+        // Setup side menu checkbox
+        const sideMenuDarkMode = document.getElementById('sideMenuDarkMode');
+        if (sideMenuDarkMode) {
+            sideMenuDarkMode.checked = savedTheme === 'dark';
+            sideMenuDarkMode.addEventListener('change', () => {
+                const newTheme = sideMenuDarkMode.checked ? 'dark' : 'light';
+                this.setTheme(newTheme, true);
+            });
+        }
     }
 
     toggleTheme() {
@@ -45,6 +55,12 @@ class ThemeManager {
 
         // Save to localStorage
         localStorage.setItem('chordsapp-theme', theme);
+
+        // Sync side menu checkbox
+        const sideMenuDarkMode = document.getElementById('sideMenuDarkMode');
+        if (sideMenuDarkMode) {
+            sideMenuDarkMode.checked = theme === 'dark';
+        }
     }
 
     updateIcon(icon) {
