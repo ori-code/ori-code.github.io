@@ -1252,7 +1252,7 @@ a {
     color: black;
     white-space: pre-wrap;
     word-wrap: break-word;
-    padding: 20px;
+    padding: 8px 20px 20px 20px;
     columns: 2;
     column-gap: 40px;
     column-fill: auto;
@@ -1569,13 +1569,19 @@ a {
     line-height: 1.4 !important;
     column-span: all;
     -webkit-column-span: all;
-    margin: 0 0 8px 0;
+    margin: 0;
     padding: 0;
 }
 
 .song-header:first-child {
     margin-top: 0 !important;
     padding-top: 0 !important;
+}
+
+/* Remove gap between header and first section */
+.song-header + .song-section-block,
+.song-header + * {
+    margin-top: 0 !important;
 }
 
 /* Minimalist Title */
@@ -1619,7 +1625,7 @@ a {
 .section-badges-row {
     display: flex;
     gap: 6px;
-    margin: 4px 0 4px 0;
+    margin: 0;
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1635,6 +1641,17 @@ a {
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
+}
+
+/* RTL: Align badges to the right to match first column */
+[dir="rtl"] .section-badges-row,
+.live-preview[dir="rtl"] .section-badges-row {
+    justify-content: flex-end;
+}
+
+/* Reduce space after badges row */
+.section-badges-row + * {
+    margin-top: 0 !important;
 }
 
 /* Hide badges when checkbox is unchecked */
@@ -2084,7 +2101,7 @@ a {
     .song-header {
         line-height: 1.3 !important;
         column-span: all !important;
-        margin-bottom: 6px !important;
+        margin: 0 !important;
         break-after: avoid !important;
     }
 

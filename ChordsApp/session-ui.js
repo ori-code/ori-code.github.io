@@ -583,10 +583,18 @@ class SessionUI {
         const indicator = document.getElementById('sessionStatusIndicator');
         if (!indicator) return;
 
+        // Leader gets Share and Singers buttons
+        const leaderButtons = isLeader ? `
+            <button onclick="sessionUI.showShareBadge('${sessionCode}')"
+                    style="padding: 6px 12px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+                <span>🔗</span> Share
+            </button>
+        ` : '';
+
         indicator.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; flex-wrap: wrap;">
                 <span style="font-size: 20px;">${isLeader ? '📡' : '📻'}</span>
-                <div style="flex: 1;">
+                <div style="flex: 1; min-width: 150px;">
                     <div style="font-weight: 600; color: #10b981; font-size: 14px;">
                         ${isLeader ? 'Broadcasting' : 'Connected'} • ${sessionCode}
                     </div>
@@ -594,10 +602,13 @@ class SessionUI {
                         ${isLeader ? 'You are the session leader' : 'Following session leader'}
                     </div>
                 </div>
-                <button onclick="sessionUI.showSessionControls()"
-                        style="padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 12px;">
-                    Options
-                </button>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    ${leaderButtons}
+                    <button onclick="sessionUI.showSessionControls()"
+                            style="padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 12px;">
+                        Options
+                    </button>
+                </div>
             </div>
         `;
 
@@ -684,6 +695,135 @@ class SessionUI {
         if (sideMenuSection) {
             sideMenuSection.style.display = 'none';
         }
+    }
+
+    /**
+     * Show share badge modal with QR code and links
+     */
+    async showShareBadge(sessionCode) {
+        // Remove existing modal if any
+        const existingModal = document.getElementById('shareBadgeModal');
+        if (existingModal) existingModal.remove();
+
+        const baseUrl = window.location.origin + window.location.pathname;
+        const joinLink = `${baseUrl}?join=${sessionCode}`;
+        const singerLink = `${baseUrl}?singer=${sessionCode}`;
+
+        // Get current singers status
+        const allowSingers = window.sessionManager ? window.sessionManager.getAllowSingers() : false;
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.id = 'shareBadgeModal';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); display: flex; align-items: center;
+            justify-content: center; z-index: 10000; padding: 20px;
+        `;
+
+        modal.innerHTML = `
+            <div style="background: #1e1e2e; border-radius: 16px; padding: 24px; max-width: 400px; width: 100%; position: relative; border: 1px solid rgba(255,255,255,0.15);">
+                <button onclick="document.getElementById('shareBadgeModal').remove()"
+                        style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: #888; font-size: 24px; cursor: pointer; line-height: 1;">
+                    &times;
+                </button>
+
+                <h3 style="margin: 0 0 20px 0; text-align: center; color: #ffffff; font-size: 18px; font-weight: 600;">
+                    Share Session
+                </h3>
+
+                <!-- Session Code -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 32px; font-weight: bold; font-family: monospace; color: #10b981; letter-spacing: 4px;">
+                        ${sessionCode}
+                    </div>
+                </div>
+
+                <!-- QR Code -->
+                <div id="shareBadgeQR" style="display: flex; justify-content: center; margin-bottom: 20px; background: white; padding: 12px; border-radius: 8px;"></div>
+
+                <!-- Join Link -->
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; color: #9ca3af; margin-bottom: 6px;">Join Link (Players)</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" value="${joinLink}" readonly
+                               style="flex: 1; padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; background: rgba(255,255,255,0.08); color: #e5e5e5; font-size: 12px;">
+                        <button onclick="navigator.clipboard.writeText('${joinLink}'); sessionUI.showToast('📋 Join link copied!')"
+                                style="padding: 10px 16px; background: #10b981; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Allow Singers Toggle -->
+                <div style="margin-bottom: 16px; padding: 12px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 8px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="shareBadgeSingersToggle" ${allowSingers ? 'checked' : ''}
+                               onchange="sessionUI.handleShareBadgeSingerToggle(this.checked, '${sessionCode}')"
+                               style="width: 18px; height: 18px; cursor: pointer;">
+                        <div>
+                            <div style="font-size: 14px; color: #e5e5e5;">Allow Singers</div>
+                            <div style="font-size: 11px; color: #9ca3af;">Lyrics only, no account needed</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Singer Link (shown when enabled) -->
+                <div id="shareBadgeSingerSection" style="margin-bottom: 16px; display: ${allowSingers ? 'block' : 'none'};">
+                    <label style="display: block; font-size: 12px; color: #a78bfa; margin-bottom: 6px;">Singer Link (Lyrics only)</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" value="${singerLink}" readonly id="shareBadgeSingerLink"
+                               style="flex: 1; padding: 10px; border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 6px; background: rgba(139, 92, 246, 0.15); color: #e5e5e5; font-size: 12px;">
+                        <button onclick="navigator.clipboard.writeText('${singerLink}'); sessionUI.showToast('🎤 Singer link copied!')"
+                                style="padding: 10px 16px; background: #8b5cf6; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Close Button -->
+                <button onclick="document.getElementById('shareBadgeModal').remove()"
+                        style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #e5e5e5; cursor: pointer; font-size: 14px; margin-top: 8px;">
+                    Close
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Generate QR code
+        const qrContainer = document.getElementById('shareBadgeQR');
+        if (qrContainer && typeof QRCode !== 'undefined') {
+            new QRCode(qrContainer, {
+                text: joinLink,
+                width: 150,
+                height: 150,
+                colorDark: '#10b981',
+                colorLight: '#ffffff'
+            });
+        }
+
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+    }
+
+    /**
+     * Handle singer toggle from share badge
+     */
+    async handleShareBadgeSingerToggle(allow, sessionCode) {
+        if (window.sessionManager) {
+            await window.sessionManager.toggleAllowSingers(allow);
+        }
+
+        // Show/hide singer section
+        const singerSection = document.getElementById('shareBadgeSingerSection');
+        if (singerSection) {
+            singerSection.style.display = allow ? 'block' : 'none';
+        }
+
+        this.showToast(allow ? '🎤 Singers enabled!' : '🎤 Singers disabled');
     }
 
     /**

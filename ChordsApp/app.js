@@ -2512,24 +2512,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         }
 
                         formatted.push('</div>'); // Close song-header
-                        formatted.push('<br>');
                         metadataLines = [];
                     }
                 }
             }
 
-            // Empty line
-            if (!line) {
-                if (currentSection) {
-                    sectionContent.push('<br>');
-                } else {
-                    formatted.push('<br>');
-                }
+            // ✅ Skip arrangement line (line with only inline notation)
+            if (isArrangementLine(line)) {
                 continue;
             }
 
-            // ✅ Skip arrangement line (line with only inline notation)
-            if (isArrangementLine(line)) {
+            // Skip empty lines
+            if (!line) {
                 continue;
             }
 
@@ -2543,11 +2537,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Regular line
+            // Regular line (lyrics/chords)
             if (currentSection) {
-                sectionContent.push(line + '<br>');
+                sectionContent.push(line + '\n');
             } else {
-                formatted.push(line + '<br>');
+                formatted.push(line + '\n');
             }
         }
 
@@ -2566,7 +2560,6 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     result.push(`<div class="song-meta">${metadataLines[j]}</div>`);
                 }
             }
-            result.push('<br>');
             result.push(...formatted);
             // Trim leading <br> tags from output
             return result.join('').replace(/^(<br\s*\/?>)+/i, '');

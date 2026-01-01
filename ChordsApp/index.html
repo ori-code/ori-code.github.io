@@ -401,84 +401,10 @@
             </div>
         </aside>
 
-        <!-- Editor actions -->
-        <section class="editor-actions-section">
-            <div class="editor-actions" style="margin: 20px 0; padding: 16px 20px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; width: 100%; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
-                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; flex: 1 1 auto; min-width: 200px;">
-                    <span style="font-size: 0.85rem; opacity: 0.8;">🔢</span>
-                    <select id="nashvilleMode" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 6px; font-size: 0.875rem; cursor: pointer; font-weight: 500;">
-                        <option value="chords" selected>Chords</option>
-                        <option value="both">Nashville + Chords</option>
-                        <option value="numbers">Nashville Only</option>
-                        <option value="lyrics">Lyrics Only</option>
-                    </select>
-                </div>
-                <div id="keyDetection" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(255, 59, 92, 0.08); border: 1px solid rgba(255, 59, 92, 0.2); border-radius: 8px; flex: 1 1 auto; min-width: 200px;">
-                    <span style="font-size: 0.85rem; opacity: 0.8;">🎹</span>
-                    <select id="keySelector" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--primary); border: 1px solid rgba(255, 59, 92, 0.25); border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
-                        <optgroup label="Major Keys">
-                            <option value="C Major" selected>C Major</option>
-                            <option value="C# Major">C# Major</option>
-                            <option value="D Major">D Major</option>
-                            <option value="D# Major">D# Major</option>
-                            <option value="E Major">E Major</option>
-                            <option value="F Major">F Major</option>
-                            <option value="F# Major">F# Major</option>
-                            <option value="G Major">G Major</option>
-                            <option value="G# Major">G# Major</option>
-                            <option value="A Major">A Major</option>
-                            <option value="A# Major">A# Major</option>
-                            <option value="B Major">B Major</option>
-                        </optgroup>
-                        <optgroup label="Minor Keys">
-                            <option value="C Minor">C Minor</option>
-                            <option value="C# Minor">C# Minor</option>
-                            <option value="D Minor">D Minor</option>
-                            <option value="D# Minor">D# Minor</option>
-                            <option value="E Minor">E Minor</option>
-                            <option value="F Minor">F Minor</option>
-                            <option value="F# Minor">F# Minor</option>
-                            <option value="G Minor">G Minor</option>
-                            <option value="G# Minor">G# Minor</option>
-                            <option value="A Minor">A Minor</option>
-                            <option value="A# Minor">A# Minor</option>
-                            <option value="B Minor">B Minor</option>
-                        </optgroup>
-                    </select>
-                    <span id="detectedKey" style="display: none;"></span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 8px; flex: 1 1 auto; min-width: 120px;">
-                    <span style="font-size: 0.85rem; opacity: 0.8;">🎵</span>
-                    <input type="number" id="bpmInput" value="120" min="40" max="240" style="width: 70px; padding: 5px 8px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(249, 115, 22, 0.25); border-radius: 6px; font-size: 0.875rem; text-align: center; font-weight: 500;" required>
-                </div>
-                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 8px; flex: 1 1 auto; min-width: 120px;">
-                    <span style="font-size: 0.85rem; opacity: 0.8;">⏱️</span>
-                    <select id="timeSignature" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(34, 211, 238, 0.25); border-radius: 6px; font-size: 0.875rem; cursor: pointer; font-weight: 500;">
-                        <option value="4/4" selected>4/4</option>
-                        <option value="3/4">3/4</option>
-                        <option value="6/8">6/8</option>
-                        <option value="2/4">2/4</option>
-                        <option value="5/4">5/4</option>
-                        <option value="7/8">7/8</option>
-                        <option value="12/8">12/8</option>
-                    </select>
-                </div>
-                <label style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 8px; cursor: pointer; font-size: 0.8rem; color: var(--text); user-select: none;">
-                    <input type="checkbox" id="showBadges" checked style="accent-color: #a855f7; cursor: pointer;">
-                    <span>Badges</span>
-                </label>
-                <button class="ghost-button" id="saveSongButton" style="flex: 1 1 auto; min-width: 120px; padding: 6px 14px; font-size: 0.875rem;">💾 Save</button>
-                <button class="ghost-button" id="loadSongButton" style="flex: 1 1 auto; min-width: 120px; padding: 6px 14px; font-size: 0.875rem;">📂 Load</button>
-                <button class="ghost-button" id="bulkImportButton" style="flex: 1 1 auto; min-width: 120px; padding: 6px 14px; font-size: 0.875rem;">📥 Bulk Import</button>
-                <input type="file" id="bulkImportInput" multiple accept=".txt,.cho,.chordpro,.chopro" style="display: none;">
-                <button class="ghost-button" id="updateSongButton" style="flex: 1 1 auto; min-width: 120px; padding: 6px 14px; font-size: 0.875rem;">🔄 Update</button>
-                <button class="ghost-button" id="copyToClipboard" style="display: none;">Copy text</button>
-            </div>
-        </section>
-
-        <!-- Live Session Controls -->
+        <!-- Live Section -->
         <section class="session-section">
-            <div class="session-controls" style="margin: 20px 0; padding: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px;">
+            <div class="session-controls" style="margin: 20px 0; padding: 16px; background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px;">
+                <h4 style="margin: 0 0 12px 0; color: #8b5cf6; font-size: 0.9rem; font-weight: 600;">Live Section</h4>
                 <!-- Session Status Indicator (shown when in session) -->
                 <div id="sessionStatusIndicator" style="display: none; margin-bottom: 12px;"></div>
 
@@ -514,54 +440,8 @@
         <section class="preview-section-content">
             <!-- Advanced Layout Controls (Collapsible) -->
             <div id="advancedControls" class="preview-controls-row" style="display: none; flex-direction: column; gap: 12px; margin-bottom: 20px; overflow: hidden; transition: all 0.3s ease;">
-                <div style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; padding: 16px;">
-                    <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.9rem; font-weight: 600;">Layout Customization</h4>
-                    <!-- Row 1: Sliders + Layout + Pages (all in same line) -->
-                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
-                        <label class="font-size-control" style="flex: 1 1 120px; min-width: 120px;">
-                            Font Size: <span id="fontSizeValue">8.5</span>pt
-                            <input type="range" id="fontSizeSlider" min="8" max="28" value="8.5" step="0.5">
-                        </label>
-                        <label class="line-height-control" style="flex: 1 1 130px; min-width: 130px;">
-                            Line Spacing: <span id="lineHeightValue">1.2</span>
-                            <input type="range" id="lineHeightSlider" min="1.0" max="2.0" value="1.2" step="0.1">
-                        </label>
-                        <label class="char-spacing-control" style="flex: 1 1 130px; min-width: 130px;">
-                            Char Spacing: <span id="charSpacingValue">0</span>px
-                            <input type="range" id="charSpacingSlider" min="0" max="8" value="0" step="0.5">
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; flex: 0 0 auto;">
-                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Layout:</span>
-                            <select id="columnCount" class="layout-select ghost-button" style="min-width: 105px;">
-                                <option value="1">1 Column</option>
-                                <option value="2" selected>2 Columns</option>
-                                <option value="3">3 Columns</option>
-                                <option value="4">4 Columns</option>
-                            </select>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; flex: 0 0 auto;">
-                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Pages:</span>
-                            <select id="pageCount" class="layout-select ghost-button" style="min-width: 88px;">
-                                <option value="1" selected>1 Page</option>
-                                <option value="2">2 Pages</option>
-                                <option value="3">3 Pages</option>
-                                <option value="4">4 Pages</option>
-                            </select>
-                        </label>
-                    </div>
-                    <!-- Display Toggle Buttons -->
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                        <button id="toggleControlsBtn" class="ghost-button display-toggle active" style="flex: 1; min-width: 120px; padding: 8px 12px; font-size: 12px; font-weight: 500;">
-                            <span style="margin-right: 4px;">🎛️</span> Main Controls
-                        </button>
-                        <button id="toggleEditorBtn" class="ghost-button display-toggle" style="flex: 1; min-width: 120px; padding: 8px 12px; font-size: 12px; font-weight: 500;">
-                            <span style="margin-right: 4px;">✏️</span> Edit Workspace
-                        </button>
-                    </div>
-                    <button class="ghost-button" id="autoOptimizeButton" style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; padding: 10px; font-weight: 600;">✨ Auto-fit to 1 Page</button>
-                </div>
 
-                <!-- Transpose Controls -->
+                <!-- 1. Transpose Controls (FIRST) -->
                 <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 16px;">
                     <h4 style="margin: 0 0 12px 0; color: #3b82f6; font-size: 0.9rem; font-weight: 600;">Transpose</h4>
 
@@ -592,6 +472,135 @@
                             <button class="ghost-button" id="applyTranspose" style="flex: 1; padding: 10px 12px;">Apply</button>
                             <button class="ghost-button" id="resetTranspose" style="flex: 1; padding: 10px 12px;">Reset</button>
                         </div>
+                    </div>
+                </div>
+
+                <!-- 2. Layout Customization (SECOND) -->
+                <div style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; padding: 16px;">
+                    <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.9rem; font-weight: 600;">Layout Customization</h4>
+                    <!-- Row 0: Display Mode, Key, BPM, Time, Badges -->
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px;">
+                            <span style="font-size: 0.85rem; opacity: 0.8;">🔢</span>
+                            <select id="nashvilleMode" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(139, 92, 246, 0.25); border-radius: 6px; font-size: 0.875rem; cursor: pointer; font-weight: 500;">
+                                <option value="chords" selected>Chords</option>
+                                <option value="both">Nashville + Chords</option>
+                                <option value="numbers">Nashville Only</option>
+                                <option value="lyrics">Lyrics Only</option>
+                            </select>
+                        </div>
+                        <div id="keyDetection" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(255, 59, 92, 0.08); border: 1px solid rgba(255, 59, 92, 0.2); border-radius: 8px;">
+                            <span style="font-size: 0.85rem; opacity: 0.8;">🎹</span>
+                            <select id="keySelector" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--primary); border: 1px solid rgba(255, 59, 92, 0.25); border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                                <optgroup label="Major Keys">
+                                    <option value="C Major" selected>C Major</option>
+                                    <option value="C# Major">C# Major</option>
+                                    <option value="D Major">D Major</option>
+                                    <option value="D# Major">D# Major</option>
+                                    <option value="E Major">E Major</option>
+                                    <option value="F Major">F Major</option>
+                                    <option value="F# Major">F# Major</option>
+                                    <option value="G Major">G Major</option>
+                                    <option value="G# Major">G# Major</option>
+                                    <option value="A Major">A Major</option>
+                                    <option value="A# Major">A# Major</option>
+                                    <option value="B Major">B Major</option>
+                                </optgroup>
+                                <optgroup label="Minor Keys">
+                                    <option value="C Minor">C Minor</option>
+                                    <option value="C# Minor">C# Minor</option>
+                                    <option value="D Minor">D Minor</option>
+                                    <option value="D# Minor">D# Minor</option>
+                                    <option value="E Minor">E Minor</option>
+                                    <option value="F Minor">F Minor</option>
+                                    <option value="F# Minor">F# Minor</option>
+                                    <option value="G Minor">G Minor</option>
+                                    <option value="G# Minor">G# Minor</option>
+                                    <option value="A Minor">A Minor</option>
+                                    <option value="A# Minor">A# Minor</option>
+                                    <option value="B Minor">B Minor</option>
+                                </optgroup>
+                            </select>
+                            <span id="detectedKey" style="display: none;"></span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.2); border-radius: 8px;">
+                            <span style="font-size: 0.85rem; opacity: 0.8;">🎵</span>
+                            <input type="number" id="bpmInput" value="120" min="40" max="240" style="width: 60px; padding: 5px 8px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(249, 115, 22, 0.25); border-radius: 6px; font-size: 0.875rem; text-align: center; font-weight: 500;" required>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.2); border-radius: 8px;">
+                            <span style="font-size: 0.85rem; opacity: 0.8;">⏱️</span>
+                            <select id="timeSignature" style="padding: 5px 10px; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid rgba(34, 211, 238, 0.25); border-radius: 6px; font-size: 0.875rem; cursor: pointer; font-weight: 500;">
+                                <option value="4/4" selected>4/4</option>
+                                <option value="3/4">3/4</option>
+                                <option value="6/8">6/8</option>
+                                <option value="2/4">2/4</option>
+                                <option value="5/4">5/4</option>
+                                <option value="7/8">7/8</option>
+                                <option value="12/8">12/8</option>
+                            </select>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px;">
+                            <input type="checkbox" id="showBadges" checked style="width: 16px; height: 16px; cursor: pointer;">
+                            <span style="font-size: 0.85rem; color: #10b981; font-weight: 500;">Badges</span>
+                        </label>
+                    </div>
+                    <!-- Row 1: Sliders -->
+                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+                        <label class="font-size-control" style="flex: 1 1 140px; min-width: 140px;">
+                            Font Size: <span id="fontSizeValue">8.5</span>pt
+                            <input type="range" id="fontSizeSlider" min="8" max="28" value="8.5" step="0.5">
+                        </label>
+                        <label class="line-height-control" style="flex: 1 1 140px; min-width: 140px;">
+                            Line Spacing: <span id="lineHeightValue">1.2</span>
+                            <input type="range" id="lineHeightSlider" min="1.0" max="2.0" value="1.2" step="0.1">
+                        </label>
+                        <label class="char-spacing-control" style="flex: 1 1 140px; min-width: 140px;">
+                            Char Spacing: <span id="charSpacingValue">0</span>px
+                            <input type="range" id="charSpacingSlider" min="0" max="8" value="0" step="0.5">
+                        </label>
+                    </div>
+                    <!-- Row 2: Layout, Pages, Follow Arrangement -->
+                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+                        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Layout:</span>
+                            <select id="columnCount" class="layout-select ghost-button" style="min-width: 105px;">
+                                <option value="1">1 Column</option>
+                                <option value="2" selected>2 Columns</option>
+                                <option value="3">3 Columns</option>
+                                <option value="4">4 Columns</option>
+                            </select>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Pages:</span>
+                            <select id="pageCount" class="layout-select ghost-button" style="min-width: 88px;">
+                                <option value="1" selected>1 Page</option>
+                                <option value="2">2 Pages</option>
+                                <option value="3">3 Pages</option>
+                                <option value="4">4 Pages</option>
+                            </select>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 6px 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px;">
+                            <input type="checkbox" id="followArrangementBtn2" style="width: 16px; height: 16px; cursor: pointer;">
+                            <span style="font-size: 0.85rem; color: #10b981; font-weight: 500;">Follow Arrangement</span>
+                        </label>
+                    </div>
+                    <!-- Display Toggle Buttons -->
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                        <button id="toggleControlsBtn" class="ghost-button display-toggle active" style="flex: 1; min-width: 120px; padding: 8px 12px; font-size: 12px; font-weight: 500;">
+                            <span style="margin-right: 4px;">🎛️</span> Main Controls
+                        </button>
+                        <button id="toggleEditorBtn" class="ghost-button display-toggle" style="flex: 1; min-width: 120px; padding: 8px 12px; font-size: 12px; font-weight: 500;">
+                            <span style="margin-right: 4px;">✏️</span> Edit Workspace
+                        </button>
+                    </div>
+                    <button class="ghost-button" id="autoOptimizeButton" style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; padding: 10px; font-weight: 600;">✨ Auto-fit to 1 Page</button>
+                    <!-- Save & Load Buttons -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;">
+                        <button class="ghost-button" id="saveSongButton" style="flex: 1; min-width: 80px; padding: 8px 12px; font-size: 0.8rem;">💾 Save</button>
+                        <button class="ghost-button" id="loadSongButton" style="flex: 1; min-width: 80px; padding: 8px 12px; font-size: 0.8rem;">📂 Load</button>
+                        <button class="ghost-button" id="bulkImportButton" style="flex: 1; min-width: 100px; padding: 8px 12px; font-size: 0.8rem;">📥 Bulk Import</button>
+                        <input type="file" id="bulkImportInput" multiple accept=".txt,.cho,.chordpro,.chopro" style="display: none;">
+                        <button class="ghost-button" id="updateSongButton" style="flex: 1; min-width: 80px; padding: 8px 12px; font-size: 0.8rem;">🔄 Update</button>
                     </div>
                 </div>
             </div>
@@ -2714,11 +2723,14 @@
 
             // Display: Follow Arrangement toggle
             const followArrangementBtn = document.getElementById('followArrangementBtn');
+            const followArrangementBtn2 = document.getElementById('followArrangementBtn2');
+
             if (followArrangementBtn) {
                 // Load saved preference or use default (unchecked)
                 const savedFollowArrangement = localStorage.getItem('chordsapp-follow-arrangement');
                 const followArrangement = savedFollowArrangement === 'true';
                 followArrangementBtn.checked = followArrangement;
+                if (followArrangementBtn2) followArrangementBtn2.checked = followArrangement;
 
                 // Initialize the state in app.js if toggle function exists
                 if (followArrangement && window.toggleFollowArrangement) {
@@ -2728,6 +2740,19 @@
                 followArrangementBtn.addEventListener('change', () => {
                     const enabled = followArrangementBtn.checked;
                     localStorage.setItem('chordsapp-follow-arrangement', enabled);
+                    if (followArrangementBtn2) followArrangementBtn2.checked = enabled;
+                    if (window.toggleFollowArrangement) {
+                        window.toggleFollowArrangement(enabled);
+                    }
+                });
+            }
+
+            // Sync second Follow Arrangement button (in Layout Customization)
+            if (followArrangementBtn2) {
+                followArrangementBtn2.addEventListener('change', () => {
+                    const enabled = followArrangementBtn2.checked;
+                    localStorage.setItem('chordsapp-follow-arrangement', enabled);
+                    if (followArrangementBtn) followArrangementBtn.checked = enabled;
                     if (window.toggleFollowArrangement) {
                         window.toggleFollowArrangement(enabled);
                     }
