@@ -13,6 +13,9 @@ const liveMode = {
     hideControlsTimeout: null,
     displayMode: 'chords',
     showBadges: true,
+    showBorders: true,
+    autoHidePlaylist: true,
+    showPlaylistWithControls: false,
     fullOverviewMode: false,
     savedDisplaySettings: null,
     currentColumnLayout: 2,
@@ -32,6 +35,8 @@ const liveMode = {
             fontSize: this.currentFontSize || 14,
             displayMode: this.displayMode,
             showBadges: this.showBadges,
+            showBorders: this.showBorders,
+            autoHidePlaylist: this.autoHidePlaylist,
             savedAt: Date.now()
         };
 
@@ -128,6 +133,13 @@ const liveMode = {
     },
 
     /**
+     * Save per-song borders visibility (convenience method)
+     */
+    async saveSongBorders(songId, showBorders) {
+        await this.saveSongPreferences(songId, { showBorders });
+    },
+
+    /**
      * Set font size for Live Mode display
      */
     setFontSize(size) {
@@ -216,6 +228,21 @@ const liveMode = {
                 this.showBadges = savedPrefs.showBadges;
                 const liveModeBadgesCheckbox = document.getElementById('liveModeBadges');
                 if (liveModeBadgesCheckbox) liveModeBadgesCheckbox.checked = savedPrefs.showBadges;
+            }
+            if (savedPrefs.showBorders !== undefined) {
+                this.showBorders = savedPrefs.showBorders;
+                const liveModeBordersCheckbox = document.getElementById('liveModeBorders');
+                if (liveModeBordersCheckbox) liveModeBordersCheckbox.checked = savedPrefs.showBorders;
+                // Apply borders visibility
+                const chartDisplay = document.getElementById('liveModeChartDisplay');
+                if (chartDisplay && !savedPrefs.showBorders) {
+                    chartDisplay.classList.add('hide-borders');
+                }
+            }
+            if (savedPrefs.autoHidePlaylist !== undefined) {
+                this.autoHidePlaylist = savedPrefs.autoHidePlaylist;
+                const autoHideCheckbox = document.getElementById('liveModeAutoHidePlaylist');
+                if (autoHideCheckbox) autoHideCheckbox.checked = savedPrefs.autoHidePlaylist;
             }
             this.updateLayoutButtons();
             // Update zoom display
@@ -614,6 +641,11 @@ const liveMode = {
         }
 
         this.controlsVisible = true;
+
+        // Show playlist if preference is enabled
+        if (this.showPlaylistWithControls && !this.sidebarVisible) {
+            this.showPlaylist();
+        }
     },
 
     /**
@@ -633,6 +665,11 @@ const liveMode = {
         }
 
         this.controlsVisible = false;
+
+        // Hide playlist when controls hide
+        if (this.sidebarVisible) {
+            this.hidePlaylist();
+        }
     },
 
     /**
@@ -790,6 +827,41 @@ const liveMode = {
         this.saveLiveModePreferences();
 
         console.log(`📺 Badges ${show ? 'shown' : 'hidden'}`);
+    },
+
+    /**
+     * Toggle borders visibility
+     */
+    toggleBorders(show) {
+        this.showBorders = show;
+
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            if (show) {
+                chartDisplay.classList.remove('hide-borders');
+            } else {
+                chartDisplay.classList.add('hide-borders');
+            }
+        }
+
+        // Auto-save global preference
+        this.saveLiveModePreferences();
+
+        // Also save per-song preference if a song is loaded
+        if (this.currentSongId) {
+            this.saveSongBorders(this.currentSongId, show);
+        }
+
+        console.log(`📺 Borders ${show ? 'shown' : 'hidden'}`);
+    },
+
+    /**
+     * Toggle auto-hide playlist after song selection
+     */
+    toggleAutoHidePlaylist(autoHide) {
+        this.autoHidePlaylist = autoHide;
+        this.saveLiveModePreferences();
+        console.log(`📺 Auto-hide playlist: ${autoHide ? 'enabled' : 'disabled'}`);
     },
 
     /**
@@ -1152,23 +1224,33 @@ const liveMode = {
     },
 
     /**
+     * Set playlist preference (used by checkbox)
+     * When checked: playlist shows with controls
+     * When unchecked: playlist stays hidden
+     */
+    setPlaylistVisible(visible) {
+        this.showPlaylistWithControls = visible;
+
+        // Immediately show/hide playlist based on checkbox
+        if (visible) {
+            this.showPlaylist();
+        } else {
+            this.hidePlaylist();
+        }
+    },
+
+    /**
      * Show playlist sidebar
      */
     async showPlaylist() {
         const playlistSidebar = document.getElementById('liveModePlaylistSidebar');
         const playlistContent = document.getElementById('liveModePlaylistContent');
-        const toggleBtn = document.getElementById('liveModePlaylistToggle');
 
         if (!playlistSidebar || !playlistContent) return;
 
         // Slide sidebar in
         playlistSidebar.style.right = '0';
         this.sidebarVisible = true;
-
-        // Update button text
-        if (toggleBtn) {
-            toggleBtn.textContent = 'Hide Playlist';
-        }
 
         playlistContent.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Loading playlist...</p>';
 
@@ -1245,20 +1327,46 @@ const liveMode = {
     },
 
     /**
+     * Update playlist selection highlight without reloading data
+     */
+    updatePlaylistSelection() {
+        const playlistContent = document.getElementById('liveModePlaylistContent');
+        if (!playlistContent) return;
+
+        const items = playlistContent.querySelectorAll('[onclick^="liveMode.loadSongFromPlaylist"]');
+        items.forEach(item => {
+            // Extract song ID from onclick
+            const onclick = item.getAttribute('onclick');
+            const match = onclick.match(/loadSongFromPlaylist\('([^']+)'\)/);
+            if (!match) return;
+
+            const songId = match[1];
+            const isCurrent = songId === this.currentSongId;
+
+            if (isCurrent) {
+                item.style.background = 'rgba(139, 92, 246, 0.3)';
+                item.style.borderColor = 'rgba(139, 92, 246, 0.5)';
+                // Update number color
+                const numberSpan = item.querySelector('span');
+                if (numberSpan) numberSpan.style.color = '#8b5cf6';
+            } else {
+                item.style.background = 'var(--button-bg)';
+                item.style.borderColor = 'var(--border)';
+                const numberSpan = item.querySelector('span');
+                if (numberSpan) numberSpan.style.color = 'var(--text-muted)';
+            }
+        });
+    },
+
+    /**
      * Hide playlist sidebar
      */
     hidePlaylist() {
         const playlistSidebar = document.getElementById('liveModePlaylistSidebar');
-        const toggleBtn = document.getElementById('liveModePlaylistToggle');
 
         if (playlistSidebar) {
             playlistSidebar.style.right = '-300px';
             this.sidebarVisible = false;
-        }
-
-        // Update button text
-        if (toggleBtn) {
-            toggleBtn.textContent = 'Show Playlist';
         }
     },
 
@@ -1341,6 +1449,13 @@ const liveMode = {
                         this.transpose(savedPrefs.transposeSteps > 0 ? 1 : -1);
                     }
                 }
+
+                // Apply showBorders preference
+                if (typeof savedPrefs.showBorders === 'boolean') {
+                    this.showBorders = savedPrefs.showBorders;
+                    const bordersCheckbox = document.getElementById('liveModeBorders');
+                    if (bordersCheckbox) bordersCheckbox.checked = savedPrefs.showBorders;
+                }
             } else {
                 // Fallback to session manager local transpose for players (backwards compatibility)
                 if (!window.sessionManager.isLeader) {
@@ -1362,6 +1477,12 @@ const liveMode = {
                 if (this.currentFontSize) {
                     chartDisplay.style.fontSize = this.currentFontSize + 'pt';
                 }
+                // Apply borders preference
+                if (this.showBorders) {
+                    chartDisplay.classList.remove('hide-borders');
+                } else {
+                    chartDisplay.classList.add('hide-borders');
+                }
             }
             const zoomValue = document.getElementById('liveModeZoomValue');
             if (zoomValue) zoomValue.textContent = (this.currentFontSize || 14) + 'pt';
@@ -1371,8 +1492,13 @@ const liveMode = {
                 this.setColumnLayout(this.currentColumnLayout);
             }
 
-            // Hide playlist
-            this.hidePlaylist();
+            // Hide playlist (if auto-hide is enabled) or update selection highlight
+            if (this.autoHidePlaylist) {
+                this.hidePlaylist();
+            } else if (this.sidebarVisible) {
+                // Update selection highlight without reloading
+                this.updatePlaylistSelection();
+            }
 
             // If leader, broadcast the song
             if (window.sessionManager.isLeader) {
@@ -1459,6 +1585,13 @@ const liveMode = {
                     this.currentTransposeSteps = savedPrefs.transposeSteps;
                 }
             }
+
+            // Apply showBorders preference
+            if (typeof savedPrefs.showBorders === 'boolean') {
+                this.showBorders = savedPrefs.showBorders;
+                const bordersCheckbox = document.getElementById('liveModeBorders');
+                if (bordersCheckbox) bordersCheckbox.checked = savedPrefs.showBorders;
+            }
         }
 
         // Update display
@@ -1474,6 +1607,12 @@ const liveMode = {
             if (this.currentColumnLayout) {
                 chartDisplay.style.columnCount = this.currentColumnLayout;
                 chartDisplay.style.columnGap = '2em';
+            }
+            // Apply borders preference
+            if (this.showBorders) {
+                chartDisplay.classList.remove('hide-borders');
+            } else {
+                chartDisplay.classList.add('hide-borders');
             }
         }
         const zoomValue = document.getElementById('liveModeZoomValue');
@@ -1539,23 +1678,55 @@ const liveMode = {
         document.querySelectorAll('.song-section-block').forEach(block => {
             block.classList.remove('section-selected');
             block.classList.remove('section-selected-static');
+            block.style.removeProperty('border');
+            block.style.removeProperty('background');
+            block.style.removeProperty('box-shadow');
         });
 
         // Add highlight to selected section
         if (sectionId) {
             const selectedBlock = document.querySelector(`[data-section-id="${sectionId}"]`);
             if (selectedBlock) {
-                // Start with blinking animation
-                selectedBlock.classList.add('section-selected');
+                const chartDisplay = document.getElementById('liveModeChartDisplay');
+                const bordersHidden = chartDisplay && chartDisplay.classList.contains('hide-borders');
+
+                if (bordersHidden) {
+                    // Use inline styles for glow animation when borders are hidden
+                    let glowCount = 0;
+                    const glowInterval = setInterval(() => {
+                        if (glowCount % 2 === 0) {
+                            // Bright glow - very visible in both themes
+                            selectedBlock.style.border = '3px solid #a855f7';
+                            selectedBlock.style.background = 'rgba(168, 85, 247, 0.4)';
+                            selectedBlock.style.boxShadow = '0 0 25px rgba(168, 85, 247, 0.8), 0 0 50px rgba(168, 85, 247, 0.4)';
+                        } else {
+                            // Dim glow
+                            selectedBlock.style.border = '3px solid rgba(168, 85, 247, 0.6)';
+                            selectedBlock.style.background = 'rgba(168, 85, 247, 0.2)';
+                            selectedBlock.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.5)';
+                        }
+                        glowCount++;
+                        if (glowCount >= 4) {
+                            clearInterval(glowInterval);
+                            // Fade out
+                            selectedBlock.style.border = 'none';
+                            selectedBlock.style.background = 'transparent';
+                            selectedBlock.style.boxShadow = 'none';
+                        }
+                    }, 500);
+                } else {
+                    // Normal CSS animation when borders are visible
+                    selectedBlock.classList.add('section-selected');
+
+                    // After 2 seconds, switch to static border
+                    setTimeout(() => {
+                        selectedBlock.classList.remove('section-selected');
+                        selectedBlock.classList.add('section-selected-static');
+                    }, 2000);
+                }
 
                 // Scroll to section if needed
                 selectedBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                // After 2 seconds, switch to static border (no background animation)
-                setTimeout(() => {
-                    selectedBlock.classList.remove('section-selected');
-                    selectedBlock.classList.add('section-selected-static');
-                }, 2000);
             }
         }
     },

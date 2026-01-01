@@ -1232,6 +1232,38 @@ a {
         min-width: 100% !important;
         width: 100%;
     }
+
+    /* Layout Customization - Row 0: Display controls (2-column grid) */
+    .layout-controls-row {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px !important;
+        align-items: stretch !important;
+    }
+
+    .layout-controls-row > div,
+    .layout-controls-row > label {
+        width: 100%;
+        min-width: 0 !important;
+        justify-content: center;
+    }
+
+    /* Badges checkbox - full width */
+    .layout-controls-row > label:last-child {
+        grid-column: 1 / -1;
+    }
+
+    /* Layout Customization - Row 1: Sliders (stack vertically) */
+    .layout-sliders-row {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .layout-sliders-row > label {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+        width: 100%;
+    }
 }
 
 .preview-container {
@@ -1646,7 +1678,7 @@ a {
 /* RTL: Align badges to the right to match first column */
 [dir="rtl"] .section-badges-row,
 .live-preview[dir="rtl"] .section-badges-row {
-    justify-content: flex-end;
+    justify-content: flex-start;
 }
 
 /* Reduce space after badges row */
@@ -1658,6 +1690,14 @@ a {
 .hide-badges .section-badges-row {
     display: none !important;
 }
+
+/* Hide borders when checkbox is unchecked */
+.hide-borders .song-section-block,
+#liveModeChartDisplay.hide-borders .song-section-block {
+    border: none !important;
+    background-color: transparent !important;
+}
+
 
 /* Styled prompt modal - higher z-index to appear above other modals */
 #styledPromptModal {
