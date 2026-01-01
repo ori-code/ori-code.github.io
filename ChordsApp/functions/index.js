@@ -460,3 +460,442 @@ exports.incrementAnalysis = functions.https.onRequest((req, res) => {
         }
     });
 });
+
+// ============= ADMIN ENDPOINTS =============
+
+/**
+ * Verify admin key from request
+ */
+function verifyAdminKey(key) {
+    return key === process.env.ADMIN_KEY;
+}
+
+/**
+ * listAllUsers - Get all users with stats (Admin Only)
+ * GET request with ?adminKey=xxx
+ */
+exports.listAllUsers = functions
+    .runWith({ secrets: ['ADMIN_KEY'] })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'GET') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { adminKey } = req.query;
+            if (!verifyAdminKey(adminKey)) {
+                return res.status(403).json({ error: 'Forbidden - Invalid admin key' });
+            }
+
+            const usersSnapshot = await db.ref('users').once('value');
+            const usersData = usersSnapshot.val();
+
+            if (!usersData) {
+                return res.json({ users: [] });
+            }
+
+            const users = await Promise.all(Object.keys(usersData).map(async (userId) => {
+                const userData = usersData[userId];
+                let email = 'N/A';
+                let displayName = 'N/A';
+                try {
+                    const userRecord = await admin.auth().getUser(userId);
+                    email = userRecord.email || 'N/A';
+                    displayName = userRecord.displayName || email.split('@')[0] || 'N/A';
+                } catch (error) {
+                    console.error(`Error fetching auth data for user ${userId}:`, error.message);
+                }
+
+                return {
+                    userId,
+                    email,
+                    displayName,
+                    subscription: userData.subscription || { tier: 'FREE', status: 'active' },
+                    usage: userData.usage || { analysesThisMonth: 0, monthStartDate: new Date().toISOString() },
+                    bonusAnalyses: userData.bonusAnalyses || 0,
+                    songCount: userData.songs ? Object.keys(userData.songs).length : 0,
+                    maxSessions: userData.maxSessions || 1
+                };
+            }));
+
+            return res.status(200).json({ users });
+
+        } catch (error) {
+            console.error('Error fetching all users:', error);
+            return res.status(500).json({ error: 'Server error' });
+        }
+    });
+});
+
+/**
+ * giveBonusAnalyses - Grant bonus analyses to a user (Admin Only)
+ * POST request with { userId, count, adminKey }
+ */
+exports.giveBonusAnalyses = functions
+    .runWith({ secrets: ['ADMIN_KEY'] })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { userId, count, adminKey } = req.body;
+            if (!verifyAdminKey(adminKey)) {
+                return res.status(403).json({ error: 'Forbidden - Invalid admin key' });
+            }
+
+            if (!userId || !count || count <= 0) {
+                return res.status(400).json({ error: 'Invalid request - userId and positive count required' });
+            }
+
+            const bonusRef = db.ref(`users/${userId}/bonusAnalyses`);
+            const bonusSnap = await bonusRef.once('value');
+            const currentBonus = bonusSnap.val() || 0;
+
+            await bonusRef.set(currentBonus + count);
+
+            return res.status(200).json({
+                success: true,
+                userId,
+                bonusAdded: count,
+                totalBonus: currentBonus + count
+            });
+
+        } catch (error) {
+            console.error('Error giving bonus analyses:', error);
+            return res.status(500).json({ error: 'Server error' });
+        }
+    });
+});
+
+/**
+ * upgradeUser - Change user subscription tier (Admin Only)
+ * POST request with { userId, tier, adminKey }
+ */
+exports.upgradeUser = functions
+    .runWith({ secrets: ['ADMIN_KEY'] })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { userId, tier, adminKey } = req.body;
+            if (!verifyAdminKey(adminKey)) {
+                return res.status(403).json({ error: 'Forbidden - Invalid admin key' });
+            }
+
+            const validTiers = ['FREE', 'BASIC', 'PRO'];
+            if (!validTiers.includes(tier)) {
+                return res.status(400).json({ error: 'Invalid tier - must be FREE, BASIC, or PRO' });
+            }
+
+            if (!userId) {
+                return res.status(400).json({ error: 'Invalid request - userId required' });
+            }
+
+            const subRef = db.ref(`users/${userId}/subscription`);
+            const subSnap = await subRef.once('value');
+            const currentSub = subSnap.val() || {};
+
+            const updatedSub = {
+                ...currentSub,
+                tier: tier,
+                status: 'active',
+                startDate: currentSub.startDate || new Date().toISOString(),
+                paypalSubscriptionId: tier === 'FREE' ? null : (currentSub.paypalSubscriptionId || null),
+                endDate: null
+            };
+
+            await subRef.set(updatedSub);
+
+            return res.status(200).json({
+                success: true,
+                userId,
+                previousTier: currentSub.tier || 'FREE',
+                newTier: tier,
+                subscription: updatedSub
+            });
+
+        } catch (error) {
+            console.error('Error upgrading user:', error);
+            return res.status(500).json({ error: 'Server error' });
+        }
+    });
+});
+
+/**
+ * removeUser - Delete user from auth and database (Admin Only)
+ * POST request with { userId, adminKey }
+ */
+exports.removeUser = functions
+    .runWith({ secrets: ['ADMIN_KEY'] })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { userId, adminKey } = req.body;
+            if (!verifyAdminKey(adminKey)) {
+                return res.status(403).json({ error: 'Invalid admin key' });
+            }
+
+            if (!userId) {
+                return res.status(400).json({ error: 'User ID is required' });
+            }
+
+            try {
+                await admin.auth().deleteUser(userId);
+                console.log(`Deleted user ${userId} from Firebase Auth`);
+            } catch (authError) {
+                console.error(`Error deleting user from Auth:`, authError.message);
+            }
+
+            try {
+                await db.ref(`users/${userId}`).remove();
+                console.log(`Deleted user ${userId} data from Database`);
+            } catch (dbError) {
+                console.error(`Error deleting user from Database:`, dbError.message);
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: `User ${userId} has been removed`,
+                deletedFrom: { authentication: true, database: true }
+            });
+
+        } catch (error) {
+            console.error('Error removing user:', error);
+            return res.status(500).json({ error: 'Server error while removing user' });
+        }
+    });
+});
+
+/**
+ * resetPassword - Reset user password (Admin Only)
+ * POST request with { userId, newPassword, adminKey }
+ */
+exports.resetPassword = functions
+    .runWith({ secrets: ['ADMIN_KEY'] })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { userId, newPassword, adminKey } = req.body;
+            if (!verifyAdminKey(adminKey)) {
+                return res.status(403).json({ error: 'Invalid admin key' });
+            }
+
+            if (!userId) {
+                return res.status(400).json({ error: 'User ID is required' });
+            }
+
+            if (!newPassword || newPassword.length < 6) {
+                return res.status(400).json({ error: 'Password must be at least 6 characters' });
+            }
+
+            await admin.auth().updateUser(userId, { password: newPassword });
+            console.log(`Password reset for user ${userId}`);
+
+            return res.status(200).json({
+                success: true,
+                message: `Password has been reset for user ${userId}`
+            });
+
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            return res.status(500).json({ error: 'Failed to reset password: ' + error.message });
+        }
+    });
+});
+
+/**
+ * setMaxDevices - Set max devices for a user (Admin Only)
+ * POST request with { userId, maxDevices, adminKey }
+ */
+exports.setMaxDevices = functions
+    .runWith({ secrets: ['ADMIN_KEY'] })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { userId, maxDevices, adminKey } = req.body;
+            if (!verifyAdminKey(adminKey)) {
+                return res.status(403).json({ error: 'Invalid admin key' });
+            }
+
+            if (!userId) {
+                return res.status(400).json({ error: 'User ID is required' });
+            }
+
+            const devices = parseInt(maxDevices);
+            if (!devices || devices < 1 || devices > 10) {
+                return res.status(400).json({ error: 'Max devices must be between 1 and 10' });
+            }
+
+            await db.ref(`users/${userId}/maxSessions`).set(devices);
+            console.log(`Max devices set to ${devices} for user ${userId}`);
+
+            return res.status(200).json({
+                success: true,
+                message: `Max devices set to ${devices}`,
+                maxDevices: devices
+            });
+
+        } catch (error) {
+            console.error('Error setting max devices:', error);
+            return res.status(500).json({ error: 'Failed to set max devices: ' + error.message });
+        }
+    });
+});
+
+/**
+ * orphanUsers - Find users in Auth but not in Database (Admin Only)
+ * GET request with ?adminKey=xxx
+ */
+exports.orphanUsers = functions
+    .runWith({ secrets: ['ADMIN_KEY'] })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'GET') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { adminKey } = req.query;
+            if (!verifyAdminKey(adminKey)) {
+                return res.status(403).json({ error: 'Invalid admin key' });
+            }
+
+            const listUsersResult = await admin.auth().listUsers(1000);
+            const authUsers = listUsersResult.users;
+
+            const dbSnapshot = await db.ref('users').once('value');
+            const dbUsers = dbSnapshot.val() || {};
+            const dbUserIds = new Set(Object.keys(dbUsers));
+
+            const orphanUsersList = authUsers
+                .filter(user => !dbUserIds.has(user.uid))
+                .map(user => ({
+                    uid: user.uid,
+                    email: user.email || 'No email',
+                    displayName: user.displayName || 'No name',
+                    createdAt: user.metadata.creationTime,
+                    lastSignIn: user.metadata.lastSignInTime
+                }));
+
+            console.log(`Found ${orphanUsersList.length} orphan users out of ${authUsers.length} total auth users`);
+
+            return res.status(200).json({
+                success: true,
+                totalAuthUsers: authUsers.length,
+                totalDbUsers: dbUserIds.size,
+                orphanCount: orphanUsersList.length,
+                orphanUsers: orphanUsersList
+            });
+
+        } catch (error) {
+            console.error('Error finding orphan users:', error);
+            return res.status(500).json({ error: 'Failed to find orphan users: ' + error.message });
+        }
+    });
+});
+
+/**
+ * deleteOrphanUser - Delete orphan user from Auth (Admin Only)
+ * POST request with { uid, adminKey }
+ */
+exports.deleteOrphanUser = functions
+    .runWith({ secrets: ['ADMIN_KEY'] })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { uid, adminKey } = req.body;
+            if (!verifyAdminKey(adminKey)) {
+                return res.status(403).json({ error: 'Invalid admin key' });
+            }
+
+            if (!uid) {
+                return res.status(400).json({ error: 'User UID is required' });
+            }
+
+            let userEmail = 'unknown';
+            try {
+                const userRecord = await admin.auth().getUser(uid);
+                userEmail = userRecord.email || 'no-email';
+            } catch (e) {
+                // User might not exist
+            }
+
+            await admin.auth().deleteUser(uid);
+            console.log(`Deleted orphan user ${uid} (${userEmail}) from Firebase Auth`);
+
+            return res.status(200).json({
+                success: true,
+                message: `Orphan user ${userEmail} has been deleted from Firebase Auth`,
+                uid
+            });
+
+        } catch (error) {
+            console.error('Error deleting orphan user:', error);
+            return res.status(500).json({ error: 'Failed to delete orphan user: ' + error.message });
+        }
+    });
+});
+
+/**
+ * userStats - Get stats for a specific user (Admin Only)
+ * GET request with ?userId=xxx&adminKey=xxx
+ */
+exports.userStats = functions
+    .runWith({ secrets: ['ADMIN_KEY'] })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'GET') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { userId, adminKey } = req.query;
+            if (!verifyAdminKey(adminKey)) {
+                return res.status(403).json({ error: 'Forbidden - Invalid admin key' });
+            }
+
+            if (!userId) {
+                return res.status(400).json({ error: 'userId is required' });
+            }
+
+            const [subscriptionSnap, usageSnap, bonusSnap] = await Promise.all([
+                db.ref(`users/${userId}/subscription`).once('value'),
+                db.ref(`users/${userId}/usage`).once('value'),
+                db.ref(`users/${userId}/bonusAnalyses`).once('value')
+            ]);
+
+            return res.status(200).json({
+                userId,
+                subscription: subscriptionSnap.val() || { tier: 'FREE' },
+                usage: usageSnap.val() || { analysesThisMonth: 0 },
+                bonusAnalyses: bonusSnap.val() || 0
+            });
+
+        } catch (error) {
+            console.error('Error fetching user stats:', error);
+            return res.status(500).json({ error: 'Server error' });
+        }
+    });
+});
