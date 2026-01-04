@@ -112,14 +112,14 @@ const midiController = {
             console.log(`MIDI CC#${ccNumber} = ${value} (ch ${channel + 1})`);
 
             // If in learn mode, capture this CC
-            if (this.learningAction && value > 0) {
+            if (this.learningAction && value > 64) {
                 this.setMapping(this.learningAction, ccNumber);
                 this.learningAction = null;
                 return;
             }
 
-            // Trigger action if value > 0 (pedal pressed / button on)
-            if (value > 0) {
+            // Trigger action if value > 64 (pedal pressed / button on)
+            if (value > 64) {
                 this.triggerAction(ccNumber);
                 this.lastMidiTime = event.timeStamp;
             }
