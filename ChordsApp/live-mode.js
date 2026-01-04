@@ -290,6 +290,9 @@ const liveMode = {
             }
         }
 
+        // Initialize MIDI controller for hands-free control
+        this.initMIDI();
+
         console.log('📺 Entered Live Mode:', this.currentSongName);
     },
 
@@ -541,6 +544,7 @@ const liveMode = {
 
                 // Apply makeChordsBold first (handles Nashville numbers, lyrics mode, etc.)
                 let processedContent = this.currentSongContent;
+
                 if (window.makeChordsBold) {
                     processedContent = window.makeChordsBold(processedContent);
                 }
@@ -1761,6 +1765,116 @@ const liveMode = {
         this.updateLayoutButtons();
 
         console.log(`✅ Applied Live Mode column layout: ${columns} column(s)`);
+    },
+
+    // ============== MIDI Controller Integration ==============
+
+    /**
+     * Scroll the chart display up or down
+     * @param {number} direction - 1 for down, -1 for up
+     */
+    scrollChart(direction) {
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        const content = document.getElementById('liveModeContent');
+
+        // In Full Overview mode, scroll the content container
+        const scrollTarget = this.fullOverviewMode ? content : chartDisplay;
+
+        if (scrollTarget) {
+            const scrollAmount = scrollTarget.clientHeight * 0.8; // 80% of visible height
+            scrollTarget.scrollBy({
+                top: direction * scrollAmount,
+                behavior: 'smooth'
+            });
+            console.log(`📜 MIDI scroll ${direction > 0 ? 'down' : 'up'}`);
+        }
+    },
+
+    /**
+     * Navigate to the next song in the playlist
+     */
+    async nextSong() {
+        if (!window.sessionManager || !window.sessionManager.activeSession) {
+            console.log('📻 Not in a session, cannot navigate songs');
+            return;
+        }
+
+        try {
+            const playlist = await window.sessionManager.getPlaylist();
+            if (!playlist || playlist.length === 0) return;
+
+            // Find current song index
+            const currentIndex = playlist.findIndex(song => song.id === this.currentSongId);
+
+            // Get next song (wrap around to first if at end)
+            const nextIndex = currentIndex < playlist.length - 1 ? currentIndex + 1 : 0;
+            const nextSong = playlist[nextIndex];
+
+            if (nextSong) {
+                await this.loadSongFromPlaylist(nextSong.id);
+                console.log(`⏭️ MIDI: Next song - ${nextSong.name}`);
+            }
+        } catch (error) {
+            console.error('Error navigating to next song:', error);
+        }
+    },
+
+    /**
+     * Navigate to the previous song in the playlist
+     */
+    async previousSong() {
+        if (!window.sessionManager || !window.sessionManager.activeSession) {
+            console.log('📻 Not in a session, cannot navigate songs');
+            return;
+        }
+
+        try {
+            const playlist = await window.sessionManager.getPlaylist();
+            if (!playlist || playlist.length === 0) return;
+
+            // Find current song index
+            const currentIndex = playlist.findIndex(song => song.id === this.currentSongId);
+
+            // Get previous song (wrap around to last if at beginning)
+            const prevIndex = currentIndex > 0 ? currentIndex - 1 : playlist.length - 1;
+            const prevSong = playlist[prevIndex];
+
+            if (prevSong) {
+                await this.loadSongFromPlaylist(prevSong.id);
+                console.log(`⏮️ MIDI: Previous song - ${prevSong.name}`);
+            }
+        } catch (error) {
+            console.error('Error navigating to previous song:', error);
+        }
+    },
+
+    /**
+     * Initialize MIDI controller when entering Live Mode
+     */
+    async initMIDI() {
+        if (!window.midiController) {
+            console.log('🎹 MIDI controller module not loaded');
+            return false;
+        }
+
+        // Initialize MIDI access
+        const success = await midiController.init();
+
+        if (success) {
+            // Set up action handlers
+            midiController.actions.scrollDown = () => this.scrollChart(1);
+            midiController.actions.scrollUp = () => this.scrollChart(-1);
+            midiController.actions.nextSong = () => this.nextSong();
+            midiController.actions.prevSong = () => this.previousSong();
+
+            // Load saved mappings
+            await midiController.loadMappings();
+
+            console.log('🎹 MIDI controller initialized for Live Mode');
+            return true;
+        }
+
+        return false;
     }
 };
 

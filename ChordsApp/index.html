@@ -1731,6 +1731,10 @@
                 <button id="liveModeFullOverview" onclick="liveMode.toggleFullOverview()" style="padding: 7px 12px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease;">
                     📄 Full Overview
                 </button>
+                <!-- MIDI Controller Button -->
+                <button id="liveModeMidiBtn" onclick="openMidiSettings()" style="padding: 7px 12px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease;" title="MIDI Controller Settings">
+                    🎹 <span id="midiStatus" style="display: none; color: #4ade80; font-size: 11px;">●</span>
+                </button>
             </div>
 
             <!-- Session Info & Playlist Button (if in session) -->
@@ -1748,6 +1752,66 @@
                 </div>
                 <div id="liveModeSessionInfo" style="margin-top: 8px; font-size: 12px; color: var(--text-muted);"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- MIDI Settings Modal -->
+    <div id="midiSettingsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 10010; justify-content: center; align-items: center;">
+        <div style="background: var(--surface); border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; position: relative; border: 1px solid var(--border);">
+            <button onclick="closeMidiSettings()" style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+
+            <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px;">🎹 MIDI Controller</h3>
+            <p id="midiDeviceStatus" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Checking devices...</p>
+
+            <!-- MIDI Mappings -->
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Scroll Down -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 8px;">
+                    <span style="color: var(--text); font-size: 13px;">Scroll Down</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="midiMapping-scrollDown" style="color: #4ade80; font-size: 12px; font-family: monospace;">CC#64</span>
+                        <button onclick="midiController.learn('scrollDown')" style="padding: 4px 10px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Learn</button>
+                    </div>
+                </div>
+
+                <!-- Scroll Up -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 8px;">
+                    <span style="color: var(--text); font-size: 13px;">Scroll Up</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="midiMapping-scrollUp" style="color: #4ade80; font-size: 12px; font-family: monospace;">CC#65</span>
+                        <button onclick="midiController.learn('scrollUp')" style="padding: 4px 10px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Learn</button>
+                    </div>
+                </div>
+
+                <!-- Next Song -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 8px;">
+                    <span style="color: var(--text); font-size: 13px;">Next Song</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="midiMapping-nextSong" style="color: #4ade80; font-size: 12px; font-family: monospace;">CC#66</span>
+                        <button onclick="midiController.learn('nextSong')" style="padding: 4px 10px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Learn</button>
+                    </div>
+                </div>
+
+                <!-- Previous Song -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 8px;">
+                    <span style="color: var(--text); font-size: 13px;">Previous Song</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="midiMapping-prevSong" style="color: #4ade80; font-size: 12px; font-family: monospace;">CC#67</span>
+                        <button onclick="midiController.learn('prevSong')" style="padding: 4px 10px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Learn</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="midiController.saveMappings(); closeMidiSettings();" style="flex: 1; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;">Save</button>
+                <button onclick="closeMidiSettings()" style="flex: 1; padding: 10px; background: var(--button-bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 13px;">Close</button>
+            </div>
+
+            <!-- Browser Support Note -->
+            <p style="color: var(--text-muted); font-size: 11px; margin-top: 16px; text-align: center;">
+                Works in Chrome, Edge, Firefox. Not supported in Safari.
+            </p>
         </div>
     </div>
 
@@ -1772,6 +1836,37 @@
 
     <!-- Live Mode (full-screen performance view) -->
     <script src="live-mode.js"></script>
+
+    <!-- MIDI Controller (hands-free control for Live Mode) -->
+    <script src="midi-controller.js"></script>
+    <script>
+        // MIDI Settings Modal functions
+        function openMidiSettings() {
+            const modal = document.getElementById('midiSettingsModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                // Initialize MIDI if not already done
+                if (window.midiController && !midiController.midiAccess) {
+                    midiController.init().then(() => {
+                        midiController.refreshMappingDisplays();
+                    });
+                } else if (window.midiController) {
+                    midiController.refreshMappingDisplays();
+                }
+            }
+        }
+
+        function closeMidiSettings() {
+            const modal = document.getElementById('midiSettingsModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // Cancel learn mode if active
+                if (window.midiController) {
+                    midiController.cancelLearn();
+                }
+            }
+        }
+    </script>
 
     <!-- Pad Player -->
     <script src="pad-player.js"></script>
