@@ -564,6 +564,38 @@ const liveMode = {
                 });
                 chartDisplay.innerHTML = formattedHTML;
 
+                // Parse and render arrangement badges separately for Live Mode
+                // (formatForPreview only adds badges inside .song-header which requires metadata)
+                if (!chartDisplay.querySelector('.section-badges-row')) {
+                    const inlinePattern = /\((PC|CD|[VBICOT])(\d*)\)(\d+)?/gi;
+                    const cleanContent = this.currentSongContent.replace(/<[^>]*>/g, '');
+                    const inlineMatches = [...cleanContent.matchAll(inlinePattern)];
+
+                    if (inlineMatches.length > 0) {
+                        const badges = inlineMatches.map(match => {
+                            const sectionType = match[1].toUpperCase();
+                            const sectionNum = match[2] || '';
+                            const repeatCount = match[3] ? parseInt(match[3]) : 1;
+                            const label = sectionNum ? `${sectionType}${sectionNum}` : sectionType;
+                            const repeatHTML = repeatCount > 1 ? `<sup class="repeat-count">${repeatCount}</sup>` : '';
+                            const colorClass =
+                                sectionType === 'I' ? 'badge-intro' :
+                                sectionType === 'V' ? 'badge-verse' :
+                                sectionType === 'C' ? 'badge-chorus' :
+                                sectionType === 'B' ? 'badge-bridge' :
+                                sectionType === 'PC' ? 'badge-prechorus' :
+                                'badge-other';
+                            return `<span class="section-badge ${colorClass}">${label}${repeatHTML}</span>`;
+                        }).join('');
+
+                        const badgesRow = document.createElement('div');
+                        badgesRow.className = 'section-badges-row';
+                        badgesRow.innerHTML = badges;
+                        chartDisplay.insertBefore(badgesRow, chartDisplay.firstChild);
+                        console.log('🏷️ Live Mode: Added arrangement badges');
+                    }
+                }
+
                 // Add click handlers for section blocks (leader only)
                 if (window.sessionManager && window.sessionManager.isLeader) {
                     this.attachSectionClickHandlers();
