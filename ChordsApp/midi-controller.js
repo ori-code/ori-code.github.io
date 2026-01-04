@@ -10,10 +10,10 @@ const midiController = {
 
     // Default CC mappings (can be customized by user)
     mappingConfig: {
-        scrollDown: 64,  // CC#64 (Sustain pedal)
-        scrollUp: 65,    // CC#65
-        nextSong: 66,    // CC#66
-        prevSong: 67     // CC#67
+        scrollDown: 30,  // CC#30
+        scrollUp: 31,    // CC#31
+        nextSong: 32,    // CC#32
+        prevSong: 33     // CC#33
     },
 
     // Action handlers (set by live-mode.js)
@@ -112,14 +112,14 @@ const midiController = {
             console.log(`MIDI CC#${ccNumber} = ${value} (ch ${channel + 1})`);
 
             // If in learn mode, capture this CC
-            if (this.learningAction && value > 64) {
+            if (this.learningAction && value > 0) {
                 this.setMapping(this.learningAction, ccNumber);
                 this.learningAction = null;
                 return;
             }
 
-            // Trigger action if value > 64 (pedal pressed / button on)
-            if (value > 64) {
+            // Trigger action if value > 0 (pedal pressed / button on)
+            if (value > 0) {
                 this.triggerAction(ccNumber);
                 this.lastMidiTime = event.timeStamp;
             }
