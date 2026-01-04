@@ -229,8 +229,8 @@ const midiController = {
      */
     getActionLabel(action) {
         const labels = {
-            scrollDown: 'Scroll Down',
-            scrollUp: 'Scroll Up',
+            scrollDown: 'Next Section',
+            scrollUp: 'Previous Section',
             nextSong: 'Next Song',
             prevSong: 'Previous Song'
         };

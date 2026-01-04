@@ -1424,6 +1424,7 @@ const liveMode = {
             this.currentKey = window.normalizeKey ? window.normalizeKey(songData.key || songData.originalKey) : (songData.key || songData.originalKey || 'C Major');
             this.currentSongId = songId;
             this.currentTransposeSteps = 0;
+            this.resetSectionIndex(); // Reset MIDI section navigation
 
             // Build display name from structured fields
             const title = songData.title || songData.name || 'Untitled';
@@ -1769,25 +1770,50 @@ const liveMode = {
 
     // ============== MIDI Controller Integration ==============
 
+    // Track current section index for MIDI navigation
+    currentSectionIndex: -1,
+
     /**
-     * Scroll the chart display up or down
-     * @param {number} direction - 1 for down, -1 for up
+     * Navigate between song sections (VERSE, CHORUS, etc.)
+     * @param {number} direction - 1 for next section, -1 for previous section
      */
-    scrollChart(direction) {
-        const chartDisplay = document.getElementById('liveModeChartDisplay');
-        const content = document.getElementById('liveModeContent');
+    navigateSection(direction) {
+        const sectionBlocks = document.querySelectorAll('.song-section-block');
 
-        // In Full Overview mode, scroll the content container
-        const scrollTarget = this.fullOverviewMode ? content : chartDisplay;
-
-        if (scrollTarget) {
-            const scrollAmount = scrollTarget.clientHeight * 0.8; // 80% of visible height
-            scrollTarget.scrollBy({
-                top: direction * scrollAmount,
-                behavior: 'smooth'
-            });
-            console.log(`📜 MIDI scroll ${direction > 0 ? 'down' : 'up'}`);
+        if (sectionBlocks.length === 0) {
+            console.log('🎵 No sections found in current song');
+            return;
         }
+
+        // Calculate new index
+        let newIndex = this.currentSectionIndex + direction;
+
+        // Wrap around
+        if (newIndex < 0) {
+            newIndex = sectionBlocks.length - 1;
+        } else if (newIndex >= sectionBlocks.length) {
+            newIndex = 0;
+        }
+
+        this.currentSectionIndex = newIndex;
+        const targetSection = sectionBlocks[newIndex];
+
+        if (targetSection) {
+            const sectionId = targetSection.dataset.sectionId;
+            const sectionName = targetSection.dataset.sectionName || 'Section';
+
+            // Use existing selectSection for highlighting and scrolling
+            this.selectSection(sectionId, sectionName);
+
+            console.log(`🎵 MIDI: ${direction > 0 ? 'Next' : 'Previous'} section - ${sectionName} (${newIndex + 1}/${sectionBlocks.length})`);
+        }
+    },
+
+    /**
+     * Reset section index when loading a new song
+     */
+    resetSectionIndex() {
+        this.currentSectionIndex = -1;
     },
 
     /**
@@ -1861,9 +1887,9 @@ const liveMode = {
         const success = await midiController.init();
 
         if (success) {
-            // Set up action handlers
-            midiController.actions.scrollDown = () => this.scrollChart(1);
-            midiController.actions.scrollUp = () => this.scrollChart(-1);
+            // Set up action handlers - CC30/31 navigate sections, CC32/33 navigate songs
+            midiController.actions.scrollDown = () => this.navigateSection(1);   // Next section
+            midiController.actions.scrollUp = () => this.navigateSection(-1);    // Previous section
             midiController.actions.nextSong = () => this.nextSong();
             midiController.actions.prevSong = () => this.previousSong();
 
