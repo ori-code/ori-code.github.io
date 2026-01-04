@@ -22,6 +22,10 @@
           ".read": "$uid === auth.uid",
           ".write": "$uid === auth.uid"
         },
+        "midiMappings": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
         "bonusAnalyses": {
           ".read": "$uid === auth.uid",
           ".write": false
