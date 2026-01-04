@@ -833,6 +833,28 @@
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
 
+                // Sync to active session playlist if song is there
+                if (window.sessionManager && window.sessionManager.activeSession) {
+                    await window.sessionManager.updateSongInPlaylist(songToUpdate.id, {
+                        title: title,
+                        author: author,
+                        content: content,
+                        key: originalKey,
+                        originalKey: originalKey,
+                        bpm: bpmValue,
+                        timeSignature: timeSignature,
+                        baselineChart: baselineChart
+                    });
+                }
+
+                // Refresh Live Mode if currently viewing this song
+                if (window.liveMode && window.liveMode.currentSongId === songToUpdate.id) {
+                    window.liveMode.currentSongContent = content;
+                    window.liveMode.currentKey = originalKey;
+                    window.liveMode.updateDisplay();
+                    console.log('🔄 Refreshed Live Mode with updated song content');
+                }
+
                 showMessage('Success', `"${songToUpdate.name}" updated successfully!`, 'success');
             } catch (error) {
                 console.error('Error updating song:', error);

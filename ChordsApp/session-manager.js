@@ -416,7 +416,37 @@ class SessionManager {
 
         await this.database.ref(`sessions/${this.activeSession}/playlist/${songId}`).remove();
         console.log(`➖ Removed from playlist: ${songId}`);
-    }
+    },
+
+    /**
+     * Update a song in the active session's playlist
+     * Called when user edits a song from their library
+     */
+    async updateSongInPlaylist(songId, updatedData) {
+        if (!this.activeSession) return false;
+
+        const playlistSongRef = this.database.ref(`sessions/${this.activeSession}/playlist/${songId}`);
+
+        const snapshot = await playlistSongRef.once('value');
+        if (snapshot.exists()) {
+            // Song exists in playlist, update it
+            await playlistSongRef.update({
+                name: updatedData.title || updatedData.name,
+                title: updatedData.title,
+                author: updatedData.author,
+                content: updatedData.content,
+                key: updatedData.key || updatedData.originalKey,
+                originalKey: updatedData.originalKey,
+                bpm: updatedData.bpm,
+                timeSignature: updatedData.timeSignature,
+                baselineChart: updatedData.baselineChart,
+                updatedAt: new Date().toISOString()
+            });
+            console.log(`🔄 Updated song ${songId} in playlist`);
+            return true;
+        }
+        return false;
+    },
 
     /**
      * Get session participants
