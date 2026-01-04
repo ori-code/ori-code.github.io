@@ -2648,8 +2648,58 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Detect if content is RTL (Hebrew, Arabic, etc.)
         const isRTL = /[\u0590-\u05FF\u0600-\u06FF]/.test(content);
 
+        // Check if content has inline [chord] bracket notation
+        const hasInlineBrackets = /\[[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\]/.test(content);
+
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
+
+            // Handle inline [chord] bracket notation (e.g., [Am]word [G]word2)
+            if (hasInlineBrackets && /\[[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\]/.test(line)) {
+                const bracketPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g;
+
+                if (mode === 'lyrics') {
+                    // Lyrics mode: remove chord brackets entirely
+                    line = line.replace(bracketPattern, '');
+                    result.push(line);
+                } else if (isRTL) {
+                    // RTL content: extract chords and put on line above lyrics
+                    const chords = [];
+                    let match;
+                    const tempPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g;
+                    while ((match = tempPattern.exec(line)) !== null) {
+                        const chord = match[1];
+                        const number = chordToNashville(chord, key);
+                        if (mode === 'both' && number) {
+                            chords.push(`<b>${number} | ${chord}</b>`);
+                        } else if (mode === 'numbers' && number) {
+                            chords.push(`<b>${number}</b>`);
+                        } else {
+                            chords.push(`<b>${chord}</b>`);
+                        }
+                    }
+                    // Create chord line above lyrics
+                    if (chords.length > 0) {
+                        result.push(chords.join('    ')); // Chord line
+                    }
+                    // Lyrics line without brackets
+                    result.push(line.replace(bracketPattern, ''));
+                } else {
+                    // LTR content: style chord brackets inline
+                    line = line.replace(bracketPattern, (_, chord) => {
+                        const number = chordToNashville(chord, key);
+                        if (mode === 'both' && number) {
+                            return `<span class="inline-chord"><b>${chord}|${number}</b></span>`;
+                        } else if (mode === 'numbers' && number) {
+                            return `<span class="inline-chord"><b>${number}</b></span>`;
+                        } else {
+                            return `<span class="inline-chord"><b>${chord}</b></span>`;
+                        }
+                    });
+                    result.push(line);
+                }
+                continue;
+            }
 
             // Skip metadata lines (combined format like "Title | Key: X | BPM: Y" or standalone)
             if (/^(Key|Title|Artist|BPM|Tempo|Capo):/i.test(line) || /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line)) {
@@ -2707,22 +2757,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // For RTL content, be more careful about what is a chord vs lyrics
             if (isRTL) {
-                // Check if this line is a chord line or a lyrics line
-                // Chord lines: contain multiple chords (2+) OR only chords with spaces
-                // Lyrics lines: contain Hebrew characters + text
-                const hasHebrewChars = /[\u0590-\u05FF]/.test(line);
-                const chordMatches = line.match(/\b[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\b/g);
-                const chordCount = chordMatches ? chordMatches.length : 0;
+                // Check if this line is a chord-only line (no Hebrew/Arabic characters)
+                const hasHebrewChars = /[\u0590-\u05FF\u0600-\u06FF]/.test(line);
 
-                // Only process chords if:
-                // 1. Line has no Hebrew characters (English chord line), OR
-                // 2. Line has multiple chords (2+), indicating it's a chord line not lyrics
-                const shouldProcessChords = !hasHebrewChars || chordCount >= 2;
-
-                if (shouldProcessChords) {
-                    // Only match chords that are surrounded by spaces or at start/end of line
+                // Only process chords if line has NO Hebrew/Arabic characters
+                // This means it's a pure chord line above the lyrics
+                if (!hasHebrewChars) {
+                    // Process chord-only lines for RTL content
                     const chordPattern = /(^|\s)([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(\s|$)/g;
-                    line = line.replace(chordPattern, (match, before, chord, after) => {
+                    line = line.replace(chordPattern, (_, before, chord, after) => {
                         const number = chordToNashville(chord, key);
                         if (mode === 'both' && number) {
                             return `${before}<b>${number} | ${chord}</b>${after}`;
@@ -2733,7 +2776,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         }
                     });
                 }
-                // If it's a lyrics line with Hebrew and isolated letters, leave it as-is
+                // If line has Hebrew chars, leave it completely as-is (don't try to parse chords from mixed text)
             } else {
                 // For English text, use normal pattern
                 const chordPattern = /\b([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;

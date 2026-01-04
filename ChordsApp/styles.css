@@ -1698,6 +1698,27 @@ a {
     background-color: transparent !important;
 }
 
+/* Inline chord styling for [chord] bracket notation */
+.inline-chord {
+    display: inline;
+    color: var(--accent);
+    font-weight: 700;
+    margin: 0 2px;
+    vertical-align: baseline;
+}
+
+.inline-chord b {
+    background: rgba(139, 92, 246, 0.15);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+/* RTL specific: keep inline chords readable */
+[dir="rtl"] .inline-chord {
+    direction: ltr;
+    unicode-bidi: embed;
+}
 
 /* Styled prompt modal - higher z-index to appear above other modals */
 #styledPromptModal {
