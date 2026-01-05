@@ -1362,15 +1362,21 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return source;
         }
 
-        console.log('📝 Source first 300 chars:', source.substring(0, 300));
+        // DEFENSIVE: Strip any HTML tags that might have gotten into the source
+        // This prevents issues with already-formatted content being transposed
+        let cleanSource = source.replace(/<[^>]*>/g, '');
+        // Also clean up any Nashville number artifacts like "1 | " or "| 1" that might be leftover
+        cleanSource = cleanSource.replace(/\b\d+\s*\|\s*/g, '').replace(/\s*\|\s*\d+\b/g, '');
+
+        console.log('📝 Source first 300 chars:', cleanSource.substring(0, 300));
 
         // Check if source has bracketed chords [C] [Em] or plain chords (B A C#m)
-        const hasBrackets = source.includes('[') && CHORD_REGEX.test(source);
+        const hasBrackets = cleanSource.includes('[') && CHORD_REGEX.test(cleanSource);
         console.log('Has brackets:', hasBrackets);
 
         if (hasBrackets) {
             // Transpose bracketed format [C] [Em] etc.
-            const result = source.replace(CHORD_REGEX, (fullMatch, chord) => {
+            const result = cleanSource.replace(CHORD_REGEX, (fullMatch, chord) => {
                 const newChord = transposeChord(chord, semitoneShift);
                 console.log(`  🎸 [${chord}] → [${newChord}]`);
                 return '[' + newChord + ']';
@@ -1380,7 +1386,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         } else {
             // Transpose plain chord format (chord line above lyrics)
             console.log('🔄 Transposing plain chord format (line-by-line)');
-            const lines = source.split('\n');
+            const lines = cleanSource.split('\n');
             const transposedLines = lines.map((line, index) => {
                 // Skip metadata/title lines - they contain pipe-separated info or key/bpm labels
                 const isMetadataLine = /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line) ||
