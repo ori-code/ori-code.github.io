@@ -416,7 +416,7 @@ class SessionManager {
 
         await this.database.ref(`sessions/${this.activeSession}/playlist/${songId}`).remove();
         console.log(`➖ Removed from playlist: ${songId}`);
-    },
+    }
 
     /**
      * Update a song in the active session's playlist
@@ -446,7 +446,7 @@ class SessionManager {
             return true;
         }
         return false;
-    },
+    }
 
     /**
      * Get session participants
@@ -461,7 +461,7 @@ class SessionManager {
             uid,
             ...data
         }));
-    },
+    }
 
     /**
      * Get session playlist
