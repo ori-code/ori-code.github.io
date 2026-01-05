@@ -461,7 +461,7 @@ class SessionManager {
             uid,
             ...data
         }));
-    }
+    },
 
     /**
      * Get session playlist
