@@ -1663,26 +1663,18 @@ a {
     margin-left: 8px;
 }
 
-/* ✅ CIRCULAR SECTION BADGES */
+/* ✅ MINIMAL DOTS SECTION BADGES */
 .section-badges-row {
     display: flex;
-    gap: 6px;
-    margin: 0;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+    align-items: center;
+    gap: 16px;  /* Space for dots between badges */
+    margin: 8px 0 16px 0;  /* Space above (after key) and below (before sections) */
+    flex-wrap: wrap;
     /* Span across all columns so both columns start at same height */
     column-span: all;
     -webkit-column-span: all;
     break-inside: avoid;
     page-break-inside: avoid;
-    /* Ensure it stays together */
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
 }
 
 /* RTL: Align badges to the right to match first column */
@@ -1754,122 +1746,118 @@ a {
 }
 
 .section-badge {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 16px;  /* Pill shape */
+    font-weight: 500;
     font-size: 12px !important;
     line-height: normal !important;
     letter-spacing: normal !important;
-    border: 2px solid;
-    padding: 0 6px;
-    text-align: center;
+    background: transparent;        /* No fill - outline only */
+    color: #4b5563;                 /* Dark gray text */
+    border: 1.5px solid #4b5563;    /* Dark gray outline */
+    cursor: pointer;
+    transition: all 0.2s ease;
     flex-shrink: 0;
     white-space: nowrap;
 }
 
-/* Mobile: Auto-resize circles to fit all in one row */
+.section-badge:hover {
+    background: rgba(75, 85, 99, 0.1);
+    border-color: #374151;
+}
+
+/* Active/Selected state */
+.section-badge.active,
+.section-badge.badge-active {
+    background: #374151;
+    color: #ffffff;
+    border-color: #374151;
+}
+
+/* Dot separator BETWEEN badges (outside, not inside) */
+.section-badge + .section-badge::before {
+    content: '·';
+    position: absolute;
+    left: -11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+/* RTL: Position dot on the right side instead of left */
+[dir="rtl"] .section-badge + .section-badge::before,
+.live-preview[dir="rtl"] .section-badge + .section-badge::before {
+    left: auto;
+    right: -11px;
+}
+
+/* Mobile: Responsive pill badges */
 @media (max-width: 768px) {
     .section-badges-row {
-        overflow-x: visible; /* Remove scroll on mobile */
-        justify-content: space-between;
-        gap: 3px; /* Reduce gap from 6px to 3px */
-        margin: 2px 0; /* Reduce margin from 4px to 2px */
+        gap: 14px;
     }
 
     .section-badge {
-        /* Calculate size to fit 10 badges with smaller gaps */
-        /* Formula: (100% - (9 gaps × 3px)) / 10 badges */
-        min-width: calc((100% - 27px) / 10);
-        max-width: calc((100% - 27px) / 10);
-        width: calc((100% - 27px) / 10);
-        height: auto;
-        aspect-ratio: 1 / 1; /* Keep circles perfectly round */
-        padding: 0; /* Remove padding to save space */
-        font-size: clamp(8px, 2.5vw, 11px) !important; /* Responsive font size */
-        line-height: normal !important;
-        letter-spacing: normal !important;
-        border-width: 1.5px; /* Slightly thinner border on mobile */
-        flex-shrink: 1; /* Allow shrinking if needed */
+        padding: 3px 10px;
+        font-size: 11px !important;
+    }
+
+    .section-badge + .section-badge::before {
+        left: -10px;
+        font-size: 14px;
+    }
+
+    /* RTL mobile fix */
+    [dir="rtl"] .section-badge + .section-badge::before,
+    .live-preview[dir="rtl"] .section-badge + .section-badge::before {
+        left: auto;
+        right: -10px;
     }
 }
 
 /* Extra small mobile devices */
 @media (max-width: 480px) {
     .section-badges-row {
-        gap: 2px; /* Even smaller gap on very small screens */
-        margin: 1px 0;
+        gap: 12px;
     }
 
     .section-badge {
-        /* Recalculate for 2px gaps */
-        min-width: calc((100% - 18px) / 10);
-        max-width: calc((100% - 18px) / 10);
-        width: calc((100% - 18px) / 10);
-        font-size: clamp(7px, 2.2vw, 9px) !important;
-        line-height: normal !important;
-        letter-spacing: normal !important;
-        border-width: 1px;
-        padding: 0;
+        padding: 2px 8px;
+        font-size: 10px !important;
+    }
+
+    .section-badge + .section-badge::before {
+        left: -9px;
+        font-size: 12px;
+    }
+
+    /* RTL extra small mobile fix */
+    [dir="rtl"] .section-badge + .section-badge::before,
+    .live-preview[dir="rtl"] .section-badge + .section-badge::before {
+        left: auto;
+        right: -9px;
     }
 }
 
-/* Badge Colors - Matching Screenshot */
-.badge-intro {
-    background: rgba(59, 130, 246, 0.1);
-    border-color: #3b82f6;
-    color: #3b82f6;
-}
-
-.badge-verse {
-    background: rgba(168, 85, 247, 0.1);
-    border-color: #a855f7;
-    color: #a855f7;
-}
-
-.badge-chorus {
-    background: rgba(249, 115, 22, 0.1);
-    border-color: #f97316;
-    color: #f97316;
-}
-
-.badge-bridge {
-    background: rgba(239, 68, 68, 0.1);
-    border-color: #ef4444;
-    color: #ef4444;
-}
-
-.badge-prechorus {
-    background: rgba(34, 197, 94, 0.1);
-    border-color: #22c55e;
-    color: #22c55e;
-}
-
-.badge-outro {
-    background: rgba(236, 72, 153, 0.1);
-    border-color: #ec4899;
-    color: #ec4899;
-}
-
-.badge-turn {
-    background: rgba(251, 191, 36, 0.1);
-    border-color: #fbbf24;
-    color: #fbbf24;
-}
-
-.badge-break {
-    background: rgba(6, 182, 212, 0.1);
-    border-color: #06b6d4;
-    color: #06b6d4;
-}
-
+/* Badge Colors - All use outline style (minimal dots design) */
+.badge-intro,
+.badge-verse,
+.badge-chorus,
+.badge-bridge,
+.badge-prechorus,
+.badge-outro,
+.badge-turn,
+.badge-break,
 .badge-other {
-    background: rgba(156, 163, 175, 0.1);
-    border-color: #9ca3af;
-    color: #9ca3af;
+    background: transparent;
+    border: 1.5px solid #4b5563;
+    color: #4b5563;
 }
 
 /* Repeat count superscript - small number showing how many times a section repeats */
@@ -2263,33 +2251,43 @@ a {
         margin-left: 6px !important;
     }
 
-    /* Print-friendly badges */
+    /* Print-friendly badges - Minimal outline style */
     .section-badges-row {
         display: flex !important;
         flex-wrap: wrap !important;
-        gap: 3px !important;
+        gap: 12px !important;
         margin: 4px 0 !important;
         column-span: all !important;
         justify-content: flex-start !important;
+        align-items: center !important;
     }
 
     .section-badge {
-        min-width: 18px !important;
-        min-height: 18px !important;
-        width: 18px !important;
-        height: 18px !important;
-        padding: 0 !important;
+        position: relative !important;
+        padding: 2px 8px !important;
         font-size: 7pt !important;
         font-weight: 500 !important;
-        background: #f5f5f5 !important;
-        border: 1px solid #999 !important;
-        color: #444 !important;
-        border-radius: 50% !important;
+        background: transparent !important;
+        border: 1px solid #444 !important;
+        color: #333 !important;
+        border-radius: 10px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         flex-shrink: 0 !important;
-        box-sizing: border-box !important;
+        min-width: auto !important;
+        width: auto !important;
+        height: auto !important;
+    }
+
+    .section-badge + .section-badge::before {
+        content: '·' !important;
+        position: absolute !important;
+        left: -9px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #666 !important;
+        font-size: 10pt !important;
     }
 
     /* Minimalist section blocks for print */
