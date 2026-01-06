@@ -52,10 +52,16 @@ class SessionUI {
 
     /**
      * Show my sessions modal
+     * @param {boolean} keepPendingSongs - If true, keep pending songs for bulk add
      */
-    async showMySessionsModal() {
+    async showMySessionsModal(keepPendingSongs = false) {
         const modal = document.getElementById('mySessionsModal');
         if (modal) {
+            // Clear pending songs unless we're explicitly adding songs
+            if (!keepPendingSongs) {
+                window.pendingSongToAdd = null;
+                window.pendingSongsToAdd = null;
+            }
             modal.style.display = 'flex';
             await this.loadUserSessions();
         }
@@ -1108,13 +1114,15 @@ class SessionUI {
         // Show/hide leader-only controls
         const leaderControls = document.querySelectorAll('.leader-only');
         leaderControls.forEach(el => {
-            el.style.display = isLeader ? 'block' : 'none';
+            const displayType = el.dataset.display || 'block';
+            el.style.display = isLeader ? displayType : 'none';
         });
 
         // Show/hide player-only controls
         const playerControls = document.querySelectorAll('.player-only');
         playerControls.forEach(el => {
-            el.style.display = isLeader ? 'none' : 'block';
+            const displayType = el.dataset.display || 'block';
+            el.style.display = isLeader ? 'none' : displayType;
         });
 
         // Update singer toggle if leader
@@ -1178,6 +1186,69 @@ class SessionUI {
         } catch (error) {
             console.error('Error toggling singers:', error);
             this.showToast('❌ Failed to update singer settings');
+        }
+    }
+
+    /**
+     * Add current song to session playlist (Leader only)
+     */
+    async addCurrentSongToPlaylist() {
+        if (!window.sessionManager || !window.sessionManager.isLeader) {
+            this.showToast('❌ Only session leader can add songs');
+            return;
+        }
+
+        const visualEditor = document.getElementById('visualEditor');
+        const keySelector = document.getElementById('keySelector');
+        const bpmInput = document.getElementById('bpmInput');
+
+        if (!visualEditor || !visualEditor.value.trim()) {
+            this.showToast('❌ No song loaded in editor');
+            return;
+        }
+
+        const songData = {
+            id: `song_${Date.now()}`,
+            name: window.currentSongName || 'Untitled',
+            content: visualEditor.value,
+            originalKey: keySelector ? keySelector.value : 'C Major',
+            bpm: bpmInput ? parseInt(bpmInput.value) || null : null
+        };
+
+        try {
+            await window.sessionManager.addSongToPlaylist(songData);
+            this.showToast('✅ Added to playlist');
+            await this.loadPlaylist();
+        } catch (error) {
+            console.error('Error adding song to playlist:', error);
+            this.showToast('❌ Failed to add song');
+        }
+    }
+
+    /**
+     * Show songbook to add songs to playlist (Leader only)
+     */
+    showAddFromSongbook() {
+        if (!window.sessionManager || !window.sessionManager.isLeader) {
+            this.showToast('❌ Only session leader can add songs');
+            return;
+        }
+
+        // Set flag to indicate we're adding to playlist
+        window.addingToSessionPlaylist = true;
+
+        // Close session controls modal
+        this.hideSessionControls();
+
+        // Open the load song modal
+        const loadSongModal = document.getElementById('loadSongModal');
+        if (loadSongModal) {
+            loadSongModal.style.display = 'flex';
+            // Trigger loading songs if needed
+            const sideMenuLoad = document.getElementById('sideMenuLoad');
+            if (sideMenuLoad) {
+                sideMenuLoad.click();
+            }
         }
     }
 }

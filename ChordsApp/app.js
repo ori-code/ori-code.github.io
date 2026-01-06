@@ -509,15 +509,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.paddingTop = '40px';
     }
 
-    // Detect local development (localhost or local network IP)
-    const isLocalDev = window.location.hostname === 'localhost' ||
-                       window.location.hostname.startsWith('192.168.') ||
-                       window.location.hostname.startsWith('10.') ||
-                       window.location.hostname.startsWith('172.');
-
-    const API_URL = isLocalDev
-        ? `http://${window.location.hostname}:3002/api/analyze-chart`
-        : 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/analyzeChartGemini';
+    // Always use Firebase Cloud Function for chart analysis
+    // To use local dev server instead, change to: `http://localhost:3002/api/analyze-chart`
+    const API_URL = 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/analyzeChartGemini';
 
     // Nashville Number System state - default key is C Major
     let currentKey = 'C Major';
@@ -652,9 +646,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
         'E#': 'F',
         'B#': 'C'
     };
-    // Match chords in brackets [C] [Em] [D/F#] [C2] [Gsus4] etc.
-    // Comprehensive regex to match all chord patterns
-    const CHORD_REGEX = /\[([A-G](?:#|b)?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G](?:#|b)?)?)\]/g;
+    // Match chords in brackets [C] [Em] [Em7] [Cma7] [Cmaj7] [D/F#] [Gsus4] etc.
+    // Pattern: Root + sharp/flat + quality (maj/ma/min/m/M/dim/aug/sus/add) + number + bass
+    const CHORD_REGEX = /\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g;
 
     let uploadedFile = null;
     let previewObjectURL = null;
@@ -704,6 +698,140 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Expose getter for current transpose steps (for song-library.js save)
     window.getCurrentTransposeSteps = () => currentTransposeSteps;
+
+    // Normalize content: Convert hybrid AI output to clean edit format
+    // Input: Hybrid format with old (Title:, Key: | BPM:) and v4 ({subtitle:}) mixed
+    // Output: Clean format with Title on line 1, metadata comma-separated on line 2
+    const normalizeContent = (content) => {
+        if (!content) return content;
+
+        // Strip HTML tags
+        const cleanContent = content.replace(/<[^>]*>/g, '');
+
+        // Note: Chord grids (| D . Dsus |) keep bare chords for proper display
+        // The transpose function handles transposing bare chords in grids separately
+
+        const lines = cleanContent.split('\n');
+        const outputLines = [];
+
+        // Extract metadata manually for robustness
+        let title = '';
+        let artist = '';
+        let key = '';
+        let tempo = '';
+        let time = '';
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+
+            // Extract from old format: Title: Amazing Grace
+            if (!title && /^Title:\s*(.+)/i.test(trimmed)) {
+                title = trimmed.match(/^Title:\s*(.+)/i)[1].trim();
+            }
+
+            // Extract from old format: Key: G | BPM: 76 | Time: 3/4
+            if (/^Key:\s*([A-G][#b]?)/i.test(trimmed) && trimmed.includes('|')) {
+                const keyMatch = trimmed.match(/^Key:\s*([A-G][#b]?\s*(?:Major|Minor|m)?)/i);
+                const bpmMatch = trimmed.match(/BPM:\s*(\d+)/i);
+                const timeMatch = trimmed.match(/Time:\s*(\d+\/\d+)/i);
+                if (!key && keyMatch) key = keyMatch[1].trim();
+                if (!tempo && bpmMatch) tempo = bpmMatch[1];
+                if (!time && timeMatch) time = timeMatch[1];
+            }
+
+            // Extract from v4 directives
+            if (/^\{title:\s*([^}]+)\}/i.test(trimmed)) {
+                const m = trimmed.match(/^\{title:\s*([^}]+)\}/i);
+                if (!title && m) title = m[1].trim();
+            }
+            if (/^\{subtitle:\s*([^}]+)\}/i.test(trimmed)) {
+                const m = trimmed.match(/^\{subtitle:\s*([^}]+)\}/i);
+                if (!artist && m) artist = m[1].trim();
+            }
+            if (/^\{artist:\s*([^}]+)\}/i.test(trimmed)) {
+                const m = trimmed.match(/^\{artist:\s*([^}]+)\}/i);
+                if (!artist && m) artist = m[1].trim();
+            }
+            if (/^\{key:\s*([^}]+)\}/i.test(trimmed)) {
+                const m = trimmed.match(/^\{key:\s*([^}]+)\}/i);
+                if (!key && m) key = m[1].trim();
+            }
+            if (/^\{tempo:\s*([^}]+)\}/i.test(trimmed)) {
+                const m = trimmed.match(/^\{tempo:\s*([^}]+)\}/i);
+                if (!tempo && m) tempo = m[1].trim();
+            }
+            if (/^\{time:\s*([^}]+)\}/i.test(trimmed)) {
+                const m = trimmed.match(/^\{time:\s*([^}]+)\}/i);
+                if (!time && m) time = m[1].trim();
+            }
+
+            // Old format artist line
+            if (!artist && /^(Artist|Subtitle|By):\s*(.+)/i.test(trimmed)) {
+                const m = trimmed.match(/^(?:Artist|Subtitle|By):\s*(.+)/i);
+                if (m) artist = m[1].trim();
+            }
+        }
+
+        // Build header - Title on line 1
+        if (title) {
+            outputLines.push(title);
+        }
+
+        // Build metadata line with commas - Subtitle, Key, Tempo, Time on line 2
+        const metaParts = [];
+        if (artist && artist.toLowerCase() !== 'unknown') {
+            metaParts.push(artist);
+        }
+        if (key) {
+            metaParts.push(`Key: ${key}`);
+        }
+        if (tempo) {
+            metaParts.push(`${tempo} BPM`);
+        }
+        if (time) {
+            metaParts.push(time);
+        }
+        if (metaParts.length > 0) {
+            outputLines.push(metaParts.join(', '));
+        }
+
+        // Process remaining lines - skip old format headers and v4 directives
+        for (const line of lines) {
+            const trimmed = line.trim();
+
+            // Skip empty lines at the start (until we have content)
+            if (!trimmed && outputLines.length <= 2) continue;
+
+            // Skip old format metadata lines (various patterns)
+            if (/^Title:\s*.+/i.test(trimmed)) continue;
+            if (/^Key:\s*[A-G]/i.test(trimmed) && trimmed.includes('|')) continue;
+            if (/^(Artist|Subtitle|By):\s*.+/i.test(trimmed)) continue;
+
+            // Skip v4 metadata directives (but keep {c:} section markers)
+            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo):/i.test(trimmed)) continue;
+
+            // Convert {c: Section:} to just Section: for clean display (Title Case)
+            if (/^\{c:\s*([^}]+)\}/i.test(trimmed)) {
+                const sectionMatch = trimmed.match(/^\{c:\s*([^}]+)\}/i);
+                if (sectionMatch) {
+                    // Convert to Title Case (e.g., "VERSE 2:" -> "Verse 2:")
+                    const sectionName = sectionMatch[1].trim().replace(/\w+/g, word =>
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    );
+                    outputLines.push(sectionName);
+                    continue;
+                }
+            }
+
+            // Keep everything else (badges, content)
+            outputLines.push(line);
+        }
+
+        return outputLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    };
+
+    // Expose globally for testing
+    window.normalizeContent = normalizeContent;
 
     // Expose function to convert visual format to inline songbook format
     window.convertToInlineFormat = (visualContent) => {
@@ -1231,9 +1359,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 baselineChart = removeAnalysisLines(result.transcription);
                 currentTransposeSteps = 0;
 
+                // ✅ Normalize hybrid AI output to clean format FIRST
+                const normalizedChart = normalizeContent(baselineChart);
+
                 // AI now returns proper ChordPro format with metadata and {comment:} tags
                 // Default: Show chords above lyrics (cleaner view)
-                let visualFormat = convertToAboveLineFormat(baselineChart, true);
+                let visualFormat = convertToAboveLineFormat(normalizedChart, true);
 
                 // ✅ Auto-insert arrangement line (V1) (C) (V2) etc.
                 visualFormat = autoInsertArrangementLine(visualFormat);
@@ -1246,9 +1377,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 visualEditor.value = visualFormat;
 
-                // Keep ChordPro format as baseline
-                songbookOutput.value = baselineChart;
-                setDirectionalLayout(songbookOutput, baselineChart);
+                // Display normalized content in songbook output
+                songbookOutput.value = normalizedChart;
+                setDirectionalLayout(songbookOutput, normalizedChart);
 
                 // Update AI reference preview in Step 3
                 if (aiReferenceContent) {
@@ -1278,16 +1409,23 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     updateUsageDisplay();
                 }
 
-                // Reset font size to default 8.5pt for new analysis
+                // Reset font size to minimum (8pt) and 2 columns for new analysis
                 if (fontSizeSlider && fontSizeValue && livePreview) {
-                    fontSizeSlider.value = 8.5;
-                    fontSizeValue.textContent = '8.5';
-                    livePreview.style.fontSize = '8.5pt';
+                    fontSizeSlider.value = 8;
+                    fontSizeValue.textContent = '8';
+                    livePreview.style.fontSize = '8pt';
                     // Also sync side menu slider
                     const sideMenuFontSize = document.getElementById('sideMenuFontSize');
                     const sideMenuFontSizeVal = document.getElementById('sideMenuFontSizeVal');
-                    if (sideMenuFontSize) sideMenuFontSize.value = 8.5;
-                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = '8.5pt';
+                    if (sideMenuFontSize) sideMenuFontSize.value = 8;
+                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = '8pt';
+                }
+
+                // Set default 2 columns for new analysis
+                const columnCountSelect = document.getElementById('columnCount');
+                if (columnCountSelect && livePreview) {
+                    columnCountSelect.value = 2;
+                    livePreview.style.columns = '2';
                 }
 
                 // Update the live preview
@@ -1314,8 +1452,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Add {comment: } markers for section headers
             baselineChart = addCommentMarkers(baselineChart);
 
+            // ✅ Normalize hybrid AI output to clean format FIRST
+            const normalizedChart = normalizeContent(baselineChart);
+
             // Default: Show chords above lyrics
-            let visualFormat = convertToAboveLineFormat(baselineChart, true);
+            let visualFormat = convertToAboveLineFormat(normalizedChart, true);
 
             // ✅ Auto-insert arrangement line (V1) (C) (V2) etc.
             visualFormat = autoInsertArrangementLine(visualFormat);
@@ -1328,9 +1469,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             visualEditor.value = visualFormat;
 
-            // Keep SongBook format
-            songbookOutput.value = baselineChart;
-            setDirectionalLayout(songbookOutput, baselineChart);
+            // Display normalized content in songbook output
+            songbookOutput.value = normalizedChart;
+            setDirectionalLayout(songbookOutput, normalizedChart);
 
             // Update AI reference preview in Step 3
             if (aiReferenceContent) {
@@ -1365,10 +1506,22 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // DEFENSIVE: Strip any HTML tags that might have gotten into the source
         // This prevents issues with already-formatted content being transposed
         let cleanSource = source.replace(/<[^>]*>/g, '');
-        // Also clean up any Nashville number artifacts like "1 | " or "| 1" that might be leftover
-        cleanSource = cleanSource.replace(/\b\d+\s*\|\s*/g, '').replace(/\s*\|\s*\d+\b/g, '');
 
         console.log('📝 Source first 300 chars:', cleanSource.substring(0, 300));
+
+        // Check if source is Chords App Format v4 (has directives like {key:} or {title:})
+        const isV4Format = /\{(?:title|key|tempo|subtitle|artist|time|capo):/i.test(cleanSource);
+
+        if (isV4Format && window.chordsAppParser) {
+            console.log('🎼 Using Chords App Format v4 parser for transpose');
+            // Use the new parser which handles:
+            // - [Chord] brackets inline with lyrics
+            // - Chord grids | G | C | D |
+            // - {key: X} directive updates
+            const result = window.chordsAppParser.transposeContent(cleanSource, semitoneShift);
+            console.log('✅ transposeChart (v4) complete - result first 300 chars:', result.substring(0, 300));
+            return result;
+        }
 
         // Check if source has bracketed chords [C] [Em] or plain chords (B A C#m)
         const hasBrackets = cleanSource.includes('[') && CHORD_REGEX.test(cleanSource);
@@ -1417,10 +1570,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // More flexible detection: line with mostly chords and whitespace
 
                 // Strict pattern for pure chord lines (allows optional leading/trailing parens, pipes, etc.)
-                const hasOnlyChords = /^[\s()\[\]|]*([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?[\s()|\-\.\[\]]*)+[\s()\[\]|]*$/;
+                const hasOnlyChords = /^[\s()\[\]|]*([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?[\s()|\-\.\[\]]*)+[\s()\[\]|]*$/;
 
                 // Also check: if line has chord patterns
-                const chordPattern = /[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?/g;
+                const chordPattern = /[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?/g;
                 const chords = line.match(chordPattern) || [];
                 const hasChords = chords.length >= 1;
 
@@ -1444,7 +1597,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 if (hasOnlyChords.test(line) || looksLikeChordLine) {
                     console.log(`  📝 Line ${index} is chord line:`, line.substring(0, 60));
                     // This is a chord line - transpose each chord
-                    const transposed = line.replace(/([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g, (match, chord) => {
+                    const transposed = line.replace(/([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)/g, (match, chord) => {
                         const newChord = transposeChord(chord, semitoneShift);
                         if (index < 5) {
                             console.log(`    🎸 ${chord} → ${newChord}`);
@@ -1648,26 +1801,42 @@ Our [Em7]hearts will cry, these bones will [D]sing
             console.log('📊 Source chart length:', sourceChart.length);
             console.log('📊 Source chart first 200 chars:', sourceChart.substring(0, 200));
 
+            // Check if source is Chords App Format v4
+            const isV4Format = /\{(?:title|key|tempo|subtitle|artist|time|capo):/i.test(sourceChart);
+
             // Transpose the SongBook format (with brackets) using cumulative steps
             const transposedSongbook = transposeChart(sourceChart, currentTransposeSteps);
             console.log('📊 Transposed songbook length:', transposedSongbook.length);
             console.log('📊 Transposed songbook first 200 chars:', transposedSongbook.substring(0, 200));
-            songbookOutput.value = transposedSongbook;
 
-            // Convert transposed version to visual format
-            console.log('🔄 Converting to above-line format...');
-            let transposedVisual = convertToAboveLineFormat(transposedSongbook, true);
-            console.log('📊 Visual format length:', transposedVisual.length);
-            console.log('📊 Visual format first 200 chars:', transposedVisual.substring(0, 200));
+            // ✅ Normalize transposed content to clean format
+            const normalizedTransposed = normalizeContent(transposedSongbook);
+            songbookOutput.value = normalizedTransposed;
 
-            // Add arrangement line
-            transposedVisual = autoInsertArrangementLine(transposedVisual);
+            if (isV4Format) {
+                // V4 format: Convert to above-line format for visual editor display
+                console.log('🎼 Converting v4 format to above-line for editor display');
+                let transposedVisual = convertToAboveLineFormat(normalizedTransposed, true);
+                transposedVisual = autoInsertArrangementLine(transposedVisual);
+                transposedVisual = ensureMetadata(transposedVisual);
+                transposedVisual = normalizeMetadataSpacing(transposedVisual);
+                visualEditor.value = transposedVisual;
+            } else {
+                // Legacy format: Convert transposed version to visual format
+                console.log('🔄 Converting to above-line format...');
+                let transposedVisual = convertToAboveLineFormat(normalizedTransposed, true);
+                console.log('📊 Visual format length:', transposedVisual.length);
+                console.log('📊 Visual format first 200 chars:', transposedVisual.substring(0, 200));
 
-            // Ensure metadata format is correct
-            transposedVisual = ensureMetadata(transposedVisual);
-            transposedVisual = normalizeMetadataSpacing(transposedVisual);
+                // Add arrangement line
+                transposedVisual = autoInsertArrangementLine(transposedVisual);
 
-            visualEditor.value = transposedVisual;
+                // Ensure metadata format is correct
+                transposedVisual = ensureMetadata(transposedVisual);
+                transposedVisual = normalizeMetadataSpacing(transposedVisual);
+
+                visualEditor.value = transposedVisual;
+            }
         } else {
             // For loaded songs without songbook format, transpose visual format directly
             console.log('Transposing visual format directly');
@@ -1686,8 +1855,19 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Transpose the key and update it everywhere
         if (originalDetectedKey) {
-            // Always transpose from the original detected key, not the current displayed key
-            const newKey = transposeKey(originalDetectedKey, currentTransposeSteps);
+            // Check if content is v4 format
+            const contentIsV4 = /\{key:/i.test(visualEditor.value);
+
+            let newKey;
+            if (contentIsV4 && window.chordsAppParser) {
+                // For v4 format, the parser already updated the {key: X} directive
+                // Extract the new key from the content
+                const metadata = window.chordsAppParser.extractMetadata(visualEditor.value);
+                newKey = metadata.key || transposeKey(originalDetectedKey, currentTransposeSteps);
+            } else {
+                // For legacy format, transpose the key manually
+                newKey = transposeKey(originalDetectedKey, currentTransposeSteps);
+            }
             console.log('Transposing key from', originalDetectedKey, 'by', currentTransposeSteps, 'steps to', newKey);
 
             currentKey = newKey;
@@ -1696,13 +1876,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 keySelector.value = newKey;
             }
 
-            // Update the key in the visual editor content
-            let content = visualEditor.value;
-            // Match key value precisely without trailing spaces (handles "Key: D Major | BPM: 75" format)
-            const keyLineRegex = /^(.*Key:\s*)([A-G][#b]?\s*(?:Major|Minor|major|minor)?)/m;
-            if (keyLineRegex.test(content)) {
-                content = content.replace(keyLineRegex, `$1${newKey}`);
-                visualEditor.value = content;
+            // Update the key in the visual editor content (for legacy format)
+            if (!contentIsV4) {
+                let content = visualEditor.value;
+                // Match key value precisely without trailing spaces (handles "Key: D Major | BPM: 75" format)
+                const keyLineRegex = /^(.*Key:\s*)([A-G][#b]?\s*(?:Major|Minor|major|minor)?)/m;
+                if (keyLineRegex.test(content)) {
+                    content = content.replace(keyLineRegex, `$1${newKey}`);
+                    visualEditor.value = content;
+                }
             }
         }
 
@@ -1895,11 +2077,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Reset cumulative transpose steps
             currentTransposeSteps = 0;
 
-            // Reset SongBook format to original
-            songbookOutput.value = baselineChart;
+            // Normalize the baseline chart
+            const normalizedChart = normalizeContent(baselineChart);
 
-            // Convert to visual format
-            let visualFormat = convertToAboveLineFormat(baselineChart, true);
+            // Reset SongBook format to original (normalized)
+            songbookOutput.value = normalizedChart;
+
+            // Convert to visual format (from normalized content)
+            let visualFormat = convertToAboveLineFormat(normalizedChart, true);
 
             // Re-insert arrangement line (preserve it during reset)
             visualFormat = autoInsertArrangementLine(visualFormat);
@@ -2001,12 +2186,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         // Add {comment: } markers for section headers
                         baselineChart = addCommentMarkers(baselineChart);
 
+                        // ✅ Normalize hybrid AI output to clean format FIRST
+                        const normalizedChart = normalizeContent(baselineChart);
+
                         // Default: Show chords above lyrics
-                        const visualFormat = convertToAboveLineFormat(baselineChart, true);
+                        const visualFormat = convertToAboveLineFormat(normalizedChart, true);
                         visualEditor.value = visualFormat;
 
-                        songbookOutput.value = baselineChart;
-                        setDirectionalLayout(songbookOutput, baselineChart);
+                        // Display normalized content in songbook output
+                        songbookOutput.value = normalizedChart;
+                        setDirectionalLayout(songbookOutput, normalizedChart);
 
                         if (aiReferenceContent) {
                             aiReferenceContent.textContent = baselineChart;
@@ -2041,16 +2230,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
-    // Normalize section headers to uppercase format to match dropdown options
+    // Normalize section headers to Title Case to match dropdown options
     const normalizeSectionHeader = (sectionName) => {
         // Remove trailing colon if present
         const withoutColon = sectionName.replace(/:$/, '').trim();
 
-        // Convert to uppercase
-        const uppercase = withoutColon.toUpperCase();
+        // Convert to Title Case (e.g., "VERSE 1" -> "Verse 1")
+        const titleCase = withoutColon.replace(/\w+/g, word =>
+            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        );
 
         // Add colon back
-        return uppercase + ':';
+        return titleCase + ':';
     };
 
     const convertToAboveLineFormat = (text, compact = true) => {
@@ -2092,6 +2283,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
         for (let line of lines) {
             // Remove {soc} {eoc} markers
             if (line.match(/^\{(soc|eoc)\}$/)) {
+                continue;
+            }
+
+            // Handle row space tag {rs} - preserve as blank line
+            if (line.match(/^\{rs\}$/i)) {
+                formatted.push('{rs}');
                 continue;
             }
 
@@ -2167,6 +2364,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Normalize section header to uppercase (e.g., "verse 2:" -> "VERSE 2:")
                 const normalizedSection = normalizeSectionHeader(line);
                 formatted.push(normalizedSection);
+                continue;
+            }
+
+            // Check if line is a chord grid (| D . Dsus | Em7 |) - preserve as-is
+            if (line.trim().startsWith('|') || (line.includes('|') && (line.match(/\|/g) || []).length >= 2)) {
+                // Chord grid line - keep formatting intact, don't try to separate
+                formatted.push(line);
                 continue;
             }
 
@@ -2352,6 +2556,361 @@ Our [Em7]hearts will cry, these bones will [D]sing
         setDirectionalLayout(songbookOutput, songbookOutput.value);
     };
 
+    // Format Chords App Format v4 content for preview
+    const formatV4ForPreview = (content, options = {}) => {
+        const { enableSectionBlocks = false } = options;
+        const parser = window.chordsAppParser;
+        const formatted = [];
+        let sectionCounter = 0;
+
+        // Strip HTML tags before parsing (AI output may have bold tags)
+        const cleanContent = content.replace(/<[^>]*>/g, '');
+
+        // Extract metadata using parser (from clean content)
+        const metadata = parser.extractMetadata(cleanContent);
+        const arrangement = parser.parseArrangementFull(cleanContent);
+
+        // Build section repeat map and flow chains from arrangement
+        const sectionRepeatMap = {}; // { 'Bridge': 2, 'Chorus': 2 }
+        const flowChains = []; // [{ startSection: 'Outro', chain: 'Outro > Intro > Verse 1' }]
+        const renderedFlowChains = new Set(); // Track which chains have been rendered
+
+        // Helper to convert badge label to full section name
+        const badgeToSectionName = (label) => {
+            const baseLabel = label.replace(/\d+$/, '');
+            const num = label.match(/\d+$/)?.[0] || '';
+            const nameMap = {
+                'I': 'Intro', 'V': 'Verse', 'PC': 'Pre-Chorus', 'C': 'Chorus',
+                'B': 'Bridge', 'O': 'Outro', 'INT': 'Interlude', 'TAG': 'Tag',
+                'CODA': 'Coda', 'TURN': 'Turn', 'BRK': 'Break'
+            };
+            const baseName = nameMap[baseLabel] || baseLabel;
+            return num ? `${baseName} ${num}` : baseName;
+        };
+
+        // Parse arrangement for repeats and build flow chains
+        for (let i = 0; i < arrangement.length; i++) {
+            const item = arrangement[i];
+            if (item.type === 'badge' && item.repeat > 1) {
+                const sectionName = badgeToSectionName(item.label);
+                sectionRepeatMap[sectionName] = item.repeat;
+            }
+        }
+
+        // Build flow chains - find sequences of badge > badge > badge...
+        let i = 0;
+        while (i < arrangement.length) {
+            // Look for start of a flow chain (badge followed by >)
+            if (arrangement[i].type === 'badge' &&
+                i + 1 < arrangement.length &&
+                arrangement[i + 1].type === 'flow') {
+
+                // Start building the chain
+                const chainParts = [badgeToSectionName(arrangement[i].label)];
+                const startSection = badgeToSectionName(arrangement[i].label);
+                let j = i + 1;
+
+                // Continue collecting the chain
+                while (j < arrangement.length && arrangement[j].type === 'flow') {
+                    j++; // Skip the >
+                    if (j < arrangement.length && arrangement[j].type === 'badge') {
+                        chainParts.push(badgeToSectionName(arrangement[j].label));
+                        j++;
+                    } else {
+                        break;
+                    }
+                }
+
+                // If we have a valid chain (at least 2 parts)
+                if (chainParts.length >= 2) {
+                    flowChains.push({
+                        startSection: startSection,
+                        chain: chainParts.join(' > ')
+                    });
+                }
+
+                i = j; // Move past the chain
+            } else {
+                i++;
+            }
+        }
+
+        // Get Nashville mode
+        const mode = nashvilleMode ? nashvilleMode.value : 'both';
+        const key = currentKey || metadata.key || 'C Major';
+
+        // Build song header
+        formatted.push('<div class="song-header">');
+
+        // Row 1: Bold Title
+        if (metadata.title) {
+            formatted.push(`<div class="song-title"><b>${metadata.title}</b></div>`);
+        }
+
+        // Row 2: Subtitle, Key, Tempo, Time (comma-separated)
+        const metaParts = [];
+        if (metadata.artist && metadata.artist.toLowerCase() !== 'unknown') {
+            metaParts.push(metadata.artist);
+        }
+        if (metadata.key) {
+            metaParts.push(`Key: ${metadata.key}`);
+        }
+        if (metadata.tempo) {
+            metaParts.push(`${metadata.tempo} BPM`);
+        } else if (bpmInput && bpmInput.value) {
+            metaParts.push(`${bpmInput.value} BPM`);
+        }
+        if (metadata.time) {
+            metaParts.push(metadata.time);
+        } else if (timeSignature && timeSignature.value) {
+            metaParts.push(timeSignature.value);
+        }
+        if (metaParts.length > 0) {
+            formatted.push(`<div class="song-meta">${metaParts.join(', ')}</div>`);
+        }
+
+        // Arrangement badges with repeat counts (flow arrows only shown in chart body)
+        if (arrangement.length > 0) {
+            const badges = arrangement
+                .filter(item => item.type === 'badge') // Skip flow arrows in badge row
+                .map(item => {
+                    const colorClass = parser.getBadgeColorClass(item.label);
+                    const repeatSup = item.repeat > 1 ? `<sup class="repeat-count">${item.repeat}x</sup>` : '';
+                    return `<span class="section-badge ${colorClass}">${item.label}${repeatSup}</span>`;
+                }).join('');
+            formatted.push(`<div class="section-badges-row">${badges}</div>`);
+        }
+
+        formatted.push('</div>'); // Close song-header
+
+        // Process content lines (use cleanContent for parsing)
+        const lines = cleanContent.split('\n');
+        let currentSection = null;
+        let sectionContent = [];
+
+        const finishSection = () => {
+            if (currentSection) {
+                const sectionId = `section-${sectionCounter++}`;
+                const sectionClass = enableSectionBlocks ? 'song-section-block' : '';
+
+                // Extract section comment from parentheses: "Verse 1 (Play Loud)" -> name="Verse 1", comment="Play Loud"
+                const sectionMatch = currentSection.match(/^([^(]+?)(?:\s*\(([^)]+)\))?\s*$/);
+                const sectionName = sectionMatch ? sectionMatch[1].trim() : currentSection;
+                const sectionComment = sectionMatch ? sectionMatch[2] : null;
+
+                const blockStart = enableSectionBlocks ? `<div class="${sectionClass}" data-section-id="${sectionId}" data-section-name="${sectionName}">` : '';
+                const blockEnd = enableSectionBlocks ? '</div>' : '';
+
+                // Check if section has a repeat count from arrangement
+                const repeatCount = sectionRepeatMap[sectionName] || sectionRepeatMap[currentSection];
+                const repeatSuffix = repeatCount > 1 ? ` (${repeatCount}x)` : '';
+                const headerText = `${sectionName}${repeatSuffix}`;
+
+                formatted.push(blockStart);
+                // Render comment INLINE as span inside header
+                const commentSpan = sectionComment ? `<span class="section-comment">${sectionComment}</span>` : '';
+                formatted.push(`<div class="section-header">${headerText}${commentSpan}</div>`);
+                if (sectionContent.length > 0) {
+                    formatted.push(...sectionContent);
+                }
+
+                // Render flow chain starting from this section (only once per chain)
+                const chainFromHere = flowChains.find(fc => fc.startSection === currentSection && !renderedFlowChains.has(fc.chain));
+                if (chainFromHere) {
+                    formatted.push(`<div class="flow-instruction">${chainFromHere.chain}</div>`);
+                    renderedFlowChains.add(chainFromHere.chain);
+                }
+
+                formatted.push(blockEnd);
+
+                sectionContent = [];
+                currentSection = null;
+            }
+        };
+
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+
+            // Skip empty lines
+            if (!trimmedLine) {
+                continue;
+            }
+
+            // Handle row space tag {rs} - insert blank line
+            if (/^\{rs\}$/i.test(trimmedLine)) {
+                if (currentSection) {
+                    sectionContent.push('<div class="row-space"></div>');
+                } else {
+                    formatted.push('<div class="row-space"></div>');
+                }
+                continue;
+            }
+
+            // Skip directive lines (already processed as metadata)
+            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo):/i.test(trimmedLine)) {
+                continue;
+            }
+
+            // Skip arrangement badge line - multiple detection methods
+            if (parser.BADGE_LINE_REGEX.test(trimmedLine)) {
+                continue;
+            }
+            // Fallback: line with only badge patterns like (I), (V1), (TURN), (BRK), etc.
+            if (/^[\s]*(\([A-Z]+\d*\)\s*)+[\s]*$/i.test(trimmedLine)) {
+                continue;
+            }
+
+            // Skip old format header lines (AI hybrid output cleanup)
+            if (/^Title:\s*.+/i.test(trimmedLine)) {
+                continue;
+            }
+            if (/^Key:\s*[A-G].*\|.*BPM.*\|.*Time/i.test(trimmedLine)) {
+                continue;
+            }
+            if (/^(Artist|Subtitle|By):\s*.+/i.test(trimmedLine)) {
+                continue;
+            }
+
+            // Skip normalized metadata line (e.g., "Artist, Key: G, 76 BPM, 3/4")
+            if (/Key:\s*[A-G].*,.*BPM/i.test(trimmedLine) && /,/.test(trimmedLine)) {
+                continue;
+            }
+
+            // Skip plain title line (normalized format: first line is just the title)
+            if (metadata.title && trimmedLine === metadata.title) {
+                continue;
+            }
+
+            // Section marker: {c: Section Name:} or clean Section: format
+            const v4SectionMatch = trimmedLine.match(/^\{c:\s*([^}]+)\}$/i);
+            if (v4SectionMatch) {
+                finishSection();
+                // Extract section name and optional comment: "{c: Bridge: (A cappella)}" -> "Bridge (A Cappella)"
+                const v4Content = v4SectionMatch[1].trim();
+                const v4CommentMatch = v4Content.match(/^(.+?):\s*(\([^)]+\))$/);
+                if (v4CommentMatch) {
+                    // Has comment: extract section part and comment
+                    const sectionPart = v4CommentMatch[1].trim().replace(/:$/, '');
+                    const commentPart = v4CommentMatch[2];
+                    // Title case both parts
+                    const titleCased = sectionPart.replace(/\w+/g, word =>
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    );
+                    currentSection = `${titleCased} ${commentPart}`;
+                } else {
+                    // No comment: just title case and remove trailing colon
+                    currentSection = v4Content.replace(/:$/, '').replace(/\w+/g, word =>
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    );
+                }
+                continue;
+            }
+
+            // Clean section marker: Intro:, Verse 1:, Chorus:, etc. (optionally with comment)
+            // Matches: "Verse 1:", "Chorus:", "Bridge: (A cappella)", etc.
+            const sectionKeywords = /^(Intro|Verse|Pre-?Chorus|Chorus|Bridge|Outro|Interlude|Tag|Coda|Turn|Turnaround|Break|Instrumental|Solo|Ending|Vamp)/i;
+            const cleanSectionMatch = trimmedLine.match(/^(.+?):\s*(\([^)]+\))?$/);
+            if (sectionKeywords.test(trimmedLine) && cleanSectionMatch) {
+                finishSection();
+                // Extract section name and optional comment
+                const sectionPart = cleanSectionMatch[1].trim();
+                const commentPart = cleanSectionMatch[2] || '';
+                // Convert to Title Case (e.g., "BREAK" -> "Break", "TURN 1" -> "Turn 1")
+                const titleCased = sectionPart.replace(/\w+/g, word =>
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                );
+                currentSection = commentPart ? `${titleCased} ${commentPart}` : titleCased;
+                continue;
+            }
+
+            // Check if line is a chord grid: | G | C | D | or | [G] . [Dsus] | [Em7] |
+            if (parser.isChordGrid(trimmedLine)) {
+                // Format chord grid
+                let formattedGrid = trimmedLine;
+
+                // First handle bracketed chords [G] in grids (from wrapChordGridChords)
+                formattedGrid = formattedGrid.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g, (match, chord) => {
+                    const number = chordToNashville(chord, key);
+                    if (mode === 'both' && number) {
+                        return `<b>${chord}|${number}</b>`;
+                    } else if (mode === 'numbers' && number) {
+                        return `<b>${number}</b>`;
+                    } else {
+                        return `<b>${chord}</b>`;
+                    }
+                });
+
+                // Also handle bare chords after | or . (legacy format)
+                formattedGrid = formattedGrid.replace(/([|\.\s])([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(?=[\s\.|]|$)/g, (match, prefix, chord) => {
+                    // Skip if already formatted (contains <b>)
+                    if (match.includes('<b>')) return match;
+                    const number = chordToNashville(chord, key);
+                    if (mode === 'both' && number) {
+                        return `${prefix}<b>${chord}|${number}</b>`;
+                    } else if (mode === 'numbers' && number) {
+                        return `${prefix}<b>${number}</b>`;
+                    } else {
+                        return `${prefix}<b>${chord}</b>`;
+                    }
+                });
+
+                const gridLine = `<div class="chord-grid">${formattedGrid}</div>\n`;
+                if (currentSection) {
+                    sectionContent.push(gridLine);
+                } else {
+                    formatted.push(gridLine);
+                }
+                continue;
+            }
+
+            // Process line with inline [Chord] brackets
+            let formattedLine = trimmedLine;
+            const hasChords = /\[[A-G][#b]?/.test(formattedLine);
+
+            if (hasChords) {
+                if (mode === 'lyrics') {
+                    // Lyrics mode: remove chord brackets entirely
+                    formattedLine = formattedLine.replace(/\[[^\]]+\]/g, '');
+                } else {
+                    // Style chord brackets
+                    formattedLine = formattedLine.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g, (match, chord) => {
+                        const number = chordToNashville(chord, key);
+                        if (mode === 'both' && number) {
+                            return `<span class="inline-chord"><b>${chord}|${number}</b></span>`;
+                        } else if (mode === 'numbers' && number) {
+                            return `<span class="inline-chord"><b>${number}</b></span>`;
+                        } else {
+                            return `<span class="inline-chord"><b>${chord}</b></span>`;
+                        }
+                    });
+                }
+            }
+
+            // Add line to output
+            const outputLine = formattedLine + '\n';
+            if (currentSection) {
+                sectionContent.push(outputLine);
+            } else {
+                formatted.push(outputLine);
+            }
+        }
+
+        // Finish last section
+        finishSection();
+
+        // Render any remaining flow chains (for sections not in chart body)
+        const remainingChains = flowChains.filter(fc => !renderedFlowChains.has(fc.chain));
+        if (remainingChains.length > 0) {
+            formatted.push('<div class="flow-instructions-section">');
+            for (const fc of remainingChains) {
+                formatted.push(`<div class="flow-instruction">${fc.chain}</div>`);
+            }
+            formatted.push('</div>');
+        }
+
+        return formatted.join('').replace(/^(<br\s*\/?>)+/i, '');
+    };
+
     // Format content with structured HTML for professional display
     const formatForPreview = (content, options = {}) => {
         const { enableSectionBlocks = false } = options;
@@ -2366,10 +2925,20 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // ✅ STRIP HTML TAGS from content before parsing (fixes <b>C</b> issue)
         const cleanContent = content.replace(/<[^>]*>/g, '');
 
+        // Check if this is Chords App Format v4 or normalized format
+        const isV4Format = /\{(?:title|key|tempo|subtitle|artist|time|capo):/i.test(cleanContent);
+        // Normalized format: Has "Key: X" and "BPM" on same line (comma-separated metadata)
+        const isNormalizedFormat = /Key:\s*[A-G][#b]?.*,.*\d+\s*BPM/i.test(cleanContent);
+
+        // If v4 or normalized format, use the parser for metadata and structure
+        if ((isV4Format || isNormalizedFormat) && window.chordsAppParser) {
+            return formatV4ForPreview(content, options);
+        }
+
         // ✅ PARSE SONG STRUCTURE FOR CIRCULAR BADGES - ONLY inline notation
         // Pattern for inline notation: (V1)2 or (C)3 or (PC)2 - number after parentheses = repeat count
         // Must try PC and CD first (two chars) before single letter
-        const inlinePattern = /\((PC|CD|[VBICOT])(\d*)\)(\d+)?/gi;
+        const inlinePattern = /\((PC|CD|TURN|BRK|INT|TAG|CODA|[VBICOT])(\d*)\)(\d+)?/gi;
         const songStructure = [];
         const inlineMatches = [...cleanContent.matchAll(inlinePattern)];
 
@@ -2394,22 +2963,30 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const isArrangementLine = (line) => {
             // Strip HTML tags from line first (e.g., (<b>C</b>) -> (C))
             const cleanLine = line.replace(/<[^>]*>/g, '');
-            // Check if line contains at least one inline notation pattern
-            const hasInlineNotation = /\((?:PC|CD|[VBICOT])\d*\)/.test(cleanLine);
-            // Check if line contains ONLY inline notation patterns, digits, spaces, parentheses, and pipe
-            const onlyInlineNotation = /^[\s\(VBICOTPCD\d\)|]+$/.test(cleanLine) && hasInlineNotation;
-            return onlyInlineNotation;
+            // Check if line contains badge notation: (I), (V1), (TURN), (BRK), (TAG), etc.
+            const hasBadges = /\((?:PC|CD|TURN|BRK|INT|TAG|CODA|[VBICOT])\d*\)/i.test(cleanLine);
+            // Check if line contains ONLY badges (no other content except spaces)
+            const onlyBadges = /^[\s]*(\([A-Z]+\d*\)\s*)+[\s]*$/i.test(cleanLine);
+            return hasBadges && onlyBadges;
         };
 
         const finishSection = () => {
             if (currentSection) {
                 const sectionId = `section-${sectionCounter++}`;
                 const sectionClass = enableSectionBlocks ? 'song-section-block' : '';
-                const blockStart = enableSectionBlocks ? `<div class="${sectionClass}" data-section-id="${sectionId}" data-section-name="${currentSection}">` : '';
+
+                // Extract section comment from parentheses: "Verse 1 (Play Loud)" -> name="Verse 1", comment="Play Loud"
+                const sectionMatch = currentSection.match(/^([^(]+?)(?:\s*\(([^)]+)\))?\s*$/);
+                const sectionName = sectionMatch ? sectionMatch[1].trim() : currentSection;
+                const sectionComment = sectionMatch ? sectionMatch[2] : null;
+
+                const blockStart = enableSectionBlocks ? `<div class="${sectionClass}" data-section-id="${sectionId}" data-section-name="${sectionName}">` : '';
                 const blockEnd = enableSectionBlocks ? '</div>' : '';
 
                 formatted.push(blockStart);
-                formatted.push(`<div class="section-header">${currentSection}</div>`);
+                // Render comment INLINE as span inside header
+                const commentSpan = sectionComment ? `<span class="section-comment">${sectionComment}</span>` : '';
+                formatted.push(`<div class="section-header">${sectionName}${commentSpan}</div>`);
                 if (sectionContent.length > 0) {
                     formatted.push(...sectionContent);
                 }
@@ -2425,8 +3002,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // First non-empty lines are metadata (title, author, key info)
             if (inMetadata && line) {
                 // Check if line is a section header - if so, it's not metadata
-                const isSectionHeader = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA)\s*\d*:?$/i.test(line) ||
-                                       /^(V|C|B)\s*\d+:$/i.test(line);
+                // Allow optional comment in parentheses: "Verse 1: (Comment)"
+                const isSectionHeader = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA|TURN|TURNAROUND|BREAK|INTERLUDE|INSTRUMENTAL|SOLO|ENDING|VAMP)\s*\d*:?(?:\s*\([^)]+\))?$/i.test(line) ||
+                                       /^(V|C|B)\s*\d+:(?:\s*\([^)]+\))?$/i.test(line);
 
                 // Skip chord progression summary lines (e.g., "C | 1 | G | 5 D/F | 2# Em | 3")
                 const isChordProgression = /^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(line);
@@ -2511,6 +3089,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                                     section.type === 'C' ? 'badge-chorus' :
                                     section.type === 'B' ? 'badge-bridge' :
                                     section.type === 'PC' ? 'badge-prechorus' :
+                                    section.type === 'O' ? 'badge-outro' :
+                                    section.type === 'TURN' ? 'badge-turn' :
+                                    section.type === 'BRK' ? 'badge-break' :
                                     'badge-other';
                                 return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
                             }).join('');
@@ -2533,13 +3114,30 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Section headers (VERSE 1:, CHORUS:, etc.)
-            if (/^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA)\s*\d*:?$/i.test(line) ||
-                /^(V|C|B)\s*\d+:$/i.test(line)) {
+            // Handle row space tag {rs} - insert blank line
+            if (/^\{rs\}$/i.test(line)) {
+                if (currentSection) {
+                    sectionContent.push('<div class="row-space"></div>');
+                } else {
+                    formatted.push('<div class="row-space"></div>');
+                }
+                continue;
+            }
+
+            // Section headers (VERSE 1:, CHORUS:, TURN 1:, BREAK:, etc.) - allow optional (comment)
+            if (/^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA|TURN|TURNAROUND|BREAK|INTERLUDE|INSTRUMENTAL|SOLO|ENDING|VAMP)\s*\d*:?(?:\s*\([^)]+\))?$/i.test(line) ||
+                /^(V|C|B)\s*\d+:(?:\s*\([^)]+\))?$/i.test(line)) {
                 // Finish previous section if exists
                 finishSection();
-                // Start new section
-                currentSection = line;
+                // Start new section - Convert to Title Case but preserve (comment)
+                // First extract comment if present, then title-case the section name
+                const commentMatch = line.match(/(\([^)]+\))$/);
+                const comment = commentMatch ? commentMatch[1] : '';
+                const sectionPart = commentMatch ? line.slice(0, -comment.length).trim() : line;
+                const titleCased = sectionPart.replace(/:$/, '').replace(/\w+/g, word =>
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                );
+                currentSection = comment ? `${titleCased} ${comment}` : titleCased;
                 continue;
             }
 
@@ -2617,15 +3215,23 @@ Our [Em7]hearts will cry, these bones will [D]sing
             console.log('Applied arrangement order, new length:', visualContent.length);
         }
 
-        // Always make chords bold (skip Nashville numbers for clean print preview)
-        visualContent = makeChordsBold(visualContent);
+        // Check if content uses v4/normalized format (has [chord] brackets or normalized metadata)
+        const hasInlineBrackets = /\[[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\]/.test(visualContent);
+        const isNormalizedFormat = /Key:\s*[A-G][#b]?.*,.*\d+\s*BPM/i.test(visualContent);
+        const isV4Format = /\{(?:title|key|tempo|subtitle|artist|time|capo):/i.test(visualContent);
 
-        // Auto-optimize font size DISABLED - preserve user's settings
-        // optimizeFontSize(visualContent);
-
-        // Format with structured HTML for professional display
-        const formattedHTML = formatForPreview(visualContent);
-        livePreview.innerHTML = formattedHTML;
+        // For v4/normalized formats with inline brackets, let formatForPreview handle chord formatting
+        // This prevents double-processing that strips brackets
+        if ((isV4Format || isNormalizedFormat) && hasInlineBrackets) {
+            // Format with structured HTML - formatForPreview/formatV4ForPreview handles chords
+            const formattedHTML = formatForPreview(visualContent);
+            livePreview.innerHTML = formattedHTML;
+        } else {
+            // Legacy format: use makeChordsBold for above-line chord formatting
+            visualContent = makeChordsBold(visualContent);
+            const formattedHTML = formatForPreview(visualContent);
+            livePreview.innerHTML = formattedHTML;
+        }
 
         // Apply direction to all editing surfaces based on content
         setDirectionalLayout(livePreview, visualContent);
@@ -2732,7 +3338,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Keep section headers (VERSE, CHORUS, BRIDGE, etc.)
                 // Must be a standalone header, not a chord line starting with C, B, etc.
                 const trimmedLine = line.trim();
-                const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO)\s*\d*\s*:?$/i.test(trimmedLine) ||
+                const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|TURN|BREAK)\s*\d*\s*:?$/i.test(trimmedLine) ||
                                        /^(V|PC)\d+\s*:?$/i.test(trimmedLine); // V1, V2, PC1, etc.
                 if (isSectionHeader) {
                     result.push(''); // Add blank line before section header
@@ -3400,17 +4006,19 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // ============= FOLLOW ARRANGEMENT TAGS FEATURE =============
 
-    // Tag to section name mapping
+    // Tag to section name mapping (Title Case)
     const TAG_TO_SECTION = {
-        'I': 'INTRO',
-        'V1': 'VERSE 1', 'V2': 'VERSE 2', 'V3': 'VERSE 3', 'V4': 'VERSE 4',
-        'PC': 'PRE-CHORUS', 'PC1': 'PRE-CHORUS', 'PC2': 'PRE-CHORUS 2',
-        'C': 'CHORUS', 'C1': 'CHORUS', 'C2': 'CHORUS 2',
-        'B': 'BRIDGE', 'B1': 'BRIDGE', 'B2': 'BRIDGE 2',
-        'INT': 'INTERLUDE',
-        'TAG': 'TAG',
-        'CODA': 'CODA',
-        'O': 'OUTRO'
+        'I': 'Intro',
+        'V1': 'Verse 1', 'V2': 'Verse 2', 'V3': 'Verse 3', 'V4': 'Verse 4',
+        'PC': 'Pre-Chorus', 'PC1': 'Pre-Chorus', 'PC2': 'Pre-Chorus 2',
+        'C': 'Chorus', 'C1': 'Chorus', 'C2': 'Chorus 2',
+        'B': 'Bridge', 'B1': 'Bridge', 'B2': 'Bridge 2',
+        'INT': 'Interlude',
+        'TAG': 'Tag',
+        'CODA': 'Coda',
+        'O': 'Outro',
+        'TURN': 'Turn', 'TURN1': 'Turn 1', 'TURN2': 'Turn 2',
+        'BRK': 'Break', 'BRK1': 'Break 1', 'BRK2': 'Break 2'
     };
 
     /**
@@ -3438,7 +4046,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     /**
      * Parse content into sections map
-     * Returns: { 'INTRO': 'content...', 'VERSE 1': 'content...', 'CHORUS': 'content...' }
+     * Returns: { 'Intro': 'content...', 'Verse 1': 'content...', 'Chorus': 'content...' }
      */
     function parseSectionsFromContent(content) {
         const lines = content.split('\n');
@@ -3643,46 +4251,55 @@ Our [Em7]hearts will cry, these bones will [D]sing
     /**
      * Ensures BPM and Time Signature metadata exist in content with default values
      * Adds "BPM: 120" and "Time: 4/4" if not present
+     * Detects both old format (BPM: 120) and normalized format (120 BPM)
      */
     function ensureMetadata(content) {
         const lines = content.split('\n');
 
-        // Check if BPM exists
-        const hasBPM = /BPM:\s*\d+/i.test(content);
-        // Check if Time Signature exists
-        const hasTime = /Time:\s*[^\n\r|]+/i.test(content);
+        // Check if BPM exists - both "BPM: 120" and "120 BPM" formats
+        const hasBPM = /BPM:\s*\d+/i.test(content) || /\d+\s*BPM/i.test(content);
+        // Check if Time Signature exists - both "Time: 3/4" and standalone "3/4" or "4/4"
+        const hasTime = /Time:\s*\d+\/\d+/i.test(content) || /,\s*\d+\/\d+/i.test(content);
 
         // If both exist, return content unchanged
         if (hasBPM && hasTime) {
             return content;
         }
 
-        // Find the Key line to add BPM and Time to it
-        let keyLineIndex = lines.findIndex(line => /Key:/i.test(line));
+        // Find the metadata line (line with Key: or second line after title)
+        let metaLineIndex = lines.findIndex(line => /Key:/i.test(line));
 
-        if (keyLineIndex >= 0) {
-            // Add missing metadata to the Key line
-            let keyLine = lines[keyLineIndex];
+        // If no Key: line, try to find the metadata line (usually line 2)
+        if (metaLineIndex < 0 && lines.length >= 2) {
+            // Check if line 2 looks like metadata (has comma-separated values)
+            if (/,/.test(lines[1]) && !/^\{c:/.test(lines[1].trim()) && !/^\(/.test(lines[1].trim())) {
+                metaLineIndex = 1;
+            }
+        }
+
+        if (metaLineIndex >= 0) {
+            // Add missing metadata to the metadata line
+            let metaLine = lines[metaLineIndex];
 
             if (!hasBPM) {
-                keyLine += ' | BPM: 120';
+                metaLine += ', 120 BPM';
             }
             if (!hasTime) {
-                keyLine += ' | Time: 4/4';
+                metaLine += ', 4/4';
             }
 
-            lines[keyLineIndex] = keyLine;
+            lines[metaLineIndex] = metaLine;
         } else {
-            // No Key line found - add a new metadata line at the start
+            // No metadata line found - add a new one at line 2
             let metadataLine = '';
             if (!hasBPM) {
-                metadataLine = 'BPM: 120';
+                metadataLine = '120 BPM';
             }
             if (!hasTime) {
-                metadataLine += (metadataLine ? ' | ' : '') + 'Time: 4/4';
+                metadataLine += (metadataLine ? ', ' : '') + '4/4';
             }
-            if (metadataLine) {
-                lines.unshift(metadataLine);
+            if (metadataLine && lines.length > 0) {
+                lines.splice(1, 0, metadataLine);
             }
         }
 
@@ -3706,7 +4323,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // ✅ ONLY parse inline notation: (V1) (C) (V2) etc. - NOT section headers
         // Pattern for inline notation: (V1)2 or (C)3 or (PC)2 - number after parentheses = repeat count
         // Must try PC and CD first (two chars) before single letter
-        const inlinePattern = /\((PC|CD|[VBICOT])(\d*)\)(\d+)?/gi;
+        const inlinePattern = /\((PC|CD|TURN|BRK|INT|TAG|CODA|[VBICOT])(\d*)\)(\d+)?/gi;
 
         const songStructure = [];
         const inlineMatches = [...content.matchAll(inlinePattern)];
@@ -3739,6 +4356,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 section.type === 'B' ? 'badge-bridge' :
                 section.type === 'PC' ? 'badge-prechorus' :
                 section.type === 'O' ? 'badge-outro' :
+                section.type === 'TURN' ? 'badge-turn' :
+                section.type === 'BRK' ? 'badge-break' :
                 'badge-other';
             return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
         }).join('');
@@ -4436,6 +5055,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
             showAllFeaturesBtn.addEventListener('click', () => {
                 const modal = document.getElementById('featuresModal');
                 if (modal) modal.style.display = 'flex';
+            });
+        }
+
+        // Raw AI Output Toggle
+        const showRawOutputBtn = document.getElementById('showRawOutputBtn');
+        const aiReferencePreview = document.getElementById('aiReferencePreview');
+        if (showRawOutputBtn && aiReferencePreview) {
+            showRawOutputBtn.addEventListener('click', () => {
+                const isVisible = aiReferencePreview.style.display !== 'none';
+                aiReferencePreview.style.display = isVisible ? 'none' : 'block';
+                showRawOutputBtn.textContent = isVisible ? '👁️ Raw' : '👁️ Hide';
+                showRawOutputBtn.style.background = isVisible ? '#6366f1' : '#10b981';
             });
         }
 
@@ -5144,8 +5775,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
             baselineChart = loadedBaseline;
             currentTransposeSteps = 0;
 
+            // ✅ Normalize hybrid content to clean format FIRST
+            const normalizedChart = normalizeContent(loadedBaseline);
+
             // Convert ChordPro to visual format (same as analyze flow)
-            let visualFormat = convertToAboveLineFormat(loadedBaseline, true);
+            let visualFormat = convertToAboveLineFormat(normalizedChart, true);
 
             // Auto-insert arrangement line
             visualFormat = autoInsertArrangementLine(visualFormat);
@@ -5163,9 +5797,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             visualEditor.value = visualFormat;
             setDirectionalLayout(visualEditor, visualFormat);
 
-            // Update songbook output
-            songbookOutput.value = loadedBaseline;
-            setDirectionalLayout(songbookOutput, loadedBaseline);
+            // Update songbook output (normalized)
+            songbookOutput.value = normalizedChart;
+            setDirectionalLayout(songbookOutput, normalizedChart);
 
             // Reset transpose input
             transposeStepInput.value = 0;
@@ -5247,17 +5881,19 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // ============= SECTION HEADER EDITOR WITH DROPDOWNS =============
 
-    // Section options for dropdown
+    // Section options for dropdown (Title Case)
     const sectionOptions = [
-        'INTRO',
-        'VERSE 1', 'VERSE 2', 'VERSE 3', 'VERSE 4',
-        'PRE-CHORUS', 'PRE-CHORUS 1', 'PRE-CHORUS 2',
-        'CHORUS', 'CHORUS 1', 'CHORUS 2',
-        'BRIDGE', 'BRIDGE 1', 'BRIDGE 2',
-        'INTERLUDE',
-        'TAG',
-        'CODA',
-        'OUTRO'
+        'Intro',
+        'Verse 1', 'Verse 2', 'Verse 3', 'Verse 4',
+        'Pre-Chorus', 'Pre-Chorus 1', 'Pre-Chorus 2',
+        'Chorus', 'Chorus 1', 'Chorus 2',
+        'Bridge', 'Bridge 1', 'Bridge 2',
+        'Interlude',
+        'Tag',
+        'Coda',
+        'Outro',
+        'Turn', 'Turn 1', 'Turn 2',
+        'Break', 'Break 1', 'Break 2'
     ];
 
     // Create section editor dropdown overlay
@@ -5318,18 +5954,34 @@ Our [Em7]hearts will cry, these bones will [D]sing
     cancelButton.style.cssText = `
         flex: 1;
         padding: 6px 12px;
-        background: rgba(255, 255, 255, 0.1);
-        color: var(--text);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: #6b7280;
+        color: white;
+        border: none;
         border-radius: 6px;
         cursor: pointer;
         font-size: 13px;
+    `;
+
+    const removeButton = document.createElement('button');
+    removeButton.textContent = 'Remove';
+    removeButton.style.cssText = `
+        width: 100%;
+        margin-top: 8px;
+        padding: 6px 12px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
     `;
 
     buttonContainer.appendChild(applyButton);
     buttonContainer.appendChild(cancelButton);
     sectionEditorOverlay.appendChild(sectionSelect);
     sectionEditorOverlay.appendChild(buttonContainer);
+    sectionEditorOverlay.appendChild(removeButton);
     document.body.appendChild(sectionEditorOverlay);
 
     let currentEditingLine = null;
@@ -5337,21 +5989,23 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Function to show section editor
     function showSectionEditor(lineText, lineNumber, clickX, clickY) {
-        const sectionMatch = lineText.match(/^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|CHOURS)[\s\d]*:?/i);
+        const sectionMatch = lineText.match(/^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|TURN|BREAK|CHOURS)[\s\d]*:?/i);
 
         if (sectionMatch) {
             currentEditingLine = lineText.trim();
             currentEditingLineNumber = lineNumber;
 
-            // Try to find matching option
-            const currentSection = currentEditingLine.replace(':', '').trim().toUpperCase();
-            const matchingOption = sectionOptions.find(opt => opt === currentSection);
+            // Try to find matching option (case-insensitive)
+            const currentSection = currentEditingLine.replace(':', '').trim();
+            const matchingOption = sectionOptions.find(opt =>
+                opt.toLowerCase() === currentSection.toLowerCase()
+            );
 
             if (matchingOption) {
                 sectionSelect.value = matchingOption;
             } else {
-                // Default to CHORUS if no match (covers typos like "CHOURS")
-                sectionSelect.value = 'CHORUS';
+                // Default to Chorus if no match (covers typos like "CHOURS")
+                sectionSelect.value = 'Chorus';
             }
 
             // Position overlay with proper scroll compensation
@@ -5408,6 +6062,21 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Cancel editing
     cancelButton.addEventListener('click', hideSectionEditor);
 
+    // Remove section header entirely
+    removeButton.addEventListener('click', () => {
+        if (currentEditingLineNumber !== null) {
+            const lines = visualEditor.value.split('\n');
+            lines.splice(currentEditingLineNumber, 1); // Remove the line
+            visualEditor.value = lines.join('\n');
+
+            // Update SongBook and preview
+            updateSongBookFromVisual();
+            updateLivePreview();
+
+            hideSectionEditor();
+        }
+    });
+
     // Click on visualEditor to detect section headers
     if (visualEditor) {
         visualEditor.addEventListener('click', (e) => {
@@ -5419,7 +6088,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const currentLine = lines[lineNumber];
 
             // Check if this line is a section header
-            const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|CHOURS)[\s\d]*:?/i.test(currentLine.trim());
+            const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|TURN|BREAK|CHOURS)[\s\d]*:?/i.test(currentLine.trim());
 
             if (isSectionHeader) {
                 // Show editor at click position
@@ -5441,20 +6110,23 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // ============= END SECTION HEADER EDITOR =============
 
     // ============= ARRANGEMENT TAG EDITOR =============
-    // Arrangement tag options for dropdown
+    // Arrangement tag options for dropdown (with repeat counts and flow arrow)
     const arrangementTagOptions = [
-        '(I)',     // Intro
+        '(I)', '(I)2x', '(I)3x',     // Intro with repeats
         '(V1)', '(V2)', '(V3)', '(V4)',  // Verses
         '(PC)', '(PC1)', '(PC2)',  // Pre-Chorus
-        '(C)', '(C1)', '(C2)',  // Chorus
-        '(B)', '(B1)', '(B2)',  // Bridge
+        '(C)', '(C)2x', '(C1)', '(C2)',  // Chorus with repeats
+        '(B)', '(B)2x', '(B1)', '(B2)',  // Bridge with repeats
         '(INT)',  // Interlude
-        '(TAG)',  // Tag
+        '(TAG)', '(TAG)2x',  // Tag with repeat
         '(CODA)', // Coda
-        '(O)'     // Outro
+        '(O)',    // Outro
+        '(TURN)', '(TURN1)', '(TURN2)',  // Turn
+        '(BRK)', '(BRK1)', '(BRK2)',  // Break
+        '>'  // Flow arrow (go to)
     ];
 
-    // Create arrangement tag editor dropdown overlay
+    // Create arrangement tag editor dropdown overlay (compact layout like section editor)
     const arrangementEditorOverlay = document.createElement('div');
     arrangementEditorOverlay.id = 'arrangementEditorOverlay';
     arrangementEditorOverlay.style.cssText = `
@@ -5465,30 +6137,21 @@ Our [Em7]hearts will cry, these bones will [D]sing
         border-radius: 8px;
         padding: 12px;
         z-index: 10000;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-        min-width: 180px;
-    `;
-
-    const arrangementSelectLabel = document.createElement('label');
-    arrangementSelectLabel.textContent = 'Edit Tag:';
-    arrangementSelectLabel.style.cssText = `
-        display: block;
-        margin-bottom: 8px;
-        font-size: 0.85rem;
-        color: var(--text);
-        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        min-width: 200px;
     `;
 
     const arrangementSelect = document.createElement('select');
     arrangementSelect.style.cssText = `
         width: 100%;
         padding: 8px;
+        font-size: 14px;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 6px;
         background: var(--bg, #0f0f23);
         color: var(--text);
-        border: 1px solid var(--primary);
-        border-radius: 6px;
-        font-size: 0.95rem;
         cursor: pointer;
+        margin-bottom: 8px;
     `;
 
     arrangementTagOptions.forEach(tag => {
@@ -5498,37 +6161,55 @@ Our [Em7]hearts will cry, these bones will [D]sing
         arrangementSelect.appendChild(option);
     });
 
+    const arrangementButtonContainer = document.createElement('div');
+    arrangementButtonContainer.style.cssText = 'display: flex; gap: 8px;';
+
     const arrangementApplyButton = document.createElement('button');
     arrangementApplyButton.textContent = 'Apply';
     arrangementApplyButton.style.cssText = `
-        margin-top: 8px;
-        width: 100%;
-        padding: 8px;
+        flex: 1;
+        padding: 6px 12px;
         background: var(--primary);
         color: white;
         border: none;
         border-radius: 6px;
         cursor: pointer;
+        font-size: 13px;
         font-weight: 600;
     `;
 
+    const arrangementCancelButton = document.createElement('button');
+    arrangementCancelButton.textContent = 'Cancel';
+    arrangementCancelButton.style.cssText = `
+        flex: 1;
+        padding: 6px 12px;
+        background: #6b7280;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+    `;
+
     const arrangementRemoveButton = document.createElement('button');
-    arrangementRemoveButton.textContent = 'Remove Tag';
+    arrangementRemoveButton.textContent = 'Remove';
     arrangementRemoveButton.style.cssText = `
-        margin-top: 6px;
         width: 100%;
-        padding: 8px;
+        margin-top: 8px;
+        padding: 6px 12px;
         background: #dc3545;
         color: white;
         border: none;
         border-radius: 6px;
         cursor: pointer;
+        font-size: 13px;
         font-weight: 600;
     `;
 
-    arrangementEditorOverlay.appendChild(arrangementSelectLabel);
+    arrangementButtonContainer.appendChild(arrangementApplyButton);
+    arrangementButtonContainer.appendChild(arrangementCancelButton);
     arrangementEditorOverlay.appendChild(arrangementSelect);
-    arrangementEditorOverlay.appendChild(arrangementApplyButton);
+    arrangementEditorOverlay.appendChild(arrangementButtonContainer);
     arrangementEditorOverlay.appendChild(arrangementRemoveButton);
     document.body.appendChild(arrangementEditorOverlay);
 
@@ -5646,6 +6327,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Remove button click
     arrangementRemoveButton.addEventListener('click', removeArrangementTag);
+
+    // Cancel button click
+    arrangementCancelButton.addEventListener('click', hideArrangementEditor);
 
     // Enter key to apply
     arrangementSelect.addEventListener('keydown', (e) => {

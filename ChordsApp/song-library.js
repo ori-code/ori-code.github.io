@@ -448,7 +448,12 @@
                 // Extract title - remove leading numbers like "171. "
                 const titleMatch = trimmed.match(/^(?:\d+\.\s*)?(.+)/);
                 if (titleMatch && titleMatch[1]) {
-                    return titleMatch[1].trim();
+                    let title = titleMatch[1].trim();
+                    // Strip "Title: " prefix if present (from AI analysis output)
+                    if (title.toLowerCase().startsWith('title:')) {
+                        title = title.substring(6).trim();
+                    }
+                    return title;
                 }
             }
             return '';
@@ -612,7 +617,7 @@
                 const pageCountSelect = document.getElementById('pageCount');
 
                 const layoutSettings = {
-                    fontSize: fontSizeSlider ? parseFloat(fontSizeSlider.value) : 8.5,
+                    fontSize: fontSizeSlider ? parseFloat(fontSizeSlider.value) : 8,
                     lineHeight: lineHeightSlider ? parseFloat(lineHeightSlider.value) : 1.5,
                     charSpacing: charSpacingSlider ? parseFloat(charSpacingSlider.value) : 0,
                     columnCount: columnCountSelect ? columnCountSelect.value : '2',
@@ -798,7 +803,7 @@
                 const pageCountSelect = document.getElementById('pageCount');
 
                 const layoutSettings = {
-                    fontSize: fontSizeSlider ? parseFloat(fontSizeSlider.value) : 8.5,
+                    fontSize: fontSizeSlider ? parseFloat(fontSizeSlider.value) : 8,
                     lineHeight: lineHeightSlider ? parseFloat(lineHeightSlider.value) : 1.5,
                     charSpacing: charSpacingSlider ? parseFloat(charSpacingSlider.value) : 0,
                     columnCount: columnCountSelect ? columnCountSelect.value : '2',
@@ -954,7 +959,7 @@
             addToSessionBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease; margin-right: 4px;';
             addToSessionBtn.title = 'Add to session playlist';
 
-            addToSessionBtn.addEventListener('click', (e) => {
+            addToSessionBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
 
                 // Check if user has an active session or is PRO
@@ -964,7 +969,7 @@
                 }
 
                 // ✅ STORE SONG DATA WITH NEW STRUCTURED FIELDS
-                window.pendingSongToAdd = {
+                const songData = {
                     // Legacy field
                     name: song.name,
 
@@ -981,6 +986,28 @@
                     // Transpose state
                     originalKey: song.originalKey || 'Unknown'
                 };
+
+                // If adding from Session Controls with an active session, add directly
+                if (window.addingToSessionPlaylist && window.sessionManager.activeSession && window.sessionManager.isLeader) {
+                    try {
+                        await window.sessionManager.addSongToPlaylist(songData);
+                        showMessage('Success', `Added "${song.name}" to playlist`, 'success');
+                        loadSongModal.style.display = 'none';
+                        window.addingToSessionPlaylist = false;
+
+                        // Reopen session controls and refresh playlist
+                        if (window.sessionUI) {
+                            window.sessionUI.showSessionControls();
+                        }
+                    } catch (error) {
+                        console.error('Error adding to playlist:', error);
+                        showMessage('Error', 'Failed to add song to playlist', 'error');
+                    }
+                    return;
+                }
+
+                // Otherwise, store and open My Sessions modal
+                window.pendingSongToAdd = songData;
 
                 // Close load song modal
                 loadSongModal.style.display = 'none';
@@ -1364,11 +1391,13 @@
         loadSongClose.addEventListener('click', () => {
             resetBulkSelection();
             loadSongModal.style.display = 'none';
+            window.addingToSessionPlaylist = false;
         });
 
         loadSongCancel.addEventListener('click', () => {
             resetBulkSelection();
             loadSongModal.style.display = 'none';
+            window.addingToSessionPlaylist = false;
         });
 
         // ============= BULK SELECTION BUTTON HANDLERS =============
@@ -1608,6 +1637,7 @@
         loadSongModal.addEventListener('click', (e) => {
             if (e.target === loadSongModal) {
                 loadSongModal.style.display = 'none';
+                window.addingToSessionPlaylist = false;
             }
         });
 
@@ -1664,14 +1694,30 @@
                         // Extract song title from content or filename
                         let songName = extractSongTitle(content, file.name);
 
-                        // Extract metadata from content before cleaning
-                        const keyMatch = content.match(/\{key:\s*([^}]+)\}/i);
-                        const tempoMatch = content.match(/\{tempo:\s*([^}]+)\}/i);
-                        const timeMatch = content.match(/\{time:\s*([^}]+)\}/i);
-                        const authorMatch = content.match(/\{author:\s*([^}]+)\}/i);
+                        // Check if content is v4 format
+                        const isV4Format = /\{(?:title|key|tempo|subtitle|artist|time|capo):/i.test(content);
 
-                        // Clean unnecessary tags from content
-                        content = cleanChordProContent(content);
+                        // Extract metadata from content before cleaning
+                        let keyMatch, tempoMatch, timeMatch, authorMatch;
+
+                        if (isV4Format && window.chordsAppParser) {
+                            // Use v4 parser for metadata extraction
+                            const metadata = window.chordsAppParser.extractMetadata(content);
+                            keyMatch = metadata.key ? [null, metadata.key] : null;
+                            tempoMatch = metadata.tempo ? [null, metadata.tempo] : null;
+                            timeMatch = metadata.time ? [null, metadata.time] : null;
+                            authorMatch = metadata.artist ? [null, metadata.artist] : null;
+                            // For v4 format, keep the content as-is (don't clean directives)
+                        } else {
+                            // Legacy format extraction
+                            keyMatch = content.match(/\{key:\s*([^}]+)\}/i);
+                            tempoMatch = content.match(/\{tempo:\s*([^}]+)\}/i);
+                            timeMatch = content.match(/\{time:\s*([^}]+)\}/i);
+                            authorMatch = content.match(/\{author:\s*([^}]+)\}/i) ||
+                                         content.match(/\{subtitle:\s*([^}]+)\}/i);
+                            // Clean unnecessary tags from content (legacy format only)
+                            content = cleanChordProContent(content);
+                        }
 
                         const songData = {
                             name: songName,

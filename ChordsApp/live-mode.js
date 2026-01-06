@@ -567,26 +567,47 @@ const liveMode = {
                 // Parse and render arrangement badges separately for Live Mode
                 // (formatForPreview only adds badges inside .song-header which requires metadata)
                 if (!chartDisplay.querySelector('.section-badges-row')) {
-                    const inlinePattern = /\((PC|CD|[VBICOT])(\d*)\)(\d+)?/gi;
                     const cleanContent = this.currentSongContent.replace(/<[^>]*>/g, '');
-                    const inlineMatches = [...cleanContent.matchAll(inlinePattern)];
+                    let badgesList = [];
 
-                    if (inlineMatches.length > 0) {
-                        const badges = inlineMatches.map(match => {
+                    // Check if content is v4 format and use parser
+                    if (window.chordsAppParser && /\{(?:title|key|tempo|subtitle|artist|time|capo):/i.test(cleanContent)) {
+                        // Use new parseArrangementFull for full object support (repeat counts, flow arrows)
+                        badgesList = window.chordsAppParser.parseArrangementFull(cleanContent);
+                    } else {
+                        // Legacy format: parse inline notation
+                        const inlinePattern = /\((PC|CD|TURN|BRK|INT|TAG|CODA|[VBICOT])(\d*)\)(\d+)?/gi;
+                        const inlineMatches = [...cleanContent.matchAll(inlinePattern)];
+                        badgesList = inlineMatches.map(match => {
                             const sectionType = match[1].toUpperCase();
                             const sectionNum = match[2] || '';
-                            const repeatCount = match[3] ? parseInt(match[3]) : 1;
                             const label = sectionNum ? `${sectionType}${sectionNum}` : sectionType;
-                            const repeatHTML = repeatCount > 1 ? `<sup class="repeat-count">${repeatCount}</sup>` : '';
-                            const colorClass =
-                                sectionType === 'I' ? 'badge-intro' :
-                                sectionType === 'V' ? 'badge-verse' :
-                                sectionType === 'C' ? 'badge-chorus' :
-                                sectionType === 'B' ? 'badge-bridge' :
-                                sectionType === 'PC' ? 'badge-prechorus' :
-                                'badge-other';
-                            return `<span class="section-badge ${colorClass}">${label}${repeatHTML}</span>`;
-                        }).join('');
+                            const repeat = match[3] ? parseInt(match[3]) : 1;
+                            return { type: 'badge', label, repeat };
+                        });
+                    }
+
+                    if (badgesList.length > 0) {
+                        const badges = badgesList
+                            .filter(item => item.type === 'badge' || (typeof item === 'string' && item !== '>')) // Skip flow arrows
+                            .map(item => {
+                                // Handle badges (support both object and string formats)
+                                const label = typeof item === 'string' ? item : item.label;
+                                const repeat = typeof item === 'object' ? item.repeat : 1;
+                                const colorClass = window.chordsAppParser
+                                    ? window.chordsAppParser.getBadgeColorClass(label)
+                                    : (label.replace(/\d+$/, '') === 'I' ? 'badge-intro' :
+                                       label.replace(/\d+$/, '') === 'V' ? 'badge-verse' :
+                                       label.replace(/\d+$/, '') === 'C' ? 'badge-chorus' :
+                                       label.replace(/\d+$/, '') === 'B' ? 'badge-bridge' :
+                                       label.replace(/\d+$/, '') === 'PC' ? 'badge-prechorus' :
+                                       label.replace(/\d+$/, '') === 'O' ? 'badge-outro' :
+                                       label.replace(/\d+$/, '') === 'TURN' ? 'badge-turn' :
+                                       label.replace(/\d+$/, '') === 'BRK' ? 'badge-break' :
+                                       'badge-other');
+                                const repeatSup = repeat > 1 ? `<sup class="repeat-count">${repeat}x</sup>` : '';
+                                return `<span class="section-badge ${colorClass}">${label}${repeatSup}</span>`;
+                            }).join('');
 
                         const badgesRow = document.createElement('div');
                         badgesRow.className = 'section-badges-row';

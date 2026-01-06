@@ -1645,12 +1645,22 @@ a {
     font-weight: 700;
     font-size: 14px;
     margin: 6px 0 8px 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    text-decoration: underline;
+    letter-spacing: 0.3px;
     /* Prevent section headers from breaking away from their content */
     break-after: avoid;
     -webkit-column-break-after: avoid;
     page-break-after: avoid;
+}
+
+/* Section comments/performance notes (italic, inline with header) */
+.section-comment {
+    font-style: italic;
+    font-size: inherit;
+    color: #666;
+    font-weight: 400;
+    text-decoration: none;  /* Remove underline inherited from parent */
+    margin-left: 8px;
 }
 
 /* ✅ CIRCULAR SECTION BADGES */
@@ -1844,6 +1854,18 @@ a {
     color: #ec4899;
 }
 
+.badge-turn {
+    background: rgba(251, 191, 36, 0.1);
+    border-color: #fbbf24;
+    color: #fbbf24;
+}
+
+.badge-break {
+    background: rgba(6, 182, 212, 0.1);
+    border-color: #06b6d4;
+    color: #06b6d4;
+}
+
 .badge-other {
     background: rgba(156, 163, 175, 0.1);
     border-color: #9ca3af;
@@ -1858,6 +1880,33 @@ a {
     vertical-align: super;
     position: relative;
     top: -2px;
+}
+
+/* Flow arrow between badges - e.g., (C) > (I) displays as C → I */
+.flow-arrow {
+    font-size: 18px;
+    color: #666;
+    margin: 0 4px;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+/* Flow instructions section - groups all flow arrows at end of chart */
+.flow-instructions-section {
+    margin-top: 16px;
+    padding-top: 8px;
+    border-top: 1px dashed #ccc;
+}
+
+/* Flow instruction line in preview - e.g., "Chorus > Intro" */
+.flow-instruction {
+    font-weight: 700;
+    font-size: 14px;
+    color: #333;
+    text-decoration: underline;
+    margin: 4px 0;
+    padding: 2px 0;
+    letter-spacing: 0.3px;
 }
 
 /* ✅ EDITOR SONG STRUCTURE BADGES */
@@ -1915,6 +1964,13 @@ a {
     border-width: 2px;
     background: transparent;
     box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.1);
+}
+
+/* Row space tag {rs} - visible blank line */
+.row-space {
+    height: 1.2em;
+    min-height: 1.2em;
+    display: block;
 }
 
 /* Overflow Notification Toast */
@@ -2192,11 +2248,19 @@ a {
     .section-header {
         font-weight: 700 !important;
         font-size: 10.5pt !important;
-        text-transform: uppercase !important;
+        text-decoration: underline !important;
         margin: 12px 0 6px 0 !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: 0.3px !important;
         break-after: avoid !important;
         page-break-after: avoid !important;
+    }
+
+    .section-comment {
+        font-style: italic !important;
+        font-size: inherit !important;
+        color: #444 !important;
+        text-decoration: none !important;
+        margin-left: 6px !important;
     }
 
     /* Print-friendly badges */
@@ -2237,6 +2301,36 @@ a {
         box-shadow: none !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
+    }
+
+    /* Row space for print */
+    .row-space {
+        height: 1em !important;
+        min-height: 1em !important;
+        display: block !important;
+    }
+
+    /* Flow arrow for print */
+    .flow-arrow {
+        color: #333 !important;
+        font-size: 14px !important;
+    }
+
+    /* Flow instructions section for print */
+    .flow-instructions-section {
+        margin-top: 12px !important;
+        padding-top: 6px !important;
+        border-top: 1px dashed #999 !important;
+    }
+
+    /* Flow instruction for print - matches section header styling */
+    .flow-instruction {
+        font-weight: 700 !important;
+        font-size: 10.5pt !important;
+        color: #000 !important;
+        text-decoration: underline !important;
+        margin: 3px 0 !important;
+        letter-spacing: 0.3px !important;
     }
 
     /* Hide the hidden print preview div - we use livePreview instead */
