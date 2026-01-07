@@ -808,7 +808,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (/^(Artist|Subtitle|By):\s*.+/i.test(trimmed)) continue;
 
             // Skip v4 metadata directives (but keep {c:} section markers)
-            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo):/i.test(trimmed)) continue;
+            // Note: {layout: X} is parsed for column count but not displayed
+            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo|layout):/i.test(trimmed)) continue;
 
             // Convert {c: Section:} to just Section: for clean display (Title Case)
             if (/^\{c:\s*([^}]+)\}/i.test(trimmed)) {
@@ -2786,7 +2787,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
 
             // Skip directive lines (already processed as metadata)
-            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo):/i.test(trimmedLine)) {
+            // Note: {layout: X} is also skipped - it's only used for column count detection
+            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo|layout):/i.test(trimmedLine)) {
                 continue;
             }
 
