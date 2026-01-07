@@ -1113,6 +1113,46 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }
     };
 
+    // Global variable to store detected layout from AI analysis
+    let detectedLayout = null;
+
+    /**
+     * Extract and apply layout setting from AI transcription
+     * Looks for {layout: 1} or {layout: 2} directive
+     */
+    const extractAndApplyLayout = (transcription) => {
+        // Remove markdown code blocks if present
+        const cleanedTranscription = transcription.replace(/```[a-z]*\n?/g, '').replace(/```$/g, '');
+
+        // Look for {layout: X} directive
+        const layoutMatch = cleanedTranscription.match(/\{layout:\s*(\d+)\}/i);
+
+        if (layoutMatch && layoutMatch[1]) {
+            const layoutValue = parseInt(layoutMatch[1]);
+            if (layoutValue === 1 || layoutValue === 2) {
+                detectedLayout = layoutValue;
+                console.log('📐 Layout detected from AI:', layoutValue, 'column(s)');
+
+                // Apply to column count dropdown
+                const columnCountSelect = document.getElementById('columnCount');
+                if (columnCountSelect && livePreview) {
+                    columnCountSelect.value = layoutValue;
+                    livePreview.style.columns = layoutValue.toString();
+                    console.log('✅ Applied detected layout:', layoutValue, 'column(s)');
+                }
+                return layoutValue;
+            }
+        }
+
+        // Default: no layout detected, use default (2 columns)
+        console.log('📐 No layout directive found, using default 2 columns');
+        detectedLayout = 2;
+        return null;
+    };
+
+    // Expose for use in song-library.js when saving
+    window.getDetectedLayout = () => detectedLayout;
+
     const handleFileSelection = () => {
         uploadedFile = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
 
@@ -1390,6 +1430,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Extract and display detected key
                 extractAndDisplayKey(result.transcription);
 
+                // Extract and apply layout from AI detection (1 or 2 columns)
+                extractAndApplyLayout(result.transcription);
+
                 lastRawTranscription = result.transcription;
 
                 transposeStepInput.value = 0;
@@ -1409,7 +1452,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     updateUsageDisplay();
                 }
 
-                // Reset font size to minimum (8pt) and 2 columns for new analysis
+                // Reset font size to minimum (8pt) for new analysis
                 if (fontSizeSlider && fontSizeValue && livePreview) {
                     fontSizeSlider.value = 8;
                     fontSizeValue.textContent = '8';
@@ -1419,13 +1462,6 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     const sideMenuFontSizeVal = document.getElementById('sideMenuFontSizeVal');
                     if (sideMenuFontSize) sideMenuFontSize.value = 8;
                     if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = '8pt';
-                }
-
-                // Set default 2 columns for new analysis
-                const columnCountSelect = document.getElementById('columnCount');
-                if (columnCountSelect && livePreview) {
-                    columnCountSelect.value = 2;
-                    livePreview.style.columns = '2';
                 }
 
                 // Update the live preview
@@ -2203,6 +2239,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         }
 
                         extractAndDisplayKey(result.transcription);
+
+                        // Extract and apply layout from AI detection (1 or 2 columns)
+                        extractAndApplyLayout(result.transcription);
 
                         transposeStepInput.value = 0;
                         setStatus('success', 'Re-analysis applied! Review the updated chart.');

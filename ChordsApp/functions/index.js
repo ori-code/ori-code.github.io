@@ -32,6 +32,17 @@ CHORDS APP FORMAT v4 - MANDATORY OUTPUT FORMAT
 {key: G}
 {time: 4/4}
 {tempo: 120}
+{layout: 2}
+
+## LAYOUT DETECTION
+Detect the visual layout of the source document:
+- {layout: 1} = Single column (sections flow top to bottom)
+- {layout: 2} = Two columns (content side by side, like the example PDF)
+
+Look for visual indicators:
+- If content is arranged in 2 side-by-side columns → {layout: 2}
+- If sections flow sequentially in one column → {layout: 1}
+- Professional chord sheets often use 2-column layout to fit on one page
 
 ## ARRANGEMENT BADGES LINE
 Place ALL badges on ONE line after metadata. Include every section occurrence:
@@ -90,6 +101,7 @@ COMPLETE OUTPUT EXAMPLE
 {key: G}
 {time: 3/4}
 {tempo: 76}
+{layout: 1}
 (I) (V1) (V2) (TURN) (V3) (C) (TAG) (O)
 
 {c: Intro:}
@@ -153,13 +165,14 @@ Analysis: [Brief key detection reasoning]
 CRITICAL RULES
 ================================================================================
 
-1. ALWAYS output metadata directives at top
+1. ALWAYS output metadata directives at top (including {layout: 1} or {layout: 2})
 2. ALWAYS include arrangement badge line after metadata
 3. Section markers use {c: Section:} - NO badges inside
 4. Chords in [brackets] with NO space before word
 5. Use chord grids | G | C | for instrumental parts
 6. Empty section marker for repeats
-7. Keep original language (Hebrew/English)`;
+7. Keep original language (Hebrew/English)
+8. DETECT and output {layout: 1} or {layout: 2} based on source document columns`;
 
 /**
  * Verify Firebase ID token from Authorization header
