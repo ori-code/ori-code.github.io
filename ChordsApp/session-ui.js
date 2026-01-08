@@ -1,4 +1,4 @@
-// ChordsApp Session UI Manager
+// aChordim Session UI Manager
 // Handles rendering and interaction for live sessions
 
 class SessionUI {

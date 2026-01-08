@@ -1,5 +1,5 @@
 /**
- * ChordsApp Pad Player
+ * aChordim Pad Player
  * Plays looping ambient pad sounds for each musical key
  */
 

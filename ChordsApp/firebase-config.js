@@ -1,4 +1,4 @@
-// Firebase Configuration for ChordsAppClaude
+// Firebase Configuration for aChordimClaude
 const firebaseConfig = {
     apiKey: "AIzaSyD8tN8r-ZcuM1iBfse5RHotw4Q9dcF3ks4",
     authDomain: "chordsapp-e10e7.firebaseapp.com",
@@ -18,4 +18,4 @@ const auth = firebase.auth();
 // Export for use in other files
 window.auth = auth;
 
-console.log('Firebase initialized successfully for ChordsAppClaude');
+console.log('Firebase initialized successfully for aChordimClaude');

@@ -1,4 +1,4 @@
-// Firebase Authentication for ChordsAppClaude
+// Firebase Authentication for aChordimClaude
 
 class ChordsAuthManager {
     constructor() {

@@ -1,4 +1,4 @@
-// ChordsApp Live Session Manager
+// aChordim Live Session Manager
 // Handles real-time collaboration between leaders (PRO) and players (BASIC+)
 
 class SessionManager {

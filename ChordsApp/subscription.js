@@ -1,5 +1,5 @@
 /**
- * ChordsApp Subscription Management
+ * aChordim Subscription Management
  * Handles subscription tiers, usage tracking, and feature access control
  */
 
@@ -42,7 +42,7 @@ const SUBSCRIPTION_TIERS = {
         nashvilleNumbers: false,
         canCreateSession: false,
         canJoinSession: false,
-        features: ['3 AI analyses/month', 'Transpose', 'Print/Export']
+        features: ['3 scans/month', 'Transpose', 'Print/Export']
     },
     BASIC: {
         name: 'Basic',
@@ -52,7 +52,7 @@ const SUBSCRIPTION_TIERS = {
         nashvilleNumbers: false,
         canCreateSession: false,
         canJoinSession: true,
-        features: ['20 AI analyses/month', 'Save to Library', 'Transpose', 'Print/Export']
+        features: ['20 scans/month', 'Save to Library', 'Transpose', 'Print/Export']
     },
     PRO: {
         name: 'Pro',
@@ -62,7 +62,7 @@ const SUBSCRIPTION_TIERS = {
         nashvilleNumbers: true,
         canCreateSession: true,
         canJoinSession: true,
-        features: ['Unlimited AI analyses', 'Save to Library', 'Nashville Numbers', 'Live Sessions', 'Transpose', 'Print/Export']
+        features: ['Unlimited scans', 'Save to Library', 'Nashville Numbers', 'Live Sessions', 'Transpose', 'Print/Export']
     },
     BOOK: {
         name: 'Book',
@@ -74,7 +74,7 @@ const SUBSCRIPTION_TIERS = {
         nashvilleNumbers: true,
         canCreateSession: false,
         canJoinSession: false,
-        features: ['20 AI scans included', 'Save to Library', 'Nashville Numbers', 'Buy scan packs', 'Transpose', 'Print/Export']
+        features: ['20 scans included', 'Save to Library', 'Nashville Numbers', 'Buy scan packs', 'Transpose', 'Print/Export']
     }
 };
 
@@ -535,7 +535,7 @@ window.SCAN_PACKS = SCAN_PACKS;
 
 // Export environment info
 window.CHORDSAPP_ENV = SUBSCRIPTION_ENV;
-console.log(`ChordsApp Environment: ${SUBSCRIPTION_ENV}`);
+console.log(`aChordim Environment: ${SUBSCRIPTION_ENV}`);
 console.log(`Prices: Basic=$${CURRENT_PRICES.BASIC}, Pro=$${CURRENT_PRICES.PRO}, Book=$${CURRENT_PRICES.BOOK}`);
 
 // Create global subscription manager instance

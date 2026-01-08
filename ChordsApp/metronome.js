@@ -1,5 +1,5 @@
 /**
- * ChordsApp Metronome
+ * aChordim Metronome
  * Professional metronome with tap tempo, time signatures, and multiple sounds
  */
 

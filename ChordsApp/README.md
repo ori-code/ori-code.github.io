@@ -1,4 +1,4 @@
-# ChordsApp
+# aChordim
 
 AI-powered chord chart transcription tool for worship leaders and musicians.
 
@@ -20,9 +20,9 @@ AI-powered chord chart transcription tool for worship leaders and musicians.
 
 ### Installation
 
-1. **Navigate to the ChordsApp directory:**
+1. **Navigate to the aChordim directory:**
    ```bash
-   cd ChordsApp
+   cd aChordim
    ```
 
 2. **Install dependencies:**
@@ -94,7 +94,7 @@ Example response:
 ## Project Structure
 
 ```
-ChordsApp/
+aChordim/
 ├── index.html          # Main frontend
 ├── styles.css          # Styling
 ├── app.js             # Frontend logic

@@ -1,4 +1,4 @@
-// ChordsApp Live Mode - Full-screen performance view
+// aChordim Live Mode - Full-screen performance view
 // Allows both leaders and players to view songs in distraction-free mode
 
 const liveMode = {

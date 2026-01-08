@@ -1,4 +1,4 @@
-// ChordsApp MIDI Controller - Hands-free control for Live Mode
+// aChordim MIDI Controller - Hands-free control for Live Mode
 // Allows foot pedals and MIDI controllers to scroll charts and navigate songs
 
 const midiController = {

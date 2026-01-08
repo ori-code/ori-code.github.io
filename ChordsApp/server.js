@@ -218,7 +218,7 @@ NEVER say "I cannot read this" - always attempt transcription with confidence ma
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'ChordsAppClaude API is running' });
+    res.json({ status: 'ok', message: 'aChordimClaude API is running' });
 });
 
 // Main OCR endpoint - Using Google Gemini
@@ -824,7 +824,7 @@ app.post('/api/admin/delete-orphan-user', async (req, res) => {
 
 // Start server - bind to 0.0.0.0 to accept connections from any network interface
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`ChordsAppClaude API server running on port ${PORT}`);
+    console.log(`aChordimClaude API server running on port ${PORT}`);
     console.log(`Health check: http://localhost:${PORT}/health`);
     console.log(`Usage tracking: http://localhost:${PORT}/api/can-analyze`);
 });

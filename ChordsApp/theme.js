@@ -1,4 +1,4 @@
-// Theme Toggle for ChordsAppClaude
+// Theme Toggle for aChordimClaude
 
 class ThemeManager {
     constructor() {

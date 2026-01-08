@@ -1,4 +1,4 @@
-// Vercel Serverless Function for ChordsApp - Using Anthropic Claude
+// Vercel Serverless Function for aChordim - Using Anthropic Claude
 const Anthropic = require('@anthropic-ai/sdk');
 
 const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';

@@ -699,7 +699,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Expose getter for current transpose steps (for song-library.js save)
     window.getCurrentTransposeSteps = () => currentTransposeSteps;
 
-    // Normalize content: Convert hybrid AI output to clean edit format
+    // Normalize content: Convert hybrid output to clean edit format
     // Input: Hybrid format with old (Title:, Key: | BPM:) and v4 ({subtitle:}) mixed
     // Output: Clean format with Title on line 1, metadata comma-separated on line 2
     const normalizeContent = (content) => {
@@ -1161,7 +1161,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     let detectedLayout = null;
 
     /**
-     * Extract and apply layout setting from AI transcription
+     * Extract and apply layout setting from transcription
      * Looks for {layout: 1} or {layout: 2} directive
      */
     const extractAndApplyLayout = (transcription) => {
@@ -1209,7 +1209,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             setDirectionalLayout(songbookOutput, '');
             setDirectionalLayout(livePreview, '');
             if (aiReferenceContent) {
-                aiReferenceContent.innerHTML = '<p class="preview-placeholder">AI transcription will appear here after analysis.</p>';
+                aiReferenceContent.innerHTML = '<p class="preview-placeholder">transcription will appear here after analysis.</p>';
                 aiReferenceContent.removeAttribute('dir');
                 aiReferenceContent.style.direction = '';
                 aiReferenceContent.style.textAlign = '';
@@ -1238,7 +1238,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         lastUploadPayload = null;
         lastRawTranscription = '';
         if (aiReferenceContent) {
-            aiReferenceContent.innerHTML = '<p class="preview-placeholder">AI transcription will appear here after analysis.</p>';
+            aiReferenceContent.innerHTML = '<p class="preview-placeholder">transcription will appear here after analysis.</p>';
         }
         transposeStepInput.value = 0;
 
@@ -1414,7 +1414,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const intenseScanCheckbox = document.getElementById('intenseScanCheckbox');
             const intenseMode = intenseScanCheckbox ? intenseScanCheckbox.checked : false;
 
-            setStatus('processing', 'Uploading to AI server', 30);
+            setStatus('processing', 'Uploading to server', 30);
 
             // Call the Vercel serverless API
             const response = await fetch(API_URL, {
@@ -1433,7 +1433,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 throw new Error(`API error: ${response.status} ${response.statusText}`);
             }
 
-            setStatus('processing', 'AI analyzing chords', 60);
+            setStatus('processing', 'analyzing chords', 60);
 
             const result = await response.json();
 
@@ -1443,7 +1443,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 baselineChart = removeAnalysisLines(result.transcription);
                 currentTransposeSteps = 0;
 
-                // ✅ Normalize hybrid AI output to clean format FIRST
+                // ✅ Normalize hybrid output to clean format FIRST
                 const normalizedChart = normalizeContent(baselineChart);
 
                 // AI now returns proper ChordPro format with metadata and {comment:} tags
@@ -1485,10 +1485,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Small delay to show the final progress step
                 await new Promise(resolve => setTimeout(resolve, 200));
 
-                setStatus('success', 'AI transcription ready! Edit visually on the left.');
+                setStatus('success', 'transcription ready! Edit visually on the left.');
 
                 // Show success toast notification
-                window.showSuccessToast('AI transcription complete!');
+                window.showSuccessToast('transcription complete!');
 
                 // Increment analysis counter
                 if (window.subscriptionManager) {
@@ -1532,7 +1532,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Add {comment: } markers for section headers
             baselineChart = addCommentMarkers(baselineChart);
 
-            // ✅ Normalize hybrid AI output to clean format FIRST
+            // ✅ Normalize hybrid output to clean format FIRST
             const normalizedChart = normalizeContent(baselineChart);
 
             // Default: Show chords above lyrics
@@ -1852,7 +1852,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         if (!hasVisualContent && !hasSongbookContent) {
             console.error('❌ No content to transpose!');
-            setStatus('error', 'Nothing to transpose yet. Load a song or run AI analysis first.');
+            setStatus('error', 'Nothing to transpose yet. Load a song or analyze first.');
             return;
         }
         if (!Number.isInteger(steps) || steps === 0) {
@@ -2231,7 +2231,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const intenseScanCheckbox = document.getElementById('intenseScanCheckbox');
             const intenseMode = intenseScanCheckbox ? intenseScanCheckbox.checked : false;
 
-            setStatus('processing', 'Sending to AI server', 30);
+            setStatus('processing', 'Sending to server', 30);
 
             fetch(API_URL, {
                 method: 'POST',
@@ -2250,7 +2250,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     if (!response.ok) {
                         throw new Error(`API error: ${response.status} ${response.statusText}`);
                     }
-                    setStatus('processing', 'AI re-analyzing', 65);
+                    setStatus('processing', 're-analyzing', 65);
                     return response.json();
                 })
                 .then(async (result) => {
@@ -2266,7 +2266,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         // Add {comment: } markers for section headers
                         baselineChart = addCommentMarkers(baselineChart);
 
-                        // ✅ Normalize hybrid AI output to clean format FIRST
+                        // ✅ Normalize hybrid output to clean format FIRST
                         const normalizedChart = normalizeContent(baselineChart);
 
                         // Default: Show chords above lyrics
@@ -2646,7 +2646,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const formatted = [];
         let sectionCounter = 0;
 
-        // Strip HTML tags before parsing (AI output may have bold tags)
+        // Strip HTML tags before parsing (output may have bold tags)
         const cleanContent = content.replace(/<[^>]*>/g, '');
 
         // Extract metadata using parser (from clean content)
@@ -4568,7 +4568,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Check if user has Pro subscription for Nashville Numbers
             if (window.subscriptionManager && !window.subscriptionManager.canUseNashvilleNumbers()) {
-                alert('🔢 Nashville Numbers is a Pro feature!\n\nUpgrade to Pro for $1.99/month to unlock Nashville Number System and unlimited AI analyses.');
+                alert('🔢 Nashville Numbers is a Pro feature!\n\nUpgrade to Pro for $1.99/month to unlock Nashville Number System and unlimited analyses.');
 
                 // Reset to "chords only" mode
                 nashvilleMode.value = 'chords';
@@ -5094,7 +5094,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 }
             } else {
                 // Non-logged-in user: show welcome message
-                usageText.textContent = 'Sign up to start your free plan with 3 AI analyses/month';
+                usageText.textContent = 'Sign up to start your free plan with 3 scans/month';
                 usageIndicator.style.background = 'rgba(16, 185, 129, 0.1)';
                 usageIndicator.style.borderColor = 'rgba(16, 185, 129, 0.3)';
                 usageText.style.color = '#059669';

@@ -1,4 +1,4 @@
-// Firebase Cloud Functions for ChordsApp
+// Firebase Cloud Functions for aChordim
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const Anthropic = require('@anthropic-ai/sdk');

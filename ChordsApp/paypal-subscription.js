@@ -1,5 +1,5 @@
 /**
- * PayPal Subscription Integration for ChordsApp
+ * PayPal Subscription Integration for aChordim
  * Handles PayPal subscription buttons and payment processing
  */
 
@@ -213,7 +213,7 @@ class PayPalSubscriptionManager {
      */
     showSubscriptionSuccess(planType) {
         const tierName = planType === 'BASIC' ? 'Basic' : 'Pro';
-        alert(`🎉 Welcome to ChordsApp ${tierName}!\n\nYour subscription is now active. Enjoy unlimited access to all features!`);
+        alert(`🎉 Welcome to aChordim ${tierName}!\n\nYour subscription is now active. Enjoy unlimited access to all features!`);
     }
 
     /**
@@ -303,7 +303,7 @@ class PayPalSubscriptionManager {
             createOrder: (data, actions) => {
                 return actions.order.create({
                     purchase_units: [{
-                        description: 'ChordsApp Book - Lifetime Access',
+                        description: 'aChordim Book - Lifetime Access',
                         amount: {
                             value: PAYPAL_ONE_TIME_PRICES.BOOK.toFixed(2)
                         },
@@ -372,7 +372,7 @@ class PayPalSubscriptionManager {
             createOrder: (data, actions) => {
                 return actions.order.create({
                     purchase_units: [{
-                        description: `ChordsApp ${scans} AI Scans`,
+                        description: `aChordim ${scans} Scans`,
                         amount: {
                             value: price.toFixed(2)
                         },
@@ -445,7 +445,7 @@ class PayPalSubscriptionManager {
      * Show purchase success message
      */
     showPurchaseSuccess(itemName) {
-        alert(`🎉 Purchase Complete!\n\nYour ${itemName} purchase was successful. Enjoy ChordsApp!`);
+        alert(`🎉 Purchase Complete!\n\nYour ${itemName} purchase was successful. Enjoy aChordim!`);
     }
 
     /**
