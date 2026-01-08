@@ -434,14 +434,28 @@
         // Function to extract title from content
         function extractTitleFromContent(content) {
             const lines = content.split('\n');
+
+            // First, check for {title: X} directive (v4 format)
+            for (const line of lines) {
+                const titleDirective = line.match(/\{title:\s*([^}]+)\}/i);
+                if (titleDirective && titleDirective[1]) {
+                    return titleDirective[1].trim();
+                }
+            }
+
+            // Fallback: find first non-metadata line
             for (const line of lines) {
                 const trimmed = line.trim();
-                // Skip empty lines, chord lines, and Key/BPM lines
+                // Skip empty lines, chord lines, Key/BPM lines, and metadata lines
                 if (!trimmed ||
-                    /^[A-G][#b]?/.test(trimmed) ||
-                    /^Key:/i.test(trimmed) ||
-                    /^BPM:/i.test(trimmed) ||
-                    /^\d+\s*$/.test(trimmed)) {
+                    /^[A-G][#b]?\s/.test(trimmed) ||           // Chord lines
+                    /^Key:/i.test(trimmed) ||                   // Key: X lines
+                    /^BPM:/i.test(trimmed) ||                   // BPM: X lines
+                    /Key:\s*[A-G]/i.test(trimmed) ||           // Lines containing Key: anywhere
+                    /\d+\s*BPM/i.test(trimmed) ||              // Lines containing BPM
+                    /^\d+\s*$/.test(trimmed) ||                // Just numbers
+                    /^\{/.test(trimmed) ||                     // Directive lines
+                    /^\(/.test(trimmed)) {                     // Badge lines
                     continue;
                 }
 
@@ -507,17 +521,13 @@
             // Reset to new song mode
             resetToNewSongMode();
 
-            // Auto-fill with extracted title + Key + BPM format
+            // Auto-fill with just the extracted title (key/BPM/time saved separately)
             const extractedTitle = extractTitleFromContent(content);
-            const keyValue = keySelector ? keySelector.value : 'C Major';
-
-            // Build formatted name: "Title | Key: E Major | BPM: 120"
-            const formattedName = `${extractedTitle} | Key: ${keyValue} | BPM: ${bpmValue}`;
-            songNameInput.value = formattedName;
+            songNameInput.value = extractedTitle || '';
             saveSongModal.style.display = 'flex';
 
             // Focus and select the text for easy editing
-            if (formattedName) {
+            if (extractedTitle) {
                 setTimeout(() => {
                     songNameInput.focus();
                     songNameInput.select();
@@ -582,9 +592,11 @@
             const title = titleMatch ? titleMatch[1].trim() : songName.trim();
 
             // Extract author from content or baselineChart
+            // Try {author: X} first, then {subtitle: X} as fallback
             let author = '';
-            const authorMatch = (content + '\n' + baselineChart).match(/\{author:\s*([^\}]+)\}/i) ||
-                               (content + '\n' + baselineChart).match(/^([^\n]+)\n([A-Z][^\n]+)$/m);
+            const combinedContent = content + '\n' + baselineChart;
+            const authorMatch = combinedContent.match(/\{author:\s*([^\}]+)\}/i) ||
+                               combinedContent.match(/\{subtitle:\s*([^\}]+)\}/i);
             if (authorMatch) {
                 author = authorMatch[1].trim();
             }
@@ -768,9 +780,11 @@
             const title = titleMatch ? titleMatch[1].trim() : songName.trim();
 
             // Extract author from content or baselineChart
+            // Try {author: X} first, then {subtitle: X} as fallback
             let author = '';
-            const authorMatch = (content + '\n' + baselineChart).match(/\{author:\s*([^\}]+)\}/i) ||
-                               (content + '\n' + baselineChart).match(/^([^\n]+)\n([A-Z][^\n]+)$/m);
+            const combinedContent = content + '\n' + baselineChart;
+            const authorMatch = combinedContent.match(/\{author:\s*([^\}]+)\}/i) ||
+                               combinedContent.match(/\{subtitle:\s*([^\}]+)\}/i);
             if (authorMatch) {
                 author = authorMatch[1].trim();
             }
@@ -2023,10 +2037,11 @@
                 const title = titleMatch ? titleMatch[1].trim() : song.name.trim();
 
                 // Extract author from content or baselineChart
+                // Try {author: X} first, then {subtitle: X} as fallback
                 let author = '';
                 const content = (song.content || '') + '\n' + (song.baselineChart || '');
                 const authorMatch = content.match(/\{author:\s*([^\}]+)\}/i) ||
-                                   content.match(/^([^\n]+)\n([A-Z][^\n]+)$/m);
+                                   content.match(/\{subtitle:\s*([^\}]+)\}/i);
                 if (authorMatch) {
                     author = authorMatch[1].trim();
                 }

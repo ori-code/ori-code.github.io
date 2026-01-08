@@ -1056,11 +1056,24 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Remove markdown code blocks if present (Claude sometimes wraps in ```)
         let cleanedTranscription = transcription.replace(/```[a-z]*\n?/g, '').replace(/```$/g, '');
 
-        // Look for "Key:" line in the transcription - more flexible regex
-        const keyMatch = cleanedTranscription.match(/Key:\s*([^\n\r]+)/i);
+        // Look for key in multiple formats:
+        // 1. {key: G} directive
+        // 2. Key: G (possibly followed by comma and other metadata)
+        let detectedKey = null;
 
-        if (keyMatch && keyMatch[1]) {
-            const detectedKey = keyMatch[1].trim();
+        // First try {key: X} directive format
+        const keyDirectiveMatch = cleanedTranscription.match(/\{key:\s*([A-G][#b]?(?:\s*(?:Major|Minor|maj|min|m))?)\}/i);
+        if (keyDirectiveMatch && keyDirectiveMatch[1]) {
+            detectedKey = keyDirectiveMatch[1].trim();
+        } else {
+            // Try "Key: X" format - capture just the key, not BPM/time that may follow
+            const keyTextMatch = cleanedTranscription.match(/Key:\s*([A-G][#b]?(?:\s*(?:Major|Minor|maj|min|m))?)/i);
+            if (keyTextMatch && keyTextMatch[1]) {
+                detectedKey = keyTextMatch[1].trim();
+            }
+        }
+
+        if (detectedKey) {
             const normalizedKey = normalizeKey(detectedKey);
             console.log('✅ Key detected:', detectedKey, '→', normalizedKey);
             detectedKeySpan.textContent = normalizedKey;
@@ -1076,11 +1089,41 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 nashvilleMode.value = 'chords';
             }
 
-            // Set default BPM and Time Signature if not detected
-            if (bpmInput && !bpmInput.value) {
+            // Extract and set BPM from transcription
+            // Look for {tempo: X} directive or "X BPM" pattern
+            const tempoDirectiveMatch = cleanedTranscription.match(/\{tempo:\s*(\d+)\}/i);
+            const tempoBpmMatch = cleanedTranscription.match(/(\d+)\s*BPM/i);
+            if (tempoDirectiveMatch && tempoDirectiveMatch[1]) {
+                const detectedTempo = tempoDirectiveMatch[1];
+                console.log('✅ Tempo detected from directive:', detectedTempo);
+                if (bpmInput) bpmInput.value = detectedTempo;
+            } else if (tempoBpmMatch && tempoBpmMatch[1]) {
+                const detectedTempo = tempoBpmMatch[1];
+                console.log('✅ Tempo detected from BPM pattern:', detectedTempo);
+                if (bpmInput) bpmInput.value = detectedTempo;
+            } else if (bpmInput && !bpmInput.value) {
                 bpmInput.value = '120';
             }
-            if (timeSignature && !timeSignature.value) {
+
+            // Extract and set Time Signature from transcription
+            // Look for {time: X/Y} directive or standalone "X/Y" pattern
+            const timeDirectiveMatch = cleanedTranscription.match(/\{time:\s*(\d+\/\d+)\}/i);
+            const timePatternMatch = cleanedTranscription.match(/(?:^|\s|,)(\d+\/\d+)(?:\s|,|$)/m);
+            if (timeDirectiveMatch && timeDirectiveMatch[1]) {
+                const detectedTime = timeDirectiveMatch[1];
+                console.log('✅ Time signature detected from directive:', detectedTime);
+                if (timeSignature) timeSignature.value = detectedTime;
+            } else if (timePatternMatch && timePatternMatch[1]) {
+                const detectedTime = timePatternMatch[1];
+                // Validate it's a reasonable time signature (not something like 2024/01)
+                const [top, bottom] = detectedTime.split('/').map(Number);
+                if (top <= 12 && [2, 4, 8, 16].includes(bottom)) {
+                    console.log('✅ Time signature detected from pattern:', detectedTime);
+                    if (timeSignature) timeSignature.value = detectedTime;
+                } else if (timeSignature && !timeSignature.value) {
+                    timeSignature.value = '4/4';
+                }
+            } else if (timeSignature && !timeSignature.value) {
                 timeSignature.value = '4/4';
             }
 
@@ -2812,8 +2855,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Skip normalized metadata line (e.g., "Artist, Key: G, 76 BPM, 3/4")
-            if (/Key:\s*[A-G].*,.*BPM/i.test(trimmedLine) && /,/.test(trimmedLine)) {
+            // Skip normalized metadata line (e.g., "Artist, Key: G, 76 BPM, 3/4" or "Loop Community, Key: F, 76 BPM, 3/4")
+            // Also skip any line that contains Key: and BPM together (metadata line)
+            if (/Key:\s*[A-G]/i.test(trimmedLine) && /\d+\s*BPM/i.test(trimmedLine)) {
+                continue;
+            }
+            // Skip lines that are just author + metadata (e.g., "Loop Community, Key: F...")
+            if (/^[^{}\[\]]+,\s*Key:/i.test(trimmedLine)) {
+                continue;
+            }
+
+            // Skip separator lines (---, ___, etc.)
+            if (/^[-_=]{2,}\s*$/.test(trimmedLine)) {
                 continue;
             }
 
@@ -2861,6 +2914,35 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
                 );
                 currentSection = commentPart ? `${titleCased} ${commentPart}` : titleCased;
+                continue;
+            }
+
+            // Check if line is a chord-only line (chords above lyrics format)
+            // This detects lines like "G    C    G" or "D/F#  Em7  Cma7" that appear above lyrics
+            const tokens = trimmedLine.split(/\s+/).filter(t => t.length > 0);
+            const isChordOnlyLine = tokens.length > 0 &&
+                tokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?$/.test(token)) &&
+                !trimmedLine.includes('|'); // Not a chord grid
+
+            if (isChordOnlyLine && mode !== 'lyrics') {
+                // Format chord-only line with bold chords
+                let formattedChordLine = trimmedLine.replace(/([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?)/g, (match, chord) => {
+                    const number = chordToNashville(chord, key);
+                    if (mode === 'both' && number) {
+                        return `<b>${chord}|${number}</b>`;
+                    } else if (mode === 'numbers' && number) {
+                        return `<b>${number}</b>`;
+                    } else {
+                        return `<b>${chord}</b>`;
+                    }
+                });
+
+                const chordLine = `<div class="chord-line">${formattedChordLine}</div>`;
+                if (currentSection) {
+                    sectionContent.push(chordLine);
+                } else {
+                    formatted.push(chordLine);
+                }
                 continue;
             }
 
@@ -4959,6 +5041,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 sideMenuTierBadge.textContent = '⭐ Basic';
                 sideMenuTierBadge.style.background = 'rgba(245, 158, 11, 0.15)';
                 sideMenuTierBadge.style.color = '#f59e0b';
+            } else if (summary.tier === 'BOOK') {
+                sideMenuTierBadge.textContent = '📖 Book';
+                sideMenuTierBadge.style.background = 'rgba(139, 92, 246, 0.15)';
+                sideMenuTierBadge.style.color = '#8b5cf6';
             } else {
                 sideMenuTierBadge.textContent = 'Free';
                 sideMenuTierBadge.style.background = 'rgba(59, 130, 246, 0.15)';
@@ -5156,6 +5242,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Create Pro subscription button
             window.paypalSubscriptionManager.createSubscriptionButton('PRO', 'paypal-pro-button');
 
+            // Create Book one-time purchase button
+            window.paypalSubscriptionManager.createBookPurchaseButton('paypal-book-button');
+
+            // Create scan pack buttons
+            window.paypalSubscriptionManager.createScanPackButton('SCAN_STARTER', 'paypal-scan-starter');
+            window.paypalSubscriptionManager.createScanPackButton('SCAN_VALUE', 'paypal-scan-value');
+            window.paypalSubscriptionManager.createScanPackButton('SCAN_BUNDLE', 'paypal-scan-bundle');
+
         } catch (error) {
             console.error('Failed to initialize PayPal buttons:', error);
         }
@@ -5169,7 +5263,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const currentUser = firebase.auth().currentUser;
             const isLoggedIn = !!currentUser;
             const currentTier = isLoggedIn && window.subscriptionManager ? window.subscriptionManager.getCurrentTier() || 'FREE' : null;
-            const tiers = ['free', 'basic', 'pro'];
+            const tiers = ['free', 'basic', 'pro', 'book'];
 
             // Ensure PayPal SDK is loaded before creating buttons (only for logged-in users)
             if (isLoggedIn && window.paypalSubscriptionManager && !window.paypalSubscriptionManager.isSDKLoaded) {
@@ -5208,6 +5302,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     } else if (tier === 'pro') {
                         card.style.border = '2px solid var(--primary)';
                         card.style.boxShadow = 'none';
+                    } else if (tier === 'book') {
+                        card.style.border = '2px solid #8b5cf6';
+                        card.style.boxShadow = 'none';
                     }
                 }
 
@@ -5215,6 +5312,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     // Non-logged-in user: show signup buttons
                     if (tier === 'free') {
                         actionDiv.innerHTML = '<button class="signup-free-btn" style="width: 100%; padding: 12px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">Register Now for Free</button>';
+                    } else if (tier === 'book') {
+                        actionDiv.innerHTML = '<button class="signup-book-btn" style="width: 100%; padding: 12px 16px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">Sign Up to Get Book</button>';
                     } else {
                         const btnColor = tier === 'basic' ? '#3b82f6' : 'var(--primary)';
                         actionDiv.innerHTML = `<button class="signup-${tier}-btn" style="width: 100%; padding: 12px 16px; background: ${btnColor}; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">Sign Up to Start</button>`;
@@ -5225,8 +5324,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 } else if (tier === 'free') {
                     // Free tier - no action needed if user is on paid plan
                     actionDiv.innerHTML = '';
+                } else if (tier === 'book') {
+                    // Book tier - one-time purchase button
+                    actionDiv.innerHTML = '<div id="paypal-book-button" style="min-height: 45px;"></div>';
+                    if (window.paypalSubscriptionManager) {
+                        window.paypalSubscriptionManager.createBookPurchaseButton('paypal-book-button');
+                    }
                 } else {
-                    // Show PayPal button for upgrades
+                    // Show PayPal button for upgrades (Basic/Pro subscriptions)
                     actionDiv.innerHTML = `<div id="paypal-${tier}-button" style="min-height: 45px;"></div>`;
                     // Re-initialize PayPal button for this tier
                     if (window.paypalSubscriptionManager) {
@@ -5234,6 +5339,26 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     }
                 }
             });
+
+            // Show/hide scan packs section for Book users
+            const scanPacksSection = document.getElementById('scanPacksSection');
+            const currentScansCount = document.getElementById('currentScansCount');
+            if (scanPacksSection) {
+                if (isLoggedIn && currentTier === 'BOOK') {
+                    scanPacksSection.style.display = 'block';
+                    if (currentScansCount && window.subscriptionManager) {
+                        currentScansCount.textContent = window.subscriptionManager.getPurchasedScans();
+                    }
+                    // Initialize scan pack buttons
+                    if (window.paypalSubscriptionManager) {
+                        window.paypalSubscriptionManager.createScanPackButton('SCAN_STARTER', 'paypal-scan-starter');
+                        window.paypalSubscriptionManager.createScanPackButton('SCAN_VALUE', 'paypal-scan-value');
+                        window.paypalSubscriptionManager.createScanPackButton('SCAN_BUNDLE', 'paypal-scan-bundle');
+                    }
+                } else {
+                    scanPacksSection.style.display = 'none';
+                }
+            }
 
             // Show/hide sign-in link based on login state
             const signInLink = document.getElementById('subscriptionSignInLink');
@@ -5269,6 +5394,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     btn.onclick = () => {
                         document.getElementById('subscriptionModal').style.display = 'none';
                         window.pendingPlanAfterSignup = 'PRO';
+                        if (window.chordsAuth) window.chordsAuth.showAuthModal('signup');
+                    };
+                });
+                document.querySelectorAll('.signup-book-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        document.getElementById('subscriptionModal').style.display = 'none';
+                        window.pendingPlanAfterSignup = 'BOOK';
                         if (window.chordsAuth) window.chordsAuth.showAuthModal('signup');
                     };
                 });
@@ -5347,6 +5479,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
             btn.addEventListener('click', () => {
                 hideRegistrationPrompt();
                 window.pendingPlanAfterSignup = 'PRO'; // Will show subscription modal after signup
+                if (window.chordsAuth) {
+                    window.chordsAuth.showAuthModal('signup');
+                }
+            });
+        });
+
+        // Register for BOOK button (one-time purchase)
+        const registerBookBtns = document.querySelectorAll('.register-book-btn');
+        registerBookBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                hideRegistrationPrompt();
+                window.pendingPlanAfterSignup = 'BOOK'; // Will show subscription modal after signup
                 if (window.chordsAuth) {
                     window.chordsAuth.showAuthModal('signup');
                 }

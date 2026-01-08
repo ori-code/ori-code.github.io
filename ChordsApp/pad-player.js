@@ -29,14 +29,17 @@ const padPlayer = {
 
     // Current settings
     volume: 0.7,
-    crossfade: 1.5,        // Fade duration in seconds
+    crossfade: 4,          // Fade duration in seconds (longer for smooth transitions)
     lowPassFreq: 20000,    // Hz (20000 = no filtering)
     highPassFreq: 20,      // Hz (20 = no filtering)
     reverbMix: 0.3,        // 0-1 (0 = dry, 1 = full reverb) - default 30%
     pan: 0,                // -1 to 1 (left to right)
 
     // Fade duration in seconds (same as crossfade)
-    fadeDuration: 1.5,
+    fadeDuration: 4,
+
+    // Stop All fade duration (longer for smooth ending)
+    stopAllFadeDuration: 6,
 
     // All 12 keys
     keys: ['C', 'Csharp', 'D', 'Dsharp', 'E', 'F', 'Fsharp', 'G', 'Gsharp', 'A', 'Asharp', 'B'],
@@ -277,8 +280,9 @@ const padPlayer = {
         const source = this.activeSources[key];
         const gainNode = this.gainNodes[key];
 
-        // Fade out
+        // Fade out smoothly - must set current value first for smooth ramp
         const currentTime = this.audioContext.currentTime;
+        gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
         gainNode.gain.linearRampToValueAtTime(0, currentTime + this.fadeDuration);
 
         // Stop after fade out
@@ -301,12 +305,45 @@ const padPlayer = {
     },
 
     /**
-     * Stop all playing pads
+     * Stop all playing pads with a slow fade out
      */
     stopAll() {
         Object.keys(this.activeSources).forEach(key => {
-            this.stop(key);
+            this.stopWithFade(key, this.stopAllFadeDuration);
         });
+    },
+
+    /**
+     * Stop a pad with a specific fade duration
+     */
+    stopWithFade(key, fadeTime) {
+        if (!this.activeSources[key]) return;
+
+        const source = this.activeSources[key];
+        const gainNode = this.gainNodes[key];
+
+        // Fade out with specified duration
+        const currentTime = this.audioContext.currentTime;
+        gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
+        gainNode.gain.linearRampToValueAtTime(0, currentTime + fadeTime);
+
+        // Stop after fade out
+        setTimeout(() => {
+            try {
+                source.stop();
+            } catch (e) {
+                // Source may already be stopped
+            }
+        }, fadeTime * 1000);
+
+        // Remove references
+        delete this.activeSources[key];
+        delete this.gainNodes[key];
+
+        // Update UI
+        this.updateKeyUI(key, false);
+
+        console.log(`Stopped pad: ${key} (fade: ${fadeTime}s)`);
     },
 
     /**
@@ -324,9 +361,10 @@ const padPlayer = {
 
     /**
      * Set crossfade duration (seconds)
+     * Minimum 2.5 seconds for smooth transitions
      */
     setCrossfade(value) {
-        this.crossfade = Math.max(0.1, Math.min(5, value));
+        this.crossfade = Math.max(2.5, Math.min(8, value));
         this.fadeDuration = this.crossfade;
     },
 
@@ -452,6 +490,12 @@ const padPlayer = {
         const miniNowPlaying = document.getElementById('miniPadNowPlaying');
         if (miniNowPlaying) {
             miniNowPlaying.textContent = displayText;
+        }
+
+        // Mini player stop button - show active when pads are playing
+        const miniStopBtn = document.getElementById('miniPadStop');
+        if (miniStopBtn) {
+            miniStopBtn.classList.toggle('active', playingKeys.length > 0);
         }
     },
 

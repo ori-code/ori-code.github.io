@@ -3,11 +3,69 @@
  * Handles PayPal subscription buttons and payment processing
  */
 
-// PayPal Plan IDs (You need to create these in your PayPal Developer Dashboard)
-const PAYPAL_PLAN_IDS = {
-    BASIC: 'P-6PG918695K486915UNEJWL2Q',  // Basic plan $0.99/month
-    PRO: 'P-4VN66533B0865510NNEJWZTI'    // Pro plan $1.99/month
+// Environment Detection
+const PAYPAL_ENV = (() => {
+    const hostname = window.location.hostname;
+    const isLocalDev = hostname === 'localhost' ||
+                       hostname === '127.0.0.1' ||
+                       hostname.startsWith('192.168.') ||
+                       hostname.startsWith('10.') ||
+                       hostname.startsWith('172.');
+    return isLocalDev ? 'sandbox' : 'production';
+})();
+
+console.log(`PayPal Environment: ${PAYPAL_ENV}`);
+
+// PayPal Client IDs
+// NOTE: Using production client ID for both environments since plans were created in live account with test prices
+const PAYPAL_CLIENT_IDS = {
+    sandbox: 'AZObqKE5ztYeUcv5jiLNxiM7XgV6OZ7HdEzd6xfEB7_feWVC6z4HrsPdYvtvWcJYi3lAs6xgSRxAXwW8',  // Using production for testing
+    production: 'AZObqKE5ztYeUcv5jiLNxiM7XgV6OZ7HdEzd6xfEB7_feWVC6z4HrsPdYvtvWcJYi3lAs6xgSRxAXwW8'
 };
+
+// PayPal Plan IDs (from PayPal Developer Dashboard)
+const PAYPAL_PLAN_IDS = {
+    sandbox: {
+        BASIC: 'P-8J890296A3354335HNFP76AY',  // Sandbox Basic plan
+        PRO: 'P-0LC262226Y1697300NFP77MY'     // Sandbox Pro plan
+    },
+    production: {
+        BASIC: 'P-8J890296A3354335HNFP76AY',  // Production Basic plan $0.99/month
+        PRO: 'P-0LC262226Y1697300NFP77MY'     // Production Pro plan $1.99/month
+    }
+};
+
+// Prices Configuration
+const PAYPAL_PRICES = {
+    sandbox: {
+        BOOK: 0.01,           // TEST PRICE
+        SCAN_STARTER: 0.01,   // TEST PRICE
+        SCAN_VALUE: 0.01,     // TEST PRICE
+        SCAN_BUNDLE: 0.01     // TEST PRICE
+    },
+    production: {
+        BOOK: 9.99,           // Book plan one-time purchase
+        SCAN_STARTER: 0.99,   // 5 scans
+        SCAN_VALUE: 1.99,     // 15 scans
+        SCAN_BUNDLE: 4.99     // 50 scans
+    }
+};
+
+// Get current environment prices
+const PAYPAL_ONE_TIME_PRICES = PAYPAL_PRICES[PAYPAL_ENV];
+
+// Scan pack quantities (same for both environments)
+const SCAN_PACK_QUANTITIES = {
+    SCAN_STARTER: 5,
+    SCAN_VALUE: 15,
+    SCAN_BUNDLE: 50
+};
+
+// Get current Client ID
+const PAYPAL_CLIENT_ID = PAYPAL_CLIENT_IDS[PAYPAL_ENV];
+
+// Get current Plan IDs
+const CURRENT_PLAN_IDS = PAYPAL_PLAN_IDS[PAYPAL_ENV];
 
 class PayPalSubscriptionManager {
     constructor() {
@@ -32,9 +90,10 @@ class PayPalSubscriptionManager {
                 return;
             }
 
-            // Load PayPal SDK
+            // Load PayPal SDK with environment-specific client ID
             const script = document.createElement('script');
-            script.src = 'https://www.paypal.com/sdk/js?client-id=AUjr_VTe9_mnojYbrv2wEhvIlYN3nXES7HG2hIfHpNhZchdcNGCh6WeHJtxwXkDBqS09gb2RjX-HAYEK&vault=true&intent=subscription';
+            script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&intent=subscription&currency=USD`;
+            console.log(`Loading PayPal SDK for ${PAYPAL_ENV} environment`);
 
             script.onload = () => {
                 this.isSDKLoaded = true;
@@ -60,7 +119,7 @@ class PayPalSubscriptionManager {
             return;
         }
 
-        const planId = PAYPAL_PLAN_IDS[planType];
+        const planId = CURRENT_PLAN_IDS[planType];
         if (!planId) {
             console.error('Invalid plan type:', planType);
             return;
@@ -214,6 +273,195 @@ class PayPalSubscriptionManager {
         } catch (error) {
             console.error('Error cancelling subscription:', error);
             alert('Failed to cancel subscription. Please contact support.');
+        }
+    }
+
+    /**
+     * Create one-time purchase button for Book plan
+     */
+    createBookPurchaseButton(containerId) {
+        if (!this.isSDKLoaded || !window.paypal) {
+            console.error('PayPal SDK not loaded');
+            return;
+        }
+
+        const container = document.getElementById(containerId);
+        if (!container) {
+            console.error('Container not found:', containerId);
+            return;
+        }
+        container.innerHTML = '';
+
+        window.paypal.Buttons({
+            style: {
+                shape: 'rect',
+                color: 'blue',
+                layout: 'vertical',
+                label: 'pay'
+            },
+
+            createOrder: (data, actions) => {
+                return actions.order.create({
+                    purchase_units: [{
+                        description: 'ChordsApp Book - Lifetime Access',
+                        amount: {
+                            value: PAYPAL_ONE_TIME_PRICES.BOOK.toFixed(2)
+                        },
+                        custom_id: window.subscriptionManager.currentUser?.uid || 'unknown'
+                    }]
+                });
+            },
+
+            onApprove: async (data, actions) => {
+                const order = await actions.order.capture();
+                console.log('Book purchase approved:', order.id);
+
+                await this.handleBookPurchaseApproval(order.id);
+                this.showPurchaseSuccess('Book');
+
+                if (window.subscriptionManager) {
+                    await window.subscriptionManager.init(window.subscriptionManager.currentUser);
+                }
+                this.closeSubscriptionModal();
+            },
+
+            onError: (err) => {
+                console.error('PayPal purchase error:', err);
+                this.showPurchaseError(err);
+            },
+
+            onCancel: () => {
+                console.log('Purchase cancelled by user');
+            }
+        }).render(`#${containerId}`);
+    }
+
+    /**
+     * Create scan pack purchase button
+     */
+    createScanPackButton(packType, containerId) {
+        if (!this.isSDKLoaded || !window.paypal) {
+            console.error('PayPal SDK not loaded');
+            return;
+        }
+
+        const price = PAYPAL_ONE_TIME_PRICES[packType];
+        const scans = SCAN_PACK_QUANTITIES[packType];
+
+        if (!price || !scans) {
+            console.error('Invalid scan pack type:', packType);
+            return;
+        }
+
+        const container = document.getElementById(containerId);
+        if (!container) {
+            console.error('Container not found:', containerId);
+            return;
+        }
+        container.innerHTML = '';
+
+        window.paypal.Buttons({
+            style: {
+                shape: 'rect',
+                color: 'gold',
+                layout: 'vertical',
+                label: 'pay',
+                height: 35
+            },
+
+            createOrder: (data, actions) => {
+                return actions.order.create({
+                    purchase_units: [{
+                        description: `ChordsApp ${scans} AI Scans`,
+                        amount: {
+                            value: price.toFixed(2)
+                        },
+                        custom_id: `${window.subscriptionManager.currentUser?.uid || 'unknown'}_${packType}`
+                    }]
+                });
+            },
+
+            onApprove: async (data, actions) => {
+                const order = await actions.order.capture();
+                console.log('Scan pack purchase approved:', order.id);
+
+                await this.handleScanPackApproval(packType, scans, order.id);
+                this.showPurchaseSuccess(`${scans} Scans`);
+
+                if (window.subscriptionManager) {
+                    await window.subscriptionManager.loadUserPurchasedScans();
+                    window.subscriptionManager.notifySubscriptionChange();
+                }
+
+                // Update UI if scan pack modal is open
+                this.updateScanPackUI();
+            },
+
+            onError: (err) => {
+                console.error('PayPal purchase error:', err);
+                this.showPurchaseError(err);
+            },
+
+            onCancel: () => {
+                console.log('Scan pack purchase cancelled by user');
+            }
+        }).render(`#${containerId}`);
+    }
+
+    /**
+     * Handle Book plan purchase approval
+     */
+    async handleBookPurchaseApproval(orderId) {
+        try {
+            if (window.subscriptionManager) {
+                // Set tier to BOOK with order ID
+                await window.subscriptionManager.updateSubscription('BOOK', orderId);
+                // Add initial 20 scans
+                await window.subscriptionManager.addPurchasedScans(20);
+            }
+            console.log(`Book plan activated with order: ${orderId}`);
+        } catch (error) {
+            console.error('Error handling Book purchase:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Handle scan pack purchase approval
+     */
+    async handleScanPackApproval(packType, scans, orderId) {
+        try {
+            if (window.subscriptionManager) {
+                await window.subscriptionManager.addPurchasedScans(scans);
+            }
+            console.log(`Added ${scans} scans with order: ${orderId}`);
+        } catch (error) {
+            console.error('Error handling scan pack purchase:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Show purchase success message
+     */
+    showPurchaseSuccess(itemName) {
+        alert(`🎉 Purchase Complete!\n\nYour ${itemName} purchase was successful. Enjoy ChordsApp!`);
+    }
+
+    /**
+     * Show purchase error message
+     */
+    showPurchaseError(error) {
+        alert(`❌ Purchase Error\n\nSomething went wrong. Please try again.\n\nError: ${error.message || 'Unknown error'}`);
+    }
+
+    /**
+     * Update scan pack UI after purchase
+     */
+    updateScanPackUI() {
+        const scansDisplay = document.getElementById('currentScansCount');
+        if (scansDisplay && window.subscriptionManager) {
+            scansDisplay.textContent = window.subscriptionManager.getPurchasedScans();
         }
     }
 }

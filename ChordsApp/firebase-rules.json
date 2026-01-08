@@ -49,6 +49,10 @@
         "maxSessions": {
           ".read": "$uid === auth.uid",
           ".write": false
+        },
+        "purchasedScans": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
         }
       }
     },

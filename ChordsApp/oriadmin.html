@@ -322,6 +322,12 @@
             box-shadow: 0 2px 4px rgba(4, 120, 87, 0.15);
         }
 
+        .tier-BOOK {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #b45309;
+            box-shadow: 0 2px 4px rgba(180, 83, 9, 0.15);
+        }
+
         .status-badge {
             display: inline-block;
             padding: 4px 10px;
@@ -344,6 +350,33 @@
         .stat-number {
             font-weight: 600;
             color: #667eea;
+        }
+
+        .next-payment {
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .payment-none {
+            color: #9ca3af;
+        }
+
+        .payment-onetime {
+            color: #b45309;
+        }
+
+        .payment-ok {
+            color: #059669;
+        }
+
+        .payment-soon {
+            color: #d97706;
+        }
+
+        .payment-urgent {
+            color: #dc2626;
+            font-weight: 700;
         }
 
         .actions-cell {
@@ -818,6 +851,10 @@
                 <div class="stat-value" id="proUsers">0</div>
                 <div class="stat-label">Pro Tier</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-value" id="bookUsers">0</div>
+                <div class="stat-label">Book Tier</div>
+            </div>
         </div>
 
         <!-- Users Table -->
@@ -834,6 +871,7 @@
                             <th>Email</th>
                             <th>User ID</th>
                             <th>Tier</th>
+                            <th>Next Payment</th>
                             <th>Status</th>
                             <th>Analyses Used</th>
                             <th>Bonus</th>
@@ -843,7 +881,7 @@
                     </thead>
                     <tbody id="usersTableBody">
                         <tr>
-                            <td colspan="9" class="loading">Loading...</td>
+                            <td colspan="10" class="loading">Loading...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -890,6 +928,7 @@
                     <option value="FREE">FREE - $0 (3 analyses/month)</option>
                     <option value="BASIC">BASIC - $0.99/mo (20 analyses/month, Save songs)</option>
                     <option value="PRO">PRO - $1.99/mo (Unlimited analyses, Nashville Numbers)</option>
+                    <option value="BOOK">BOOK - $9.99 one-time (20 scans + buy more)</option>
                 </select>
             </div>
             <div class="modal-footer">
@@ -1016,20 +1055,69 @@
                 total: users.length,
                 free: users.filter(u => u.subscription.tier === 'FREE').length,
                 basic: users.filter(u => u.subscription.tier === 'BASIC').length,
-                pro: users.filter(u => u.subscription.tier === 'PRO').length
+                pro: users.filter(u => u.subscription.tier === 'PRO').length,
+                book: users.filter(u => u.subscription.tier === 'BOOK').length
             };
 
             document.getElementById('totalUsers').textContent = stats.total;
             document.getElementById('freeUsers').textContent = stats.free;
             document.getElementById('basicUsers').textContent = stats.basic;
             document.getElementById('proUsers').textContent = stats.pro;
+            document.getElementById('bookUsers').textContent = stats.book;
+        }
+
+        /**
+         * Calculate next payment date based on subscription start date
+         * For monthly subscriptions, returns the next payment date
+         */
+        function getNextPaymentInfo(subscription) {
+            const tier = subscription.tier || 'FREE';
+
+            // FREE tier - no payment
+            if (tier === 'FREE') {
+                return { text: '-', class: 'payment-none' };
+            }
+
+            // BOOK tier - one-time purchase, no recurring payment
+            if (tier === 'BOOK') {
+                return { text: 'One-time', class: 'payment-onetime' };
+            }
+
+            // BASIC and PRO - monthly subscriptions
+            const startDate = subscription.startDate ? new Date(subscription.startDate) : null;
+            if (!startDate) {
+                return { text: 'N/A', class: 'payment-none' };
+            }
+
+            // Calculate next payment date (monthly from start date)
+            const now = new Date();
+            let nextPayment = new Date(startDate);
+
+            // Move forward month by month until we find the next payment date
+            while (nextPayment <= now) {
+                nextPayment.setMonth(nextPayment.getMonth() + 1);
+            }
+
+            // Calculate days until next payment
+            const daysUntil = Math.ceil((nextPayment - now) / (1000 * 60 * 60 * 24));
+
+            // Format the date
+            const dateStr = nextPayment.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            if (daysUntil <= 3) {
+                return { text: `${dateStr} (${daysUntil}d)`, class: 'payment-urgent' };
+            } else if (daysUntil <= 7) {
+                return { text: `${dateStr} (${daysUntil}d)`, class: 'payment-soon' };
+            } else {
+                return { text: `${dateStr} (${daysUntil}d)`, class: 'payment-ok' };
+            }
         }
 
         function displayUsers(users) {
             const tbody = document.getElementById('usersTableBody');
 
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: #666;">No users found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #666;">No users found</td></tr>';
                 return;
             }
 
@@ -1043,6 +1131,7 @@
                 const displayName = user.displayName || 'N/A';
                 const email = user.email || 'N/A';
                 const statusClass = status === 'active' ? 'status-active' : 'status-inactive';
+                const nextPayment = getNextPaymentInfo(user.subscription);
 
                 return `
                     <tr>
@@ -1050,6 +1139,7 @@
                         <td><span class="user-email" title="${email}">${email.length > 25 ? email.substring(0, 25) + '...' : email}</span></td>
                         <td><span class="user-id" title="${user.userId}">${userId}</span></td>
                         <td><span class="tier-badge tier-${tier}">${tier}</span></td>
+                        <td><span class="next-payment ${nextPayment.class}">${nextPayment.text}</span></td>
                         <td><span class="status-badge ${statusClass}">${status}</span></td>
                         <td><span class="stat-number">${analysesUsed}</span></td>
                         <td><span class="stat-number">${bonus}</span></td>
