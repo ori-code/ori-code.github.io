@@ -1685,12 +1685,18 @@ a {
     margin-bottom: 0;   /* No gap after - lyrics follow immediately */
 }
 
-/* RTL: Keep chord lines LTR but align to right */
+/* RTL: Let chord lines flow RTL so chords appear in correct visual order */
 [dir="rtl"] .chord-line,
 .live-preview[dir="rtl"] .chord-line {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Keep individual chord text LTR (so "Am" doesn't become "mA") */
+[dir="rtl"] .chord-line .chord,
+.live-preview[dir="rtl"] .chord-line .chord {
     direction: ltr;
     unicode-bidi: embed;
-    text-align: right;
 }
 
 /* Preview Logo - The Faith Sound */
