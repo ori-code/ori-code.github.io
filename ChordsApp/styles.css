@@ -1685,6 +1685,14 @@ a {
     margin-bottom: 0;   /* No gap after - lyrics follow immediately */
 }
 
+/* RTL: Keep chord lines LTR but align to right */
+[dir="rtl"] .chord-line,
+.live-preview[dir="rtl"] .chord-line {
+    direction: ltr;
+    unicode-bidi: embed;
+    text-align: right;
+}
+
 /* Preview Logo - The Faith Sound */
 .preview-page {
     position: relative;

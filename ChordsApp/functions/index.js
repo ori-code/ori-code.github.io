@@ -311,7 +311,7 @@ exports.analyzeChartGemini = functions
             }
 
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+            const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
             const { imageData, mimeType, feedback, previousTranscription, intenseMode } = req.body;
 
@@ -349,7 +349,7 @@ exports.analyzeChartGemini = functions
                 success: true,
                 transcription: transcription,
                 metadata: {
-                    model: 'gemini-2.0-flash-exp',
+                    model: 'gemini-3-flash-preview',
                     feedbackApplied: Boolean(feedback)
                 }
             });
