@@ -146,6 +146,135 @@ document.addEventListener('DOMContentLoaded', () => {
         yearSpan.textContent = new Date().getFullYear();
     }
 
+    // Auto-load worship pad sounds after 3 minutes of usage for smoother experience
+    setTimeout(() => {
+        if (window.padPlayer && !window.padPlayer.isLoading && Object.keys(window.padPlayer.buffers).length === 0) {
+            console.log('Auto-loading worship pads in background...');
+            window.padPlayer.loadSounds().then(count => {
+                console.log(`Worship pads pre-loaded: ${count} sounds ready`);
+            }).catch(err => {
+                console.log('Pad pre-loading skipped:', err.message);
+            });
+        }
+    }, 180000); // 3 minutes = 180000ms
+
+    // ============= MOBILE A4 PREVIEW SCALING =============
+    // Scales the A4 preview to fit mobile screens while maintaining exact proportions
+    (function initMobilePreviewScaling() {
+        const A4_WIDTH_PX = 793; // 210mm in pixels at 96dpi
+        const MOBILE_BREAKPOINT = 800; // Scale when viewport is smaller than this
+        const PADDING = 16; // Side padding on mobile
+
+        let previewContainer = null;
+        let scaleWrapper = null;
+        let isScalingActive = false;
+
+        function setupScaling() {
+            previewContainer = document.querySelector('.preview-container');
+            if (!previewContainer) return;
+
+            // Check if wrapper already exists
+            if (previewContainer.parentElement?.classList.contains('preview-scale-wrapper')) {
+                scaleWrapper = previewContainer.parentElement;
+            }
+        }
+
+        function createWrapper() {
+            if (!previewContainer || scaleWrapper) return;
+
+            // Create wrapper div
+            scaleWrapper = document.createElement('div');
+            scaleWrapper.className = 'preview-scale-wrapper';
+
+            // Insert wrapper before preview container and move container inside
+            previewContainer.parentNode.insertBefore(scaleWrapper, previewContainer);
+            scaleWrapper.appendChild(previewContainer);
+        }
+
+        function removeWrapper() {
+            if (!scaleWrapper || !previewContainer) return;
+
+            // Move preview container back out and remove wrapper
+            scaleWrapper.parentNode.insertBefore(previewContainer, scaleWrapper);
+            scaleWrapper.remove();
+            scaleWrapper = null;
+
+            // Remove scaling class and inline styles
+            previewContainer.classList.remove('mobile-scaled');
+            previewContainer.style.transform = '';
+            previewContainer.style.width = '';
+        }
+
+        function applyScaling() {
+            const viewportWidth = window.innerWidth;
+
+            // Only scale on mobile/tablet
+            if (viewportWidth >= MOBILE_BREAKPOINT) {
+                if (isScalingActive) {
+                    removeWrapper();
+                    isScalingActive = false;
+                    console.log('Mobile scaling disabled (desktop view)');
+                }
+                return;
+            }
+
+            setupScaling();
+            if (!previewContainer) return;
+
+            // Create wrapper if needed
+            if (!scaleWrapper) {
+                createWrapper();
+            }
+
+            // Calculate scale factor
+            const availableWidth = viewportWidth - (PADDING * 2);
+            const scale = Math.min(1, availableWidth / A4_WIDTH_PX);
+
+            // Apply scaling
+            previewContainer.classList.add('mobile-scaled');
+            previewContainer.style.width = A4_WIDTH_PX + 'px';
+            previewContainer.style.transform = `scale(${scale})`;
+
+            // Update wrapper height to match scaled content
+            // Get the actual height of the preview container
+            const contentHeight = previewContainer.offsetHeight;
+            const scaledHeight = contentHeight * scale;
+            scaleWrapper.style.height = scaledHeight + 'px';
+            scaleWrapper.style.width = (A4_WIDTH_PX * scale) + 'px';
+
+            isScalingActive = true;
+            console.log(`Mobile scaling applied: ${(scale * 100).toFixed(0)}%`);
+        }
+
+        // Initial application
+        setTimeout(applyScaling, 100);
+
+        // Reapply on resize (debounced)
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(applyScaling, 150);
+        });
+
+        // Reapply when content changes (e.g., after analysis)
+        const observer = new MutationObserver(() => {
+            if (isScalingActive) {
+                setTimeout(applyScaling, 50);
+            }
+        });
+
+        // Observe the live preview for content changes
+        setTimeout(() => {
+            const livePreview = document.getElementById('livePreview');
+            if (livePreview) {
+                observer.observe(livePreview, { childList: true, subtree: true, characterData: true });
+            }
+        }, 500);
+
+        // Expose for manual refresh if needed
+        window.refreshMobileScaling = applyScaling;
+    })();
+
     if (!fileInput || !analysisStatus || !visualEditor || !songbookOutput) {
         return;
     }
@@ -1631,8 +1760,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     return line;
                 }
 
-                // Skip arrangement lines with notation like (I) (V1) (PC) (C) etc.
-                const isArrangementLine = /\([VBICOTPC]+\d*\)/.test(line);
+                // Skip arrangement lines with notation like (I) (V1) (PC) (C) (TURN) (BRK) etc.
+                const isArrangementLine = /\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)/i.test(line);
                 if (isArrangementLine) {
                     console.log(`  ⏭️ Line ${index} is arrangement line, skipping:`, line.substring(0, 60));
                     return line;
@@ -1767,8 +1896,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Skip arrangement lines with notation like (I) (V1) (PC) (C) etc.
-            if (/\([VBICOTPC]+\d*\)/.test(line)) {
+            // Skip arrangement lines with notation like (I) (V1) (PC) (C) (TURN) (BRK) etc.
+            if (/\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)/i.test(line)) {
                 result.push(line);
                 continue;
             }
@@ -3442,9 +3571,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Skip arrangement lines (e.g., "(I) (V1) (PC) (C) (V2) (PC) (C) (B) (C) (O)")
-            const hasInlineNotation = /\((?:PC|CD|[VBICOT])\d*\)/.test(line);
-            const onlyInlineNotation = /^[\s\(VBICOTPCD\d\)|]+$/.test(line) && hasInlineNotation;
+            // Skip arrangement lines (e.g., "(I) (V1) (PC) (C)" or "(I) · (V1) · (TURN) · (BRK)")
+            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)/i.test(line);
+            const onlyInlineNotation = /^[\s\(\)A-Z0-9·|,\-–—]+$/i.test(line) && hasInlineNotation;
             if (onlyInlineNotation) {
                 result.push(line);
                 continue;
@@ -4082,8 +4211,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Intro → Verse → Pre-Chorus → Chorus → Verse → Pre-Chorus → Chorus → Bridge → Chorus → Outro
         const arrangementLine = '(I) (V1) (PC) (C) (V2) (PC) (C) (B) (C) (O)';
 
-        // Check if arrangement line already exists - don't duplicate
-        if (/\([VBICOTPC]+\d*\)\s*\([VBICOTPC]+\d*\)/.test(content)) {
+        // Check if arrangement line already exists - don't duplicate (looks for at least 2 consecutive tags)
+        if (/\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)[\s·]*\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)/i.test(content)) {
             console.log('Arrangement line already exists, skipping insertion');
             return content;
         }
@@ -4152,18 +4281,24 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const lines = content.split('\n');
 
         for (const line of lines) {
-            // Check if line is an arrangement line (contains multiple tags like "(V1) (C) (V2)")
+            // Check if line is an arrangement line (contains multiple tags like "(V1) (C) (V2)" or "(I) · (V1) · (C)")
             const cleanLine = line.replace(/<[^>]*>/g, '').trim();
-            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|[VBICOT])\d*\)/i.test(cleanLine);
-            const onlyInlineNotation = /^[\s\(VBICOTPCD\d\)|INTAGCOD]+$/i.test(cleanLine) && hasInlineNotation;
+            // Match common arrangement tags: V, C, B, I, O, T, PC, CD, INT, TAG, CODA, TURN, BRK, etc.
+            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)/i.test(cleanLine);
+            // Allow letters, digits, parentheses, whitespace, middle dots (·), pipes (|), dashes, commas
+            const onlyInlineNotation = /^[\s\(\)A-Z0-9·|,\-–—]+$/i.test(cleanLine) && hasInlineNotation;
 
             if (onlyInlineNotation) {
                 // Extract all tags from this line
                 const tagMatches = [...cleanLine.matchAll(/\(([A-Z\d]+)\)/gi)];
-                return tagMatches.map(m => m[1].toUpperCase());
+                if (tagMatches.length > 0) {
+                    console.log('Found arrangement tags:', tagMatches.map(m => m[1]));
+                    return tagMatches.map(m => m[1].toUpperCase());
+                }
             }
         }
 
+        console.log('No arrangement line detected in content');
         return [];
     }
 
@@ -4180,7 +4315,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         let arrangementLine = '';
         let inMetadata = true;
 
-        const sectionPattern = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|INTERLUDE|TAG|CODA)\s*(\d*):?$/i;
+        const sectionPattern = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|INTERLUDE|TAG|CODA|TURN|TURNAROUND|BREAK)\s*(\d*):?$/i;
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
@@ -4188,8 +4323,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Check if it's an arrangement line
             const cleanLine = trimmedLine.replace(/<[^>]*>/g, '');
-            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|[VBICOT])\d*\)/i.test(cleanLine);
-            const isArrangementLine = /^[\s\(VBICOTPCD\d\)|INTAGCOD]+$/i.test(cleanLine) && hasInlineNotation;
+            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)/i.test(cleanLine);
+            const isArrangementLine = /^[\s\(\)A-Z0-9·|,\-–—]+$/i.test(cleanLine) && hasInlineNotation;
 
             if (isArrangementLine) {
                 arrangementLine = line;
@@ -4278,6 +4413,22 @@ Our [Em7]hearts will cry, these bones will [D]sing
             rebuiltParts.push(arrangementLine);
         }
 
+        // Helper: case-insensitive section lookup
+        const findSection = (name) => {
+            // Try exact match first
+            if (sections[name]) return { content: sections[name], name: name };
+            // Try uppercase
+            const upper = name.toUpperCase();
+            if (sections[upper]) return { content: sections[upper], name: upper };
+            // Try title case variations
+            for (const key of Object.keys(sections)) {
+                if (key.toUpperCase() === upper) {
+                    return { content: sections[key], name: key };
+                }
+            }
+            return null;
+        };
+
         // Add sections in arrangement order
         for (const tag of tags) {
             const sectionName = TAG_TO_SECTION[tag];
@@ -4286,15 +4437,19 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Try to find the section (exact match or base match)
-            let sectionContent = sections[sectionName];
-            let actualSectionName = sectionName;
+            // Try to find the section (case-insensitive)
+            let found = findSection(sectionName);
+            let sectionContent = found?.content;
+            let actualSectionName = found?.name || sectionName;
 
             // If not found, try without number (e.g., "CHORUS" instead of "CHORUS 1")
             if (!sectionContent) {
                 const baseName = sectionName.replace(/\s*\d+$/, '');
-                sectionContent = sections[baseName];
-                if (sectionContent) actualSectionName = baseName;
+                found = findSection(baseName);
+                if (found) {
+                    sectionContent = found.content;
+                    actualSectionName = found.name;
+                }
             }
 
             // If still not found for numbered tags, try the base section
@@ -4302,8 +4457,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const baseTag = tag.replace(/\d+$/, '');
                 const baseSectionName = TAG_TO_SECTION[baseTag];
                 if (baseSectionName) {
-                    sectionContent = sections[baseSectionName];
-                    if (sectionContent) actualSectionName = baseSectionName;
+                    found = findSection(baseSectionName);
+                    if (found) {
+                        sectionContent = found.content;
+                        actualSectionName = found.name;
+                    }
                 }
             }
 
@@ -5111,15 +5269,32 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
         }
 
-        // Update Nashville Numbers mode UI
-        if (nashvilleMode && !summary.canUseNashville) {
-            nashvilleMode.style.opacity = '0.5';
-            nashvilleMode.disabled = true;
-            nashvilleMode.title = 'Pro feature - Upgrade to unlock';
-        } else if (nashvilleMode) {
-            nashvilleMode.style.opacity = '1';
+        // Update Nashville Numbers mode UI - disable only Nashville options, not the whole select
+        if (nashvilleMode) {
+            // Always keep select enabled for Chords/Lyrics options
             nashvilleMode.disabled = false;
-            nashvilleMode.title = 'Select Nashville Number System display mode';
+            nashvilleMode.style.opacity = '1';
+
+            // Disable/enable Nashville-specific options based on subscription
+            const nashvilleOptions = nashvilleMode.querySelectorAll('option[value="both"], option[value="numbers"]');
+            nashvilleOptions.forEach(opt => {
+                if (!summary.canUseNashville) {
+                    opt.disabled = true;
+                    opt.textContent = opt.value === 'both' ? 'Nash+Chords ⭐' : 'Nashville ⭐';
+                } else {
+                    opt.disabled = false;
+                    opt.textContent = opt.value === 'both' ? 'Nash+Chords' : 'Nashville';
+                }
+            });
+
+            // If currently on a Nashville mode without access, switch to chords
+            if (!summary.canUseNashville && (nashvilleMode.value === 'both' || nashvilleMode.value === 'numbers')) {
+                nashvilleMode.value = 'chords';
+            }
+
+            nashvilleMode.title = summary.canUseNashville
+                ? 'Select display mode'
+                : 'Chords/Lyrics available • Nashville requires Pro';
         }
     }
 

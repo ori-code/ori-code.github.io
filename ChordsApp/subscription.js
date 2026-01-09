@@ -57,12 +57,12 @@ const SUBSCRIPTION_TIERS = {
     PRO: {
         name: 'Pro',
         price: CURRENT_PRICES.PRO,
-        analysesPerMonth: -1, // -1 means unlimited
+        analysesPerMonth: 50,
         canSave: true,
         nashvilleNumbers: true,
         canCreateSession: true,
         canJoinSession: true,
-        features: ['Unlimited scans', 'Save to Library', 'Nashville Numbers', 'Live Sessions', 'Transpose', 'Print/Export']
+        features: ['50 scans/month', 'Save to Library', 'Nashville Numbers', 'Live Sessions', 'Transpose', 'Print/Export']
     },
     BOOK: {
         name: 'Book',

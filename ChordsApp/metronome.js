@@ -21,6 +21,7 @@ const metronome = {
     soundType: 'click',   // 'click', 'beep', 'wood'
     accentFirstBeat: true,
     multiplier: 1,        // Speed multiplier (1 = normal, 2 = double time, 0.5 = half time)
+    pendingMultiplier: null, // Multiplier to apply on next beat 1
 
     // Tap tempo
     tapTimes: [],
@@ -143,6 +144,14 @@ const metronome = {
         const effectiveBeatsPerMeasure = this.beatsPerMeasure * this.multiplier;
         if (this.currentBeat >= effectiveBeatsPerMeasure) {
             this.currentBeat = 0;
+
+            // Apply pending multiplier on beat 1
+            if (this.pendingMultiplier !== null) {
+                this.multiplier = this.pendingMultiplier;
+                this.pendingMultiplier = null;
+                this.updateMultiplierUI();
+                console.log(`Multiplier applied: x${this.multiplier}`);
+            }
         }
     },
 
@@ -273,6 +282,26 @@ const metronome = {
         if (this.masterGain) {
             this.masterGain.gain.setValueAtTime(this.volume, this.audioContext.currentTime);
         }
+        this.updateVolumeUI();
+    },
+
+    /**
+     * Update volume UI sliders
+     */
+    updateVolumeUI() {
+        const volumePercent = Math.round(this.volume * 100);
+
+        // Modal volume slider
+        const modalVolume = document.getElementById('metronome-volume-slider');
+        if (modalVolume) {
+            modalVolume.value = volumePercent;
+        }
+
+        // Mini player volume slider
+        const miniVolume = document.getElementById('miniMetronomeVolume');
+        if (miniVolume) {
+            miniVolume.value = volumePercent;
+        }
     },
 
     /**
@@ -287,29 +316,21 @@ const metronome = {
      * Set speed multiplier (1 = normal, 2 = double time, 0.5 = half time)
      */
     setMultiplier(value) {
-        const oldMultiplier = this.multiplier;
-        this.multiplier = value;
-
-        // Adjust timing for smooth transition when playing
-        if (this.isPlaying && this.audioContext && oldMultiplier !== value) {
-            const currentTime = this.audioContext.currentTime;
-            const newEffectiveBpm = this.bpm * value;
-            const newSecondsPerBeat = 60.0 / newEffectiveBpm;
-
-            // Calculate time since last beat
-            const oldEffectiveBpm = this.bpm * oldMultiplier;
-            const oldSecondsPerBeat = 60.0 / oldEffectiveBpm;
-            const timeSinceLastBeat = oldSecondsPerBeat - (this.nextNoteTime - currentTime);
-
-            // Scale the elapsed time to the new tempo and calculate next beat
-            const scaledElapsed = timeSinceLastBeat * (oldMultiplier / value);
-            const timeToNextBeat = Math.max(0.01, newSecondsPerBeat - scaledElapsed);
-
-            this.nextNoteTime = currentTime + timeToNextBeat;
+        // If not playing, apply immediately
+        if (!this.isPlaying) {
+            this.multiplier = value;
+            this.pendingMultiplier = null;
+            this.updateMultiplierUI();
+            console.log(`Multiplier set to x${value}`);
+            return;
         }
 
-        this.updateMultiplierUI();
-        console.log(`Multiplier set to x${value}`);
+        // If playing, queue the change for next beat 1
+        if (value !== this.multiplier) {
+            this.pendingMultiplier = value;
+            this.updateMultiplierUI(); // Show pending state
+            console.log(`Multiplier queued: x${value} (will apply on beat 1)`);
+        }
     },
 
     /**
@@ -326,14 +347,19 @@ const metronome = {
         // Modal multiplier buttons
         document.querySelectorAll('.metronome-mult-btn').forEach(btn => {
             const mult = parseFloat(btn.dataset.mult);
+            // Active = current multiplier, Pending = queued multiplier
             btn.classList.toggle('active', mult === this.multiplier);
+            btn.classList.toggle('pending', mult === this.pendingMultiplier);
         });
 
         // Mini player multiplier button
         const miniMultBtn = document.getElementById('miniMetronomeMult');
         if (miniMultBtn) {
-            miniMultBtn.textContent = `x${this.multiplier}`;
+            // Show pending multiplier if queued, otherwise current
+            const displayMult = this.pendingMultiplier !== null ? this.pendingMultiplier : this.multiplier;
+            miniMultBtn.textContent = `x${displayMult}`;
             miniMultBtn.classList.toggle('active', this.multiplier !== 1);
+            miniMultBtn.classList.toggle('pending', this.pendingMultiplier !== null);
         }
     },
 

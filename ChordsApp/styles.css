@@ -1466,7 +1466,73 @@ a {
     accent-color: var(--primary);
 }
 
-/* Mobile: Stack controls vertically */
+/* Ensure selects in music row are clickable on ALL screen sizes */
+.layout-music-row select {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+.layout-music-row > div {
+    position: relative !important;
+    z-index: 50 !important;
+}
+
+.layout-music-row span {
+    pointer-events: none !important;
+}
+
+/* iPad/Tablet: Keep full-width stretched layout */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .layout-controls-row {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    /* Music row: 4 items stretch equally */
+    .layout-music-row > div {
+        flex: 1 !important;
+        padding: 5px 8px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Display row: 7 items stretch equally */
+    .layout-display-row > div,
+    .layout-display-row > label,
+    .layout-display-row > button {
+        flex: 1 !important;
+        padding: 5px 8px !important;
+        font-size: 0.75rem !important;
+        justify-content: center !important;
+    }
+
+    .layout-controls-row select,
+    .layout-controls-row input[type="number"] {
+        font-size: 0.75rem !important;
+    }
+
+    .layout-controls-row span {
+        font-size: 0.7rem !important;
+    }
+
+    /* Group related items together */
+    .layout-actions-row {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    .layout-sliders-row {
+        gap: 8px !important;
+    }
+
+    .layout-sliders-row > label {
+        flex: 1 1 30% !important;
+        min-width: 120px !important;
+    }
+}
+
+/* Mobile: Keep full-width stretched layout */
 @media (max-width: 768px) {
     .preview-controls-row > div {
         flex-direction: column !important;
@@ -1487,24 +1553,81 @@ a {
         width: 100%;
     }
 
-    /* Layout Customization - Row 0: Display controls (2-column grid) */
-    .layout-controls-row {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px !important;
-        align-items: stretch !important;
+    /* Music row: 4 items in one row, stretched */
+    .layout-music-row {
+        display: flex !important;
+        width: 100% !important;
+        justify-content: space-between !important;
     }
 
-    .layout-controls-row > div,
-    .layout-controls-row > label {
-        width: 100%;
-        min-width: 0 !important;
-        justify-content: center;
+    .layout-music-row > div {
+        flex: 1 !important;
+        min-width: 60px !important;
+        justify-content: center !important;
+        padding: 5px 6px !important;
+        font-size: 0.7rem !important;
+        overflow: visible !important;
     }
 
-    /* Badges checkbox - full width */
-    .layout-controls-row > label:last-child {
-        grid-column: 1 / -1;
+    /* Ensure selects in music row are clickable on mobile */
+    .layout-music-row select {
+        min-width: 50px !important;
+        -webkit-appearance: menulist !important;
+        appearance: menulist !important;
+        pointer-events: auto !important;
+        position: relative !important;
+        z-index: 100 !important;
+        touch-action: manipulation !important;
+    }
+
+    /* Ensure parent containers don't block clicks */
+    .layout-music-row > div {
+        position: relative !important;
+        z-index: 50 !important;
+    }
+
+    /* Make sure emoji spans don't block select */
+    .layout-music-row span {
+        pointer-events: none !important;
+    }
+
+    /* Display row: 7 items wrap into two rows on mobile */
+    .layout-display-row {
+        display: flex !important;
+        width: 100% !important;
+        justify-content: space-between !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+
+    /* First 4 items (Badges, 2 Col, 1 Pg, Follow) - fit 4 per row */
+    .layout-display-row > div,
+    .layout-display-row > label {
+        flex: 1 1 22% !important;
+        min-width: 60px !important;
+        max-width: 25% !important;
+        justify-content: center !important;
+        padding: 5px 4px !important;
+        font-size: 0.65rem !important;
+    }
+
+    /* Last 3 items (Image, Print, Auto Fit) - fit 3 per row */
+    .layout-display-row > button {
+        flex: 1 1 30% !important;
+        min-width: 80px !important;
+        justify-content: center !important;
+        padding: 5px 4px !important;
+        font-size: 0.65rem !important;
+    }
+
+    .layout-controls-row select,
+    .layout-controls-row input[type="number"] {
+        font-size: 0.7rem !important;
+        padding: 1px 2px !important;
+    }
+
+    .layout-controls-row span {
+        font-size: 0.65rem !important;
     }
 
     /* Layout Customization - Row 1: Sliders (stack vertically) */
@@ -1930,8 +2053,8 @@ a {
 .section-badges-row {
     display: flex;
     align-items: center;
-    gap: 16px;  /* Space for dots between badges */
-    margin: 8px 0 16px 0;  /* Space above (after key) and below (before sections) */
+    gap: 12px;  /* Space for dots between badges - minimalistic */
+    margin: 4px 0 12px 0;  /* Reduced margins - minimalistic */
     flex-wrap: wrap;
     /* Span across all columns so both columns start at same height */
     column-span: all;
@@ -2013,15 +2136,15 @@ a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 4px 12px;
-    border-radius: 16px;  /* Pill shape */
+    padding: 2px 8px;               /* Smaller - minimalistic style */
+    border-radius: 10px;            /* Smaller radius */
     font-weight: 500;
-    font-size: 12px !important;
+    font-size: 9px !important;      /* Smaller font - minimalistic */
     line-height: normal !important;
     letter-spacing: normal !important;
     background: transparent;        /* No fill - outline only */
-    color: #4b5563;                 /* Dark gray text */
-    border: 1.5px solid #4b5563;    /* Dark gray outline */
+    color: #444;                    /* Darker gray text */
+    border: 1px solid #444;         /* Thinner border */
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
@@ -2029,27 +2152,27 @@ a {
 }
 
 .section-badge:hover {
-    background: rgba(75, 85, 99, 0.1);
-    border-color: #374151;
+    background: rgba(68, 68, 68, 0.1);
+    border-color: #333;
 }
 
 /* Active/Selected state */
 .section-badge.active,
 .section-badge.badge-active {
-    background: #374151;
+    background: #444;
     color: #ffffff;
-    border-color: #374151;
+    border-color: #444;
 }
 
 /* Dot separator BETWEEN badges (outside, not inside) */
 .section-badge + .section-badge::before {
     content: '·';
     position: absolute;
-    left: -11px;
+    left: -9px;
     top: 50%;
     transform: translateY(-50%);
-    color: #6b7280;
-    font-size: 16px;
+    color: #666;
+    font-size: 12px;
     font-weight: 400;
 }
 
@@ -2057,54 +2180,54 @@ a {
 [dir="rtl"] .section-badge + .section-badge::before,
 .live-preview[dir="rtl"] .section-badge + .section-badge::before {
     left: auto;
-    right: -11px;
+    right: -9px;
 }
 
-/* Mobile: Responsive pill badges */
+/* Mobile: Responsive pill badges - keep minimalistic style */
 @media (max-width: 768px) {
     .section-badges-row {
-        gap: 14px;
+        gap: 12px;
     }
 
     .section-badge {
-        padding: 3px 10px;
-        font-size: 11px !important;
+        padding: 2px 7px;
+        font-size: 8px !important;
     }
 
     .section-badge + .section-badge::before {
-        left: -10px;
-        font-size: 14px;
+        left: -8px;
+        font-size: 10px;
     }
 
     /* RTL mobile fix */
     [dir="rtl"] .section-badge + .section-badge::before,
     .live-preview[dir="rtl"] .section-badge + .section-badge::before {
         left: auto;
-        right: -10px;
+        right: -8px;
     }
 }
 
 /* Extra small mobile devices */
 @media (max-width: 480px) {
     .section-badges-row {
-        gap: 12px;
+        gap: 10px;
     }
 
     .section-badge {
-        padding: 2px 8px;
-        font-size: 10px !important;
+        padding: 1px 6px;
+        font-size: 7px !important;
     }
 
     .section-badge + .section-badge::before {
-        left: -9px;
-        font-size: 12px;
+        left: -7px;
+        font-size: 9px;
     }
 
     /* RTL extra small mobile fix */
     [dir="rtl"] .section-badge + .section-badge::before,
     .live-preview[dir="rtl"] .section-badge + .section-badge::before {
         left: auto;
-        right: -9px;
+        right: -7px;
     }
 }
 
@@ -2119,8 +2242,8 @@ a {
 .badge-break,
 .badge-other {
     background: transparent;
-    border: 1.5px solid #4b5563;
-    color: #4b5563;
+    border: 1px solid #444;
+    color: #444;
 }
 
 /* Repeat count superscript - small number showing how many times a section repeats */
@@ -2364,27 +2487,14 @@ a {
     }
 }
 
-/* Print Styles - Clean Chord Chart Formatting */
+/* Print Styles - Print exactly what you see on screen */
 @media print {
     @page {
-        margin: 10mm;
-        size: A4;
+        margin: 0.5cm;
+        size: A4 portrait;
     }
 
-    * {
-        background: white !important;
-        color: black !important;
-        box-shadow: none !important;
-        text-shadow: none !important;
-    }
-
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: 'Courier New', monospace;
-    }
-
-    /* Hide everything except the live preview */
+    /* Hide UI elements only - NO style overrides */
     .app-header,
     .hero,
     .workflow,
@@ -2406,32 +2516,43 @@ a {
     select,
     button,
     input,
-    label {
+    label,
+    #printPreview {
         display: none !important;
     }
 
-    .container {
-        max-width: 100%;
-        padding: 0;
-        margin: 0;
+    /* Reset container margins/padding for print - remove whitespace */
+    body,
+    .container,
+    .preview-section,
+    .preview-section-content {
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
-    /* Show only preview section for printing */
     .preview-section {
         display: block !important;
-        background: white !important;
-        padding: 0 !important;
-        margin: 0 !important;
     }
 
     .preview-container {
-        background: white !important;
+        width: 100% !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
         border: none !important;
-        border-radius: 0 !important;
         box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    #livePreview {
+        display: block !important;
+        border: none !important;
+        box-shadow: none !important;
+        aspect-ratio: auto !important;
+        min-height: auto !important;
+        width: 100% !important;
         padding: 0 !important;
         margin: 0 !important;
-        min-height: auto !important;
     }
 
     /* Hide A4 label during print */
@@ -2439,238 +2560,22 @@ a {
         display: none !important;
     }
 
-    /* Show the live preview content */
-    #livePreview {
-        display: block !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-        color: black !important;
-        background: white !important;
-        border: none !important;
-        aspect-ratio: auto !important;
-        min-height: auto !important;
-        font-size: 10.5pt;
-        line-height: 1.5;
-        columns: 2;
-        column-gap: 40px;
-        column-rule: 1px solid rgba(0, 0, 0, 0.2);
-        column-fill: auto;
-    }
-
-    /* Style bold tags (chords) in black - minimalist */
-    #livePreview b {
-        color: #000 !important;
-        font-weight: 600 !important;
-        font-size: 1em !important;
-    }
-
-    /* Song header container - fixed line-height for print */
-    .song-header {
-        line-height: 1.3 !important;
-        column-span: all !important;
-        margin: 0 !important;
-        break-after: avoid !important;
-    }
-
-    /* Minimalist print formatting */
-    .song-title {
-        font-size: 12pt !important;
-        font-weight: 700 !important;
-        text-align: start !important;
-        margin: 0 0 3px 0 !important;
-        column-span: all !important;
-        break-after: avoid !important;
-        display: block !important;
-        width: 100% !important;
-    }
-
-    .song-meta {
-        text-align: start !important;
-        font-size: 9pt !important;
-        margin: 0 0 1.5px 0 !important;
-        column-span: all !important;
-        break-after: avoid !important;
-        color: #666 !important;
-        display: block !important;
-        width: 100% !important;
-    }
-
-    .section-header {
-        font-weight: 700 !important;
-        font-size: 10.5pt !important;
-        text-decoration: underline !important;
-        margin: 12px 0 6px 0 !important;
-        letter-spacing: 0.3px !important;
-        break-after: avoid !important;
-        page-break-after: avoid !important;
-    }
-
-    .section-comment {
-        font-style: italic !important;
-        font-size: inherit !important;
-        color: #444 !important;
-        text-decoration: none !important;
-        margin-left: 6px !important;
-    }
-
-    /* Print-friendly badges - Minimal outline style */
-    .section-badges-row {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 12px !important;
-        margin: 4px 0 !important;
-        column-span: all !important;
-        justify-content: flex-start !important;
-        align-items: center !important;
-    }
-
-    .section-badge {
-        position: relative !important;
-        padding: 2px 8px !important;
-        font-size: 7pt !important;
-        font-weight: 500 !important;
-        background: transparent !important;
-        border: 1px solid #444 !important;
-        color: #333 !important;
-        border-radius: 10px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        flex-shrink: 0 !important;
-        min-width: auto !important;
-        width: auto !important;
-        height: auto !important;
-    }
-
-    .section-badge + .section-badge::before {
-        content: '·' !important;
-        position: absolute !important;
-        left: -9px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        color: #666 !important;
-        font-size: 10pt !important;
-    }
-
-    /* Minimalist section blocks for print */
     .song-section-block {
-        margin: 9px 0 !important;
-        padding: 6px 0 !important;
         border: none !important;
-        background: transparent !important;
         box-shadow: none !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
     }
 
-    /* Row space for print */
-    .row-space {
-        height: 1em !important;
-        min-height: 1em !important;
-        display: block !important;
-    }
-
-    /* Flow arrow for print */
-    .flow-arrow {
-        color: #333 !important;
-        font-size: 14px !important;
-    }
-
-    /* Flow instructions section for print */
-    .flow-instructions-section {
-        margin-top: 12px !important;
-        padding-top: 6px !important;
-        border-top: 1px dashed #999 !important;
-    }
-
-    /* Flow instruction for print - matches section header styling */
-    .flow-instruction {
-        font-weight: 700 !important;
-        font-size: 10.5pt !important;
-        color: #000 !important;
-        text-decoration: underline !important;
-        margin: 3px 0 !important;
-        letter-spacing: 0.3px !important;
-    }
-
-    /* Hide the hidden print preview div - we use livePreview instead */
-    #printPreview {
-        display: none !important;
-    }
-
-    /* Format the printed chord chart */
-    .print-chart {
-        font-family: 'Courier New', monospace;
-        font-size: 11pt;
-        line-height: 1.5;
-        color: black;
-        white-space: pre-wrap;
-        page-break-inside: avoid;
-    }
-
-    .print-chart h1 {
-        font-size: 16pt;
-        font-weight: bold;
-        margin: 0 0 6px 0;
-        text-align: center;
-        column-span: all;
-    }
-
-    .print-chart h2 {
-        font-size: 13pt;
-        font-weight: normal;
-        font-style: italic;
-        margin: 0 0 8px 0;
-        text-align: center;
-        column-span: all;
-    }
-
-    .print-chart .meta {
-        font-size: 10pt;
-        margin-bottom: 10px;
-        column-span: all;
-    }
-
-    .print-chart .section {
-        margin: 8px 0;
-        page-break-inside: avoid;
-        break-inside: avoid;
-    }
-
-    .print-chart .section-title {
-        font-weight: bold;
-        font-size: 12pt;
-        margin: 8px 0 4px 0;
-        break-after: avoid;
-    }
-
-    /* Prevent page breaks in the middle of sections */
+    /* Page break rules only */
+    .song-section-block,
     .chord-line,
     .lyric-line {
         page-break-inside: avoid;
         break-inside: avoid;
     }
 
-    .chord-line {
-        color: black;
-        font-weight: bold;
-        font-size: 13pt;
-        margin: 0;
-        line-height: 1.3;
-        letter-spacing: 0.3px;
-    }
-
-    .lyric-line {
-        color: black;
-        margin: 0 0 6px 0;
-        line-height: 1.3;
-        font-size: 11pt;
-    }
-
-    @page {
-        margin: 1cm;
-        size: A4 portrait;
+    .section-header {
+        break-after: avoid;
+        page-break-after: avoid;
     }
 }
 
@@ -3094,5 +2999,42 @@ a {
         width: 85vw;
         max-width: 320px;
         left: -90vw;
+    }
+}
+
+/* ============================================
+   MOBILE A4 PREVIEW SCALING
+   Scales the A4 preview to fit mobile screens
+   while maintaining exact desktop proportions
+   ============================================ */
+
+/* Wrapper for scaled preview - contains overflow and sets visual height */
+.preview-scale-wrapper {
+    position: relative;
+    overflow: hidden;
+    margin: 0 auto;
+    background: var(--bg-soft);
+    border-radius: 12px;
+}
+
+/* When scaling is active, preview container needs fixed dimensions */
+.preview-container.mobile-scaled {
+    transform-origin: top left;
+    width: 793px !important;      /* Fixed A4 width - prevents reflow */
+    max-width: none !important;   /* Override the 100% constraint */
+    min-width: 793px !important;  /* Prevent any shrinking */
+    /* Scale value set by JavaScript */
+}
+
+/* Mobile: Center the scaled preview and add dark background */
+@media screen and (max-width: 800px) {
+    .preview-scale-wrapper {
+        background: #1a1a1a;
+        border-radius: 8px;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    .preview-container.mobile-scaled {
+        margin: 0; /* Remove auto margin when transformed */
     }
 }

@@ -403,10 +403,16 @@
                         <button id="miniMetronomeTap" class="mini-metronome-tap" onclick="metronome.tap();" style="padding: 4px 8px; border-radius: 6px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); color: var(--text); font-size: 10px; font-weight: 600; cursor: pointer;">TAP</button>
                     </div>
                     <!-- BPM Slider -->
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                         <span style="font-size: 10px; opacity: 0.5;">20</span>
                         <input type="range" id="miniMetronomeBpmSlider" min="20" max="300" value="120" style="flex: 1; height: 4px; accent-color: #eab308;" oninput="metronome.setBpm(this.value); document.getElementById('miniMetronomeBpm').textContent = this.value;">
                         <span style="font-size: 10px; opacity: 0.5;">300</span>
+                    </div>
+                    <!-- Volume Slider -->
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                        <span style="font-size: 12px; opacity: 0.6;">🔈</span>
+                        <input type="range" id="miniMetronomeVolume" min="0" max="100" value="70" style="flex: 1; height: 4px; accent-color: #eab308;" oninput="metronome.setVolume(this.value / 100);">
+                        <span style="font-size: 12px; opacity: 0.6;">🔊</span>
                     </div>
                     <!-- Full controls button -->
                     <div class="side-menu-buttons">
@@ -540,20 +546,20 @@
                         <input type="file" id="bulkImportInput" multiple accept=".txt,.cho,.chordpro,.chopro" style="display: none;">
                         <button class="ghost-button" id="updateSongButton" style="padding: 8px 12px; font-size: 0.8rem; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #10b981;">🔄 Update</button>
                     </div>
-                    <!-- Row 0: Compact Controls - All with consistent bordered style -->
-                    <div class="layout-controls-row" style="display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; margin-bottom: 12px;">
-                        <div style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px;">
+                    <!-- Row 0a: Music Settings (Chords, Key, BPM, Time Sig) -->
+                    <div class="layout-controls-row layout-music-row" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; width: 100%; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; flex: 1;">
                             <span style="font-size: 0.75rem;">🔢</span>
-                            <select id="nashvilleMode" style="padding: 2px 4px; background: transparent; color: var(--text); border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500;">
+                            <select id="nashvilleMode" style="padding: 4px 6px; background: rgba(139, 92, 246, 0.15); color: var(--text); border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1; -webkit-appearance: menulist; border-radius: 4px;">
                                 <option value="chords" selected>Chords</option>
                                 <option value="both">Nash+Chords</option>
                                 <option value="numbers">Nashville</option>
                                 <option value="lyrics">Lyrics</option>
                             </select>
                         </div>
-                        <div id="keyDetection" style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(255, 59, 92, 0.08); border: 1px solid rgba(255, 59, 92, 0.3); border-radius: 6px;">
+                        <div id="keyDetection" style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(255, 59, 92, 0.08); border: 1px solid rgba(255, 59, 92, 0.3); border-radius: 6px; flex: 1;">
                             <span style="font-size: 0.75rem;">🎹</span>
-                            <select id="keySelector" style="padding: 2px 4px; background: transparent; color: var(--primary); border: none; font-size: 0.8rem; font-weight: 500; cursor: pointer;">
+                            <select id="keySelector" style="padding: 4px 6px; background: rgba(255, 59, 92, 0.15); color: var(--primary); border: none; font-size: 0.8rem; font-weight: 500; cursor: pointer; flex: 1; -webkit-appearance: menulist; border-radius: 4px;">
                                 <optgroup label="Major">
                                     <option value="C Major" selected>C</option>
                                     <option value="C# Major">C#</option>
@@ -585,13 +591,13 @@
                             </select>
                             <span id="detectedKey" style="display: none;"></span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 6px;">
+                        <div style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 6px; flex: 1;">
                             <span style="font-size: 0.75rem;">🎵</span>
-                            <input type="number" id="bpmInput" value="120" min="40" max="240" style="width: 45px; padding: 2px 4px; background: transparent; color: var(--text); border: none; font-size: 0.8rem; text-align: center; font-weight: 500;" required>
+                            <input type="number" id="bpmInput" value="120" min="40" max="240" style="width: 100%; padding: 2px 4px; background: transparent; color: var(--text); border: none; font-size: 0.8rem; text-align: center; font-weight: 500;" required>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 6px;">
+                        <div style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 6px; flex: 1;">
                             <span style="font-size: 0.75rem;">⏱️</span>
-                            <select id="timeSignature" style="padding: 2px 4px; background: transparent; color: var(--text); border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500;">
+                            <select id="timeSignature" style="padding: 4px 6px; background: rgba(34, 211, 238, 0.15); color: var(--text); border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1; -webkit-appearance: menulist; border-radius: 4px;">
                                 <option value="4/4" selected>4/4</option>
                                 <option value="3/4">3/4</option>
                                 <option value="6/8">6/8</option>
@@ -601,33 +607,36 @@
                                 <option value="12/8">12/8</option>
                             </select>
                         </div>
-                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px;">
+                    </div>
+                    <!-- Row 0b: Display & Actions (Badges, Columns, Pages, Actions) -->
+                    <div class="layout-controls-row layout-display-row" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; width: 100%; justify-content: space-between;">
+                        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; flex: 1;">
                             <input type="checkbox" id="showBadges" checked style="width: 14px; height: 14px; cursor: pointer;">
                             <span style="font-size: 0.8rem; color: #10b981; font-weight: 500;">Badges</span>
                         </label>
-                        <div style="display: flex; align-items: center; padding: 6px 10px; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px;">
-                            <select id="columnCount" style="padding: 2px 4px; background: transparent; color: #a855f7; border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500;">
+                        <div style="display: flex; align-items: center; padding: 6px 10px; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; flex: 1; justify-content: center;">
+                            <select id="columnCount" style="padding: 4px 6px; background: rgba(168, 85, 247, 0.15); color: #a855f7; border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; -webkit-appearance: menulist; border-radius: 4px;">
                                 <option value="1">1 Col</option>
                                 <option value="2" selected>2 Col</option>
                                 <option value="3">3 Col</option>
                                 <option value="4">4 Col</option>
                             </select>
                         </div>
-                        <div style="display: flex; align-items: center; padding: 6px 10px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px;">
-                            <select id="pageCount" style="padding: 2px 4px; background: transparent; color: #3b82f6; border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500;">
+                        <div style="display: flex; align-items: center; padding: 6px 10px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; flex: 1; justify-content: center;">
+                            <select id="pageCount" style="padding: 4px 6px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; -webkit-appearance: menulist; border-radius: 4px;">
                                 <option value="1" selected>1 Pg</option>
                                 <option value="2">2 Pg</option>
                                 <option value="3">3 Pg</option>
                                 <option value="4">4 Pg</option>
                             </select>
                         </div>
-                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 6px 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px;">
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 6px 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; flex: 1; justify-content: center;">
                             <input type="checkbox" id="followArrangementBtn2" style="width: 14px; height: 14px; cursor: pointer;">
-                            <span style="font-size: 0.8rem; color: #10b981; font-weight: 500;">Follow Arr.</span>
+                            <span style="font-size: 0.8rem; color: #10b981; font-weight: 500;">Follow</span>
                         </label>
-                        <button id="layoutSaveAsImage" style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(236, 72, 153, 0.08); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 6px; color: #ec4899; font-size: 0.8rem; cursor: pointer; font-weight: 500;">📷 Image</button>
-                        <button id="layoutPrintButton" style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 6px; color: #6366f1; font-size: 0.8rem; cursor: pointer; font-weight: 500;">🖨️ Print</button>
-                        <button id="layoutAutoFitButton" style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; color: #8b5cf6; font-size: 0.8rem; cursor: pointer; font-weight: 500;">✨ Auto Fit</button>
+                        <button id="layoutSaveAsImage" style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; background: rgba(236, 72, 153, 0.08); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 6px; color: #ec4899; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1;">📷 Image</button>
+                        <button id="layoutPrintButton" style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 6px; color: #6366f1; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1;">🖨️ Print</button>
+                        <button id="layoutAutoFitButton" style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; color: #8b5cf6; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1;">✨ Auto Fit</button>
                     </div>
                     <!-- Row 1: Sliders -->
                     <div class="layout-sliders-row" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
@@ -748,7 +757,7 @@
                 <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 32px;">
                     <div style="display: flex; align-items: center; gap: 8px; color: var(--text);">
                         <span style="font-size: 1.3rem;">🎵</span>
-                        <span style="font-size: 0.95rem;">Unlimited Scans</span>
+                        <span style="font-size: 0.95rem;">More Scans</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px; color: var(--text);">
                         <span style="font-size: 1.3rem;">⚡</span>
@@ -761,25 +770,32 @@
                 </div>
 
                 <!-- Pricing badges -->
-                <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap;">
+                <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap;">
                     <!-- Free tier -->
-                    <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 16px 20px; min-width: 140px;">
+                    <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 14px 16px; min-width: 120px;">
                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Free</div>
-                        <div style="font-size: 1.4rem; font-weight: 700; color: var(--text);">$0</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">3 analyses/day<br>Basic features</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text);">$0</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">3 scans/month<br>Basic features</div>
                     </div>
                     <!-- Basic tier -->
-                    <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 16px 20px; min-width: 140px;">
+                    <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 14px 16px; min-width: 120px;">
                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Basic</div>
-                        <div style="font-size: 1.4rem; font-weight: 700; color: var(--text);">$0.99<span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">15 analyses/day<br>Song library</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text);">$0.99<span style="font-size: 0.75rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">20 scans/month<br>Song library</div>
                     </div>
                     <!-- Pro tier -->
-                    <div style="background: linear-gradient(135deg, rgba(255, 59, 92, 0.2), rgba(139, 92, 246, 0.2)); border: 2px solid var(--primary); border-radius: 12px; padding: 16px 20px; position: relative; min-width: 140px;">
-                        <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; font-size: 0.7rem; padding: 2px 10px; border-radius: 10px; font-weight: 600;">POPULAR</div>
+                    <div style="background: linear-gradient(135deg, rgba(255, 59, 92, 0.2), rgba(139, 92, 246, 0.2)); border: 2px solid var(--primary); border-radius: 12px; padding: 14px 16px; position: relative; min-width: 120px;">
+                        <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; font-weight: 600;">POPULAR</div>
                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Pro</div>
-                        <div style="font-size: 1.4rem; font-weight: 700; color: var(--text);">$1.99<span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">Unlimited analyses<br>Priority + Cloud sync</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text);">$1.99<span style="font-size: 0.75rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">50 scans/month<br>Live Sessions</div>
+                    </div>
+                    <!-- Book tier -->
+                    <div style="background: rgba(139, 92, 246, 0.15); border: 2px solid #a78bfa; border-radius: 12px; padding: 14px 16px; min-width: 120px; position: relative;">
+                        <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #8b5cf6; color: white; font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; font-weight: 600;">ONE-TIME</div>
+                        <div style="font-size: 0.8rem; color: #a78bfa; margin-bottom: 4px;">Book</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text);">$9.99<span style="font-size: 0.65rem; font-weight: 400; color: var(--text-muted);"> once</span></div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">20 scans included<br>Buy more anytime</div>
                     </div>
                 </div>
 
@@ -1129,7 +1145,7 @@
                         <div style="font-size: 32px; font-weight: 700; color: #dc2626; margin-bottom: 4px;">$1.99<span style="font-size: 16px; font-weight: 400; color: #ef4444;">/mo</span></div>
                         <div style="font-size: 12px; color: #ef4444; margin-bottom: 16px;">3-day free trial</div>
                         <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8; flex: 1; color: #374151;">
-                            <li style="color: #dc2626;">✓ Unlimited scans</li>
+                            <li style="color: #dc2626;">✓ 50 scans/month</li>
                             <li style="color: #dc2626;">✓ Save to Library</li>
                             <li style="color: #dc2626;">✓ Nashville Numbers</li>
                             <li style="color: #dc2626;">✓ Live Sessions</li>
@@ -1247,7 +1263,7 @@
                         <div style="font-size: 32px; font-weight: 700; color: #dc2626; margin-bottom: 4px;">$1.99<span style="font-size: 14px; font-weight: 400; color: #ef4444;">/mo</span></div>
                         <p style="margin: 0 0 12px 0; font-size: 12px; color: #ef4444;">3-day free trial</p>
                         <ul style="list-style: none; padding: 0; margin: 0 0 20px 0; font-size: 14px; line-height: 1.8; color: #374151;">
-                            <li style="color: #dc2626;">✓ Unlimited scans</li>
+                            <li style="color: #dc2626;">✓ 50 scans/month</li>
                             <li style="color: #dc2626;">✓ Save to Library</li>
                             <li style="color: #dc2626;">✓ Nashville Numbers</li>
                             <li style="color: #dc2626;">✓ Live Sessions</li>
@@ -1377,7 +1393,7 @@
                 <!-- Get Started CTA -->
                 <div style="text-align: center; padding: 24px; background: linear-gradient(135deg, #fff5f5 0%, #fdf4ff 100%); border-radius: 12px; margin-top: 8px;">
                     <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: #1e293b;">Ready to transform your worship experience?</p>
-                    <p style="margin: 0 0 16px 0; font-size: 14px; color: #64748b;">Start free with 3 analyses. Upgrade anytime for unlimited access.</p>
+                    <p style="margin: 0 0 16px 0; font-size: 14px; color: #64748b;">Start free with 3 scans. Upgrade anytime for more features.</p>
                     <button id="featuresModalUpgrade" style="padding: 14px 40px; background: linear-gradient(135deg, #ef4444 0%, #a855f7 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(239, 68, 68, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(239, 68, 68, 0.3)';">
                         View Plans & Pricing
                     </button>
@@ -1948,6 +1964,18 @@
             background: linear-gradient(135deg, rgba(234, 179, 8, 0.3) 0%, rgba(249, 115, 22, 0.3) 100%);
             border-color: rgba(234, 179, 8, 0.6);
             color: #eab308;
+        }
+
+        /* Pending state - blink to show waiting for beat 1 */
+        .metronome-mult-btn.pending {
+            animation: pendingBlink 0.5s ease-in-out infinite;
+            border-color: rgba(16, 185, 129, 0.6);
+            color: #10b981;
+        }
+
+        @keyframes pendingBlink {
+            0%, 100% { background: rgba(16, 185, 129, 0.15); }
+            50% { background: rgba(16, 185, 129, 0.35); }
         }
 
         #metronome-play-btn.playing {
