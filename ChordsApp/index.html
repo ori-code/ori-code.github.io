@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>aChordim | The Faith Sound</title>
 
-    <link rel="icon" type="image/png" href="../images/FaithSoundLogo.png">
-    <link rel="apple-touch-icon" href="../images/FaithSoundLogo.png">
+    <link rel="icon" type="image/svg+xml" href="achordim-icon-app.svg">
+    <link rel="apple-touch-icon" href="achordim-icon-app.svg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,21 +35,16 @@
 <body>
     <header class="app-header">
         <div class="header-container">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <button id="sideMenuToggle" class="hamburger-btn" title="Open Menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button id="sideMenuToggle" class="hamburger-btn" title="Open Menu" style="padding: 0; margin: 0; margin-top: -4px; border: none; background: none; cursor: pointer; display: flex; align-items: center; line-height: 0; align-self: flex-start;">
+                    <img src="achordim-icon-app.svg" alt="Menu" style="width: 38px; height: 38px; border-radius: 8px; display: block;">
                 </button>
-                <a href="../index.html" class="nav-logo">THE FAITH <span>SOUND</span></a>
+                <a href="../index.html" style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
+                    <span style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim</span>
+                    <span style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span style="color: #ff3b5c; opacity: 1;">sound</span>.com</span>
+                </a>
             </div>
             <div class="header-actions">
-                <!-- Usage Indicator -->
-                <div id="headerUsageIndicator" style="display: none; margin-right: 12px; padding: 6px 12px; background: rgba(59, 130, 246, 0.15); border-radius: 6px; font-size: 13px; color: #3b82f6; white-space: nowrap;">
-                    <span id="headerUsageText">Loading...</span>
-                </div>
-
-                <!-- Upgrade Button moved to side menu -->
 
                 <div style="position: relative;">
                     <button class="ghost-button" id="signInButton" type="button">Sign In</button>
@@ -747,7 +742,14 @@
                     <span style="color: white; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;">UNLOCK FULL POWER</span>
                 </div>
 
-                <h2 style="font-size: 2.2rem; margin-bottom: 16px; background: linear-gradient(135deg, #ff3b5c 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Support aChordim</h2>
+                <h2 style="font-size: clamp(1.5rem, 5vw, 2.2rem); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                    <span style="background: linear-gradient(135deg, #ff3b5c 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; align-self: flex-start; margin-top: -4px;">Support</span>
+                    <img src="achordim-icon-app.svg" alt="" style="width: clamp(32px, 8vw, 44px); height: clamp(32px, 8vw, 44px); border-radius: 10px; align-self: flex-start;">
+                    <span style="display: flex; flex-direction: column; line-height: 1.2;">
+                        <span style="background: linear-gradient(135deg, #ff3b5c 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">א/aChordim</span>
+                        <span style="font-size: 0.5rem; color: #999; font-weight: 400;">www.thefaith<span style="color: #ff3b5c;">sound</span>.com</span>
+                    </span>
+                </h2>
 
                 <p style="font-size: 1.15rem; color: var(--text-muted, #999); margin-bottom: 28px; line-height: 1.7; max-width: 550px; margin-left: auto; margin-right: auto;">
                     Join thousands of worship leaders using aChordim to transform their music ministry
@@ -778,10 +780,10 @@
                         <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">3 scans/month<br>Basic features</div>
                     </div>
                     <!-- Basic tier -->
-                    <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 14px 16px; min-width: 120px;">
-                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Basic</div>
-                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text);">$0.99<span style="font-size: 0.75rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">20 scans/month<br>Song library</div>
+                    <div style="background: rgba(16, 185, 129, 0.15); border: 2px solid #6ee7b7; border-radius: 12px; padding: 14px 16px; min-width: 120px;">
+                        <div style="font-size: 0.8rem; color: #6ee7b7; margin-bottom: 4px;">Basic</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: #10b981;">$0.99<span style="font-size: 0.75rem; font-weight: 400; color: #6ee7b7;">/mo</span></div>
+                        <div style="font-size: 0.7rem; color: #6ee7b7; margin-top: 8px; line-height: 1.4;">20 scans/month<br>Song library</div>
                     </div>
                     <!-- Pro tier -->
                     <div style="background: linear-gradient(135deg, rgba(255, 59, 92, 0.2), rgba(139, 92, 246, 0.2)); border: 2px solid var(--primary); border-radius: 12px; padding: 14px 16px; position: relative; min-width: 120px;">
