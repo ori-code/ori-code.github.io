@@ -1318,6 +1318,11 @@ const liveMode = {
     setPlaylistLocked(locked) {
         this.playlistLocked = locked;
         console.log(`🔒 Playlist ${locked ? 'locked' : 'unlocked'}`);
+
+        // Refresh playlist to update UI
+        if (this.sidebarVisible) {
+            this.showPlaylist();
+        }
     },
 
     /**
@@ -1399,15 +1404,35 @@ const liveMode = {
                         `<option value="${k.value}" ${k.value === selectedPadKey ? 'selected' : ''}>${k.label}</option>`
                     ).join('');
                     const padEnabled = liveMode.songPadEnabled[song.id];
-                    const padDisabled = !isLeader ? 'disabled' : '';
-                    const metroDisabled = !isLeader ? 'disabled' : '';
 
-                    // Remove button for leaders
-                    const removeBtn = isLeader ? `
+                    // Check if playlist is locked
+                    const isLocked = liveMode.playlistLocked;
+                    const controlsDisabled = !isLeader || isLocked ? 'disabled' : '';
+                    const controlsCursor = !isLeader || isLocked ? 'not-allowed' : 'pointer';
+                    const controlsOpacity = !isLeader || isLocked ? '0.4' : '1';
+
+                    // Remove button for leaders (hidden when locked)
+                    const removeBtn = (isLeader && !isLocked) ? `
                         <button onclick="event.stopPropagation(); liveMode.removeSongFromPlaylist('${song.id}')"
                                 style="width: 22px; height: 22px; border-radius: 50%; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
                                 title="Remove from playlist">×</button>
                     ` : '';
+
+                    // Controls row (hidden when locked for cleaner look)
+                    const controlsRow = isLocked ? '' : `
+                                    <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
+                                        <label onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
+                                            <input type="checkbox" ${metroChecked} ${controlsDisabled} onchange="liveMode.toggleSongMetronome('${song.id}', this.checked)" style="cursor: ${controlsCursor};" />
+                                            <span>🎵 ${displayBpm}</span>
+                                        </label>
+                                        <div onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted);">
+                                            <input type="checkbox" ${padEnabled ? 'checked' : ''} ${controlsDisabled} onchange="liveMode.toggleSongPad('${song.id}', this.checked)" style="cursor: ${controlsCursor};" />
+                                            <span>🎹</span>
+                                            <select ${controlsDisabled} onchange="liveMode.changeSongPadKey('${song.id}', this.value)" style="font-size: 10px; padding: 2px 4px; border-radius: 4px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
+                                                ${padKeyOptions}
+                                            </select>
+                                        </div>
+                                    </div>`;
 
                     return `
                         <div onclick="liveMode.loadSongFromPlaylist('${song.id}')"
@@ -1416,19 +1441,7 @@ const liveMode = {
                                 <span style="color: ${numberColor}; font-weight: 600; min-width: 20px; font-size: 13px;">${index + 1}</span>
                                 <div style="flex: 1; min-width: 0;">
                                     <div style="color: var(--text); font-weight: ${fontWeight}; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${song.name}</div>
-                                    <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
-                                        <label onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: ${isLeader ? 'pointer' : 'not-allowed'}; opacity: ${isLeader ? '1' : '0.6'};">
-                                            <input type="checkbox" ${metroChecked} ${metroDisabled} onchange="liveMode.toggleSongMetronome('${song.id}', this.checked)" style="cursor: ${isLeader ? 'pointer' : 'not-allowed'};" />
-                                            <span>🎵 ${displayBpm}</span>
-                                        </label>
-                                        <div onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted);">
-                                            <input type="checkbox" ${padEnabled ? 'checked' : ''} ${padDisabled} onchange="liveMode.toggleSongPad('${song.id}', this.checked)" style="cursor: ${isLeader ? 'pointer' : 'not-allowed'};" />
-                                            <span>🎹</span>
-                                            <select ${padDisabled} onchange="liveMode.changeSongPadKey('${song.id}', this.value)" style="font-size: 10px; padding: 2px 4px; border-radius: 4px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); cursor: ${isLeader ? 'pointer' : 'not-allowed'}; opacity: ${isLeader ? '1' : '0.6'};">
-                                                ${padKeyOptions}
-                                            </select>
-                                        </div>
-                                    </div>
+                                    ${controlsRow}
                                 </div>
                                 ${removeBtn}
                                 ${indicator}
@@ -1437,8 +1450,8 @@ const liveMode = {
                     `;
                 }).join('');
 
-                // Add "Add Song" button at bottom for leaders
-                if (isLeader) {
+                // Add "Add Song" button at bottom for leaders (hidden when locked)
+                if (isLeader && !this.playlistLocked) {
                     playlistContent.innerHTML += `
                         <button onclick="liveMode.showAddSongModal()" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 8px;">
                             + Add Song
