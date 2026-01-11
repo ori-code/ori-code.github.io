@@ -1577,14 +1577,27 @@ const liveMode = {
             // Get songs from Firebase
             const snapshot = await firebase.database().ref(`users/${user.uid}/songs`).once('value');
             const songs = snapshot.val() || {};
+            const allSongs = Object.entries(songs).map(([id, data]) => ({ id, ...data }));
+
+            console.log(`📚 Library has ${allSongs.length} songs`);
+
+            // Check if library is empty
+            if (allSongs.length === 0) {
+                listContainer.innerHTML = `
+                    <p style="color: var(--text-muted); text-align: center; margin-bottom: 12px;">Your library is empty</p>
+                    <p style="color: var(--text-muted); text-align: center; font-size: 12px;">Scan or import songs first, then add them to your playlist</p>
+                `;
+                return;
+            }
 
             // Get current playlist to exclude already added songs
             const playlist = await window.sessionManager.getPlaylist();
             const playlistIds = new Set(playlist.map(s => s.id));
 
+            console.log(`📋 Playlist has ${playlist.length} songs, excluding: ${[...playlistIds].join(', ')}`);
+
             // Filter and sort songs
-            let songList = Object.entries(songs)
-                .map(([id, data]) => ({ id, ...data }))
+            let songList = allSongs
                 .filter(song => !playlistIds.has(song.id)) // Exclude songs already in playlist
                 .filter(song => !filter || song.name?.toLowerCase().includes(filter.toLowerCase()))
                 .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
