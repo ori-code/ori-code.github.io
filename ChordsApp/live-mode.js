@@ -1502,7 +1502,7 @@ const liveMode = {
         }
 
         try {
-            await window.sessionManager.removeFromPlaylist(songId);
+            await window.sessionManager.removeSongFromPlaylist(songId);
             console.log(`➖ Removed song from playlist: ${songId}`);
             // Refresh playlist display
             this.showPlaylist();
