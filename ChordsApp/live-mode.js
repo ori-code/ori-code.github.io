@@ -1502,8 +1502,8 @@ const liveMode = {
         }
 
         // Get song name for confirmation
-        const playlist = window.sessionManager.playlist || {};
-        const song = playlist[songId];
+        const playlist = await window.sessionManager.getPlaylist();
+        const song = playlist.find(s => s.id === songId);
         const songName = song?.name || song?.title || 'this song';
 
         // Beautiful confirm dialog
