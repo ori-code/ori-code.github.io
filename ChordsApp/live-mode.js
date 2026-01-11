@@ -1418,8 +1418,17 @@ const liveMode = {
                                 title="Remove from playlist">×</button>
                     ` : '';
 
-                    // Controls row (hidden when locked for cleaner look)
-                    const controlsRow = isLocked ? '' : `
+                    // Song info (key, bpm, time signature)
+                    const displayKey = song.originalKey || song.key || '--';
+                    const displayTimeSig = song.timeSignature || '4/4';
+
+                    // Info row when locked (display only), controls row when unlocked
+                    const controlsRow = isLocked ? `
+                                    <div style="display: flex; gap: 10px; margin-top: 3px; font-size: 11px; color: var(--text-muted);">
+                                        <span>🎵 ${displayBpm}</span>
+                                        <span>⏱ ${displayTimeSig}</span>
+                                        <span>🎹 ${displayKey}</span>
+                                    </div>` : `
                                     <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
                                         <label onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
                                             <input type="checkbox" ${metroChecked} ${controlsDisabled} onchange="liveMode.toggleSongMetronome('${song.id}', this.checked)" style="cursor: ${controlsCursor};" />
