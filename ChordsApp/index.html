@@ -2126,6 +2126,14 @@
                     <button onclick="window.metronome && window.metronome.decreaseBpm()" style="width: 18px; height: 18px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 12px; padding: 0;">−</button>
                     <span id="liveMetroBpm" style="font-size: 12px; font-weight: 700; color: #f59e0b; min-width: 24px; text-align: center;">120</span>
                     <button onclick="window.metronome && window.metronome.increaseBpm()" style="width: 18px; height: 18px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 12px; padding: 0;">+</button>
+                    <button onclick="window.metronome && window.metronome.tap()" style="padding: 2px 6px; background: linear-gradient(135deg, #d97706, #f59e0b); border: none; color: white; border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">TAP</button>
+                    <select id="liveMetroTimeSig" onchange="window.metronome && window.metronome.setTimeSignature(parseInt(this.value.split('/')[0]), parseInt(this.value.split('/')[1]))" style="padding: 2px 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">
+                        <option value="4/4">4/4</option>
+                        <option value="3/4">3/4</option>
+                        <option value="6/8">6/8</option>
+                        <option value="2/4">2/4</option>
+                    </select>
+                    <button id="liveMetroMult" onclick="window.metronome && window.metronome.toggleDoubleTime()" style="padding: 2px 6px; background: var(--surface); border: 1px solid var(--border); color: #f59e0b; border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 700; min-width: 24px;">x1</button>
                 </div>
                 <!-- Mini Pad -->
                 <div style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px;">
@@ -2196,6 +2204,10 @@
                     <label style="display: flex; align-items: center; gap: 5px; padding: 7px 10px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text); user-select: none;">
                         <input type="checkbox" id="liveModePlaylistToggle" onchange="liveMode.setPlaylistVisible(this.checked); document.getElementById('playlistToggleLabel').textContent = this.checked ? 'Playlist ON' : 'Playlist OFF'" style="accent-color: #3b82f6; cursor: pointer; width: 16px; height: 16px;">
                         <span id="playlistToggleLabel">Playlist OFF</span>
+                    </label>
+                    <label id="liveModePlaylistLock" style="display: flex; align-items: center; gap: 5px; padding: 7px 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text); user-select: none;">
+                        <input type="checkbox" id="liveModePlaylistLockToggle" onchange="liveMode.setPlaylistLocked(this.checked); this.parentElement.style.background = this.checked ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.15)'; this.parentElement.style.borderColor = this.checked ? 'rgba(239, 68, 68, 0.6)' : 'rgba(239, 68, 68, 0.3)'" style="accent-color: #ef4444; cursor: pointer; width: 16px; height: 16px;">
+                        <span>🔒 Lock</span>
                     </label>
                     <!-- Follow Leader toggle (players only) -->
                     <label id="liveModeFollowLeader" style="display: none; cursor: pointer; padding: 10px 16px; background: rgba(16, 185, 129, 0.3); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 6px; font-size: 13px; color: var(--text);">

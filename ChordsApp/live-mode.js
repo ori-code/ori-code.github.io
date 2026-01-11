@@ -25,6 +25,7 @@ const liveMode = {
     songMetronomeEnabled: {}, // Track which songs have metronome enabled { songId: true/false }
     songPadEnabled: {}, // Track which songs have pad enabled { songId: true/false }
     songPadKey: {}, // Track selected pad key per song { songId: 'C' | 'D' | etc. }
+    playlistLocked: false, // When true, songs can only be changed via playlist clicks
     miniAudioSyncInterval: null, // Interval for syncing mini audio controls
 
     /**
@@ -753,7 +754,7 @@ const liveMode = {
 
         this.hideControlsTimeout = setTimeout(() => {
             this.hideControls();
-        }, 2000);
+        }, 3000);
     },
 
     /**
@@ -1311,6 +1312,15 @@ const liveMode = {
     },
 
     /**
+     * Toggle playlist lock mode
+     * When locked, songs can only be changed via playlist clicks (not buttons/keyboard)
+     */
+    setPlaylistLocked(locked) {
+        this.playlistLocked = locked;
+        console.log(`🔒 Playlist ${locked ? 'locked' : 'unlocked'}`);
+    },
+
+    /**
      * Show playlist sidebar
      */
     async showPlaylist() {
@@ -1544,16 +1554,22 @@ const liveMode = {
             modal.id = 'liveAddSongModal';
             modal.innerHTML = `
                 <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 20px;">
-                    <div style="background: var(--bg-secondary, #1a1a2e); border-radius: 12px; width: 100%; max-width: 400px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                    <div style="background: var(--bg-secondary, #1a1a2e); border-radius: 12px; width: 100%; max-width: 450px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
                         <div style="padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                             <h3 style="margin: 0; color: var(--text); font-size: 16px;">Add Song to Playlist</h3>
                             <button onclick="liveMode.hideAddSongModal()" style="background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
                         </div>
                         <div style="padding: 12px; border-bottom: 1px solid var(--border);">
+                            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                                <select id="liveAddSongSource" onchange="liveMode.loadAddSongList()" style="flex: 1; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--button-bg); color: var(--text); font-size: 13px; cursor: pointer;">
+                                    <option value="my-songs">📁 My Songs</option>
+                                    <option value="public">🌐 Public Songs</option>
+                                </select>
+                            </div>
                             <input type="text" id="liveAddSongSearch" placeholder="Search songs..." oninput="liveMode.filterAddSongList(this.value)"
                                    style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-size: 14px; box-sizing: border-box;" />
                         </div>
-                        <div id="liveAddSongList" style="flex: 1; overflow-y: auto; padding: 12px; min-height: 200px;">
+                        <div id="liveAddSongList" style="flex: 1; overflow-y: auto; padding: 12px; min-height: 200px; max-height: 400px;">
                             <p style="color: var(--text-muted); text-align: center;">Loading songs...</p>
                         </div>
                     </div>
@@ -1564,8 +1580,54 @@ const liveMode = {
 
         modal.style.display = 'block';
 
+        // Reset search
+        const searchInput = document.getElementById('liveAddSongSearch');
+        if (searchInput) searchInput.value = '';
+
+        // Load user's books into the source dropdown
+        await this.loadBookOptions();
+
         // Load songs from library
         await this.loadAddSongList();
+    },
+
+    /**
+     * Load user's books into the source dropdown
+     */
+    async loadBookOptions() {
+        const sourceSelect = document.getElementById('liveAddSongSource');
+        if (!sourceSelect) return;
+
+        const user = window.auth?.currentUser;
+        if (!user) return;
+
+        try {
+            // Keep the first two options (My Songs, Public Songs)
+            const defaultOptions = `
+                <option value="my-songs">📁 My Songs</option>
+                <option value="public">🌐 Public Songs</option>
+            `;
+
+            // Get user's books
+            const booksSnapshot = await firebase.database().ref(`users/${user.uid}/books`).once('value');
+            const books = booksSnapshot.val() || {};
+
+            let bookOptions = '';
+            Object.entries(books).forEach(([bookId, book]) => {
+                const bookName = book.name || 'Untitled Book';
+                bookOptions += `<option value="book:${bookId}">📖 ${bookName}</option>`;
+            });
+
+            if (bookOptions) {
+                sourceSelect.innerHTML = defaultOptions +
+                    '<option disabled>──────────</option>' +
+                    bookOptions;
+            } else {
+                sourceSelect.innerHTML = defaultOptions;
+            }
+        } catch (error) {
+            console.error('Error loading books:', error);
+        }
     },
 
     /**
@@ -1581,28 +1643,80 @@ const liveMode = {
      */
     async loadAddSongList(filter = '') {
         const listContainer = document.getElementById('liveAddSongList');
+        const sourceSelect = document.getElementById('liveAddSongSource');
         if (!listContainer) return;
+
+        // Get filter from search input if not passed
+        if (!filter) {
+            const searchInput = document.getElementById('liveAddSongSearch');
+            filter = searchInput?.value || '';
+        }
+
+        const source = sourceSelect?.value || 'my-songs';
+        listContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Loading songs...</p>';
 
         try {
             const user = window.auth?.currentUser;
-            if (!user) {
-                listContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Please log in to access your library</p>';
-                return;
+            let allSongs = [];
+
+            if (source === 'public') {
+                // Load public songs
+                const snapshot = await firebase.database().ref('public-songs').once('value');
+                const publicSongs = snapshot.val() || {};
+                allSongs = Object.entries(publicSongs).map(([id, data]) => ({
+                    id: `public:${id}`,
+                    name: data.title || data.name || 'Untitled',
+                    originalKey: data.key || data.originalKey,
+                    bpm: data.bpm || data.tempo,
+                    isPublic: true,
+                    ...data
+                }));
+                console.log(`🌐 Loaded ${allSongs.length} public songs`);
+
+            } else if (source.startsWith('book:')) {
+                // Load songs from a specific book
+                const bookId = source.replace('book:', '');
+                if (!user) {
+                    listContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Please log in to access your books</p>';
+                    return;
+                }
+
+                const bookSnapshot = await firebase.database().ref(`users/${user.uid}/books/${bookId}`).once('value');
+                const book = bookSnapshot.val();
+
+                if (book && book.songs) {
+                    allSongs = Object.entries(book.songs).map(([id, data]) => ({
+                        id: `book:${bookId}:${id}`,
+                        name: data.title || data.name || 'Untitled',
+                        originalKey: data.key || data.originalKey,
+                        bpm: data.bpm || data.tempo,
+                        bookId: bookId,
+                        ...data
+                    }));
+                }
+                console.log(`📖 Loaded ${allSongs.length} songs from book`);
+
+            } else {
+                // Load user's own songs (my-songs)
+                if (!user) {
+                    listContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Please log in to access your library</p>';
+                    return;
+                }
+
+                const snapshot = await firebase.database().ref(`users/${user.uid}/songs`).once('value');
+                const songs = snapshot.val() || {};
+                allSongs = Object.entries(songs).map(([id, data]) => ({ id, ...data }));
+                console.log(`📁 Loaded ${allSongs.length} songs from My Songs`);
             }
 
-            // Get songs from Firebase
-            const snapshot = await firebase.database().ref(`users/${user.uid}/songs`).once('value');
-            const songs = snapshot.val() || {};
-            const allSongs = Object.entries(songs).map(([id, data]) => ({ id, ...data }));
-
-            console.log(`📚 Library has ${allSongs.length} songs`);
-
-            // Check if library is empty
+            // Check if source is empty
             if (allSongs.length === 0) {
-                listContainer.innerHTML = `
-                    <p style="color: var(--text-muted); text-align: center; margin-bottom: 12px;">Your library is empty</p>
-                    <p style="color: var(--text-muted); text-align: center; font-size: 12px;">Scan or import songs first, then add them to your playlist</p>
-                `;
+                const emptyMessage = source === 'public'
+                    ? 'No public songs available'
+                    : source.startsWith('book:')
+                        ? 'This book is empty'
+                        : 'Your library is empty';
+                listContainer.innerHTML = `<p style="color: var(--text-muted); text-align: center;">${emptyMessage}</p>`;
                 return;
             }
 
@@ -1610,12 +1724,10 @@ const liveMode = {
             const playlist = await window.sessionManager.getPlaylist();
             const playlistIds = new Set(playlist.map(s => s.id));
 
-            console.log(`📋 Playlist has ${playlist.length} songs, excluding: ${[...playlistIds].join(', ')}`);
-
             // Filter and sort songs
             let songList = allSongs
                 .filter(song => !playlistIds.has(song.id)) // Exclude songs already in playlist
-                .filter(song => !filter || song.name?.toLowerCase().includes(filter.toLowerCase()))
+                .filter(song => !filter || (song.name || '').toLowerCase().includes(filter.toLowerCase()))
                 .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
             if (songList.length === 0) {
@@ -1625,15 +1737,19 @@ const liveMode = {
                 return;
             }
 
-            listContainer.innerHTML = songList.map(song => `
+            // Render song list with source indicator
+            listContainer.innerHTML = songList.map(song => {
+                const sourceIcon = song.isPublic ? '🌐' : song.bookId ? '📖' : '';
+                return `
                 <div onclick="liveMode.addSongToPlaylist('${song.id}')"
-                     style="padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s ease;">
-                    <div style="color: var(--text); font-size: 13px; font-weight: 500;">${song.name || 'Untitled'}</div>
+                     style="padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s ease;"
+                     onmouseover="this.style.background='var(--button-hover)'" onmouseout="this.style.background='var(--button-bg)'">
+                    <div style="color: var(--text); font-size: 13px; font-weight: 500;">${sourceIcon} ${song.name || 'Untitled'}</div>
                     <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">
-                        ${song.originalKey || '--'} ${song.bpm ? `• ${song.bpm} BPM` : ''}
+                        ${song.originalKey || song.key || '--'} ${song.bpm || song.tempo ? `• ${song.bpm || song.tempo} BPM` : ''}
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
 
         } catch (error) {
             console.error('Error loading songs:', error);
@@ -1659,14 +1775,46 @@ const liveMode = {
 
         try {
             const user = window.auth?.currentUser;
-            if (!user) return;
+            let songData = null;
+            let dbPath = '';
 
-            // Get song data from Firebase
-            const snapshot = await firebase.database().ref(`users/${user.uid}/songs/${songId}`).once('value');
-            const songData = snapshot.val();
+            // Determine the source based on songId prefix
+            if (songId.startsWith('public:')) {
+                // Public song
+                const actualId = songId.replace('public:', '');
+                dbPath = `public-songs/${actualId}`;
+                const snapshot = await firebase.database().ref(dbPath).once('value');
+                songData = snapshot.val();
+                if (songData) {
+                    songData.name = songData.title || songData.name;
+                    songData.originalKey = songData.key || songData.originalKey;
+                    songData.bpm = songData.bpm || songData.tempo;
+                }
+            } else if (songId.startsWith('book:')) {
+                // Book song (format: book:bookId:songId)
+                const parts = songId.split(':');
+                const bookId = parts[1];
+                const actualSongId = parts[2];
+                if (!user) return;
+                dbPath = `users/${user.uid}/books/${bookId}/songs/${actualSongId}`;
+                const snapshot = await firebase.database().ref(dbPath).once('value');
+                songData = snapshot.val();
+                if (songData) {
+                    songData.name = songData.title || songData.name;
+                    songData.originalKey = songData.key || songData.originalKey;
+                    songData.bpm = songData.bpm || songData.tempo;
+                }
+            } else {
+                // User's own song
+                if (!user) return;
+                dbPath = `users/${user.uid}/songs/${songId}`;
+                const snapshot = await firebase.database().ref(dbPath).once('value');
+                songData = snapshot.val();
+            }
 
             if (!songData) {
-                console.error('Song not found:', songId);
+                console.error('Song not found:', songId, 'at path:', dbPath);
+                if (window.showAlert) showAlert('Song not found');
                 return;
             }
 
@@ -2330,6 +2478,11 @@ const liveMode = {
      * Navigate to the next song in the playlist
      */
     async nextSong() {
+        if (this.playlistLocked) {
+            console.log('🔒 Playlist locked - use playlist to change songs');
+            return;
+        }
+
         if (!window.sessionManager || !window.sessionManager.activeSession) {
             console.log('📻 Not in a session, cannot navigate songs');
             return;
@@ -2359,6 +2512,11 @@ const liveMode = {
      * Navigate to the previous song in the playlist
      */
     async previousSong() {
+        if (this.playlistLocked) {
+            console.log('🔒 Playlist locked - use playlist to change songs');
+            return;
+        }
+
         if (!window.sessionManager || !window.sessionManager.activeSession) {
             console.log('📻 Not in a session, cannot navigate songs');
             return;
