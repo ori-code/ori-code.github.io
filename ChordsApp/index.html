@@ -2205,9 +2205,9 @@
                         <input type="checkbox" id="liveModePlaylistToggle" onchange="liveMode.setPlaylistVisible(this.checked); document.getElementById('playlistToggleLabel').textContent = this.checked ? 'Playlist ON' : 'Playlist OFF'" style="accent-color: #3b82f6; cursor: pointer; width: 16px; height: 16px;">
                         <span id="playlistToggleLabel">Playlist OFF</span>
                     </label>
-                    <label id="liveModePlaylistLock" style="display: flex; align-items: center; gap: 5px; padding: 7px 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text); user-select: none;">
-                        <input type="checkbox" id="liveModePlaylistLockToggle" onchange="liveMode.setPlaylistLocked(this.checked); this.parentElement.style.background = this.checked ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.15)'; this.parentElement.style.borderColor = this.checked ? 'rgba(239, 68, 68, 0.6)' : 'rgba(239, 68, 68, 0.3)'" style="accent-color: #ef4444; cursor: pointer; width: 16px; height: 16px;">
-                        <span>🔒 Lock</span>
+                    <label id="liveModePlaylistLock" style="display: flex; align-items: center; gap: 5px; padding: 7px 10px; background: rgba(107, 114, 128, 0.2); border: 1px solid rgba(107, 114, 128, 0.4); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text); user-select: none;">
+                        <input type="checkbox" id="liveModePlaylistLockToggle" onchange="liveMode.setPlaylistLocked(this.checked); document.getElementById('lockToggleLabel').textContent = this.checked ? '🔒 LOCKED' : '🔓 Unlocked'; this.parentElement.style.background = this.checked ? 'rgba(239, 68, 68, 0.4)' : 'rgba(107, 114, 128, 0.2)'; this.parentElement.style.borderColor = this.checked ? 'rgba(239, 68, 68, 0.7)' : 'rgba(107, 114, 128, 0.4)'; this.parentElement.style.color = this.checked ? '#fca5a5' : 'var(--text)'" style="accent-color: #ef4444; cursor: pointer; width: 16px; height: 16px;">
+                        <span id="lockToggleLabel">🔓 Unlocked</span>
                     </label>
                     <!-- Follow Leader toggle (players only) -->
                     <label id="liveModeFollowLeader" style="display: none; cursor: pointer; padding: 10px 16px; background: rgba(16, 185, 129, 0.3); border: 1px solid rgba(16, 185, 129, 0.5); border-radius: 6px; font-size: 13px; color: var(--text);">
