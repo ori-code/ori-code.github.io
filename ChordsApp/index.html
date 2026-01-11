@@ -2106,16 +2106,26 @@
         <!-- Bottom Controls Bar - Redesigned Clean Layout -->
         <div id="liveModeBottomBar" style="position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 12px; background: var(--card-bg); border-top: 1px solid var(--border); z-index: 10003; transition: opacity 0.3s ease;">
 
-            <!-- ROW 1: Key + Audio + Font + Exit -->
-            <div style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;">
-
+            <!-- ROW 1: Key + Font + Exit (always on same line) -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 6px;">
                 <!-- KEY/TRANSPOSE Group -->
                 <div id="liveModeTransposeRow" style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px;">
                     <button onclick="liveMode.transpose(-1)" style="width: 28px; height: 28px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">−</button>
                     <div id="liveModeCurrentKey" style="padding: 6px 14px; background: var(--primary); color: white; border-radius: 6px; font-weight: 700; font-size: 14px; min-width: 36px; text-align: center;">C</div>
                     <button onclick="liveMode.transpose(1)" style="width: 28px; height: 28px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">+</button>
                 </div>
+                <!-- FONT SIZE -->
+                <div style="display: flex; align-items: center; gap: 2px; padding: 4px 6px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 8px;">
+                    <button onclick="liveMode.setFontSize(Math.max(8, liveMode.currentFontSize - 1))" style="width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 16px; padding: 0;">−</button>
+                    <span id="liveModeZoomValue" style="font-size: 12px; font-weight: 600; color: var(--text); min-width: 32px; text-align: center;">14pt</span>
+                    <button onclick="liveMode.setFontSize(Math.min(24, liveMode.currentFontSize + 1))" style="width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 16px; padding: 0;">+</button>
+                </div>
+                <!-- EXIT -->
+                <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="padding: 8px 16px; background: linear-gradient(135deg, #dc2626, #ef4444); border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Exit</button>
+            </div>
 
+            <!-- ROW 2: Audio Controls (Metronome + Pads) -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
                 <!-- METRONOME Group -->
                 <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px;">
                     <button id="liveMetroPlay" onclick="window.metronome && window.metronome.toggle()" style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #d97706, #f59e0b); border: none; color: white; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;">▶</button>
@@ -2131,7 +2141,6 @@
                     <button id="liveMetroMult" onclick="window.metronome && window.metronome.toggleDoubleTime()" style="padding: 3px 6px; background: var(--surface); border: 1px solid var(--border); color: #f59e0b; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: 700;">x1</button>
                     <button onclick="window.metronome && window.metronome.tap()" style="padding: 3px 8px; background: linear-gradient(135deg, #d97706, #f59e0b); border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: 600;">TAP</button>
                 </div>
-
                 <!-- PADS Group -->
                 <div style="display: flex; align-items: center; gap: 3px; padding: 4px 8px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px;">
                     <button id="livePadStop" onclick="window.padPlayer && window.padPlayer.stopAll()" style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #a855f7); border: none; color: white; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">⏹</button>
@@ -2144,19 +2153,9 @@
                     <button onclick="window.padPlayer && window.padPlayer.play('B')" style="padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">B</button>
                     <span id="livePadKey" style="font-size: 11px; font-weight: 700; color: #a855f7; min-width: 20px; text-align: center;">--</span>
                 </div>
-
-                <!-- FONT SIZE -->
-                <div style="display: flex; align-items: center; gap: 2px; padding: 4px 6px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 8px;">
-                    <button onclick="liveMode.setFontSize(Math.max(8, liveMode.currentFontSize - 1))" style="width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 16px; padding: 0;">−</button>
-                    <span id="liveModeZoomValue" style="font-size: 12px; font-weight: 600; color: var(--text); min-width: 32px; text-align: center;">14pt</span>
-                    <button onclick="liveMode.setFontSize(Math.min(24, liveMode.currentFontSize + 1))" style="width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 16px; padding: 0;">+</button>
-                </div>
-
-                <!-- EXIT -->
-                <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="padding: 8px 16px; background: linear-gradient(135deg, #dc2626, #ef4444); border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Exit</button>
             </div>
 
-            <!-- ROW 2: Display Options + Session Controls -->
+            <!-- ROW 3: Display Options + Session Controls -->
             <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
 
                 <!-- DISPLAY OPTIONS Group -->
