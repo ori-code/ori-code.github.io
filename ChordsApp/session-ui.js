@@ -415,6 +415,14 @@ class SessionUI {
 
             this.showToast(`✅ Session reactivated: ${session.metadata.title}`);
 
+            // Automatically enter Live Mode
+            if (window.liveMode) {
+                setTimeout(() => {
+                    window.liveMode.enter();
+                    console.log('🎸 Auto-entered Live Mode after reactivating session');
+                }, 300);
+            }
+
         } catch (error) {
             console.error('Error reactivating session:', error);
             this.showToast('❌ ' + error.message);
