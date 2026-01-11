@@ -5903,7 +5903,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             name: currentSongName || 'Untitled',
             content: visualEditor.value,
             originalKey: keySelector.value,
-            transposeSteps: globalTransposeSteps || 0,
+            transposeSteps: currentTransposeSteps || 0,
             bpm: bpmInput ? parseInt(bpmInput.value) || null : null
         };
 
