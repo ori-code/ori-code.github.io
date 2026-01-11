@@ -60,12 +60,68 @@ const padPlayer = {
         'B': 'B'
     },
 
-    // Path to pad sound files
+    // Path to pad sound files (can be external CDN URL)
+    // Options: 'pads/' (local), or external CDN URL ending with /
+    // Note: jsDelivr blocks large files. Use Cloudflare R2 for free CDN if needed.
     soundPath: 'pads/',
 
     // Loading state
     isLoading: false,
     loadedCount: 0,
+
+    // Preloaded raw audio data (before AudioContext is available)
+    rawAudioCache: {},
+    isPreloading: false,
+    preloadedCount: 0,
+
+    /**
+     * Preload audio files as raw data (can be called without user interaction)
+     * Files are fetched and cached, decoded later when AudioContext is available
+     */
+    async preloadFiles(onProgress = null) {
+        if (this.isPreloading || Object.keys(this.rawAudioCache).length === this.keys.length) return;
+
+        this.isPreloading = true;
+        this.preloadedCount = 0;
+
+        const loadPromises = this.keys.map(async (key) => {
+            try {
+                // Skip if already cached or already decoded
+                if (this.rawAudioCache[key] || this.buffers[key]) {
+                    this.preloadedCount++;
+                    if (onProgress) onProgress(this.preloadedCount, this.keys.length);
+                    return;
+                }
+
+                const url = `${this.soundPath}${key}.mp3`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    console.warn(`Pad sound not found: ${url}`);
+                    return;
+                }
+
+                // Store raw ArrayBuffer (no AudioContext needed)
+                this.rawAudioCache[key] = await response.arrayBuffer();
+                this.preloadedCount++;
+
+                if (onProgress) {
+                    onProgress(this.preloadedCount, this.keys.length);
+                }
+
+                console.log(`Preloaded pad: ${key}`);
+            } catch (error) {
+                console.error(`Error preloading pad ${key}:`, error);
+            }
+        });
+
+        await Promise.all(loadPromises);
+
+        this.isPreloading = false;
+        console.log(`Preloaded ${this.preloadedCount}/${this.keys.length} pad files from CDN`);
+
+        return this.preloadedCount;
+    },
 
     /**
      * Initialize the pad player
@@ -155,7 +211,7 @@ const padPlayer = {
     },
 
     /**
-     * Load all pad sounds
+     * Load all pad sounds (decodes preloaded files or fetches if not preloaded)
      */
     async loadSounds(onProgress = null) {
         if (this.isLoading) return;
@@ -167,25 +223,44 @@ const padPlayer = {
 
         const loadPromises = this.keys.map(async (key) => {
             try {
-                const url = `${this.soundPath}${key}.mp3`;
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    console.warn(`Pad sound not found: ${url}`);
+                // Skip if already decoded
+                if (this.buffers[key]) {
+                    this.loadedCount++;
+                    if (onProgress) onProgress(this.loadedCount, this.keys.length);
                     return;
                 }
 
-                const arrayBuffer = await response.arrayBuffer();
+                let arrayBuffer;
+
+                // Use preloaded cache if available (much faster)
+                if (this.rawAudioCache[key]) {
+                    arrayBuffer = this.rawAudioCache[key];
+                    console.log(`Using preloaded cache for: ${key}`);
+                } else {
+                    // Fetch if not preloaded
+                    const url = `${this.soundPath}${key}.mp3`;
+                    const response = await fetch(url);
+
+                    if (!response.ok) {
+                        console.warn(`Pad sound not found: ${url}`);
+                        return;
+                    }
+
+                    arrayBuffer = await response.arrayBuffer();
+                }
+
+                // Decode audio (requires AudioContext)
                 const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
 
                 this.buffers[key] = audioBuffer;
+                delete this.rawAudioCache[key]; // Free memory
                 this.loadedCount++;
 
                 if (onProgress) {
                     onProgress(this.loadedCount, this.keys.length);
                 }
 
-                console.log(`Loaded pad: ${key}`);
+                console.log(`Decoded pad: ${key}`);
             } catch (error) {
                 console.error(`Error loading pad ${key}:`, error);
             }

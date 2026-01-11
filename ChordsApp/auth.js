@@ -17,6 +17,9 @@ class ChordsAuthManager {
             console.log('Auth state changed:', user ? user.email : 'Not logged in');
 
             if (user) {
+                // Hide Controls and Editor panels on login
+                this.hideControlsAndEditor();
+
                 // Check if this is a returning user (page refresh) with no local session
                 const localSessionId = localStorage.getItem('chordsapp_session_id');
                 if (!localSessionId) {
@@ -169,14 +172,18 @@ class ChordsAuthManager {
 
     // Show modal when user is kicked out
     showKickedOutModal() {
-        // Use existing showMessage or create alert
         const message = 'You have been logged out because the maximum number of devices was reached.';
 
-        // Try to use the app's showMessage function
-        if (typeof showMessage === 'function') {
-            showMessage('Session Ended', message, 'info');
+        // Use custom showAlert if available, otherwise wait for it
+        if (window.showAlert) {
+            showAlert(message);
         } else {
-            alert(message);
+            // Wait a bit for showAlert to be defined, then try again
+            setTimeout(() => {
+                if (window.showAlert) {
+                    showAlert(message);
+                }
+            }, 500);
         }
     }
 
@@ -270,6 +277,43 @@ class ChordsAuthManager {
             this.showMessage(this.getErrorMessage(error.code), 'error');
             throw error;
         }
+    }
+
+    // Hide Controls and Editor panels on login
+    hideControlsAndEditor() {
+        // Clear localStorage to reset preferences
+        localStorage.setItem('chordsapp-show-controls', 'false');
+        localStorage.setItem('chordsapp-show-editor', 'false');
+
+        // Update checkboxes
+        const sideMenuShowControls = document.getElementById('sideMenuShowControls');
+        const sideMenuShowEditor = document.getElementById('sideMenuShowEditor');
+        if (sideMenuShowControls) sideMenuShowControls.checked = false;
+        if (sideMenuShowEditor) sideMenuShowEditor.checked = false;
+
+        // Hide the panels
+        const editorActionsSection = document.querySelector('.editor-actions-section');
+        const sessionSection = document.querySelector('.session-section');
+        const advancedControls = document.getElementById('advancedControls');
+        const editorSection = document.getElementById('editor');
+
+        if (editorActionsSection) editorActionsSection.style.display = 'none';
+        if (sessionSection) sessionSection.style.display = 'none';
+        if (advancedControls) advancedControls.style.display = 'none';
+        if (editorSection) editorSection.style.display = 'none';
+
+        // Update toggle buttons to inactive state
+        const toggleControlsBtn = document.getElementById('toggleControlsBtn');
+        const toggleControlsBtn2 = document.getElementById('toggleControlsBtn2');
+        const toggleEditorBtn = document.getElementById('toggleEditorBtn');
+        const toggleEditorBtn2 = document.getElementById('toggleEditorBtn2');
+
+        if (toggleControlsBtn) toggleControlsBtn.classList.remove('active');
+        if (toggleControlsBtn2) toggleControlsBtn2.classList.remove('active');
+        if (toggleEditorBtn) toggleEditorBtn.classList.remove('active');
+        if (toggleEditorBtn2) toggleEditorBtn2.classList.remove('active');
+
+        console.log('Controls and Editor panels hidden on login');
     }
 
     // Update UI based on auth state
@@ -386,9 +430,14 @@ class ChordsAuthManager {
             setTimeout(() => {
                 messageDiv.style.display = 'none';
             }, 5000);
+        } else if (window.showAlert) {
+            // Fallback to custom alert if message div doesn't exist
+            showAlert(message);
         } else {
-            // Fallback to alert if message div doesn't exist
-            alert(message);
+            // Last resort - wait for showAlert
+            setTimeout(() => {
+                if (window.showAlert) showAlert(message);
+            }, 500);
         }
     }
 

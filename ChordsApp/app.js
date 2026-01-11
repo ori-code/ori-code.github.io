@@ -1,3 +1,26 @@
+// ============= DISABLE PINCH-TO-ZOOM ON MOBILE =============
+document.addEventListener('gesturestart', function(e) {
+    e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('gesturechange', function(e) {
+    e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('gestureend', function(e) {
+    e.preventDefault();
+}, { passive: false });
+
+// Prevent double-tap zoom
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function(e) {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+    }
+    lastTouchEnd = now;
+}, { passive: false });
+
 // ============= GLOBAL STYLED PROMPT FUNCTION =============
 // Replaces native browser prompt() with a styled modal
 window.styledPrompt = (message, defaultValue = '', title = 'Enter value') => {
@@ -146,17 +169,32 @@ document.addEventListener('DOMContentLoaded', () => {
         yearSpan.textContent = new Date().getFullYear();
     }
 
-    // Auto-load worship pad sounds after 3 minutes of usage for smoother experience
-    setTimeout(() => {
-        if (window.padPlayer && !window.padPlayer.isLoading && Object.keys(window.padPlayer.buffers).length === 0) {
-            console.log('Auto-loading worship pads in background...');
-            window.padPlayer.loadSounds().then(count => {
-                console.log(`Worship pads pre-loaded: ${count} sounds ready`);
-            }).catch(err => {
-                console.log('Pad pre-loading skipped:', err.message);
-            });
-        }
-    }, 180000); // 3 minutes = 180000ms
+    // Preload pad sounds from jsDelivr CDN on page load (no user interaction needed)
+    // Files are fetched and cached, decoded when user first plays a pad
+    if (window.padPlayer) {
+        // Show loading indicator
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.id = 'padLoadingIndicator';
+        loadingIndicator.innerHTML = '🎹 Loading pads... <span id="padLoadProgress">0/12</span>';
+        loadingIndicator.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: opacity 0.5s;';
+        document.body.appendChild(loadingIndicator);
+
+        window.padPlayer.preloadFiles((loaded, total) => {
+            const progress = document.getElementById('padLoadProgress');
+            if (progress) progress.textContent = `${loaded}/${total}`;
+        }).then(count => {
+            console.log(`🎹 Pads preloaded from CDN: ${count} files ready`);
+            loadingIndicator.innerHTML = '🎹 Pads ready!';
+            loadingIndicator.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+            setTimeout(() => {
+                loadingIndicator.style.opacity = '0';
+                setTimeout(() => loadingIndicator.remove(), 500);
+            }, 1500);
+        }).catch(err => {
+            console.log('Pad preloading error:', err.message);
+            loadingIndicator.remove();
+        });
+    }
 
     // ============= MOBILE A4 PREVIEW SCALING =============
     // Scales the A4 preview to fit mobile screens while maintaining exact proportions
@@ -382,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const song = snapshot.val();
 
             if (!song) {
-                alert('Song not found or has been unpublished.');
+                showAlert('Song not found or has been unpublished.');
                 // Clean URL
                 window.history.replaceState({}, '', window.location.pathname);
                 return;
@@ -412,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Error loading public song:', error);
-            alert('Failed to load song: ' + error.message);
+            showAlert('Failed to load song: ' + error.message);
         }
     }
 
@@ -487,7 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('🎤 Error joining as singer:', error);
-            alert('Could not join session: ' + error.message);
+            showAlert('Could not join session: ' + error.message);
         }
     }
 
@@ -3054,8 +3092,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 !trimmedLine.includes('|'); // Not a chord grid
 
             if (isChordOnlyLine && mode !== 'lyrics') {
-                // Format chord-only line with bold chords
-                let formattedChordLine = trimmedLine.replace(/([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?)/g, (match, chord) => {
+                // Preserve original spacing - replace chords in-place with formatted versions
+                const chordPattern = /([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+                const formattedChordLine = line.replace(chordPattern, (chord) => {
                     const number = chordToNashville(chord, key);
                     if (mode === 'both' && number) {
                         return `<b>${chord}|${number}</b>`;
@@ -3066,7 +3105,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     }
                 });
 
-                const chordLine = `<div class="chord-line">${formattedChordLine}</div>`;
+                // Convert spaces to &nbsp; to absolutely preserve spacing in HTML
+                const spacedChordLine = formattedChordLine.replace(/ /g, '&nbsp;');
+                const chordLine = `<div class="chord-line">${spacedChordLine}</div>`;
                 if (currentSection) {
                     sectionContent.push(chordLine);
                 } else {
@@ -3138,8 +3179,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 }
             }
 
-            // Add line to output
-            const outputLine = formattedLine + '\n';
+            // Add line to output - wrap in lyric-line div for proper layout
+            const outputLine = `<div class="lyric-line">${formattedLine}</div>`;
             if (currentSection) {
                 sectionContent.push(outputLine);
             } else {
@@ -3394,10 +3435,35 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
 
             // Regular line (lyrics/chords)
-            if (currentSection) {
-                sectionContent.push(line + '\n');
+            // Check if this is a chord-only line (has <b>chord</b> patterns and no Hebrew/Arabic lyrics)
+            const cleanLineForCheck = line.replace(/<[^>]*>/g, '').trim();
+            const hasRTLChars = /[\u0590-\u05FF\u0600-\u06FF]/.test(cleanLineForCheck);
+            const chordTokens = cleanLineForCheck.split(/\s+/).filter(t => t.length > 0);
+            // Token pattern includes Nashville numbers like "Am|6" or "G|5"
+            const isChordOnlyLine = !hasRTLChars && chordTokens.length > 0 &&
+                chordTokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?(?:\|[0-9#b]+)?$/.test(token));
+
+            // Detect if line has chord patterns (either <b>chord</b> or bare chords)
+            const hasChordBoldTags = /<b>[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?(?:\|[0-9#b]+)?<\/b>/.test(line);
+
+            // Wrap lines in appropriate divs to preserve spacing
+            let outputLine;
+            if (isChordOnlyLine && hasChordBoldTags) {
+                // Chord-only line: use original untrimmed line, convert spaces to &nbsp;
+                const spacedLine = lines[i].replace(/ /g, '&nbsp;');
+                outputLine = `<div class="chord-line">${spacedLine}</div>`;
+            } else if (hasRTLChars || line.trim()) {
+                // Lyric line or other content: wrap in lyric-line div
+                outputLine = `<div class="lyric-line">${lines[i]}</div>`;
             } else {
-                formatted.push(line + '\n');
+                // Empty line
+                outputLine = '<br>';
+            }
+
+            if (currentSection) {
+                sectionContent.push(outputLine);
+            } else {
+                formatted.push(outputLine);
             }
         }
 
@@ -4726,7 +4792,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Check if user has Pro subscription for Nashville Numbers
             if (window.subscriptionManager && !window.subscriptionManager.canUseNashvilleNumbers()) {
-                alert('🔢 Nashville Numbers is a Pro feature!\n\nUpgrade to Pro for $1.99/month to unlock Nashville Number System and unlimited analyses.');
+                showAlert('Nashville Numbers is a Pro feature!\n\nUpgrade to Pro for $1.99/month to unlock Nashville Number System and unlimited analyses.');
 
                 // Reset to "chords only" mode
                 nashvilleMode.value = 'chords';
@@ -4920,7 +4986,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     async function savePrintPreviewPreferences() {
         const user = auth.currentUser;
         if (!user) {
-            alert('Please log in to save layout preferences');
+            showAlert('Please log in to save layout preferences');
             return;
         }
 
@@ -4953,7 +5019,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }, 2000);
         } catch (error) {
             console.error('❌ Error saving layout preferences:', error);
-            alert('Failed to save layout preferences. Please try again.');
+            showAlert('Failed to save layout preferences. Please try again.');
         }
     }
 
@@ -6038,7 +6104,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     if (createSessionBtn) {
         createSessionBtn.addEventListener('click', () => {
             if (!window.subscriptionManager || !window.subscriptionManager.canCreateSession()) {
-                alert('Creating sessions requires a PRO subscription ($1.99/mo)');
+                showAlert('Creating sessions requires a PRO subscription ($1.99/mo)');
                 window.showSubscriptionModal();
                 return;
             }
@@ -6050,7 +6116,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     if (joinSessionBtn) {
         joinSessionBtn.addEventListener('click', () => {
             if (!window.subscriptionManager || !window.subscriptionManager.canJoinSession()) {
-                alert('Joining sessions requires at least a BASIC subscription ($0.99/mo)');
+                showAlert('Joining sessions requires at least a BASIC subscription ($0.99/mo)');
                 window.showSubscriptionModal();
                 return;
             }
@@ -6072,7 +6138,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const song = playlist.find(s => s.id === songId);
 
         if (!song || !song.content) {
-            alert('Song content not available');
+            showAlert('Song content not available');
             return;
         }
 

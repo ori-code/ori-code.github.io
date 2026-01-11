@@ -1262,4 +1262,24 @@ window.loadMySessions = async function() {
     await sessionUI.loadUserSessions();
 };
 
+// Filter sessions list by title
+window.filterSessionsList = function(searchText) {
+    const sessionsList = document.getElementById('sessionsList');
+    if (!sessionsList) return;
+
+    const sessionItems = sessionsList.querySelectorAll('.session-item');
+    const searchLower = searchText.toLowerCase().trim();
+
+    sessionItems.forEach(item => {
+        const titleEl = item.querySelector('h4');
+        const title = titleEl ? titleEl.textContent.toLowerCase() : '';
+
+        if (searchLower === '' || title.includes(searchLower)) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+};
+
 console.log('✅ Session UI initialized');

@@ -22,6 +22,10 @@ const liveMode = {
     currentFontSize: 14,
     isSingerMode: false, // Singer mode: lyrics only, limited controls
     isPublicViewMode: false, // Public view mode: viewing shared public song
+    songMetronomeEnabled: {}, // Track which songs have metronome enabled { songId: true/false }
+    songPadEnabled: {}, // Track which songs have pad enabled { songId: true/false }
+    songPadKey: {}, // Track selected pad key per song { songId: 'C' | 'D' | etc. }
+    miniAudioSyncInterval: null, // Interval for syncing mini audio controls
 
     /**
      * Save Live Mode preferences to Firebase
@@ -276,6 +280,10 @@ const liveMode = {
         // Update session controls visibility
         this.updateSessionControls();
 
+        // Sync mini metronome/pad controls
+        this.syncMiniAudioControls();
+        this.startMiniAudioSync();
+
         // If in session but no song loaded, show playlist immediately
         if (!hasEditorContent && inSession) {
             setTimeout(() => this.showPlaylist(), 500);
@@ -312,6 +320,12 @@ const liveMode = {
         // Clear timeout
         if (this.hideControlsTimeout) {
             clearTimeout(this.hideControlsTimeout);
+        }
+
+        // Clear mini audio sync interval
+        if (this.miniAudioSyncInterval) {
+            clearInterval(this.miniAudioSyncInterval);
+            this.miniAudioSyncInterval = null;
         }
 
         // Reset full overview mode
@@ -946,7 +960,7 @@ const liveMode = {
 
             // Reset padding
             if (content) {
-                content.style.padding = '60px 20px 140px 20px';
+                content.style.padding = '0 20px 140px 20px';
             }
         }
 
@@ -1046,7 +1060,7 @@ const liveMode = {
             chartDisplay.style.maxWidth = '100%';
 
             // Adjust padding to maximize space
-            content.style.padding = '60px 24px 140px 24px';
+            content.style.padding = '0 24px 140px 24px';
 
             // Enable full overview class for CSS overrides (shows song-header with section badges)
             chartDisplay.classList.add('full-overview-active');
@@ -1099,7 +1113,7 @@ const liveMode = {
                 chartDisplay.style.columnGap = this.savedDisplaySettings.columnGap || '';
                 chartDisplay.style.columnRule = this.savedDisplaySettings.columnRule || '';
                 chartDisplay.style.maxWidth = this.savedDisplaySettings.maxWidth || '800px';
-                content.style.padding = this.savedDisplaySettings.padding || '60px 20px 140px 20px';
+                content.style.padding = this.savedDisplaySettings.padding || '0 20px 140px 20px';
             }
 
             // Re-apply saved preferences from Firebase
@@ -1315,9 +1329,15 @@ const liveMode = {
             // Get playlist from session manager
             if (window.sessionManager && window.sessionManager.activeSession) {
                 const playlist = await window.sessionManager.getPlaylist();
+                const isLeader = window.sessionManager.isLeader;
 
                 if (playlist.length === 0) {
-                    playlistContent.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No songs in playlist</p>';
+                    const addButton = isLeader ? `
+                        <button onclick="liveMode.showAddSongModal()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 12px;">
+                            + Add Song
+                        </button>
+                    ` : '';
+                    playlistContent.innerHTML = `<p style="color: var(--text-muted); text-align: center;">No songs in playlist</p>${addButton}`;
                     return;
                 }
 
@@ -1327,7 +1347,6 @@ const liveMode = {
                 // Get leader's current song ID (what leader is broadcasting)
                 const leaderSong = window.sessionManager.leaderCurrentSong;
                 const leaderSongId = leaderSong ? leaderSong.songId : null;
-                const isLeader = window.sessionManager.isLeader;
 
                 playlistContent.innerHTML = playlist.map((song, index) => {
                     const isCurrent = song.id === currentSongId;
@@ -1360,6 +1379,26 @@ const liveMode = {
                         indicator = '<span style="color: #10b981; font-size: 12px;">👑 Leader</span>';
                     }
 
+                    const metroChecked = liveMode.songMetronomeEnabled[song.id] ? 'checked' : '';
+                    const displayBpm = song.bpm || '--';
+
+                    // Build pad key dropdown options
+                    const relatedKeys = liveMode.getRelatedKeys(song.originalKey);
+                    const selectedPadKey = liveMode.songPadKey[song.id] || (relatedKeys.length > 0 ? relatedKeys[0].value : '');
+                    const padKeyOptions = relatedKeys.map(k =>
+                        `<option value="${k.value}" ${k.value === selectedPadKey ? 'selected' : ''}>${k.label}</option>`
+                    ).join('');
+                    const padEnabled = liveMode.songPadEnabled[song.id];
+                    const padDisabled = !isLeader ? 'disabled' : '';
+                    const metroDisabled = !isLeader ? 'disabled' : '';
+
+                    // Remove button for leaders
+                    const removeBtn = isLeader ? `
+                        <button onclick="event.stopPropagation(); liveMode.removeSongFromPlaylist('${song.id}')"
+                                style="width: 22px; height: 22px; border-radius: 50%; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+                                title="Remove from playlist">×</button>
+                    ` : '';
+
                     return `
                         <div onclick="liveMode.loadSongFromPlaylist('${song.id}')"
                              style="padding: 8px 12px; background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s ease;">
@@ -1367,13 +1406,35 @@ const liveMode = {
                                 <span style="color: ${numberColor}; font-weight: 600; min-width: 20px; font-size: 13px;">${index + 1}</span>
                                 <div style="flex: 1; min-width: 0;">
                                     <div style="color: var(--text); font-weight: ${fontWeight}; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${song.name}</div>
-                                    <div style="color: var(--text-muted); font-size: 11px;">${song.originalKey || 'Unknown key'}${song.bpm ? ` • ${song.bpm} BPM` : ''}</div>
+                                    <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
+                                        <label onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: ${isLeader ? 'pointer' : 'not-allowed'}; opacity: ${isLeader ? '1' : '0.6'};">
+                                            <input type="checkbox" ${metroChecked} ${metroDisabled} onchange="liveMode.toggleSongMetronome('${song.id}', this.checked)" style="cursor: ${isLeader ? 'pointer' : 'not-allowed'};" />
+                                            <span>🎵 ${displayBpm}</span>
+                                        </label>
+                                        <div onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted);">
+                                            <input type="checkbox" ${padEnabled ? 'checked' : ''} ${padDisabled} onchange="liveMode.toggleSongPad('${song.id}', this.checked)" style="cursor: ${isLeader ? 'pointer' : 'not-allowed'};" />
+                                            <span>🎹</span>
+                                            <select ${padDisabled} onchange="liveMode.changeSongPadKey('${song.id}', this.value)" style="font-size: 10px; padding: 2px 4px; border-radius: 4px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); cursor: ${isLeader ? 'pointer' : 'not-allowed'}; opacity: ${isLeader ? '1' : '0.6'};">
+                                                ${padKeyOptions}
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
+                                ${removeBtn}
                                 ${indicator}
                             </div>
                         </div>
                     `;
                 }).join('');
+
+                // Add "Add Song" button at bottom for leaders
+                if (isLeader) {
+                    playlistContent.innerHTML += `
+                        <button onclick="liveMode.showAddSongModal()" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 8px;">
+                            + Add Song
+                        </button>
+                    `;
+                }
             } else {
                 playlistContent.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Not in a session</p>';
             }
@@ -1413,6 +1474,347 @@ const liveMode = {
                 if (numberSpan) numberSpan.style.color = 'var(--text-muted)';
             }
         });
+    },
+
+    /**
+     * Toggle metronome enabled for a specific song
+     */
+    toggleSongMetronome(songId, enabled) {
+        this.songMetronomeEnabled[songId] = enabled;
+        console.log(`🎵 Metronome ${enabled ? 'enabled' : 'disabled'} for song: ${songId}`);
+    },
+
+    /**
+     * Toggle pad enabled for a specific song
+     */
+    toggleSongPad(songId, enabled) {
+        this.songPadEnabled[songId] = enabled;
+        console.log(`🎹 Pad ${enabled ? 'enabled' : 'disabled'} for song: ${songId}`);
+    },
+
+    /**
+     * Remove song from playlist (Leader only)
+     */
+    async removeSongFromPlaylist(songId) {
+        if (!window.sessionManager || !window.sessionManager.isLeader) {
+            console.log('Only leader can remove songs');
+            return;
+        }
+
+        try {
+            await window.sessionManager.removeFromPlaylist(songId);
+            console.log(`➖ Removed song from playlist: ${songId}`);
+            // Refresh playlist display
+            this.showPlaylist();
+        } catch (error) {
+            console.error('Error removing song from playlist:', error);
+            if (window.showAlert) showAlert('Failed to remove song from playlist');
+        }
+    },
+
+    /**
+     * Show modal to add songs to playlist
+     */
+    async showAddSongModal() {
+        if (!window.sessionManager || !window.sessionManager.isLeader) {
+            console.log('Only leader can add songs');
+            return;
+        }
+
+        // Create modal if it doesn't exist
+        let modal = document.getElementById('liveAddSongModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'liveAddSongModal';
+            modal.innerHTML = `
+                <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: var(--bg-secondary, #1a1a2e); border-radius: 12px; width: 100%; max-width: 400px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                        <div style="padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; color: var(--text); font-size: 16px;">Add Song to Playlist</h3>
+                            <button onclick="liveMode.hideAddSongModal()" style="background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+                        </div>
+                        <div style="padding: 12px; border-bottom: 1px solid var(--border);">
+                            <input type="text" id="liveAddSongSearch" placeholder="Search songs..." oninput="liveMode.filterAddSongList(this.value)"
+                                   style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-size: 14px; box-sizing: border-box;" />
+                        </div>
+                        <div id="liveAddSongList" style="flex: 1; overflow-y: auto; padding: 12px; min-height: 200px;">
+                            <p style="color: var(--text-muted); text-align: center;">Loading songs...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        modal.style.display = 'block';
+
+        // Load songs from library
+        await this.loadAddSongList();
+    },
+
+    /**
+     * Hide add song modal
+     */
+    hideAddSongModal() {
+        const modal = document.getElementById('liveAddSongModal');
+        if (modal) modal.style.display = 'none';
+    },
+
+    /**
+     * Load songs from library into add song modal
+     */
+    async loadAddSongList(filter = '') {
+        const listContainer = document.getElementById('liveAddSongList');
+        if (!listContainer) return;
+
+        try {
+            const user = window.auth?.currentUser;
+            if (!user) {
+                listContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Please log in to access your library</p>';
+                return;
+            }
+
+            // Get songs from Firebase
+            const snapshot = await firebase.database().ref(`users/${user.uid}/songs`).once('value');
+            const songs = snapshot.val() || {};
+
+            // Get current playlist to exclude already added songs
+            const playlist = await window.sessionManager.getPlaylist();
+            const playlistIds = new Set(playlist.map(s => s.id));
+
+            // Filter and sort songs
+            let songList = Object.entries(songs)
+                .map(([id, data]) => ({ id, ...data }))
+                .filter(song => !playlistIds.has(song.id)) // Exclude songs already in playlist
+                .filter(song => !filter || song.name?.toLowerCase().includes(filter.toLowerCase()))
+                .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+            if (songList.length === 0) {
+                listContainer.innerHTML = filter
+                    ? '<p style="color: var(--text-muted); text-align: center;">No matching songs found</p>'
+                    : '<p style="color: var(--text-muted); text-align: center;">All songs already in playlist</p>';
+                return;
+            }
+
+            listContainer.innerHTML = songList.map(song => `
+                <div onclick="liveMode.addSongToPlaylist('${song.id}')"
+                     style="padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s ease;">
+                    <div style="color: var(--text); font-size: 13px; font-weight: 500;">${song.name || 'Untitled'}</div>
+                    <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">
+                        ${song.originalKey || '--'} ${song.bpm ? `• ${song.bpm} BPM` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (error) {
+            console.error('Error loading songs:', error);
+            listContainer.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading songs</p>';
+        }
+    },
+
+    /**
+     * Filter add song list based on search input
+     */
+    filterAddSongList(query) {
+        this.loadAddSongList(query);
+    },
+
+    /**
+     * Add a song to the playlist
+     */
+    async addSongToPlaylist(songId) {
+        if (!window.sessionManager || !window.sessionManager.isLeader) {
+            console.log('Only leader can add songs');
+            return;
+        }
+
+        try {
+            const user = window.auth?.currentUser;
+            if (!user) return;
+
+            // Get song data from Firebase
+            const snapshot = await firebase.database().ref(`users/${user.uid}/songs/${songId}`).once('value');
+            const songData = snapshot.val();
+
+            if (!songData) {
+                console.error('Song not found:', songId);
+                return;
+            }
+
+            // Add to playlist
+            await window.sessionManager.addToPlaylist(songId, {
+                name: songData.name || 'Untitled',
+                content: songData.content || '',
+                originalKey: songData.originalKey || songData.key || '',
+                bpm: songData.bpm || null
+            });
+
+            console.log(`➕ Added song to playlist: ${songData.name}`);
+
+            // Refresh playlist and modal
+            this.showPlaylist();
+            this.loadAddSongList(document.getElementById('liveAddSongSearch')?.value || '');
+
+        } catch (error) {
+            console.error('Error adding song to playlist:', error);
+            if (window.showAlert) showAlert('Failed to add song to playlist');
+        }
+    },
+
+    /**
+     * Convert key string (e.g., "C Major", "F# Minor") to pad player key format
+     */
+    convertKeyToPadKey(keyString) {
+        if (!keyString) return null;
+
+        // Extract the root note (e.g., "C", "F#", "Bb")
+        const match = keyString.match(/^([A-G][#b]?)/i);
+        if (!match) return null;
+
+        let key = match[1].toUpperCase();
+
+        // Handle flats - convert to sharps for pad player
+        const flatToSharp = {
+            'DB': 'Csharp', 'EB': 'Dsharp', 'GB': 'Fsharp',
+            'AB': 'Gsharp', 'BB': 'Asharp'
+        };
+
+        // Check for flat notation
+        if (key.includes('B') && key.length === 2 && key[0] !== 'B') {
+            // It's a flat (e.g., "Db", "Eb")
+            const flatKey = key.toUpperCase();
+            if (flatToSharp[flatKey]) return flatToSharp[flatKey];
+        }
+
+        // Handle sharps
+        if (key.includes('#')) {
+            return key.replace('#', 'sharp');
+        }
+
+        // Plain note (A, B, C, D, E, F, G)
+        return key;
+    },
+
+    /**
+     * Get related keys for dropdown (relative major/minor + all keys)
+     * Returns array of { value: 'C', label: 'C', isRelative: false }
+     */
+    getRelatedKeys(keyString) {
+        const allKeys = ['C', 'Csharp', 'D', 'Dsharp', 'E', 'F', 'Fsharp', 'G', 'Gsharp', 'A', 'Asharp', 'B'];
+        const displayLabels = { 'C': 'C', 'Csharp': 'C#', 'D': 'D', 'Dsharp': 'D#', 'E': 'E', 'F': 'F', 'Fsharp': 'F#', 'G': 'G', 'Gsharp': 'G#', 'A': 'A', 'Asharp': 'A#', 'B': 'B' };
+
+        // Relative minor/major pairs (relative minor is 3 semitones down from major)
+        const relativePairs = {
+            'C': 'A', 'Csharp': 'Asharp', 'D': 'B', 'Dsharp': 'C', 'E': 'Csharp', 'F': 'D',
+            'Fsharp': 'Dsharp', 'G': 'E', 'Gsharp': 'F', 'A': 'Fsharp', 'Asharp': 'G', 'B': 'Gsharp'
+        };
+
+        const detectedKey = this.convertKeyToPadKey(keyString);
+        const isMinor = keyString && keyString.toLowerCase().includes('minor');
+
+        // Get relative key (if major → relative minor root, if minor → relative major root)
+        let relativeKey = null;
+        if (detectedKey) {
+            if (isMinor) {
+                // Find major key that has this as relative minor
+                relativeKey = Object.keys(relativePairs).find(k => relativePairs[k] === detectedKey);
+            } else {
+                relativeKey = relativePairs[detectedKey];
+            }
+        }
+
+        const result = [];
+
+        // Add detected key first (if exists)
+        if (detectedKey) {
+            result.push({ value: detectedKey, label: `${displayLabels[detectedKey]} ✓`, isDetected: true });
+        }
+
+        // Add relative key second (if exists and different)
+        if (relativeKey && relativeKey !== detectedKey) {
+            result.push({ value: relativeKey, label: `${displayLabels[relativeKey]} (rel)`, isRelative: true });
+        }
+
+        // Add all other keys
+        allKeys.forEach(key => {
+            if (key !== detectedKey && key !== relativeKey) {
+                result.push({ value: key, label: displayLabels[key], isDetected: false, isRelative: false });
+            }
+        });
+
+        return result;
+    },
+
+    /**
+     * Handle pad key selection change from dropdown
+     */
+    changeSongPadKey(songId, newKey) {
+        this.songPadKey[songId] = newKey;
+        // Also enable pad if a key is selected
+        if (newKey) {
+            this.songPadEnabled[songId] = true;
+        }
+        console.log(`🎹 Pad key changed for song ${songId}: ${newKey}`);
+
+        // If this is the current song and pad is playing, switch to new key
+        if (songId === this.currentSongId && this.songPadEnabled[songId] && window.padPlayer) {
+            window.padPlayer.play(newKey); // Auto crossfades
+        }
+    },
+
+    /**
+     * Sync mini audio controls (metronome & pad) with current state
+     */
+    syncMiniAudioControls() {
+        // Sync metronome BPM
+        const bpmDisplay = document.getElementById('liveMetroBpm');
+        if (bpmDisplay && window.metronome) {
+            bpmDisplay.textContent = window.metronome.bpm || 120;
+        }
+
+        // Sync metronome play button
+        const metroPlayBtn = document.getElementById('liveMetroPlay');
+        if (metroPlayBtn && window.metronome) {
+            metroPlayBtn.textContent = window.metronome.isPlaying ? '⏸' : '▶';
+            metroPlayBtn.style.background = window.metronome.isPlaying
+                ? 'linear-gradient(135deg, #16a34a, #22c55e)'
+                : 'linear-gradient(135deg, #d97706, #f59e0b)';
+        }
+
+        // Sync pad key display
+        const padKeyDisplay = document.getElementById('livePadKey');
+        if (padKeyDisplay && window.padPlayer) {
+            const playingKeys = window.padPlayer.getPlayingKeys ? window.padPlayer.getPlayingKeys() : [];
+            padKeyDisplay.textContent = playingKeys.length > 0 ? playingKeys[0].replace('sharp', '#') : '--';
+        }
+
+        // Update pad stop button style
+        const padStopBtn = document.getElementById('livePadStop');
+        if (padStopBtn && window.padPlayer) {
+            const isPlaying = window.padPlayer.getPlayingKeys && window.padPlayer.getPlayingKeys().length > 0;
+            padStopBtn.style.background = isPlaying
+                ? 'linear-gradient(135deg, #dc2626, #ef4444)'
+                : 'linear-gradient(135deg, #7c3aed, #a855f7)';
+        }
+    },
+
+    /**
+     * Start interval to sync mini audio controls
+     */
+    startMiniAudioSync() {
+        // Clear any existing interval
+        if (this.miniAudioSyncInterval) {
+            clearInterval(this.miniAudioSyncInterval);
+        }
+
+        // Sync every 200ms while Live Mode is active
+        this.miniAudioSyncInterval = setInterval(() => {
+            if (this.isActive) {
+                this.syncMiniAudioControls();
+            } else {
+                clearInterval(this.miniAudioSyncInterval);
+            }
+        }, 200);
     },
 
     /**
@@ -1574,6 +1976,29 @@ const liveMode = {
             window.currentSongId = songId;
 
             console.log(`📺 Loaded song: ${songData.name}`);
+
+            // Handle Metronome auto-start based on checkbox
+            if (this.songMetronomeEnabled[songId] && songData.bpm && window.metronome) {
+                window.metronome.setBpm(parseInt(songData.bpm));
+                window.metronome.start();
+                console.log(`🎵 Metronome started at ${songData.bpm} BPM`);
+            } else if (window.metronome && window.metronome.isPlaying) {
+                window.metronome.stop();
+                console.log(`🎵 Metronome stopped`);
+            }
+
+            // Handle Pad auto-start with crossfade based on checkbox
+            // Use selected key from dropdown, or fall back to detected key
+            const detectedKey = songData.originalKey || songData.key;
+            const detectedPadKey = this.convertKeyToPadKey(detectedKey);
+            const padKey = this.songPadKey[songId] || detectedPadKey;
+            if (this.songPadEnabled[songId] && padKey && window.padPlayer) {
+                window.padPlayer.play(padKey); // Auto crossfades from previous key
+                console.log(`🎹 Pad started in key: ${padKey}`);
+            } else if (!this.songPadEnabled[songId] && window.padPlayer) {
+                window.padPlayer.stopAll(); // Fade out if disabled
+                console.log(`🎹 Pad stopped`);
+            }
 
         } catch (error) {
             console.error('Error loading song from playlist:', error);
@@ -1959,26 +2384,36 @@ const liveMode = {
 
 // Set up event listeners when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Go Live button
-    const goLiveBtn = document.getElementById('goLiveButton');
-    if (goLiveBtn) {
-        goLiveBtn.addEventListener('click', () => {
-            // If not in a session, show My Sessions modal first
-            if (!window.sessionManager || !window.sessionManager.activeSession) {
-                const mySessionsModal = document.getElementById('mySessionsModal');
-                if (mySessionsModal) {
-                    mySessionsModal.style.display = 'flex';
-                    // Load sessions if function exists
-                    if (window.loadMySessions) {
-                        window.loadMySessions();
-                    }
+    // Helper function for Go Live click
+    function handleGoLiveClick() {
+        // If not in a session, show My Sessions modal first
+        if (!window.sessionManager || !window.sessionManager.activeSession) {
+            const mySessionsModal = document.getElementById('mySessionsModal');
+            if (mySessionsModal) {
+                mySessionsModal.style.display = 'flex';
+                // Load sessions if function exists
+                if (window.loadMySessions) {
+                    window.loadMySessions();
                 }
-            } else {
-                // Already in a session, enter Live Mode
-                liveMode.enter();
             }
-        });
+        } else {
+            // Already in a session, enter Live Mode
+            liveMode.enter();
+        }
     }
+
+    // Go Live buttons - all should have the same behavior
+    const goLiveButtons = [
+        document.getElementById('goLiveButton'),
+        document.getElementById('headerGoLiveBtn'),
+        document.getElementById('sideMenuGoLive')
+    ];
+
+    goLiveButtons.forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', handleGoLiveClick);
+        }
+    });
 
     // Tap to show controls and toggle sidebar (if in session)
     const liveModeContent = document.getElementById('liveModeContent');

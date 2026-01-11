@@ -13,6 +13,15 @@
     font-family: 'Poppins', sans-serif;
 }
 
+/* Disable pinch-to-zoom on mobile (iOS Safari ignores viewport meta) */
+html, body {
+    touch-action: manipulation;
+}
+
+* {
+    touch-action: manipulation;
+}
+
 /* Light Theme */
 [data-theme="light"] {
     --bg: #f8f9fa;
@@ -112,6 +121,46 @@ body {
 [data-theme="light"] .status-panel {
     background: rgba(0, 0, 0, 0.02);
     border-color: var(--border);
+}
+
+[data-theme="light"] .status-panel.processing {
+    background: linear-gradient(135deg, rgba(255, 59, 92, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%);
+    border-color: rgba(255, 59, 92, 0.2);
+}
+
+[data-theme="light"] .scanner-page {
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.15),
+        0 0 30px rgba(255, 59, 92, 0.1);
+}
+
+/* Light theme - Music & Live buttons with better contrast */
+[data-theme="light"] .header-btn.pads-btn {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.35) 0%, rgba(59, 130, 246, 0.35) 100%);
+    border-color: rgba(139, 92, 246, 0.6);
+    color: #6d28d9;
+    text-shadow: none;
+}
+
+[data-theme="light"] .header-btn.metro-btn {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.4) 0%, rgba(249, 115, 22, 0.4) 100%);
+    border-color: rgba(234, 179, 8, 0.7);
+    color: #a16207;
+    text-shadow: none;
+}
+
+[data-theme="light"] .header-btn.go-live-btn {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(220, 38, 38, 0.35) 100%);
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #b91c1c;
+    text-shadow: none;
+}
+
+[data-theme="light"] .header-btn.live-preview-btn {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(139, 92, 246, 0.35) 100%);
+    border-color: rgba(168, 85, 247, 0.6);
+    color: #7c3aed;
+    text-shadow: none;
 }
 
 /* Light theme - preview and print areas */
@@ -489,59 +538,66 @@ a {
 
 /* Music Tools Buttons */
 .header-btn.pads-btn {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
-    border-color: rgba(139, 92, 246, 0.35);
-    color: #a78bfa;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.25) 100%);
+    border-color: rgba(139, 92, 246, 0.5);
+    color: #e0d4ff;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .header-btn.pads-btn:hover {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.25) 100%);
-    border-color: rgba(139, 92, 246, 0.5);
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(59, 130, 246, 0.4) 100%);
+    border-color: rgba(139, 92, 246, 0.7);
+    box-shadow: 0 0 18px rgba(139, 92, 246, 0.35);
 }
 
 .header-btn.metro-btn {
-    background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(249, 115, 22, 0.15) 100%);
-    border-color: rgba(234, 179, 8, 0.35);
-    color: #fbbf24;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.25) 0%, rgba(249, 115, 22, 0.25) 100%);
+    border-color: rgba(234, 179, 8, 0.5);
+    color: #fef08a;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .header-btn.metro-btn:hover {
-    background: linear-gradient(135deg, rgba(234, 179, 8, 0.25) 0%, rgba(249, 115, 22, 0.25) 100%);
-    border-color: rgba(234, 179, 8, 0.5);
-    box-shadow: 0 0 12px rgba(234, 179, 8, 0.2);
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.4) 0%, rgba(249, 115, 22, 0.4) 100%);
+    border-color: rgba(234, 179, 8, 0.7);
+    box-shadow: 0 0 18px rgba(234, 179, 8, 0.35);
 }
 
 /* Live Session Buttons */
 .header-btn-group.live-group {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
-    border-color: rgba(239, 68, 68, 0.2);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+    border-color: rgba(239, 68, 68, 0.25);
 }
 
 .header-btn.go-live-btn {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #f87171;
-    font-weight: 600;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.3) 100%);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #fecaca;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .header-btn.go-live-btn:hover {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.4) 0%, rgba(220, 38, 38, 0.4) 100%);
-    border-color: rgba(239, 68, 68, 0.6);
-    box-shadow: 0 0 16px rgba(239, 68, 68, 0.3);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.5) 0%, rgba(220, 38, 38, 0.5) 100%);
+    border-color: rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 22px rgba(239, 68, 68, 0.4);
     transform: translateY(-1px);
 }
 
 .header-btn.live-preview-btn {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
-    border-color: rgba(168, 85, 247, 0.4);
-    color: #c4b5fd;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+    border-color: rgba(168, 85, 247, 0.5);
+    color: #e9d5ff;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .header-btn.live-preview-btn:hover {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(139, 92, 246, 0.35) 100%);
-    border-color: rgba(168, 85, 247, 0.6);
-    box-shadow: 0 0 12px rgba(168, 85, 247, 0.25);
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.45) 0%, rgba(139, 92, 246, 0.45) 100%);
+    border-color: rgba(168, 85, 247, 0.7);
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.4);
 }
 
 /* Active states for display toggles */
@@ -966,13 +1022,14 @@ a {
 
 .status-panel {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 12px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
-    padding: 8px 12px;
+    border-radius: 12px;
+    padding: 16px;
     position: relative;
     overflow: hidden;
     width: 100%;
@@ -981,8 +1038,125 @@ a {
 }
 
 .status-panel.processing {
-    background: rgba(255, 209, 92, 0.1);
-    border-color: rgba(255, 209, 92, 0.3);
+    background: linear-gradient(135deg, rgba(255, 59, 92, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%);
+    border-color: rgba(255, 59, 92, 0.3);
+}
+
+/* Scanner Animation Container */
+.scanner-animation {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.status-panel.processing .scanner-animation {
+    display: flex;
+}
+
+.scanner-document {
+    position: relative;
+    width: 80px;
+    height: 100px;
+    perspective: 500px;
+}
+
+.scanner-page {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%);
+    border-radius: 6px;
+    box-shadow:
+        0 4px 20px rgba(0, 0, 0, 0.3),
+        0 0 40px rgba(255, 59, 92, 0.2),
+        inset 0 0 20px rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+    transform: rotateX(5deg);
+    animation: pageFloat 3s ease-in-out infinite;
+}
+
+@keyframes pageFloat {
+    0%, 100% { transform: rotateX(5deg) translateY(0); }
+    50% { transform: rotateX(5deg) translateY(-3px); }
+}
+
+.scanner-lines {
+    position: absolute;
+    top: 15px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scanner-lines span {
+    height: 4px;
+    background: linear-gradient(90deg, #ddd 0%, #ccc 50%, #ddd 100%);
+    border-radius: 2px;
+}
+
+.scanner-lines span:nth-child(1) { width: 90%; }
+.scanner-lines span:nth-child(2) { width: 75%; }
+.scanner-lines span:nth-child(3) { width: 85%; }
+.scanner-lines span:nth-child(4) { width: 60%; }
+.scanner-lines span:nth-child(5) { width: 70%; }
+
+.scanner-music-note {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    font-size: 24px;
+    color: rgba(255, 59, 92, 0.6);
+    animation: noteGlow 2s ease-in-out infinite;
+}
+
+@keyframes noteGlow {
+    0%, 100% {
+        color: rgba(255, 59, 92, 0.4);
+        text-shadow: 0 0 10px rgba(255, 59, 92, 0.3);
+    }
+    50% {
+        color: rgba(255, 59, 92, 0.8);
+        text-shadow: 0 0 20px rgba(255, 59, 92, 0.6);
+    }
+}
+
+.scanner-beam {
+    position: absolute;
+    top: 0;
+    left: -5px;
+    right: -5px;
+    height: 3px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 59, 92, 0.8) 20%,
+        #ff3b5c 50%,
+        rgba(255, 59, 92, 0.8) 80%,
+        transparent 100%
+    );
+    box-shadow:
+        0 0 15px rgba(255, 59, 92, 0.8),
+        0 0 30px rgba(255, 59, 92, 0.5),
+        0 0 45px rgba(255, 59, 92, 0.3);
+    animation: scanBeam 2s ease-in-out infinite;
+    border-radius: 2px;
+}
+
+@keyframes scanBeam {
+    0% { top: 0; opacity: 1; }
+    45% { top: calc(100% - 3px); opacity: 1; }
+    50% { top: calc(100% - 3px); opacity: 0.3; }
+    55% { top: calc(100% - 3px); opacity: 1; }
+    100% { top: 0; opacity: 1; }
+}
+
+/* Status Content */
+.status-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .status-dot {
@@ -998,13 +1172,14 @@ a {
 }
 
 .status-dot.processing {
-    background: #ffd15c;
+    background: #ff3b5c;
     animation: pulse 1.2s infinite ease-in-out;
-    box-shadow: 0 0 8px rgba(255, 209, 92, 0.8);
+    box-shadow: 0 0 12px rgba(255, 59, 92, 0.8);
 }
 
 .status-dot.success {
     background: #4fd18b;
+    box-shadow: 0 0 12px rgba(79, 209, 139, 0.6);
 }
 
 .status-dot.error {
@@ -1012,14 +1187,15 @@ a {
 }
 
 .status-text {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     transition: color 0.3s ease;
+    font-weight: 500;
 }
 
 .status-panel.processing .status-text {
-    color: #ffd15c;
-    font-weight: 500;
+    color: #ff6b8a;
+    font-weight: 600;
 }
 
 .progress-bar-container {
@@ -1027,9 +1203,9 @@ a {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 6px;
+    height: 4px;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 12px 12px;
     overflow: hidden;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -1042,20 +1218,16 @@ a {
 .progress-bar-fill {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #ff3b5c, #ffd15c, #4fd18b);
+    background: linear-gradient(90deg, #ff3b5c, #a855f7, #ff3b5c);
     background-size: 200% 100%;
-    animation: progressShimmer 2s linear infinite;
+    animation: progressShimmer 1.5s linear infinite;
     transition: width 0.4s ease-out;
-    box-shadow: 0 0 15px rgba(255, 209, 92, 0.6), 0 0 5px rgba(255, 209, 92, 0.8);
+    box-shadow: 0 0 10px rgba(255, 59, 92, 0.6);
 }
 
 @keyframes progressShimmer {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 .status-hint {
@@ -1683,6 +1855,17 @@ a {
     line-height: 1.2;
     margin-top: 0.5em;  /* Small gap before chord line */
     margin-bottom: 0;   /* No gap after - lyrics follow immediately */
+    white-space: pre;   /* Preserve spacing for chord alignment */
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Lyric line styling - follows chord line */
+.live-preview .lyric-line {
+    margin: 0;
+    padding: 0;
+    line-height: 1.4;
+    white-space: pre;   /* Preserve spacing for alignment with chords */
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 /* RTL: Let chord lines flow RTL so chords appear in correct visual order */
@@ -2091,6 +2274,35 @@ a {
 /* Hide badges when checkbox is unchecked */
 .hide-badges .section-badges-row {
     display: none !important;
+}
+
+/* Live Mode Chart Display - no top margin */
+#liveModeChartDisplay {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+#liveModeChartDisplay > *:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+#liveModeChartDisplay .song-header {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+#liveModeChartDisplay .song-title {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+#liveModeChartDisplay .song-meta {
+    margin-top: 0 !important;
+}
+
+#liveModeChartDisplay .section-badges-row {
+    margin-top: 0 !important;
 }
 
 /* Hide borders when checkbox is unchecked */

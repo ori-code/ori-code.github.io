@@ -213,14 +213,18 @@ class PayPalSubscriptionManager {
      */
     showSubscriptionSuccess(planType) {
         const tierName = planType === 'BASIC' ? 'Basic' : 'Pro';
-        alert(`🎉 Welcome to aChordim ${tierName}!\n\nYour subscription is now active. Enjoy unlimited access to all features!`);
+        if (window.showAlert) {
+            showAlert(`Welcome to aChordim ${tierName}!\n\nYour subscription is now active. Enjoy unlimited access to all features!`);
+        }
     }
 
     /**
      * Show subscription error message
      */
     showSubscriptionError(error) {
-        alert(`❌ Subscription Error\n\nSomething went wrong with your subscription. Please try again or contact support.\n\nError: ${error.message || 'Unknown error'}`);
+        if (window.showAlert) {
+            showAlert(`Subscription Error\n\nSomething went wrong with your subscription. Please try again or contact support.\n\nError: ${error.message || 'Unknown error'}`);
+        }
     }
 
     /**
@@ -265,14 +269,18 @@ class PayPalSubscriptionManager {
 
             if (response.ok) {
                 await window.subscriptionManager.cancelSubscription();
-                alert('Your subscription has been cancelled. You will retain access until the end of your billing period.');
+                if (window.showAlert) {
+                    showAlert('Your subscription has been cancelled. You will retain access until the end of your billing period.');
+                }
             } else {
                 throw new Error('Failed to cancel subscription');
             }
 
         } catch (error) {
             console.error('Error cancelling subscription:', error);
-            alert('Failed to cancel subscription. Please contact support.');
+            if (window.showAlert) {
+                showAlert('Failed to cancel subscription. Please contact support.');
+            }
         }
     }
 
@@ -445,14 +453,18 @@ class PayPalSubscriptionManager {
      * Show purchase success message
      */
     showPurchaseSuccess(itemName) {
-        alert(`🎉 Purchase Complete!\n\nYour ${itemName} purchase was successful. Enjoy aChordim!`);
+        if (window.showAlert) {
+            showAlert(`Purchase Complete!\n\nYour ${itemName} purchase was successful. Enjoy aChordim!`);
+        }
     }
 
     /**
      * Show purchase error message
      */
     showPurchaseError(error) {
-        alert(`❌ Purchase Error\n\nSomething went wrong. Please try again.\n\nError: ${error.message || 'Unknown error'}`);
+        if (window.showAlert) {
+            showAlert(`Purchase Error\n\nSomething went wrong. Please try again.\n\nError: ${error.message || 'Unknown error'}`);
+        }
     }
 
     /**

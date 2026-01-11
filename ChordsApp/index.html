@@ -99,8 +99,21 @@
                         <span style="color: #f59e0b;">⚡</span> Intense Scan <span style="color: var(--text-muted); font-size: 0.75rem;">(Pro - better for hard scans)</span>
                     </label>
                     <div class="status-panel" id="analysisStatus" role="status" aria-live="polite">
-                        <span class="status-dot idle"></span>
-                        <span class="status-text">Waiting for an upload…</span>
+                        <div class="scanner-animation">
+                            <div class="scanner-document">
+                                <div class="scanner-page">
+                                    <div class="scanner-lines">
+                                        <span></span><span></span><span></span><span></span><span></span>
+                                    </div>
+                                    <div class="scanner-music-note">♪</div>
+                                </div>
+                                <div class="scanner-beam"></div>
+                            </div>
+                        </div>
+                        <div class="status-content">
+                            <span class="status-dot idle"></span>
+                            <span class="status-text">Waiting for an upload…</span>
+                        </div>
                         <div class="progress-bar-container">
                             <div class="progress-bar-fill"></div>
                         </div>
@@ -130,7 +143,7 @@
 
                     <!-- View Toggle Group -->
                     <div class="header-btn-group view-toggles">
-                        <button id="toggleControlsBtn2" class="header-btn display-toggle active">🎛️ Controls</button>
+                        <button id="toggleControlsBtn2" class="header-btn display-toggle">🎛️ Controls</button>
                         <button id="toggleEditorBtn2" class="header-btn display-toggle">✏️ Editor</button>
                     </div>
 
@@ -222,7 +235,7 @@
                     </div>
                     <div class="side-menu-row">
                         <label class="side-menu-checkbox">
-                            <input type="checkbox" id="sideMenuShowControls" checked>
+                            <input type="checkbox" id="sideMenuShowControls">
                             <span>Show Main Controls</span>
                         </label>
                     </div>
@@ -390,9 +403,13 @@
                     <!-- BPM and Controls -->
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                         <button id="miniMetronomePlay" class="mini-metronome-btn" onclick="metronome.toggle();" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, rgba(234, 179, 8, 0.3) 0%, rgba(249, 115, 22, 0.3) 100%); border: 2px solid rgba(234, 179, 8, 0.5); color: var(--text); font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;">▶</button>
-                        <div style="flex: 1; text-align: center;">
-                            <span id="miniMetronomeBpm" style="font-size: 24px; font-weight: bold; color: #eab308;">120</span>
-                            <span style="font-size: 11px; color: var(--text-muted);"> BPM</span>
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <button onclick="metronome.setBpm(Math.max(20, metronome.bpm - 1));" style="width: 24px; height: 24px; border-radius: 4px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); color: #eab308; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">−</button>
+                            <div style="text-align: center;">
+                                <span id="miniMetronomeBpm" style="font-size: 24px; font-weight: bold; color: #eab308;">120</span>
+                                <span style="font-size: 11px; color: var(--text-muted);"> BPM</span>
+                            </div>
+                            <button onclick="metronome.setBpm(Math.min(300, metronome.bpm + 1));" style="width: 24px; height: 24px; border-radius: 4px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); color: #eab308; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
                         </div>
                         <button id="miniMetronomeMult" onclick="metronome.toggleDoubleTime();" style="padding: 4px 8px; border-radius: 6px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); color: var(--text); font-size: 10px; font-weight: 700; cursor: pointer; min-width: 28px;">x1</button>
                         <button id="miniMetronomeTap" class="mini-metronome-tap" onclick="metronome.tap();" style="padding: 4px 8px; border-radius: 6px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); color: var(--text); font-size: 10px; font-weight: 600; cursor: pointer;">TAP</button>
@@ -650,7 +667,7 @@
                     </div>
                     <!-- Display Toggle Buttons -->
                     <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-                        <button id="toggleControlsBtn" class="ghost-button display-toggle active" style="flex: 1; min-width: 120px; padding: 8px 12px; font-size: 12px; font-weight: 500;">
+                        <button id="toggleControlsBtn" class="ghost-button display-toggle" style="flex: 1; min-width: 120px; padding: 8px 12px; font-size: 12px; font-weight: 500;">
                             <span style="margin-right: 4px;">🎛️</span> Main Controls
                         </button>
                         <button id="toggleEditorBtn" class="ghost-button display-toggle" style="flex: 1; min-width: 120px; padding: 8px 12px; font-size: 12px; font-weight: 500;">
@@ -774,16 +791,16 @@
                 <!-- Pricing badges -->
                 <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap;">
                     <!-- Free tier -->
-                    <div style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 14px 16px; min-width: 120px;">
+                    <div style="background: rgba(255, 255, 255, 0.08); border: 2px solid #999; border-radius: 12px; padding: 14px 16px; min-width: 120px;">
                         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">Free</div>
                         <div style="font-size: 1.3rem; font-weight: 700; color: var(--text);">$0</div>
                         <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">3 scans/month<br>Basic features</div>
                     </div>
                     <!-- Basic tier -->
                     <div style="background: rgba(16, 185, 129, 0.15); border: 2px solid #6ee7b7; border-radius: 12px; padding: 14px 16px; min-width: 120px;">
-                        <div style="font-size: 0.8rem; color: #6ee7b7; margin-bottom: 4px;">Basic</div>
-                        <div style="font-size: 1.3rem; font-weight: 700; color: #10b981;">$0.99<span style="font-size: 0.75rem; font-weight: 400; color: #6ee7b7;">/mo</span></div>
-                        <div style="font-size: 0.7rem; color: #6ee7b7; margin-top: 8px; line-height: 1.4;">20 scans/month<br>Song library</div>
+                        <div style="font-size: 0.8rem; color: var(--text); margin-bottom: 4px;">Basic</div>
+                        <div style="font-size: 1.3rem; font-weight: 700; color: var(--text);">$0.99<span style="font-size: 0.75rem; font-weight: 400; color: var(--text);">/mo</span></div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">20 scans/month<br>Song library</div>
                     </div>
                     <!-- Pro tier -->
                     <div style="background: linear-gradient(135deg, rgba(255, 59, 92, 0.2), rgba(139, 92, 246, 0.2)); border: 2px solid var(--primary); border-radius: 12px; padding: 14px 16px; position: relative; min-width: 120px;">
@@ -841,6 +858,24 @@
 
     <!-- Auth Message Display -->
     <div id="authMessage" style="position: fixed; top: 80px; right: 20px; max-width: 400px; padding: 16px 20px; border-radius: 8px; display: none; z-index: 10000; font-weight: 500;"></div>
+
+    <!-- Beautiful Custom Alert Modal -->
+    <div id="customAlertModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 99999; justify-content: center; align-items: center;">
+        <div style="background: var(--surface); border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; position: relative; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.4); animation: alertSlideIn 0.25s ease-out;">
+            <div id="customAlertIcon" style="text-align: center; font-size: 48px; margin-bottom: 16px;">ℹ️</div>
+            <h3 id="customAlertTitle" style="margin: 0 0 12px 0; color: var(--text); font-size: 18px; text-align: center; font-weight: 600;">Alert</h3>
+            <p id="customAlertMessage" style="color: var(--text-muted); font-size: 14px; line-height: 1.6; text-align: center; margin: 0 0 20px 0; white-space: pre-line;"></p>
+            <button id="customAlertOk" style="width: 100%; padding: 12px 24px; background: linear-gradient(135deg, #8b5cf6, #a855f7); border: none; color: white; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s ease;">OK</button>
+        </div>
+    </div>
+    <style>
+        @keyframes alertSlideIn {
+            from { opacity: 0; transform: scale(0.9) translateY(-20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        #customAlertOk:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4); }
+        #customAlertOk:active { transform: translateY(0); }
+    </style>
 
     <!-- Authentication Modal -->
     <div id="authModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center;">
@@ -1453,6 +1488,11 @@
                 <button class="modal-close" onclick="sessionUI.hideMySessionsModal()">&times;</button>
             </div>
             <div class="modal-body">
+                <div style="margin-bottom: 16px;">
+                    <input type="text" id="sessionsSearchInput" placeholder="🔍 Search sessions by title..."
+                           style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px;"
+                           oninput="filterSessionsList(this.value)">
+                </div>
                 <p style="margin-bottom: 16px; color: var(--text-muted);">Your saved and recent sessions</p>
                 <div id="sessionsList" style="max-height: 400px; overflow-y: auto;">
                     <!-- Sessions will be loaded here -->
@@ -1635,9 +1675,13 @@
             </div>
             <div class="modal-body" style="padding: 20px;">
                 <!-- BPM Display -->
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <div id="metronome-bpm-display" style="font-size: 64px; font-weight: bold; color: var(--primary); line-height: 1;">120</div>
-                    <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">BPM</div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 20px;">
+                    <button onclick="metronome.setBpm(Math.max(20, metronome.bpm - 1));" style="width: 40px; height: 40px; border-radius: 8px; background: rgba(234, 179, 8, 0.15); border: 2px solid rgba(234, 179, 8, 0.4); color: #eab308; font-size: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">−</button>
+                    <div style="text-align: center;">
+                        <div id="metronome-bpm-display" style="font-size: 64px; font-weight: bold; color: var(--primary); line-height: 1;">120</div>
+                        <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">BPM</div>
+                    </div>
+                    <button onclick="metronome.setBpm(Math.min(300, metronome.bpm + 1));" style="width: 40px; height: 40px; border-radius: 8px; background: rgba(234, 179, 8, 0.15); border: 2px solid rgba(234, 179, 8, 0.4); color: #eab308; font-size: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
 
                 <!-- Beat Indicators -->
@@ -2025,12 +2069,12 @@
         <!-- Main Container with Sidebar Layout -->
         <div style="display: flex; height: 100%; width: 100%;">
             <!-- Song Display Area (tap to toggle sidebar) -->
-            <div id="liveModeContent" style="flex: 1; height: 100%; overflow-y: auto; padding: 60px 20px 140px 20px; box-sizing: border-box; cursor: pointer; display: flex; justify-content: center; transition: margin-right 0.3s ease;">
+            <div id="liveModeContent" style="flex: 1; height: 100%; overflow-y: auto; padding: 0 20px 140px 20px; box-sizing: border-box; cursor: pointer; display: flex; justify-content: center; align-items: flex-start; transition: margin-right 0.3s ease;">
                 <div id="liveModeChartDisplay" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.5; white-space: pre-wrap; color: var(--text); margin: 0; max-width: 800px; text-align: left;"></div>
             </div>
 
             <!-- Playlist Sidebar (slide in from right) -->
-            <div id="liveModePlaylistSidebar" style="position: absolute; top: 0; right: -300px; width: 300px; height: 100%; background: var(--card-bg); border-left: 1px solid var(--border); overflow-y: auto; padding: 60px 12px 140px 12px; box-sizing: border-box; transition: right 0.3s ease; z-index: 10002;">
+            <div id="liveModePlaylistSidebar" style="position: absolute; top: 0; right: -300px; width: 300px; height: 100%; background: var(--card-bg); border-left: 1px solid var(--border); overflow-y: auto; padding: 10px 12px 140px 12px; box-sizing: border-box; transition: right 0.3s ease; z-index: 10002;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <h3 style="margin: 0; color: var(--text); font-size: 18px;">Playlist</h3>
                     <button onclick="liveMode.hidePlaylist()" style="background: var(--button-bg); border: none; color: var(--text); width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 18px;">&times;</button>
@@ -2039,17 +2083,6 @@
                     <!-- Playlist items will be loaded here -->
                 </div>
             </div>
-        </div>
-
-        <!-- Top Bar (song info) - auto-hides -->
-        <div id="liveModeTopBar" style="position: absolute; top: 0; left: 0; right: 0; padding: 6px 16px; background: var(--card-bg); display: flex; justify-content: space-between; align-items: center; z-index: 10003; border-bottom: 1px solid var(--border); transition: opacity 0.3s ease;">
-            <div>
-                <div id="liveModeSongName" style="font-size: 14px; font-weight: 600; color: var(--text);"></div>
-                <div id="liveModeSongKey" style="font-size: 12px; color: var(--text-muted);"></div>
-            </div>
-            <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="background: rgba(239, 68, 68, 0.9); border: none; color: white; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
-                Exit
-            </button>
         </div>
 
         <!-- Bottom Controls Bar - auto-hides -->
@@ -2065,6 +2098,29 @@
                 <button onclick="liveMode.transpose(1)" style="padding: 8px 16px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
                     +1
                 </button>
+            </div>
+
+            <!-- Mini Metronome & Pad Controls (compact) -->
+            <div style="display: flex; justify-content: center; gap: 6px; margin-bottom: 6px; align-items: center; flex-wrap: wrap;">
+                <!-- Mini Metronome -->
+                <div style="display: flex; align-items: center; gap: 3px; padding: 3px 6px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px;">
+                    <button id="liveMetroPlay" onclick="window.metronome && window.metronome.toggle()" style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #d97706, #f59e0b); border: none; color: white; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">▶</button>
+                    <button onclick="window.metronome && window.metronome.decreaseBpm()" style="width: 18px; height: 18px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 12px; padding: 0;">−</button>
+                    <span id="liveMetroBpm" style="font-size: 12px; font-weight: 700; color: #f59e0b; min-width: 24px; text-align: center;">120</span>
+                    <button onclick="window.metronome && window.metronome.increaseBpm()" style="width: 18px; height: 18px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 12px; padding: 0;">+</button>
+                </div>
+                <!-- Mini Pad -->
+                <div style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px;">
+                    <button id="livePadStop" onclick="window.padPlayer && window.padPlayer.stopAll()" style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #a855f7); border: none; color: white; font-size: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center;">⏹</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('C')" style="padding: 2px 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">C</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('D')" style="padding: 2px 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">D</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('E')" style="padding: 2px 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">E</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('F')" style="padding: 2px 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">F</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('G')" style="padding: 2px 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">G</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('A')" style="padding: 2px 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">A</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('B')" style="padding: 2px 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">B</button>
+                    <span id="livePadKey" style="font-size: 10px; font-weight: 600; color: #a855f7; min-width: 14px;">--</span>
+                </div>
             </div>
 
             <!-- Display Options -->
@@ -2109,6 +2165,10 @@
                 <!-- MIDI Controller Button -->
                 <button id="liveModeMidiBtn" onclick="openMidiSettings()" style="padding: 7px 12px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s ease;" title="MIDI Controller Settings">
                     🎹 <span id="midiStatus" style="display: none; color: #4ade80; font-size: 11px;">●</span>
+                </button>
+                <!-- Exit Button -->
+                <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="padding: 7px 14px; background: rgba(239, 68, 68, 0.9); border: none; color: white; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                    Exit
                 </button>
             </div>
 
@@ -2215,6 +2275,78 @@
     <!-- MIDI Controller (hands-free control for Live Mode) -->
     <script src="midi-controller.js"></script>
     <script>
+        // Beautiful Custom Alert Function
+        window.showAlert = function(message, options = {}) {
+            const modal = document.getElementById('customAlertModal');
+            const icon = document.getElementById('customAlertIcon');
+            const title = document.getElementById('customAlertTitle');
+            const msgEl = document.getElementById('customAlertMessage');
+            const okBtn = document.getElementById('customAlertOk');
+
+            // Determine icon and title based on message content or options
+            let alertIcon = options.icon || 'ℹ️';
+            let alertTitle = options.title || 'Notice';
+
+            // Auto-detect type from message
+            const msgLower = message.toLowerCase();
+            if (msgLower.includes('error') || msgLower.includes('failed') || msgLower.includes('❌')) {
+                alertIcon = '❌';
+                alertTitle = options.title || 'Error';
+                okBtn.style.background = 'linear-gradient(135deg, #dc2626, #ef4444)';
+            } else if (msgLower.includes('success') || msgLower.includes('welcome') || msgLower.includes('🎉') || msgLower.includes('complete')) {
+                alertIcon = '🎉';
+                alertTitle = options.title || 'Success';
+                okBtn.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+            } else if (msgLower.includes('warning') || msgLower.includes('⚠️')) {
+                alertIcon = '⚠️';
+                alertTitle = options.title || 'Warning';
+                okBtn.style.background = 'linear-gradient(135deg, #d97706, #f59e0b)';
+            } else if (msgLower.includes('pro') || msgLower.includes('upgrade') || msgLower.includes('subscription')) {
+                alertIcon = '⭐';
+                alertTitle = options.title || 'Upgrade Required';
+                okBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #a855f7)';
+            } else if (msgLower.includes('login') || msgLower.includes('log in') || msgLower.includes('sign in')) {
+                alertIcon = '🔐';
+                alertTitle = options.title || 'Authentication Required';
+                okBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #a855f7)';
+            } else if (msgLower.includes('cancel')) {
+                alertIcon = '👋';
+                alertTitle = options.title || 'Cancelled';
+                okBtn.style.background = 'linear-gradient(135deg, #6b7280, #9ca3af)';
+            } else {
+                okBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #a855f7)';
+            }
+
+            // Clean up message (remove emoji prefixes that we're now showing as icons)
+            let cleanMessage = message.replace(/^[🎉❌⚠️🔢⭐🔐👋ℹ️]\s*/g, '').trim();
+
+            icon.textContent = alertIcon;
+            title.textContent = alertTitle;
+            msgEl.textContent = cleanMessage;
+            modal.style.display = 'flex';
+
+            // Focus OK button for keyboard accessibility
+            okBtn.focus();
+
+            return new Promise((resolve) => {
+                const closeModal = () => {
+                    modal.style.display = 'none';
+                    okBtn.removeEventListener('click', closeModal);
+                    document.removeEventListener('keydown', handleKey);
+                    resolve();
+                };
+
+                const handleKey = (e) => {
+                    if (e.key === 'Enter' || e.key === 'Escape') {
+                        closeModal();
+                    }
+                };
+
+                okBtn.addEventListener('click', closeModal);
+                document.addEventListener('keydown', handleKey);
+            });
+        };
+
         // MIDI Settings Modal functions
         function openMidiSettings() {
             const modal = document.getElementById('midiSettingsModal');
@@ -2432,7 +2564,7 @@
                 saveAsImageBtn.addEventListener('click', async function() {
                     const livePreview = document.getElementById('livePreview');
                     if (!livePreview || !livePreview.innerHTML.trim()) {
-                        alert('Nothing to save. Please load or create a chord sheet first.');
+                        showAlert('Nothing to save. Please load or create a chord sheet first.');
                         return;
                     }
 
@@ -2506,7 +2638,7 @@
 
                     } catch (error) {
                         console.error('Error saving image:', error);
-                        alert('Failed to save image. Please try again.');
+                        showAlert('Failed to save image. Please try again.');
                         saveAsImageBtn.innerHTML = originalText;
                         saveAsImageBtn.disabled = false;
                     }
@@ -3295,9 +3427,9 @@
             }
 
             if (sideMenuShowControls) {
-                // Load saved preference or use default (checked)
+                // Load saved preference or use default (hidden)
                 const savedShowControls = localStorage.getItem('chordsapp-show-controls');
-                const showControls = savedShowControls !== null ? savedShowControls === 'true' : true;
+                const showControls = savedShowControls !== null ? savedShowControls === 'true' : false;
                 sideMenuShowControls.checked = showControls;
                 // Always apply visibility on load
                 setMainControlsVisibility(showControls);
