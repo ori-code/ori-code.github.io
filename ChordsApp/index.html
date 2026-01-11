@@ -2106,50 +2106,50 @@
         <!-- Bottom Controls Bar - Redesigned Clean Layout -->
         <div id="liveModeBottomBar" style="position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 12px; background: var(--card-bg); border-top: 1px solid var(--border); z-index: 10003; transition: opacity 0.3s ease;">
 
-            <!-- ROW 1: Key + Font (always on same line) -->
-            <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 6px;">
+            <!-- ROW 1: Key + Font (compact, same line) -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px;">
                 <!-- KEY/TRANSPOSE Group -->
-                <div id="liveModeTransposeRow" style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px;">
-                    <button onclick="liveMode.transpose(-1)" style="width: 28px; height: 28px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">−</button>
-                    <div id="liveModeCurrentKey" style="padding: 6px 14px; background: var(--primary); color: white; border-radius: 6px; font-weight: 700; font-size: 14px; min-width: 36px; text-align: center;">C</div>
-                    <button onclick="liveMode.transpose(1)" style="width: 28px; height: 28px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600;">+</button>
+                <div id="liveModeTransposeRow" style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px;">
+                    <button onclick="liveMode.transpose(-1)" style="width: 22px; height: 22px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; padding: 0;">−</button>
+                    <div id="liveModeCurrentKey" style="padding: 3px 8px; background: var(--primary); color: white; border-radius: 4px; font-weight: 700; font-size: 12px; min-width: 28px; text-align: center;">C</div>
+                    <button onclick="liveMode.transpose(1)" style="width: 22px; height: 22px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; padding: 0;">+</button>
                 </div>
                 <!-- FONT SIZE -->
-                <div style="display: flex; align-items: center; gap: 2px; padding: 4px 6px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 8px;">
-                    <button onclick="liveMode.setFontSize(Math.max(8, liveMode.currentFontSize - 1))" style="width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 16px; padding: 0;">−</button>
-                    <span id="liveModeZoomValue" style="font-size: 12px; font-weight: 600; color: var(--text); min-width: 32px; text-align: center;">14pt</span>
-                    <button onclick="liveMode.setFontSize(Math.min(24, liveMode.currentFontSize + 1))" style="width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 16px; padding: 0;">+</button>
+                <div style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px;">
+                    <button onclick="liveMode.setFontSize(Math.max(8, liveMode.currentFontSize - 1))" style="width: 22px; height: 22px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 14px; padding: 0;">−</button>
+                    <span id="liveModeZoomValue" style="font-size: 11px; font-weight: 600; color: var(--text); min-width: 28px; text-align: center;">14pt</span>
+                    <button onclick="liveMode.setFontSize(Math.min(24, liveMode.currentFontSize + 1))" style="width: 22px; height: 22px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 14px; padding: 0;">+</button>
                 </div>
             </div>
 
             <!-- ROW 2: Audio Controls (Metronome + Pads) -->
-            <div style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 5px;">
                 <!-- METRONOME Group -->
-                <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px;">
-                    <button id="liveMetroPlay" onclick="window.metronome && window.metronome.toggle()" style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #d97706, #f59e0b); border: none; color: white; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center;">▶</button>
-                    <button onclick="window.metronome && window.metronome.decreaseBpm()" style="width: 22px; height: 22px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 14px; padding: 0;">−</button>
-                    <span id="liveMetroBpm" style="font-size: 13px; font-weight: 700; color: #f59e0b; min-width: 30px; text-align: center;">120</span>
-                    <button onclick="window.metronome && window.metronome.increaseBpm()" style="width: 22px; height: 22px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 14px; padding: 0;">+</button>
-                    <select id="liveMetroTimeSig" onchange="window.metronome && window.metronome.setTimeSignature(parseInt(this.value.split('/')[0]), parseInt(this.value.split('/')[1]))" style="padding: 3px 4px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">
+                <div style="display: flex; align-items: center; gap: 3px; padding: 3px 6px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 6px;">
+                    <button id="liveMetroPlay" onclick="window.metronome && window.metronome.toggle()" style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #d97706, #f59e0b); border: none; color: white; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">▶</button>
+                    <button onclick="window.metronome && window.metronome.decreaseBpm()" style="width: 20px; height: 20px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 12px; padding: 0;">−</button>
+                    <span id="liveMetroBpm" style="font-size: 11px; font-weight: 700; color: #f59e0b; min-width: 26px; text-align: center;">120</span>
+                    <button onclick="window.metronome && window.metronome.increaseBpm()" style="width: 20px; height: 20px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 12px; padding: 0;">+</button>
+                    <select id="liveMetroTimeSig" onchange="window.metronome && window.metronome.setTimeSignature(parseInt(this.value.split('/')[0]), parseInt(this.value.split('/')[1]))" style="padding: 2px 3px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: 600;">
                         <option value="4/4">4/4</option>
                         <option value="3/4">3/4</option>
                         <option value="6/8">6/8</option>
                         <option value="2/4">2/4</option>
                     </select>
-                    <button id="liveMetroMult" onclick="window.metronome && window.metronome.toggleDoubleTime()" style="padding: 3px 6px; background: var(--surface); border: 1px solid var(--border); color: #f59e0b; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: 700;">x1</button>
-                    <button onclick="window.metronome && window.metronome.tap()" style="padding: 3px 8px; background: linear-gradient(135deg, #d97706, #f59e0b); border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: 600;">TAP</button>
+                    <button id="liveMetroMult" onclick="window.metronome && window.metronome.toggleDoubleTime()" style="padding: 2px 5px; background: var(--surface); border: 1px solid var(--border); color: #f59e0b; border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 700;">x1</button>
+                    <button onclick="window.metronome && window.metronome.tap()" style="padding: 2px 6px; background: linear-gradient(135deg, #d97706, #f59e0b); border: none; color: white; border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: 600;">TAP</button>
                 </div>
                 <!-- PADS Group -->
-                <div style="display: flex; align-items: center; gap: 3px; padding: 4px 8px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px;">
-                    <button id="livePadStop" onclick="window.padPlayer && window.padPlayer.stopAll()" style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #a855f7); border: none; color: white; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;">⏹</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('C')" style="padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">C</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('D')" style="padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">D</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('E')" style="padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">E</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('F')" style="padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">F</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('G')" style="padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">G</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('A')" style="padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">A</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('B')" style="padding: 4px 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600;">B</button>
-                    <span id="livePadKey" style="font-size: 11px; font-weight: 700; color: #a855f7; min-width: 20px; text-align: center;">--</span>
+                <div style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 6px;">
+                    <button id="livePadStop" onclick="window.padPlayer && window.padPlayer.stopAll()" style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #a855f7); border: none; color: white; font-size: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center;">⏹</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('C')" style="padding: 3px 5px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: 600;">C</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('D')" style="padding: 3px 5px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: 600;">D</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('E')" style="padding: 3px 5px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: 600;">E</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('F')" style="padding: 3px 5px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: 600;">F</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('G')" style="padding: 3px 5px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: 600;">G</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('A')" style="padding: 3px 5px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: 600;">A</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('B')" style="padding: 3px 5px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: 600;">B</button>
+                    <span id="livePadKey" style="font-size: 10px; font-weight: 700; color: #a855f7; min-width: 16px; text-align: center;">--</span>
                 </div>
             </div>
 
