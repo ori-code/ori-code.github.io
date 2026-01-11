@@ -2106,7 +2106,7 @@
         <!-- Bottom Controls Bar - Redesigned Clean Layout -->
         <div id="liveModeBottomBar" style="position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 12px; background: var(--card-bg); border-top: 1px solid var(--border); z-index: 10003; transition: opacity 0.3s ease;">
 
-            <!-- ROW 1: Key + Font + Exit (always on same line) -->
+            <!-- ROW 1: Key + Font (always on same line) -->
             <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 6px;">
                 <!-- KEY/TRANSPOSE Group -->
                 <div id="liveModeTransposeRow" style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px;">
@@ -2120,8 +2120,6 @@
                     <span id="liveModeZoomValue" style="font-size: 12px; font-weight: 600; color: var(--text); min-width: 32px; text-align: center;">14pt</span>
                     <button onclick="liveMode.setFontSize(Math.min(24, liveMode.currentFontSize + 1))" style="width: 24px; height: 24px; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 16px; padding: 0;">+</button>
                 </div>
-                <!-- EXIT -->
-                <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="padding: 8px 16px; background: linear-gradient(135deg, #dc2626, #ef4444); border: none; color: white; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Exit</button>
             </div>
 
             <!-- ROW 2: Audio Controls (Metronome + Pads) -->
@@ -2186,6 +2184,7 @@
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <button id="liveModeFullOverview" onclick="liveMode.toggleFullOverview()" style="padding: 6px 10px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;">📄 Overview</button>
                     <button id="liveModeMidiBtn" onclick="openMidiSettings()" style="padding: 6px 10px; background: var(--button-bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500;" title="MIDI Controller">🎹 <span id="midiStatus" style="display: none; color: #4ade80; font-size: 10px;">●</span></button>
+                    <button id="liveModeCloseBtn" onclick="liveMode.exit()" style="padding: 6px 12px; background: linear-gradient(135deg, #dc2626, #ef4444); border: none; color: white; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">Exit</button>
                 </div>
 
                 <!-- SESSION CONTROLS (shown when in session) -->
