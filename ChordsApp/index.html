@@ -877,6 +877,24 @@
         #customAlertOk:active { transform: translateY(0); }
     </style>
 
+    <!-- Beautiful Custom Confirm Modal -->
+    <div id="customConfirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 99999; justify-content: center; align-items: center;">
+        <div style="background: var(--surface); border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; position: relative; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.4); animation: alertSlideIn 0.25s ease-out;">
+            <div id="customConfirmIcon" style="text-align: center; font-size: 48px; margin-bottom: 16px;"></div>
+            <h3 id="customConfirmTitle" style="margin: 0 0 12px 0; color: var(--text); font-size: 18px; text-align: center; font-weight: 600;">Confirm</h3>
+            <p id="customConfirmMessage" style="color: var(--text-muted); font-size: 14px; line-height: 1.6; text-align: center; margin: 0 0 24px 0; white-space: pre-line;"></p>
+            <div style="display: flex; gap: 12px;">
+                <button id="customConfirmCancel" style="flex: 1; padding: 12px 24px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s ease;">Cancel</button>
+                <button id="customConfirmOk" style="flex: 1; padding: 12px 24px; background: linear-gradient(135deg, #dc2626, #ef4444); border: none; color: white; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s ease;">Remove</button>
+            </div>
+        </div>
+    </div>
+    <style>
+        #customConfirmCancel:hover { background: var(--hover-bg); }
+        #customConfirmOk:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4); }
+        #customConfirmOk:active, #customConfirmCancel:active { transform: translateY(0); }
+    </style>
+
     <!-- Authentication Modal -->
     <div id="authModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center;">
         <div style="background: var(--surface); border-radius: 20px; padding: 40px; max-width: 450px; width: 90%; position: relative; border: 1px solid rgba(255,255,255,0.1);">
@@ -2343,6 +2361,55 @@
                 };
 
                 okBtn.addEventListener('click', closeModal);
+                document.addEventListener('keydown', handleKey);
+            });
+        };
+
+        // Beautiful Custom Confirm Function
+        window.showConfirm = function(message, options = {}) {
+            const modal = document.getElementById('customConfirmModal');
+            const icon = document.getElementById('customConfirmIcon');
+            const title = document.getElementById('customConfirmTitle');
+            const msgEl = document.getElementById('customConfirmMessage');
+            const okBtn = document.getElementById('customConfirmOk');
+            const cancelBtn = document.getElementById('customConfirmCancel');
+
+            // Set icon and title
+            icon.textContent = options.icon || '🗑️';
+            title.textContent = options.title || 'Confirm';
+            msgEl.textContent = message;
+            okBtn.textContent = options.confirmText || 'Remove';
+            cancelBtn.textContent = options.cancelText || 'Cancel';
+
+            // Set button style based on type
+            if (options.type === 'danger' || !options.type) {
+                okBtn.style.background = 'linear-gradient(135deg, #dc2626, #ef4444)';
+            } else if (options.type === 'warning') {
+                okBtn.style.background = 'linear-gradient(135deg, #d97706, #f59e0b)';
+            } else {
+                okBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #a855f7)';
+            }
+
+            modal.style.display = 'flex';
+            cancelBtn.focus();
+
+            return new Promise((resolve) => {
+                const cleanup = () => {
+                    modal.style.display = 'none';
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    document.removeEventListener('keydown', handleKey);
+                };
+
+                const handleOk = () => { cleanup(); resolve(true); };
+                const handleCancel = () => { cleanup(); resolve(false); };
+                const handleKey = (e) => {
+                    if (e.key === 'Escape') handleCancel();
+                    if (e.key === 'Enter') handleOk();
+                };
+
+                okBtn.addEventListener('click', handleOk);
+                cancelBtn.addEventListener('click', handleCancel);
                 document.addEventListener('keydown', handleKey);
             });
         };

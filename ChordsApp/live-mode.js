@@ -1506,10 +1506,16 @@ const liveMode = {
         const song = playlist[songId];
         const songName = song?.name || song?.title || 'this song';
 
-        // Confirm deletion
-        if (!confirm(`Remove "${songName}" from playlist?`)) {
-            return;
-        }
+        // Beautiful confirm dialog
+        const confirmed = await window.showConfirm(`Remove "${songName}" from playlist?`, {
+            icon: '🗑️',
+            title: 'Remove Song',
+            confirmText: 'Remove',
+            cancelText: 'Keep',
+            type: 'danger'
+        });
+
+        if (!confirmed) return;
 
         try {
             await window.sessionManager.removeSongFromPlaylist(songId);
