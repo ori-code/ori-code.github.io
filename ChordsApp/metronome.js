@@ -361,6 +361,14 @@ const metronome = {
             miniMultBtn.classList.toggle('active', this.multiplier !== 1);
             miniMultBtn.classList.toggle('pending', this.pendingMultiplier !== null);
         }
+
+        // Live mode multiplier button
+        const liveMultBtn = document.getElementById('liveMetroMult');
+        if (liveMultBtn) {
+            const displayMult = this.pendingMultiplier !== null ? this.pendingMultiplier : this.multiplier;
+            liveMultBtn.textContent = displayMult === 0.5 ? '÷2' : `x${displayMult}`;
+            liveMultBtn.style.color = this.multiplier !== 1 ? '#22c55e' : '#f59e0b';
+        }
     },
 
     /**
@@ -379,6 +387,13 @@ const metronome = {
         if (miniPlayBtn) {
             miniPlayBtn.innerHTML = this.isPlaying ? '⏹' : '▶';
             miniPlayBtn.classList.toggle('playing', this.isPlaying);
+        }
+
+        // Live mode play button
+        const livePlayBtn = document.getElementById('liveMetroPlay');
+        if (livePlayBtn) {
+            livePlayBtn.innerHTML = this.isPlaying ? '⏹' : '▶';
+            livePlayBtn.style.background = this.isPlaying ? 'linear-gradient(135deg, #dc2626, #ef4444)' : 'linear-gradient(135deg, #d97706, #f59e0b)';
         }
     },
 
@@ -409,6 +424,12 @@ const metronome = {
         if (miniBpmSlider) {
             miniBpmSlider.value = this.bpm;
         }
+
+        // Live mode BPM display
+        const liveBpmDisplay = document.getElementById('liveMetroBpm');
+        if (liveBpmDisplay) {
+            liveBpmDisplay.textContent = this.bpm;
+        }
     },
 
     /**
@@ -418,6 +439,12 @@ const metronome = {
         const tsDisplay = document.getElementById('metronome-time-signature');
         if (tsDisplay) {
             tsDisplay.textContent = `${this.beatsPerMeasure}/${this.beatUnit}`;
+        }
+
+        // Live mode time signature select
+        const liveTimeSig = document.getElementById('liveMetroTimeSig');
+        if (liveTimeSig) {
+            liveTimeSig.value = `${this.beatsPerMeasure}/${this.beatUnit}`;
         }
     },
 

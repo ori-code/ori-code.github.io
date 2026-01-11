@@ -1423,11 +1423,13 @@ const liveMode = {
                     const displayTimeSig = song.timeSignature || '4/4';
 
                     // Info row when locked (display only), controls row when unlocked
+                    const metroIndicator = liveMode.songMetronomeEnabled[song.id] ? '<span style="color: #10b981; font-weight: bold;"> ✓</span>' : '';
+                    const padIndicator = padEnabled ? '<span style="color: #10b981; font-weight: bold;"> ✓</span>' : '';
                     const controlsRow = isLocked ? `
                                     <div style="display: flex; gap: 10px; margin-top: 3px; font-size: 11px; color: var(--text-muted);">
-                                        <span>🎵 ${displayBpm}</span>
+                                        <span>🎵 ${displayBpm}${metroIndicator}</span>
                                         <span>⏱ ${displayTimeSig}</span>
-                                        <span>🎹 ${displayKey}</span>
+                                        <span>🎹 ${displayKey}${padIndicator}</span>
                                     </div>` : `
                                     <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
                                         <label onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
