@@ -1655,10 +1655,13 @@ const liveMode = {
             }
 
             // Add to playlist
-            await window.sessionManager.addToPlaylist(songId, {
+            await window.sessionManager.addSongToPlaylist({
+                id: songId,
                 name: songData.name || 'Untitled',
+                title: songData.name || 'Untitled',
                 content: songData.content || '',
                 originalKey: songData.originalKey || songData.key || '',
+                key: songData.originalKey || songData.key || '',
                 bpm: songData.bpm || null
             });
 
