@@ -1601,23 +1601,23 @@
 
     <!-- Pads Modal -->
     <div id="padsModal" class="modal-overlay">
-        <div class="modal-container" style="max-width: 500px; padding: 0; overflow: hidden;">
-            <div class="modal-header" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%); border-bottom: 1px solid rgba(139, 92, 246, 0.3); border-radius: 22px 22px 0 0;">
-                <h3 style="display: flex; align-items: center; gap: 8px;">
+        <div class="modal-container" style="max-width: 340px; padding: 0; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%); border-bottom: 1px solid rgba(139, 92, 246, 0.3); border-radius: 22px 22px 0 0; padding: 12px 16px;">
+                <h3 style="display: flex; align-items: center; gap: 8px; font-size: 15px;">
                     <span>🎹</span> Worship Pads
                 </h3>
                 <button class="modal-close" id="padsModalClose">&times;</button>
             </div>
-            <div class="modal-body" style="padding: 16px;">
+            <div class="modal-body" style="padding: 12px;">
                 <!-- Loading indicator -->
-                <div id="padsLoading" style="text-align: center; padding: 40px; display: none;">
-                    <div style="font-size: 32px; margin-bottom: 12px;">🎵</div>
-                    <div style="color: var(--text-muted);">Loading pad sounds...</div>
-                    <div id="padsLoadingProgress" style="margin-top: 8px; color: var(--primary);">0/12</div>
+                <div id="padsLoading" style="text-align: center; padding: 30px; display: none;">
+                    <div style="font-size: 28px; margin-bottom: 10px;">🎵</div>
+                    <div style="color: var(--text-muted); font-size: 13px;">Loading pad sounds...</div>
+                    <div id="padsLoadingProgress" style="margin-top: 6px; color: var(--primary); font-size: 12px;">0/12</div>
                 </div>
 
                 <!-- Pad Grid -->
-                <div id="padsGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                <div id="padsGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
                     <button id="pad-key-C" class="pad-key-btn" onclick="padPlayer.toggle('C')">C</button>
                     <button id="pad-key-Csharp" class="pad-key-btn" onclick="padPlayer.toggle('Csharp')">C#</button>
                     <button id="pad-key-D" class="pad-key-btn" onclick="padPlayer.toggle('D')">D</button>
@@ -1633,8 +1633,8 @@
                 </div>
 
                 <!-- Audio Controls -->
-                <div style="margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 8px;">
-                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">Pads</div>
+                <div style="margin-top: 12px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Pads</div>
 
                     <!-- Crossfade -->
                     <div class="pad-control-row">
@@ -1674,40 +1674,40 @@
                 </div>
 
                 <!-- Currently Playing -->
-                <div id="padsNowPlaying" style="margin-top: 16px; text-align: center; display: none;">
-                    <span style="color: var(--text-muted); font-size: 12px;">Now playing: </span>
-                    <span id="padsNowPlayingKey" style="color: #8b5cf6; font-weight: 600;"></span>
+                <div id="padsNowPlaying" style="margin-top: 10px; text-align: center; display: none;">
+                    <span style="color: var(--text-muted); font-size: 11px;">Now playing: </span>
+                    <span id="padsNowPlayingKey" style="color: #8b5cf6; font-weight: 600; font-size: 12px;"></span>
                 </div>
             </div>
-            <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
-                <button class="ghost-button" id="padsStopAll" onclick="padPlayer.stopAll()">⏹️ Stop All</button>
-                <button class="ghost-button" onclick="document.getElementById('padsModal').style.display='none'">Close</button>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1); padding: 10px 16px;">
+                <button class="ghost-button" id="padsStopAll" onclick="padPlayer.stopAll()" style="font-size: 12px; padding: 6px 12px;">⏹️ Stop All</button>
+                <button class="ghost-button" onclick="document.getElementById('padsModal').style.display='none'" style="font-size: 12px; padding: 6px 12px;">Close</button>
             </div>
         </div>
     </div>
 
     <!-- Metronome Modal -->
     <div id="metronomeModal" class="modal-overlay">
-        <div class="modal-container" style="max-width: 400px; padding: 0; overflow: hidden;">
-            <div class="modal-header" style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(249, 115, 22, 0.2) 100%); border-bottom: 1px solid rgba(234, 179, 8, 0.3); border-radius: 22px 22px 0 0;">
-                <h3 style="display: flex; align-items: center; gap: 8px;">
+        <div class="modal-container" style="max-width: 300px; padding: 0; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(249, 115, 22, 0.2) 100%); border-bottom: 1px solid rgba(234, 179, 8, 0.3); border-radius: 22px 22px 0 0; padding: 12px 16px;">
+                <h3 style="display: flex; align-items: center; gap: 8px; font-size: 15px;">
                     <span>🎵</span> Metronome
                 </h3>
                 <button class="modal-close" id="metronomeModalClose">&times;</button>
             </div>
-            <div class="modal-body" style="padding: 20px;">
+            <div class="modal-body" style="padding: 12px;">
                 <!-- BPM Display -->
-                <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 20px;">
-                    <button onclick="metronome.setBpm(Math.max(20, metronome.bpm - 1));" style="width: 40px; height: 40px; border-radius: 8px; background: rgba(234, 179, 8, 0.15); border: 2px solid rgba(234, 179, 8, 0.4); color: #eab308; font-size: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">−</button>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px;">
+                    <button onclick="metronome.setBpm(Math.max(20, metronome.bpm - 1));" style="width: 32px; height: 32px; border-radius: 6px; background: rgba(234, 179, 8, 0.15); border: 2px solid rgba(234, 179, 8, 0.4); color: #eab308; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">−</button>
                     <div style="text-align: center;">
-                        <div id="metronome-bpm-display" style="font-size: 64px; font-weight: bold; color: var(--primary); line-height: 1;">120</div>
-                        <div style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">BPM</div>
+                        <div id="metronome-bpm-display" style="font-size: 42px; font-weight: bold; color: var(--primary); line-height: 1;">120</div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">BPM</div>
                     </div>
-                    <button onclick="metronome.setBpm(Math.min(300, metronome.bpm + 1));" style="width: 40px; height: 40px; border-radius: 8px; background: rgba(234, 179, 8, 0.15); border: 2px solid rgba(234, 179, 8, 0.4); color: #eab308; font-size: 24px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                    <button onclick="metronome.setBpm(Math.min(300, metronome.bpm + 1));" style="width: 32px; height: 32px; border-radius: 6px; background: rgba(234, 179, 8, 0.15); border: 2px solid rgba(234, 179, 8, 0.4); color: #eab308; font-size: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
                 </div>
 
                 <!-- Beat Indicators -->
-                <div id="metronome-beats" style="display: flex; justify-content: center; gap: 12px; margin-bottom: 24px;">
+                <div id="metronome-beats" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 12px;">
                     <div class="beat-dot accent" data-beat="0"></div>
                     <div class="beat-dot" data-beat="1"></div>
                     <div class="beat-dot" data-beat="2"></div>
@@ -1715,11 +1715,11 @@
                 </div>
 
                 <!-- BPM Slider -->
-                <div style="margin-bottom: 20px;">
+                <div style="margin-bottom: 12px;">
                     <input type="range" id="metronome-bpm-slider" min="20" max="300" value="120"
                            style="width: 100%; accent-color: #eab308;"
                            oninput="metronome.setBpm(this.value)">
-                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 2px;">
                         <span>20</span>
                         <span>160</span>
                         <span>300</span>
@@ -1727,54 +1727,54 @@
                 </div>
 
                 <!-- Tap Tempo Button -->
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <button id="metronome-tap-btn" class="metronome-tap-btn" onclick="metronome.tap()">
+                <div style="text-align: center; margin-bottom: 12px;">
+                    <button id="metronome-tap-btn" class="metronome-tap-btn" onclick="metronome.tap()" style="padding: 8px 20px; font-size: 12px;">
                         TAP TEMPO
                     </button>
                 </div>
 
                 <!-- Time Signature -->
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Time Signature</label>
-                    <div style="display: flex; gap: 8px; justify-content: center;">
-                        <button class="metronome-ts-btn active" data-beats="4" data-unit="4" onclick="selectTimeSignature(this)">4/4</button>
-                        <button class="metronome-ts-btn" data-beats="3" data-unit="4" onclick="selectTimeSignature(this)">3/4</button>
-                        <button class="metronome-ts-btn" data-beats="6" data-unit="8" onclick="selectTimeSignature(this)">6/8</button>
-                        <button class="metronome-ts-btn" data-beats="2" data-unit="4" onclick="selectTimeSignature(this)">2/4</button>
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 6px;">Time Signature</label>
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <button class="metronome-ts-btn active" data-beats="4" data-unit="4" onclick="selectTimeSignature(this)" style="padding: 4px 10px; font-size: 11px;">4/4</button>
+                        <button class="metronome-ts-btn" data-beats="3" data-unit="4" onclick="selectTimeSignature(this)" style="padding: 4px 10px; font-size: 11px;">3/4</button>
+                        <button class="metronome-ts-btn" data-beats="6" data-unit="8" onclick="selectTimeSignature(this)" style="padding: 4px 10px; font-size: 11px;">6/8</button>
+                        <button class="metronome-ts-btn" data-beats="2" data-unit="4" onclick="selectTimeSignature(this)" style="padding: 4px 10px; font-size: 11px;">2/4</button>
                     </div>
                 </div>
 
                 <!-- Sound Type -->
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Sound</label>
-                    <div style="display: flex; gap: 8px; justify-content: center;">
-                        <button class="metronome-sound-btn active" data-sound="click" onclick="selectMetronomeSound(this)">Click</button>
-                        <button class="metronome-sound-btn" data-sound="beep" onclick="selectMetronomeSound(this)">Beep</button>
-                        <button class="metronome-sound-btn" data-sound="wood" onclick="selectMetronomeSound(this)">Wood</button>
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 6px;">Sound</label>
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <button class="metronome-sound-btn active" data-sound="click" onclick="selectMetronomeSound(this)" style="padding: 4px 10px; font-size: 11px;">Click</button>
+                        <button class="metronome-sound-btn" data-sound="beep" onclick="selectMetronomeSound(this)" style="padding: 4px 10px; font-size: 11px;">Beep</button>
+                        <button class="metronome-sound-btn" data-sound="wood" onclick="selectMetronomeSound(this)" style="padding: 4px 10px; font-size: 11px;">Wood</button>
                     </div>
                 </div>
 
                 <!-- Speed Multiplier -->
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Speed</label>
-                    <div style="display: flex; gap: 8px; justify-content: center;">
-                        <button class="metronome-mult-btn" data-mult="0.5" onclick="metronome.setMultiplier(0.5)">÷2</button>
-                        <button class="metronome-mult-btn active" data-mult="1" onclick="metronome.setMultiplier(1)">x1</button>
-                        <button class="metronome-mult-btn" data-mult="2" onclick="metronome.setMultiplier(2)">x2</button>
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 6px;">Speed</label>
+                    <div style="display: flex; gap: 6px; justify-content: center;">
+                        <button class="metronome-mult-btn" data-mult="0.5" onclick="metronome.setMultiplier(0.5)" style="padding: 4px 10px; font-size: 11px;">÷2</button>
+                        <button class="metronome-mult-btn active" data-mult="1" onclick="metronome.setMultiplier(1)" style="padding: 4px 10px; font-size: 11px;">x1</button>
+                        <button class="metronome-mult-btn" data-mult="2" onclick="metronome.setMultiplier(2)" style="padding: 4px 10px; font-size: 11px;">x2</button>
                     </div>
                 </div>
 
                 <!-- Volume -->
                 <div>
-                    <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Volume</label>
+                    <label style="display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 6px;">Volume</label>
                     <input type="range" id="metronome-volume" min="0" max="100" value="70"
                            style="width: 100%; accent-color: #eab308;"
                            oninput="metronome.setVolume(this.value / 100)">
                 </div>
             </div>
-            <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
-                <button class="ghost-button" id="metronome-play-btn" onclick="metronome.toggle()" style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.3) 0%, rgba(249, 115, 22, 0.3) 100%); border-color: rgba(234, 179, 8, 0.5);">▶️ Play</button>
-                <button class="ghost-button" onclick="document.getElementById('metronomeModal').style.display='none'">Close</button>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1); padding: 10px 16px;">
+                <button class="ghost-button" id="metronome-play-btn" onclick="metronome.toggle()" style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.3) 0%, rgba(249, 115, 22, 0.3) 100%); border-color: rgba(234, 179, 8, 0.5); font-size: 12px; padding: 6px 14px;">▶️ Play</button>
+                <button class="ghost-button" onclick="document.getElementById('metronomeModal').style.display='none'" style="font-size: 12px; padding: 6px 14px;">Close</button>
             </div>
         </div>
     </div>
@@ -1843,17 +1843,18 @@
     <style>
         .pad-key-btn {
             aspect-ratio: 1;
-            border: 2px solid rgba(139, 92, 246, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.3);
             background: rgba(139, 92, 246, 0.1);
             color: var(--text);
-            font-size: 18px;
+            font-size: 14px;
             font-weight: 600;
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
+            min-height: 50px;
         }
 
         .pad-key-btn:hover {
@@ -1958,8 +1959,8 @@
         .pad-control-row {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
         .pad-control-row:last-child {
@@ -1968,8 +1969,8 @@
 
         .pad-control-label {
             color: var(--text);
-            font-size: 14px;
-            min-width: 80px;
+            font-size: 11px;
+            min-width: 60px;
         }
 
         .pad-slider {
