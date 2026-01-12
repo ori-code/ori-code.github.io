@@ -91,8 +91,9 @@ class PayPalSubscriptionManager {
             }
 
             // Load PayPal SDK with environment-specific client ID
+            // Note: Don't specify intent to allow both subscriptions AND one-time orders
             const script = document.createElement('script');
-            script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&intent=subscription&currency=USD`;
+            script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&currency=USD`;
             console.log(`Loading PayPal SDK for ${PAYPAL_ENV} environment`);
 
             script.onload = () => {
@@ -341,7 +342,11 @@ class PayPalSubscriptionManager {
             onCancel: () => {
                 console.log('Purchase cancelled by user');
             }
-        }).render(`#${containerId}`);
+        }).render(`#${containerId}`).then(() => {
+            console.log('Book purchase button rendered successfully');
+        }).catch(err => {
+            console.error('Failed to render Book purchase button:', err);
+        });
     }
 
     /**
@@ -413,7 +418,11 @@ class PayPalSubscriptionManager {
             onCancel: () => {
                 console.log('Scan pack purchase cancelled by user');
             }
-        }).render(`#${containerId}`);
+        }).render(`#${containerId}`).then(() => {
+            console.log(`Scan pack button (${packType}) rendered successfully`);
+        }).catch(err => {
+            console.error(`Failed to render scan pack button (${packType}):`, err);
+        });
     }
 
     /**
