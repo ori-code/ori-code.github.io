@@ -65,6 +65,11 @@
           "$participantUid": {
             ".write": "auth != null && $participantUid === auth.uid"
           }
+        },
+        "playerPreferences": {
+          "$uid": {
+            ".write": "auth != null && $uid === auth.uid"
+          }
         }
       }
     }

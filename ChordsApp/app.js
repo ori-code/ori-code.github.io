@@ -161,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nashvilleMode = document.getElementById('nashvilleMode');
     const timeSignature = document.getElementById('timeSignature');
     const bpmInput = document.getElementById('bpmInput');
+    const songDuration = document.getElementById('songDuration');
     const keyAnalysisDiv = document.getElementById('keyAnalysis');
     const keyAnalysisText = document.getElementById('keyAnalysisText');
     const proEditorToggle = document.getElementById('proEditorToggle');
@@ -866,6 +867,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Expose getter for current transpose steps (for song-library.js save)
     window.getCurrentTransposeSteps = () => currentTransposeSteps;
 
+    // Global function to update duration in editor (called from HTML onchange)
+    window.updateDurationInEditor = () => {
+        const songDurationInput = document.getElementById('songDuration');
+        if (songDurationInput) {
+            // Trigger the change event to update the editor
+            songDurationInput.dispatchEvent(new Event('change'));
+        }
+    };
+
     // Normalize content: Convert hybrid output to clean edit format
     // Input: Hybrid format with old (Title:, Key: | BPM:) and v4 ({subtitle:}) mixed
     // Output: Clean format with Title on line 1, metadata comma-separated on line 2
@@ -975,8 +985,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (/^(Artist|Subtitle|By):\s*.+/i.test(trimmed)) continue;
 
             // Skip v4 metadata directives (but keep {c:} section markers)
-            // Note: {layout: X} is parsed for column count but not displayed
-            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo|layout):/i.test(trimmed)) continue;
+            // Note: {layout: X} and {duration: X} are parsed but not displayed
+            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo|layout|duration):/i.test(trimmed)) continue;
 
             // Convert {c: Section:} to just Section: for clean display (Title Case)
             if (/^\{c:\s*([^}]+)\}/i.test(trimmed)) {
@@ -1292,6 +1302,19 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 }
             } else if (timeSignature && !timeSignature.value) {
                 timeSignature.value = '4/4';
+            }
+
+            // Extract and set Duration from transcription
+            // Look for {duration: M:SS} directive
+            const durationDirectiveMatch = cleanedTranscription.match(/\{duration:\s*(\d+:\d{2})\}/i);
+            const songDurationInput = document.getElementById('songDuration');
+            if (durationDirectiveMatch && durationDirectiveMatch[1]) {
+                const detectedDuration = durationDirectiveMatch[1];
+                console.log('✅ Duration detected from directive:', detectedDuration);
+                if (songDurationInput) songDurationInput.value = detectedDuration;
+            } else if (songDurationInput) {
+                // Default to 5:00 if not detected
+                songDurationInput.value = '5:00';
             }
 
             updateLivePreview();
@@ -2146,11 +2169,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         //     autoAdjustLayoutAfterTranspose(pageCountBeforeTranspose);
         // }, 200);
 
-        // Save local transpose preference if in a session
-        if (window.sessionManager && window.sessionManager.activeSession && currentSessionSongId) {
-            window.sessionManager.setLocalTranspose(currentSessionSongId, currentTransposeSteps);
-            console.log(`🎵 Saved local transpose for session: ${currentTransposeSteps} steps`);
-        }
+        // Transpose is now auto-saved via live-mode.js saveSongPreferences()
+        // to sessions/{sessionId}/playerPreferences/{uid}/{songId}/transposeSteps
 
         console.log('═══════════════════════════════════════');
         console.log('✅ TRANSPOSE COMPLETE');
@@ -2353,11 +2373,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Update the live preview
             updateLivePreview();
 
-            // Save reset to local transpose preference if in a session
-            if (window.sessionManager && window.sessionManager.activeSession && currentSessionSongId) {
-                window.sessionManager.setLocalTranspose(currentSessionSongId, 0);
-                console.log('🎵 Reset local transpose for session');
-            }
+            // Transpose reset is auto-saved via live-mode.js when user transposes
         });
     }
 
@@ -2997,8 +3013,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
 
             // Skip directive lines (already processed as metadata)
-            // Note: {layout: X} is also skipped - it's only used for column count detection
-            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo|layout):/i.test(trimmedLine)) {
+            // Note: {layout: X} and {duration: X} are also skipped - only used for detection
+            if (/^\{(?:title|subtitle|artist|key|tempo|time|capo|layout|duration):/i.test(trimmedLine)) {
                 continue;
             }
 
@@ -4879,6 +4895,63 @@ Our [Em7]hearts will cry, these bones will [D]sing
         });
     }
 
+    // Handle song duration input change
+    if (songDuration) {
+        songDuration.addEventListener('change', () => {
+            const newDuration = songDuration.value;
+            if (!newDuration || !visualEditor) return;
+
+            // Update the duration in the visual editor content
+            let content = visualEditor.value;
+
+            // Replace existing {duration: ...} directive
+            const durationRegex = /\{duration:\s*[^}]+\}/i;
+            if (durationRegex.test(content)) {
+                content = content.replace(durationRegex, `{duration: ${newDuration}}`);
+            } else {
+                // Add after {tempo: ...} or {time: ...} or at start of metadata
+                const lines = content.split('\n');
+                let inserted = false;
+
+                for (let i = 0; i < lines.length; i++) {
+                    if (lines[i].match(/\{tempo:/i) || lines[i].match(/\{time:/i)) {
+                        lines.splice(i + 1, 0, `{duration: ${newDuration}}`);
+                        inserted = true;
+                        break;
+                    }
+                }
+
+                if (!inserted) {
+                    // Find first directive and insert after
+                    for (let i = 0; i < lines.length; i++) {
+                        if (lines[i].match(/^\{[a-z]+:/i)) {
+                            lines.splice(i + 1, 0, `{duration: ${newDuration}}`);
+                            inserted = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!inserted) {
+                    // Add at start
+                    lines.unshift(`{duration: ${newDuration}}`);
+                }
+
+                content = lines.join('\n');
+            }
+
+            visualEditor.value = content;
+            updateSongBookFromVisual();
+            updateLivePreview();
+
+            // Sync with Live Mode auto-scroll if active
+            if (window.liveMode && window.liveMode.isActive) {
+                const seconds = window.liveMode.parseTimeToSeconds(newDuration);
+                window.liveMode.setAutoScrollDuration(seconds);
+            }
+        });
+    }
+
     // Handle show/hide badges checkbox
     const showBadgesCheckbox = document.getElementById('showBadges');
     if (showBadgesCheckbox) {
@@ -5990,12 +6063,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Regenerate preview first
         updateSongBookFromVisual();
 
-        // Apply user's local transpose preference for this song (if any)
-        const localTranspose = window.sessionManager.getLocalTranspose(songData.songId);
-        if (localTranspose !== 0) {
-            console.log(`🎵 Applying user's local transpose: ${localTranspose} steps`);
-            applyTranspose(localTranspose);
-        }
+        // Per-song preferences (transpose, etc.) are now handled by Live Mode
+        // via loadSongPreferences() in updateFromBroadcast()
 
         // If Live Mode is active, also update it
         console.log('📺 Checking Live Mode - exists:', !!window.liveMode, 'isActive:', window.liveMode?.isActive);

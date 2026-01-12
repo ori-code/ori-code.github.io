@@ -14,19 +14,32 @@ const liveMode = {
     displayMode: 'chords',
     showBadges: true,
     showBorders: true,
+    showTimeline: false, // Hidden by default, auto-shows when auto-scroll is ON
     autoHidePlaylist: true,
     showPlaylistWithControls: false,
     fullOverviewMode: false,
     savedDisplaySettings: null,
     currentColumnLayout: 2,
     currentFontSize: 14,
-    isSingerMode: false, // Singer mode: lyrics only, limited controls
+    isSingerMode: false, // Singer mode: chords + lyrics, limited controls (no transpose)
     isPublicViewMode: false, // Public view mode: viewing shared public song
     songMetronomeEnabled: {}, // Track which songs have metronome enabled { songId: true/false }
     songPadEnabled: {}, // Track which songs have pad enabled { songId: true/false }
     songPadKey: {}, // Track selected pad key per song { songId: 'C' | 'D' | etc. }
+    songAutoScrollEnabled: {}, // Track which songs have auto-scroll enabled { songId: true/false }
     playlistLocked: false, // When true, songs can only be changed via playlist clicks
     miniAudioSyncInterval: null, // Interval for syncing mini audio controls
+
+    // Auto-scroll state
+    autoScrollEnabled: false,
+    autoScrollPaused: false,
+    autoScrollDuration: 180, // Default 3 minutes in seconds
+    autoScrollStartTime: null,
+    autoScrollPausedAt: null,
+    autoScrollProgress: 0, // 0-1 progress
+    autoScrollAnimationId: null,
+    autoScrollManualOverride: false,
+    lastManualScrollTime: 0,
 
     /**
      * Save Live Mode preferences to Firebase
@@ -41,6 +54,7 @@ const liveMode = {
             displayMode: this.displayMode,
             showBadges: this.showBadges,
             showBorders: this.showBorders,
+            showTimeline: this.showTimeline,
             autoHidePlaylist: this.autoHidePlaylist,
             savedAt: Date.now()
         };
@@ -70,11 +84,26 @@ const liveMode = {
     },
 
     /**
-     * Save per-song preferences to Firebase (fontSize, transpose, columns)
+     * Save per-song preferences to Firebase (session-based)
+     * Stored at: sessions/{sessionId}/playerPreferences/{uid}/{songId}/
      */
     async saveSongPreferences(songId, prefs = {}) {
         const user = window.auth?.currentUser;
-        if (!user || !songId) return;
+        const sessionId = window.sessionManager?.activeSession;
+
+        // Debug logging for troubleshooting
+        if (!user) {
+            console.warn('⚠️ saveSongPreferences: No authenticated user');
+            return;
+        }
+        if (!songId) {
+            console.warn('⚠️ saveSongPreferences: No songId provided');
+            return;
+        }
+        if (!sessionId) {
+            console.warn('⚠️ saveSongPreferences: No active session');
+            return;
+        }
 
         try {
             // Load existing preferences first to merge
@@ -82,26 +111,36 @@ const liveMode = {
             const merged = { ...existing, ...prefs, savedAt: Date.now() };
 
             await firebase.database()
-                .ref(`users/${user.uid}/liveModePreferences/songPreferences/${songId}`)
+                .ref(`sessions/${sessionId}/playerPreferences/${user.uid}/${songId}`)
                 .set(merged);
-            console.log(`✅ Saved preferences for song ${songId}:`, merged);
+            console.log(`✅ Saved session preferences for song ${songId}:`, merged);
         } catch (error) {
             console.error('❌ Error saving song preferences:', error);
         }
     },
 
     /**
-     * Load per-song preferences from Firebase
+     * Load per-song preferences from Firebase (session-based)
+     * Returns null if no session or no preferences (use song defaults)
      */
     async loadSongPreferences(songId) {
         const user = window.auth?.currentUser;
-        if (!user || !songId) return null;
+        const sessionId = window.sessionManager?.activeSession;
+
+        if (!user || !songId || !sessionId) {
+            console.log(`📖 loadSongPreferences skipped: user=${!!user}, songId=${songId}, sessionId=${!!sessionId}`);
+            return null;
+        }
 
         try {
+            const path = `sessions/${sessionId}/playerPreferences/${user.uid}/${songId}`;
+            console.log(`📖 Loading preferences from: ${path}`);
             const snapshot = await firebase.database()
-                .ref(`users/${user.uid}/liveModePreferences/songPreferences/${songId}`)
+                .ref(path)
                 .once('value');
-            return snapshot.val();
+            const prefs = snapshot.val();
+            console.log(`📖 Loaded preferences:`, prefs);
+            return prefs;
         } catch (error) {
             console.error('❌ Error loading song preferences:', error);
             return null;
@@ -244,6 +283,16 @@ const liveMode = {
                     chartDisplay.classList.add('hide-borders');
                 }
             }
+            if (savedPrefs.showTimeline !== undefined) {
+                this.showTimeline = savedPrefs.showTimeline;
+                const liveModeTimelineCheckbox = document.getElementById('liveModeTimeline');
+                if (liveModeTimelineCheckbox) liveModeTimelineCheckbox.checked = savedPrefs.showTimeline;
+                // Apply timeline visibility
+                const timelineContainer = document.getElementById('verticalTimelineContainer');
+                if (timelineContainer) {
+                    timelineContainer.style.display = savedPrefs.showTimeline ? 'flex' : 'none';
+                }
+            }
             if (savedPrefs.autoHidePlaylist !== undefined) {
                 this.autoHidePlaylist = savedPrefs.autoHidePlaylist;
                 const autoHideCheckbox = document.getElementById('liveModeAutoHidePlaylist');
@@ -302,6 +351,19 @@ const liveMode = {
         // Initialize MIDI controller for hands-free control
         this.initMIDI();
 
+        // Initialize auto-scroll (with error handling)
+        try {
+            this.setupAutoScrollListeners();
+            if (this.currentSongId) {
+                await this.initAutoScrollForSong(this.currentSongId);
+            } else {
+                this.updateAutoScrollUI();
+            }
+        } catch (err) {
+            console.error('Auto-scroll init error:', err);
+            // Continue even if auto-scroll fails
+        }
+
         console.log('📺 Entered Live Mode:', this.currentSongName);
     },
 
@@ -328,6 +390,9 @@ const liveMode = {
             clearInterval(this.miniAudioSyncInterval);
             this.miniAudioSyncInterval = null;
         }
+
+        // Stop auto-scroll
+        this.stopAutoScroll();
 
         // Reset full overview mode
         if (this.fullOverviewMode) {
@@ -382,20 +447,20 @@ const liveMode = {
     },
 
     /**
-     * Enter Singer Mode - simplified lyrics-only view for anonymous users
-     * Hides all chord-related controls, locks to lyrics display mode
+     * Enter Singer Mode - simplified view for anonymous users
+     * Shows chords and lyrics, hides transpose controls
      */
     async enterSingerMode() {
         this.isSingerMode = true;
-        this.displayMode = 'lyrics'; // Lock to lyrics only
+        this.displayMode = 'chords'; // Show chords for singers
 
-        // Force the dropdown to lyrics mode so updateDisplay uses it
+        // Force the dropdown to chords mode so updateDisplay uses it
         const displayDropdown = document.getElementById('liveModeDisplayMode');
-        if (displayDropdown) displayDropdown.value = 'lyrics';
+        if (displayDropdown) displayDropdown.value = 'chords';
 
         // Also sync the main editor dropdown for makeChordsBold
         const nashvilleDropdown = document.getElementById('nashvilleMode');
-        if (nashvilleDropdown) nashvilleDropdown.value = 'lyrics';
+        if (nashvilleDropdown) nashvilleDropdown.value = 'chords';
 
         // Show overlay first
         const overlay = document.getElementById('liveModeOverlay');
@@ -408,9 +473,9 @@ const liveMode = {
             document.body.style.overflow = 'hidden';
         }
 
-        // Hide controls that singers shouldn't see (only transpose and display mode)
+        // Hide controls that singers shouldn't see (only transpose)
         const controlsToHide = [
-            'liveModeDisplayMode',       // No display mode dropdown (locked to lyrics)
+            'liveModeDisplayMode',       // No display mode dropdown for singers
             'liveModeTransposeRow'       // Hide entire transpose row (-1, key, +1)
         ];
 
@@ -532,9 +597,9 @@ const liveMode = {
         const songKeyEl = document.getElementById('liveModeSongKey');
         const currentKeyEl = document.getElementById('liveModeCurrentKey');
 
-        // Force lyrics mode for singers
+        // Force chords mode for singers (no transpose, but they see chords)
         if (this.isSingerMode) {
-            this.displayMode = 'lyrics';
+            this.displayMode = 'chords';
         }
 
         if (chartDisplay) {
@@ -754,7 +819,7 @@ const liveMode = {
 
         this.hideControlsTimeout = setTimeout(() => {
             this.hideControls();
-        }, 3000);
+        }, 5000);
     },
 
     /**
@@ -811,14 +876,9 @@ const liveMode = {
                 this.updateDisplay();
 
                 // Save per-song transpose preference for ALL users (leader and player)
+                // Save transpose to session preferences (auto-save)
                 if (this.currentSongId) {
                     this.saveSongTranspose(this.currentSongId, this.currentTransposeSteps);
-                }
-
-                // Also keep session manager sync for live session features
-                if (window.sessionManager && window.sessionManager.activeSession && !window.sessionManager.isLeader) {
-                    const songId = this.currentSongId || 'current';
-                    window.sessionManager.setLocalTranspose(songId, this.currentTransposeSteps);
                 }
 
                 console.log(`🎵 Transposed ${steps > 0 ? '+' : ''}${steps} to ${newKey}${this.currentSongId ? ` for song ${this.currentSongId}` : ''}`);
@@ -925,6 +985,23 @@ const liveMode = {
         }
 
         console.log(`📺 Borders ${show ? 'shown' : 'hidden'}`);
+    },
+
+    /**
+     * Toggle vertical timeline visibility
+     */
+    toggleTimeline(show) {
+        this.showTimeline = show;
+
+        const timelineContainer = document.getElementById('verticalTimelineContainer');
+        if (timelineContainer) {
+            timelineContainer.style.display = show ? 'flex' : 'none';
+        }
+
+        // Auto-save preference
+        this.saveLiveModePreferences();
+
+        console.log(`📺 Timeline ${show ? 'shown' : 'hidden'}`);
     },
 
     /**
@@ -1331,12 +1408,37 @@ const liveMode = {
     async showPlaylist() {
         const playlistSidebar = document.getElementById('liveModePlaylistSidebar');
         const playlistContent = document.getElementById('liveModePlaylistContent');
+        const sessionIdDiv = document.getElementById('liveModeSessionId');
+        const sessionCodeSpan = document.getElementById('liveModeSessionCode');
 
         if (!playlistSidebar || !playlistContent) return;
 
         // Slide sidebar in
         playlistSidebar.style.right = '0';
         this.sidebarVisible = true;
+
+        // Show session ID if in an active session
+        if (sessionIdDiv && sessionCodeSpan && window.sessionManager?.activeSessionCode) {
+            const sessionCode = window.sessionManager.activeSessionCode;
+            sessionCodeSpan.textContent = sessionCode;
+            sessionIdDiv.style.display = 'block';
+
+            // Generate QR code
+            const qrDiv = document.getElementById('liveModeSessionQR');
+            if (qrDiv) {
+                const joinUrl = `${window.location.origin}${window.location.pathname}?join=${sessionCode.replace('-', '')}`;
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(joinUrl)}`;
+                qrDiv.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="width: 120px; height: 120px; display: block;">`;
+            }
+
+            // Show/hide "Manage Session" button (leader only)
+            const editSessionBtn = document.getElementById('editSessionBtn');
+            if (editSessionBtn) {
+                editSessionBtn.style.display = window.sessionManager?.isLeader ? 'block' : 'none';
+            }
+        } else if (sessionIdDiv) {
+            sessionIdDiv.style.display = 'none';
+        }
 
         playlistContent.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Loading playlist...</p>';
 
@@ -1425,11 +1527,13 @@ const liveMode = {
                     // Info row when locked (display only), controls row when unlocked
                     const metroIndicator = liveMode.songMetronomeEnabled[song.id] ? '<span style="color: #10b981; font-weight: bold;"> ✓</span>' : '';
                     const padIndicator = padEnabled ? '<span style="color: #10b981; font-weight: bold;"> ✓</span>' : '';
+                    const autoScrollIndicator = liveMode.songAutoScrollEnabled[song.id] ? '<span style="color: #10b981; font-weight: bold;"> ✓</span>' : '';
+                    const autoScrollChecked = liveMode.songAutoScrollEnabled[song.id] ? 'checked' : '';
                     const controlsRow = isLocked ? `
                                     <div style="display: flex; gap: 10px; margin-top: 3px; font-size: 11px; color: var(--text-muted);">
                                         <span>🎵 ${displayBpm}${metroIndicator}</span>
-                                        <span>⏱ ${displayTimeSig}</span>
                                         <span>🎹 ${displayKey}${padIndicator}</span>
+                                        <span>📜${autoScrollIndicator}</span>
                                     </div>` : `
                                     <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
                                         <label onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
@@ -1443,6 +1547,10 @@ const liveMode = {
                                                 ${padKeyOptions}
                                             </select>
                                         </div>
+                                        <label onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
+                                            <input type="checkbox" ${autoScrollChecked} ${controlsDisabled} onchange="liveMode.toggleSongAutoScroll('${song.id}', this.checked)" style="cursor: ${controlsCursor};" />
+                                            <span>📜</span>
+                                        </label>
                                     </div>`;
 
                     return `
@@ -1511,19 +1619,33 @@ const liveMode = {
     },
 
     /**
-     * Toggle metronome enabled for a specific song
+     * Toggle metronome enabled for a specific song (auto-saves to session)
      */
     toggleSongMetronome(songId, enabled) {
         this.songMetronomeEnabled[songId] = enabled;
+        // Auto-save to session preferences
+        this.saveSongPreferences(songId, { metronomeEnabled: enabled });
         console.log(`🎵 Metronome ${enabled ? 'enabled' : 'disabled'} for song: ${songId}`);
     },
 
     /**
-     * Toggle pad enabled for a specific song
+     * Toggle pad enabled for a specific song (auto-saves to session)
      */
     toggleSongPad(songId, enabled) {
         this.songPadEnabled[songId] = enabled;
+        // Auto-save to session preferences
+        this.saveSongPreferences(songId, { padEnabled: enabled });
         console.log(`🎹 Pad ${enabled ? 'enabled' : 'disabled'} for song: ${songId}`);
+    },
+
+    /**
+     * Toggle auto-scroll enabled for a specific song (auto-saves to session)
+     */
+    toggleSongAutoScroll(songId, enabled) {
+        this.songAutoScrollEnabled[songId] = enabled;
+        // Auto-save to session preferences
+        this.saveSongPreferences(songId, { autoScrollEnabled: enabled });
+        console.log(`📜 Auto-scroll ${enabled ? 'enabled' : 'disabled'} for song: ${songId}`);
     },
 
     /**
@@ -1950,7 +2072,7 @@ const liveMode = {
     },
 
     /**
-     * Handle pad key selection change from dropdown
+     * Handle pad key selection change from dropdown (auto-saves to session)
      */
     changeSongPadKey(songId, newKey) {
         this.songPadKey[songId] = newKey;
@@ -1958,6 +2080,8 @@ const liveMode = {
         if (newKey) {
             this.songPadEnabled[songId] = true;
         }
+        // Auto-save to session preferences
+        this.saveSongPreferences(songId, { padKey: newKey, padEnabled: !!newKey });
         console.log(`🎹 Pad key changed for song ${songId}: ${newKey}`);
 
         // If this is the current song and pad is playing, switch to new key
@@ -2034,6 +2158,402 @@ const liveMode = {
     },
 
     /**
+     * Copy session join link to clipboard
+     */
+    async copySessionLink() {
+        const sessionCode = window.sessionManager?.activeSessionCode;
+        if (!sessionCode) return;
+
+        const joinUrl = `${window.location.origin}${window.location.pathname}?join=${sessionCode.replace('-', '')}`;
+
+        try {
+            await navigator.clipboard.writeText(joinUrl);
+            this.showToast('Link copied!');
+        } catch (err) {
+            console.error('Failed to copy link:', err);
+            // Fallback
+            prompt('Copy this link:', joinUrl);
+        }
+    },
+
+    /**
+     * Copy session code to clipboard
+     */
+    async copySessionCode() {
+        const sessionCode = window.sessionManager?.activeSessionCode;
+        if (!sessionCode) return;
+
+        try {
+            await navigator.clipboard.writeText(sessionCode);
+            this.showToast('Code copied!');
+        } catch (err) {
+            console.error('Failed to copy code:', err);
+            prompt('Copy this code:', sessionCode);
+        }
+    },
+
+    /**
+     * Show a toast notification
+     */
+    showToast(message) {
+        // Remove existing toast
+        const existing = document.querySelector('.live-mode-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'live-mode-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 99999;
+            animation: fadeInOut 2s ease forwards;
+        `;
+
+        // Add animation style if not exists
+        if (!document.getElementById('toast-animation')) {
+            const style = document.createElement('style');
+            style.id = 'toast-animation';
+            style.textContent = `
+                @keyframes fadeInOut {
+                    0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+                    15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    },
+
+    /**
+     * Open the session manager modal
+     * @param {string} providedSessionId - Optional session ID (for managing from My Sessions list)
+     */
+    async openSessionManager(providedSessionId = null) {
+        const modal = document.getElementById('sessionManagerModal');
+        if (!modal) return;
+
+        // Use provided sessionId or fall back to active session
+        const sessionId = providedSessionId || window.sessionManager?.activeSession;
+        if (!sessionId) return;
+
+        // Store for use in other functions (like removeParticipant, endSession)
+        this._managingSessionId = sessionId;
+
+        // Get session code from metadata if not active session
+        let sessionCode = window.sessionManager?.activeSessionCode;
+        if (providedSessionId && providedSessionId !== window.sessionManager?.activeSession) {
+            try {
+                const codeSnapshot = await firebase.database().ref(`sessions/${sessionId}/metadata/sessionCode`).once('value');
+                sessionCode = codeSnapshot.val();
+            } catch (err) {
+                console.error('Error getting session code:', err);
+            }
+        }
+
+        // Update session code display
+        const codeEl = document.getElementById('sessionManagerCode');
+        if (codeEl) codeEl.textContent = sessionCode || sessionId;
+
+        // Generate and display singer link (keep the dash - Firebase stores code with dash)
+        const singerLinkEl = document.getElementById('sessionManagerSingerLink');
+        if (singerLinkEl && sessionCode) {
+            const baseUrl = `${window.location.origin}${window.location.pathname}`;
+            const singerLink = `${baseUrl}?singer=${sessionCode}`;
+            singerLinkEl.value = singerLink;
+        }
+
+        // Get session metadata for title and allowSingers
+        try {
+            const sessionSnapshot = await firebase.database().ref(`sessions/${sessionId}/metadata`).once('value');
+            const metadata = sessionSnapshot.val();
+            const titleEl = document.getElementById('sessionManagerTitle');
+            if (titleEl && metadata) {
+                titleEl.textContent = metadata.title || 'Live Session';
+            }
+
+            // Update allowSingers toggle and visibility
+            const allowSingersToggle = document.getElementById('allowSingersToggle');
+            const singerLinkSection = document.getElementById('singerLinkSection');
+            const singerLinkDisabled = document.getElementById('singerLinkDisabled');
+            const allowSingers = metadata?.allowSingers || false;
+
+            if (allowSingersToggle) allowSingersToggle.checked = allowSingers;
+            if (singerLinkSection) singerLinkSection.style.display = allowSingers ? 'block' : 'none';
+            if (singerLinkDisabled) singerLinkDisabled.style.display = allowSingers ? 'none' : 'block';
+        } catch (err) {
+            console.error('Error loading session metadata:', err);
+        }
+
+        // Load participants
+        await this.loadSessionParticipants();
+
+        // Show modal
+        modal.style.display = 'flex';
+
+        // Start listening for participant changes
+        this.listenToParticipants();
+    },
+
+    /**
+     * Copy singer link to clipboard
+     */
+    async copySingerLink() {
+        const singerLinkEl = document.getElementById('sessionManagerSingerLink');
+        if (!singerLinkEl || !singerLinkEl.value) return;
+
+        try {
+            await navigator.clipboard.writeText(singerLinkEl.value);
+            this.showToast('🎤 Singer link copied!');
+        } catch (err) {
+            console.error('Failed to copy singer link:', err);
+            singerLinkEl.select();
+            document.execCommand('copy');
+            this.showToast('🎤 Singer link copied!');
+        }
+    },
+
+    /**
+     * Close the session manager modal
+     */
+    closeSessionManager() {
+        const modal = document.getElementById('sessionManagerModal');
+        if (modal) modal.style.display = 'none';
+
+        // Stop listening to participants
+        if (this.participantsListener) {
+            this.participantsListener.off();
+            this.participantsListener = null;
+        }
+
+        // Clear managed session ID
+        this._managingSessionId = null;
+    },
+
+    /**
+     * Toggle allow singers setting
+     */
+    async toggleAllowSingers(allowed) {
+        const sessionId = this._managingSessionId || window.sessionManager?.activeSession;
+        if (!sessionId) return;
+
+        try {
+            await firebase.database().ref(`sessions/${sessionId}/metadata/allowSingers`).set(allowed);
+
+            // Update UI
+            const singerLinkSection = document.getElementById('singerLinkSection');
+            const singerLinkDisabled = document.getElementById('singerLinkDisabled');
+            if (singerLinkSection) singerLinkSection.style.display = allowed ? 'block' : 'none';
+            if (singerLinkDisabled) singerLinkDisabled.style.display = allowed ? 'none' : 'block';
+
+            this.showToast(allowed ? '🎤 Singers enabled' : '🎤 Singers disabled');
+        } catch (err) {
+            console.error('Error toggling allow singers:', err);
+            this.showToast('Failed to update setting');
+        }
+    },
+
+    /**
+     * Load and display session participants
+     */
+    async loadSessionParticipants() {
+        const sessionId = this._managingSessionId || window.sessionManager?.activeSession;
+        console.log('📋 loadSessionParticipants - sessionId:', sessionId);
+        if (!sessionId) return;
+
+        const listEl = document.getElementById('participantsList');
+        if (!listEl) return;
+
+        try {
+            const snapshot = await firebase.database().ref(`sessions/${sessionId}/participants`).once('value');
+            const participants = snapshot.val() || {};
+            console.log('📋 Participants from Firebase:', participants);
+            const metadataSnapshot = await firebase.database().ref(`sessions/${sessionId}/metadata`).once('value');
+            const metadata = metadataSnapshot.val() || {};
+            const leaderId = metadata.leaderId;
+            console.log('📋 Leader ID:', leaderId);
+
+            this.renderParticipants(participants, leaderId);
+        } catch (err) {
+            console.error('Error loading participants:', err);
+            listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: #ef4444;">Error loading participants</div>';
+        }
+    },
+
+    /**
+     * Listen to participant changes in real-time
+     */
+    listenToParticipants() {
+        const sessionId = this._managingSessionId || window.sessionManager?.activeSession;
+        if (!sessionId) return;
+
+        // Stop any existing listener
+        if (this.participantsListener) {
+            this.participantsListener.off();
+        }
+
+        this.participantsListener = firebase.database().ref(`sessions/${sessionId}/participants`);
+        this.participantsListener.on('value', async (snapshot) => {
+            const participants = snapshot.val() || {};
+            const metadataSnapshot = await firebase.database().ref(`sessions/${sessionId}/metadata`).once('value');
+            const metadata = metadataSnapshot.val() || {};
+            const leaderId = metadata.leaderId;
+            this.renderParticipants(participants, leaderId);
+        });
+    },
+
+    /**
+     * Render participants list
+     */
+    renderParticipants(participants, leaderId) {
+        const listEl = document.getElementById('participantsList');
+        const countEl = document.getElementById('participantCount');
+        if (!listEl) return;
+
+        const participantArray = Object.entries(participants);
+        if (countEl) countEl.textContent = `(${participantArray.length})`;
+
+        if (participantArray.length === 0) {
+            listEl.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">No participants yet</div>';
+            return;
+        }
+
+        const currentUserId = window.auth?.currentUser?.uid;
+        // Check if current user is the leader (works for both active session and My Sessions view)
+        const isLeader = currentUserId === leaderId || window.sessionManager?.isLeader;
+
+        listEl.innerHTML = participantArray.map(([uid, participantData]) => {
+            const isThisLeader = uid === leaderId;
+            const isMe = uid === currentUserId;
+            const isSinger = participantData.type === 'singer';
+
+            let roleIcon = '👤';
+            let roleBadge = '';
+            let avatarBg = 'rgba(100, 100, 100, 0.2)';
+            let avatarBorder = 'rgba(100, 100, 100, 0.3)';
+
+            if (isThisLeader) {
+                roleIcon = '👑';
+                roleBadge = '<span style="font-size: 10px; background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Leader</span>';
+                avatarBg = 'rgba(245, 158, 11, 0.2)';
+                avatarBorder = 'rgba(245, 158, 11, 0.4)';
+            } else if (isSinger) {
+                roleIcon = '🎤';
+                roleBadge = '<span style="font-size: 10px; background: rgba(139, 92, 246, 0.2); color: #8b5cf6; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Singer</span>';
+                avatarBg = 'rgba(139, 92, 246, 0.2)';
+                avatarBorder = 'rgba(139, 92, 246, 0.4)';
+            } else {
+                roleBadge = '<span style="font-size: 10px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Player</span>';
+                avatarBg = 'rgba(59, 130, 246, 0.2)';
+                avatarBorder = 'rgba(59, 130, 246, 0.4)';
+            }
+
+            const meLabel = isMe ? ' <span style="font-size: 10px; opacity: 0.6;">(you)</span>' : '';
+
+            // Only leader can remove participants (but not themselves)
+            const removeBtn = (isLeader && !isThisLeader && !isMe)
+                ? `<button onclick="liveMode.removeParticipant('${uid}')" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 14px;">✕</button>`
+                : '';
+
+            return `
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border);">
+                    <div style="width: 36px; height: 36px; background: ${avatarBg}; border: 1px solid ${avatarBorder}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                        ${roleIcon}
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            ${participantData.name || 'Anonymous'}${meLabel}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                            ${roleBadge}
+                        </div>
+                    </div>
+                    ${removeBtn}
+                </div>
+            `;
+        }).join('');
+    },
+
+    /**
+     * Remove a participant from the session
+     */
+    async removeParticipant(uid) {
+        const sessionId = this._managingSessionId || window.sessionManager?.activeSession;
+        if (!sessionId) return;
+
+        // Check if current user is the leader
+        const currentUserId = window.auth?.currentUser?.uid;
+        const metadataSnapshot = await firebase.database().ref(`sessions/${sessionId}/metadata/leaderId`).once('value');
+        const leaderId = metadataSnapshot.val();
+
+        if (currentUserId !== leaderId) {
+            this.showToast('Only the leader can remove participants');
+            return;
+        }
+
+        if (!confirm('Remove this participant from the session?')) return;
+
+        try {
+            await firebase.database().ref(`sessions/${sessionId}/participants/${uid}`).remove();
+            this.showToast('Participant removed');
+        } catch (err) {
+            console.error('Error removing participant:', err);
+            this.showToast('Failed to remove participant');
+        }
+    },
+
+    /**
+     * End the current session
+     */
+    async endSession() {
+        const sessionId = this._managingSessionId || window.sessionManager?.activeSession;
+        if (!sessionId) return;
+
+        // Check if current user is the leader
+        const currentUserId = window.auth?.currentUser?.uid;
+        const metadataSnapshot = await firebase.database().ref(`sessions/${sessionId}/metadata/leaderId`).once('value');
+        const leaderId = metadataSnapshot.val();
+
+        if (currentUserId !== leaderId) {
+            this.showToast('Only the leader can end the session');
+            return;
+        }
+
+        if (!confirm('End this session? All participants will be disconnected.')) return;
+
+        try {
+            await firebase.database().ref(`sessions/${sessionId}/metadata/status`).set('ended');
+            this.closeSessionManager();
+            this.showToast('Session ended');
+
+            // Only cleanup if this is the active session
+            if (sessionId === window.sessionManager?.activeSession) {
+                window.sessionManager.cleanup();
+                this.closeLiveMode();
+            }
+
+            // Refresh session list if My Sessions modal is open
+            if (window.sessionUI) {
+                window.sessionUI.loadUserSessions();
+            }
+        } catch (err) {
+            console.error('Error ending session:', err);
+            this.showToast('Failed to end session');
+        }
+    },
+
+    /**
      * Load a song from the playlist
      * @param {string} songId - Song ID to load
      */
@@ -2092,10 +2612,10 @@ const liveMode = {
             const timeInfo = songData.timeSignature ? ` | ${songData.timeSignature}` : '';
             this.currentSongName = `${title}${author}${bpmInfo}${timeInfo}`;
 
-            // Load ALL per-song preferences (fontSize, columns, transpose)
+            // Load per-song preferences from session (or use song defaults for first load)
             const savedPrefs = await this.loadSongPreferences(songId);
             if (savedPrefs) {
-                console.log(`📺 Loaded per-song preferences for ${songId}:`, savedPrefs);
+                console.log(`📺 Loaded session preferences for ${songId}:`, savedPrefs);
 
                 // Apply font size
                 if (savedPrefs.fontSize) {
@@ -2107,7 +2627,7 @@ const liveMode = {
                     this.currentColumnLayout = savedPrefs.columns;
                 }
 
-                // Apply transpose (use saved preference, overrides session manager)
+                // Apply transpose
                 if (savedPrefs.transposeSteps && savedPrefs.transposeSteps !== 0) {
                     for (let i = 0; i < Math.abs(savedPrefs.transposeSteps); i++) {
                         this.transpose(savedPrefs.transposeSteps > 0 ? 1 : -1);
@@ -2120,16 +2640,44 @@ const liveMode = {
                     const bordersCheckbox = document.getElementById('liveModeBorders');
                     if (bordersCheckbox) bordersCheckbox.checked = savedPrefs.showBorders;
                 }
-            } else {
-                // Fallback to session manager local transpose for players (backwards compatibility)
-                if (!window.sessionManager.isLeader) {
-                    const localTranspose = window.sessionManager.getLocalTranspose(songId);
-                    if (localTranspose !== 0) {
-                        for (let i = 0; i < Math.abs(localTranspose); i++) {
-                            this.transpose(localTranspose > 0 ? 1 : -1);
-                        }
-                    }
+
+                // Apply metronome preference
+                if (typeof savedPrefs.metronomeEnabled === 'boolean') {
+                    this.songMetronomeEnabled[songId] = savedPrefs.metronomeEnabled;
                 }
+
+                // Apply pad preferences
+                if (typeof savedPrefs.padEnabled === 'boolean') {
+                    this.songPadEnabled[songId] = savedPrefs.padEnabled;
+                }
+                if (savedPrefs.padKey) {
+                    this.songPadKey[songId] = savedPrefs.padKey;
+                }
+
+                // Apply auto-scroll preference (per-song tracking)
+                if (typeof savedPrefs.autoScrollEnabled === 'boolean') {
+                    this.songAutoScrollEnabled[songId] = savedPrefs.autoScrollEnabled;
+                }
+            } else {
+                // FIRST TIME loading this song in session - use song's own settings
+                console.log(`📺 First load for ${songId}, using song defaults`);
+
+                // Use song's stored layout settings
+                if (songData.fontSize) {
+                    this.currentFontSize = songData.fontSize;
+                }
+                if (songData.columnCount) {
+                    this.currentColumnLayout = parseInt(songData.columnCount) || 2;
+                }
+
+                // Start at original key (no transpose)
+                this.currentTransposeSteps = 0;
+
+                // Defaults for new preferences
+                this.songMetronomeEnabled[songId] = false;
+                this.songPadEnabled[songId] = false;
+                this.songPadKey[songId] = null;
+                this.songAutoScrollEnabled[songId] = false;
             }
 
             // Update display
@@ -2155,6 +2703,9 @@ const liveMode = {
             if (!this.fullOverviewMode && this.currentColumnLayout) {
                 this.setColumnLayout(this.currentColumnLayout);
             }
+
+            // Initialize auto-scroll for this song (pass duration from song data if available)
+            await this.initAutoScrollForSong(songId, songData.duration);
 
             // Hide playlist (if auto-hide is enabled) or update selection highlight
             if (this.autoHidePlaylist) {
@@ -2204,6 +2755,15 @@ const liveMode = {
                 console.log(`🎹 Pad stopped`);
             }
 
+            // Handle Auto-scroll auto-start based on checkbox
+            if (this.songAutoScrollEnabled[songId]) {
+                this.startAutoScroll();
+                console.log(`📜 Auto-scroll started for song: ${songId}`);
+            } else if (this.autoScrollEnabled) {
+                this.stopAutoScroll();
+                console.log(`📜 Auto-scroll stopped`);
+            }
+
         } catch (error) {
             console.error('Error loading song from playlist:', error);
         }
@@ -2235,23 +2795,10 @@ const liveMode = {
 
         console.log('📺 Content length:', this.currentSongContent.length);
 
-        // Check for local transpose preference
-        if (window.sessionManager && !window.sessionManager.isLeader) {
-            const localTranspose = window.sessionManager.getLocalTranspose(songData.songId);
-            if (localTranspose !== 0) {
-                // We need to apply transpose to the content
-                if (typeof window.transposeChart === 'function') {
-                    this.currentSongContent = window.transposeChart(this.currentSongContent, localTranspose);
-                    this.currentKey = this.calculateNewKey(this.currentKey, localTranspose);
-                    this.currentTransposeSteps = localTranspose;
-                }
-            }
-        }
-
-        // Load player's own per-song preferences (fontSize, columns, transpose)
+        // Load player's per-song session preferences
         const savedPrefs = await this.loadSongPreferences(songData.songId);
         if (savedPrefs) {
-            console.log(`📺 Loaded per-song preferences for ${songData.songId}:`, savedPrefs);
+            console.log(`📺 Loaded session preferences for ${songData.songId}:`, savedPrefs);
 
             // Apply font size
             if (savedPrefs.fontSize) {
@@ -2263,9 +2810,8 @@ const liveMode = {
                 this.currentColumnLayout = savedPrefs.columns;
             }
 
-            // Apply transpose (on top of any local transpose already applied)
-            if (savedPrefs.transposeSteps && savedPrefs.transposeSteps !== 0 && this.currentTransposeSteps === 0) {
-                // Only apply if we haven't already applied transpose from sessionManager
+            // Apply transpose
+            if (savedPrefs.transposeSteps && savedPrefs.transposeSteps !== 0) {
                 if (typeof window.transposeChart === 'function') {
                     this.currentSongContent = window.transposeChart(this.currentSongContent, savedPrefs.transposeSteps);
                     this.currentKey = this.calculateNewKey(this.currentKey, savedPrefs.transposeSteps);
@@ -2279,6 +2825,39 @@ const liveMode = {
                 const bordersCheckbox = document.getElementById('liveModeBorders');
                 if (bordersCheckbox) bordersCheckbox.checked = savedPrefs.showBorders;
             }
+
+            // Apply metronome preference
+            if (typeof savedPrefs.metronomeEnabled === 'boolean') {
+                this.songMetronomeEnabled[songData.songId] = savedPrefs.metronomeEnabled;
+            }
+
+            // Apply pad preferences
+            if (typeof savedPrefs.padEnabled === 'boolean') {
+                this.songPadEnabled[songData.songId] = savedPrefs.padEnabled;
+            }
+            if (savedPrefs.padKey) {
+                this.songPadKey[songData.songId] = savedPrefs.padKey;
+            }
+
+            // Apply auto-scroll preference (per-song tracking)
+            if (typeof savedPrefs.autoScrollEnabled === 'boolean') {
+                this.songAutoScrollEnabled[songData.songId] = savedPrefs.autoScrollEnabled;
+            }
+        } else {
+            // FIRST TIME - use defaults from song data
+            if (songData.fontSize) {
+                this.currentFontSize = songData.fontSize;
+            }
+            if (songData.columnCount) {
+                this.currentColumnLayout = parseInt(songData.columnCount) || 2;
+            }
+            // Start at original key
+            this.currentTransposeSteps = 0;
+            // Defaults for other preferences
+            this.songMetronomeEnabled[songData.songId] = false;
+            this.songPadEnabled[songData.songId] = false;
+            this.songPadKey[songData.songId] = null;
+            this.songAutoScrollEnabled[songData.songId] = false;
         }
 
         // Update display
@@ -2315,6 +2894,40 @@ const liveMode = {
         if (this.sidebarVisible) {
             console.log('📺 Refreshing playlist sidebar');
             this.showPlaylist();
+        }
+
+        // Initialize auto-scroll for this song
+        await this.initAutoScrollForSong(songData.songId, songData.duration);
+
+        // Handle Metronome auto-start based on checkbox
+        if (this.songMetronomeEnabled[songData.songId] && songData.bpm && window.metronome) {
+            window.metronome.setBpm(parseInt(songData.bpm));
+            window.metronome.start();
+            console.log(`🎵 Metronome started at ${songData.bpm} BPM`);
+        } else if (window.metronome && window.metronome.isPlaying) {
+            window.metronome.stop();
+            console.log(`🎵 Metronome stopped`);
+        }
+
+        // Handle Pad auto-start with crossfade based on checkbox
+        const detectedKey = songData.originalKey || songData.key;
+        const detectedPadKey = this.convertKeyToPadKey(detectedKey);
+        const padKey = this.songPadKey[songData.songId] || detectedPadKey;
+        if (this.songPadEnabled[songData.songId] && padKey && window.padPlayer) {
+            window.padPlayer.play(padKey);
+            console.log(`🎹 Pad started in key: ${padKey}`);
+        } else if (!this.songPadEnabled[songData.songId] && window.padPlayer) {
+            window.padPlayer.stopAll();
+            console.log(`🎹 Pad stopped`);
+        }
+
+        // Handle Auto-scroll auto-start based on checkbox
+        if (this.songAutoScrollEnabled[songData.songId]) {
+            this.startAutoScroll();
+            console.log(`📜 Auto-scroll started for song: ${songData.songId}`);
+        } else if (this.autoScrollEnabled) {
+            this.stopAutoScroll();
+            console.log(`📜 Auto-scroll stopped`);
         }
 
         console.log(`📺 Live Mode updated: ${songData.name}`);
@@ -2593,6 +3206,490 @@ const liveMode = {
         }
 
         return false;
+    },
+
+    // ============== Auto-Scroll Feature ==============
+
+    /**
+     * Set song duration in seconds
+     */
+    setAutoScrollDuration(seconds) {
+        this.autoScrollDuration = Math.max(10, Math.min(1800, seconds)); // 10s to 30min
+        this.updateAutoScrollUI();
+
+        // Save to current song if one is loaded
+        if (this.currentSongId) {
+            this.saveSongDuration(this.currentSongId, this.autoScrollDuration);
+        }
+
+        console.log(`⏱️ Auto-scroll duration set to ${this.formatTime(this.autoScrollDuration)}`);
+    },
+
+    /**
+     * Parse time string (MM:SS or M:SS) to seconds
+     */
+    parseTimeToSeconds(timeStr) {
+        const parts = timeStr.split(':');
+        if (parts.length === 2) {
+            const minutes = parseInt(parts[0]) || 0;
+            const seconds = parseInt(parts[1]) || 0;
+            return minutes * 60 + seconds;
+        }
+        return parseInt(timeStr) || 180; // Default 3 minutes
+    },
+
+    /**
+     * Format seconds to MM:SS string
+     */
+    formatTime(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = Math.floor(totalSeconds % 60);
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    },
+
+    /**
+     * Start auto-scroll
+     */
+    startAutoScroll() {
+        if (this.autoScrollEnabled && !this.autoScrollPaused) {
+            // Already running, do nothing
+            return;
+        }
+
+        const content = document.getElementById('liveModeContent');
+        if (!content) return;
+
+        // If resuming from pause
+        if (this.autoScrollPaused && this.autoScrollPausedAt !== null) {
+            // Calculate how much time was elapsed before pause
+            const elapsedBeforePause = this.autoScrollPausedAt - this.autoScrollStartTime;
+            // Adjust start time to account for pause
+            this.autoScrollStartTime = performance.now() - elapsedBeforePause;
+            this.autoScrollPaused = false;
+            this.autoScrollPausedAt = null;
+        } else {
+            // Fresh start - calculate start time from current progress
+            const elapsedTime = this.autoScrollProgress * this.autoScrollDuration * 1000;
+            this.autoScrollStartTime = performance.now() - elapsedTime;
+        }
+
+        this.autoScrollEnabled = true;
+        this.autoScrollPaused = false;
+        this.autoScrollManualOverride = false;
+
+        // Auto-save to session preferences
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { autoScrollEnabled: true });
+        }
+
+        // Start animation loop
+        this.runAutoScroll();
+
+        // Update UI
+        this.updateAutoScrollUI();
+
+        // Show timeline when auto-scroll starts
+        this.showTimeline = true;
+        const timelineContainer = document.getElementById('verticalTimelineContainer');
+        if (timelineContainer) timelineContainer.style.display = 'flex';
+        const timelineCheckbox = document.getElementById('liveModeTimeline');
+        if (timelineCheckbox) timelineCheckbox.checked = true;
+
+        console.log(`▶️ Auto-scroll started (${this.formatTime(this.autoScrollDuration)})`);
+    },
+
+    /**
+     * Pause auto-scroll
+     */
+    pauseAutoScroll() {
+        if (!this.autoScrollEnabled || this.autoScrollPaused) return;
+
+        this.autoScrollPaused = true;
+        this.autoScrollPausedAt = performance.now();
+
+        // Cancel animation frame
+        if (this.autoScrollAnimationId) {
+            cancelAnimationFrame(this.autoScrollAnimationId);
+            this.autoScrollAnimationId = null;
+        }
+
+        this.updateAutoScrollUI();
+        console.log(`⏸️ Auto-scroll paused at ${this.formatTime(this.autoScrollProgress * this.autoScrollDuration)}`);
+    },
+
+    /**
+     * Stop auto-scroll completely
+     */
+    stopAutoScroll() {
+        this.autoScrollEnabled = false;
+        this.autoScrollPaused = false;
+        this.autoScrollProgress = 0;
+        this.autoScrollStartTime = null;
+        this.autoScrollPausedAt = null;
+
+        // Auto-save to session preferences
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { autoScrollEnabled: false });
+        }
+
+        // Cancel animation frame
+        if (this.autoScrollAnimationId) {
+            cancelAnimationFrame(this.autoScrollAnimationId);
+            this.autoScrollAnimationId = null;
+        }
+
+        // Reset scroll position
+        const content = document.getElementById('liveModeContent');
+        if (content) {
+            content.scrollTop = 0;
+        }
+
+        this.updateAutoScrollUI();
+
+        // Hide timeline when auto-scroll stops
+        this.showTimeline = false;
+        const timelineContainer = document.getElementById('verticalTimelineContainer');
+        if (timelineContainer) timelineContainer.style.display = 'none';
+        const timelineCheckbox = document.getElementById('liveModeTimeline');
+        if (timelineCheckbox) timelineCheckbox.checked = false;
+
+        console.log('⏹️ Auto-scroll stopped');
+    },
+
+    /**
+     * Toggle auto-scroll play/pause
+     */
+    toggleAutoScroll() {
+        if (!this.autoScrollEnabled) {
+            this.startAutoScroll();
+        } else if (this.autoScrollPaused) {
+            this.startAutoScroll(); // Resume
+        } else {
+            this.pauseAutoScroll();
+        }
+    },
+
+    /**
+     * Run the auto-scroll animation loop
+     */
+    runAutoScroll() {
+        if (!this.autoScrollEnabled || this.autoScrollPaused) return;
+
+        const content = document.getElementById('liveModeContent');
+        if (!content) return;
+
+        const now = performance.now();
+        const elapsed = now - this.autoScrollStartTime;
+        const durationMs = this.autoScrollDuration * 1000;
+
+        // Calculate progress (0 to 1)
+        this.autoScrollProgress = Math.min(1, elapsed / durationMs);
+
+        // Calculate scroll position
+        const maxScroll = content.scrollHeight - content.clientHeight;
+        const targetScroll = this.autoScrollProgress * maxScroll;
+
+        // Only scroll if not in manual override mode
+        if (!this.autoScrollManualOverride) {
+            content.scrollTop = targetScroll;
+        }
+
+        // Update progress bar and time display
+        this.updateAutoScrollProgress();
+
+        // Continue if not finished
+        if (this.autoScrollProgress < 1) {
+            this.autoScrollAnimationId = requestAnimationFrame(() => this.runAutoScroll());
+        } else {
+            // Finished - auto-stop
+            this.autoScrollEnabled = false;
+            this.autoScrollPaused = false;
+            this.updateAutoScrollUI();
+            console.log('✅ Auto-scroll completed');
+        }
+    },
+
+    /**
+     * Update progress bar and time display (both horizontal and vertical)
+     */
+    updateAutoScrollProgress() {
+        const progressBar = document.getElementById('autoScrollProgressFill');
+        const timeDisplay = document.getElementById('autoScrollTimeDisplay');
+        const verticalFill = document.getElementById('verticalTimelineFill');
+        const verticalHandle = document.getElementById('verticalTimelineHandle');
+        const verticalTimeEnd = document.getElementById('verticalTimeEnd');
+
+        // Horizontal progress bar (hidden but still updated for compatibility)
+        if (progressBar) {
+            progressBar.style.width = `${this.autoScrollProgress * 100}%`;
+        }
+
+        // Vertical timeline
+        if (verticalFill) {
+            verticalFill.style.height = `${this.autoScrollProgress * 100}%`;
+        }
+        if (verticalHandle) {
+            verticalHandle.style.top = `${this.autoScrollProgress * 100}%`;
+        }
+
+        // Time displays
+        if (timeDisplay) {
+            const elapsed = this.autoScrollProgress * this.autoScrollDuration;
+            timeDisplay.textContent = `${this.formatTime(elapsed)} / ${this.formatTime(this.autoScrollDuration)}`;
+        }
+        if (verticalTimeEnd) {
+            verticalTimeEnd.textContent = this.formatTime(this.autoScrollDuration);
+        }
+    },
+
+    /**
+     * Update auto-scroll UI elements (button states, etc.)
+     */
+    updateAutoScrollUI() {
+        const playBtn = document.getElementById('autoScrollPlayBtn');
+        const durationInput = document.getElementById('autoScrollDuration');
+        const progressBar = document.getElementById('autoScrollProgressFill');
+
+        if (playBtn) {
+            if (this.autoScrollEnabled && !this.autoScrollPaused) {
+                playBtn.textContent = '⏸';
+                playBtn.title = 'Pause auto-scroll';
+                playBtn.style.background = 'linear-gradient(135deg, #16a34a, #22c55e)';
+            } else {
+                playBtn.textContent = '▶';
+                playBtn.title = 'Start auto-scroll';
+                playBtn.style.background = 'linear-gradient(135deg, #0ea5e9, #06b6d4)';
+            }
+        }
+
+        if (durationInput) {
+            durationInput.value = this.formatTime(this.autoScrollDuration);
+        }
+
+        this.updateAutoScrollProgress();
+    },
+
+    /**
+     * Handle manual scroll during auto-scroll
+     * Adjusts the time position based on scroll direction
+     */
+    handleManualScroll(scrollTop) {
+        if (!this.autoScrollEnabled) return;
+
+        const content = document.getElementById('liveModeContent');
+        if (!content) return;
+
+        const maxScroll = content.scrollHeight - content.clientHeight;
+        if (maxScroll <= 0) return;
+
+        // Calculate new progress from scroll position
+        const newProgress = scrollTop / maxScroll;
+        this.autoScrollProgress = Math.max(0, Math.min(1, newProgress));
+
+        // Adjust start time to match new progress
+        const newElapsed = this.autoScrollProgress * this.autoScrollDuration * 1000;
+        this.autoScrollStartTime = performance.now() - newElapsed;
+
+        // Update display
+        this.updateAutoScrollProgress();
+
+        // Set manual override flag (cleared after a short delay)
+        this.autoScrollManualOverride = true;
+        this.lastManualScrollTime = performance.now();
+
+        // Clear manual override after 500ms of no scrolling
+        setTimeout(() => {
+            if (performance.now() - this.lastManualScrollTime >= 500) {
+                this.autoScrollManualOverride = false;
+            }
+        }, 500);
+    },
+
+    /**
+     * Handle click on content to pause/resume auto-scroll
+     */
+    handleAutoScrollClick() {
+        if (this.autoScrollEnabled) {
+            this.toggleAutoScroll();
+        }
+    },
+
+    /**
+     * Save song duration to Firebase
+     */
+    async saveSongDuration(songId, duration) {
+        const user = window.auth?.currentUser;
+        if (!user || !songId) return;
+
+        try {
+            await firebase.database()
+                .ref(`users/${user.uid}/liveModePreferences/songPreferences/${songId}/duration`)
+                .set(duration);
+            console.log(`💾 Saved duration ${this.formatTime(duration)} for song ${songId}`);
+        } catch (error) {
+            console.error('Error saving song duration:', error);
+        }
+    },
+
+    /**
+     * Load song duration from Firebase
+     */
+    async loadSongDuration(songId) {
+        const user = window.auth?.currentUser;
+        if (!user || !songId) return null;
+
+        try {
+            const snapshot = await firebase.database()
+                .ref(`users/${user.uid}/liveModePreferences/songPreferences/${songId}/duration`)
+                .once('value');
+            return snapshot.val();
+        } catch (error) {
+            console.error('Error loading song duration:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Initialize auto-scroll for current song
+     * @param {string} songId - Song ID
+     * @param {string} songDuration - Optional duration from song data (M:SS format)
+     */
+    async initAutoScrollForSong(songId, songDuration = null) {
+        // Stop any running auto-scroll
+        this.stopAutoScroll();
+
+        // Priority: 1. Firebase preferences, 2. Song data field, 3. Content directive, 4. Default
+        const savedDuration = await this.loadSongDuration(songId);
+        if (savedDuration) {
+            this.autoScrollDuration = savedDuration;
+        } else if (songDuration) {
+            // Parse duration from song data field (M:SS format)
+            const parsed = this.parseTimeToSeconds(songDuration);
+            if (parsed > 0) {
+                this.autoScrollDuration = parsed;
+            } else {
+                this.autoScrollDuration = 180;
+            }
+        } else {
+            // Try to parse duration from song content {duration: M:SS}
+            const contentDuration = this.parseDurationFromContent();
+            if (contentDuration) {
+                this.autoScrollDuration = contentDuration;
+            } else {
+                // Use default
+                this.autoScrollDuration = 180;
+            }
+        }
+
+        this.updateAutoScrollUI();
+    },
+
+    /**
+     * Parse duration from song content {duration: M:SS} directive
+     */
+    parseDurationFromContent() {
+        if (!this.currentSongContent) return null;
+
+        const match = this.currentSongContent.match(/\{duration:\s*(\d+):(\d{2})\}/i);
+        if (match) {
+            const minutes = parseInt(match[1], 10);
+            const seconds = parseInt(match[2], 10);
+            return minutes * 60 + seconds;
+        }
+        return null;
+    },
+
+    /**
+     * Set up auto-scroll event listeners
+     */
+    setupAutoScrollListeners() {
+        const content = document.getElementById('liveModeContent');
+        if (!content) return;
+
+        // Track manual scrolling
+        let scrollTimeout = null;
+        content.addEventListener('scroll', () => {
+            // If auto-scroll is running and user scrolls manually
+            if (this.autoScrollEnabled && !this.autoScrollPaused) {
+                // Clear previous timeout
+                if (scrollTimeout) clearTimeout(scrollTimeout);
+
+                // Detect if this is manual scroll (not auto-scroll)
+                const now = performance.now();
+                if (now - this.lastManualScrollTime > 100 || this.autoScrollManualOverride) {
+                    this.handleManualScroll(content.scrollTop);
+                }
+
+                // Set timeout to resume auto control after manual scroll stops
+                scrollTimeout = setTimeout(() => {
+                    this.autoScrollManualOverride = false;
+                }, 500);
+            }
+        });
+
+        // Click to pause/resume (handled in content click handler)
+    },
+
+    /**
+     * Handle click on progress bar to seek
+     */
+    handleProgressBarClick(event) {
+        const progressContainer = event.currentTarget;
+        const rect = progressContainer.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const newProgress = clickX / rect.width;
+
+        // Set new progress
+        this.autoScrollProgress = Math.max(0, Math.min(1, newProgress));
+
+        // Update scroll position
+        const content = document.getElementById('liveModeContent');
+        if (content) {
+            const maxScroll = content.scrollHeight - content.clientHeight;
+            content.scrollTop = this.autoScrollProgress * maxScroll;
+        }
+
+        // Adjust start time if auto-scroll is running
+        if (this.autoScrollEnabled) {
+            const newElapsed = this.autoScrollProgress * this.autoScrollDuration * 1000;
+            this.autoScrollStartTime = performance.now() - newElapsed;
+        }
+
+        // Update display
+        this.updateAutoScrollProgress();
+
+        console.log(`⏩ Seeked to ${this.formatTime(this.autoScrollProgress * this.autoScrollDuration)}`);
+    },
+
+    /**
+     * Handle click on vertical timeline to seek
+     */
+    handleVerticalTimelineClick(event) {
+        const container = event.currentTarget;
+        const rect = container.getBoundingClientRect();
+        const clickY = event.clientY - rect.top;
+        const newProgress = clickY / rect.height;
+
+        // Set new progress
+        this.autoScrollProgress = Math.max(0, Math.min(1, newProgress));
+
+        // Update scroll position
+        const content = document.getElementById('liveModeContent');
+        if (content) {
+            const maxScroll = content.scrollHeight - content.clientHeight;
+            content.scrollTop = this.autoScrollProgress * maxScroll;
+        }
+
+        // Adjust start time if auto-scroll is running
+        if (this.autoScrollEnabled) {
+            const newElapsed = this.autoScrollProgress * this.autoScrollDuration * 1000;
+            this.autoScrollStartTime = performance.now() - newElapsed;
+        }
+
+        // Update display
+        this.updateAutoScrollProgress();
+
+        console.log(`⏩ Seeked to ${this.formatTime(this.autoScrollProgress * this.autoScrollDuration)}`);
     }
 };
 
@@ -2635,6 +3732,15 @@ document.addEventListener('DOMContentLoaded', () => {
         liveModeContent.addEventListener('click', (e) => {
             // Don't toggle if clicking on a button
             if (e.target.tagName !== 'BUTTON') {
+                // If auto-scroll is running, pause/resume it
+                if (liveMode.autoScrollEnabled) {
+                    liveMode.toggleAutoScroll();
+                    // Show controls briefly to show pause/resume state
+                    liveMode.showControls();
+                    liveMode.startAutoHideTimer();
+                    return; // Don't toggle playlist when controlling auto-scroll
+                }
+
                 // Always show controls on tap
                 liveMode.showControls();
                 liveMode.startAutoHideTimer();

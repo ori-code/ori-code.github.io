@@ -616,6 +616,20 @@
                 }
             }
 
+            // Extract duration from content {duration: M:SS}
+            let duration = '';
+            const durationMatch = (content + '\n' + baselineChart).match(/\{duration:\s*(\d+:\d{2})\}/i);
+            if (durationMatch) {
+                duration = durationMatch[1].trim();
+            }
+            // If not found in content, get from duration input field
+            if (!duration) {
+                const durationInput = document.getElementById('songDuration');
+                if (durationInput && durationInput.value) {
+                    duration = durationInput.value;
+                }
+            }
+
             try {
                 // Save to Firebase Realtime Database
                 const database = firebase.database();
@@ -646,6 +660,7 @@
                     key: originalKey,
                     bpm: bpm,
                     timeSignature: timeSignature || '',
+                    duration: duration || '',
 
                     // Content storage
                     content: content, // Visual editor content (current state, possibly transposed)
@@ -804,6 +819,20 @@
                 }
             }
 
+            // Extract duration from content {duration: M:SS}
+            let duration = '';
+            const durationMatch = (content + '\n' + baselineChart).match(/\{duration:\s*(\d+:\d{2})\}/i);
+            if (durationMatch) {
+                duration = durationMatch[1].trim();
+            }
+            // If not found in content, get from duration input field
+            if (!duration) {
+                const durationInput = document.getElementById('songDuration');
+                if (durationInput && durationInput.value) {
+                    duration = durationInput.value;
+                }
+            }
+
             try {
                 // Update in Firebase Realtime Database
                 const database = firebase.database();
@@ -831,6 +860,7 @@
                     key: originalKey,
                     bpm: bpmValue,
                     timeSignature: timeSignature || '',
+                    duration: duration || '',
 
                     // Content storage
                     content: content,
@@ -862,6 +892,7 @@
                         originalKey: originalKey,
                         bpm: bpmValue,
                         timeSignature: timeSignature,
+                        duration: duration,
                         baselineChart: baselineChart
                     });
                 }

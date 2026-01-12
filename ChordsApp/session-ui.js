@@ -121,6 +121,10 @@ class SessionUI {
                                             style="padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
                                         🔄 Reactivate
                                     </button>
+                                    <button onclick="sessionUI.manageSession('${session.id}')"
+                                            style="padding: 6px 12px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                        ⚙️ Manage
+                                    </button>
                                     <div style="display: flex; gap: 4px;">
                                         <button onclick="sessionUI.editSession('${session.id}', '${session.title.replace(/'/g, "\\'")}')"
                                                 style="flex: 1; padding: 6px 8px; background: rgba(59, 130, 246, 0.2); border: none; border-radius: 4px; color: #3b82f6; cursor: pointer; font-size: 11px;"
@@ -427,6 +431,19 @@ class SessionUI {
             console.error('Error reactivating session:', error);
             this.showToast('❌ ' + error.message);
         }
+    }
+
+    /**
+     * Open session manager modal for a specific session
+     */
+    async manageSession(sessionId) {
+        if (!window.liveMode) {
+            this.showToast('❌ Live Mode not available');
+            return;
+        }
+
+        // Open the session manager modal with the specific session ID
+        await window.liveMode.openSessionManager(sessionId);
     }
 
     /**

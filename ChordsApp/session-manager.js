@@ -5,11 +5,12 @@ class SessionManager {
     constructor() {
         this.currentUser = null;
         this.activeSession = null;
+        this.activeSessionCode = null; // Display code (e.g., "A3F-7K2")
         this.isLeader = false;
         this.isSinger = false; // Singer mode (anonymous, lyrics only)
         this.listeners = [];
         this.inLiveMode = true; // Players follow leader by default
-        this.localTransposeMap = {}; // { songId: transposeSteps } - user's transpose per song
+        // Per-song preferences now stored in session: sessions/{sessionId}/playerPreferences/{uid}/{songId}/
         this.leaderCurrentSong = null; // Cache of leader's current song
         this.database = firebase.database();
     }
@@ -84,6 +85,7 @@ class SessionManager {
 
         // Set as active session
         this.activeSession = sessionId;
+        this.activeSessionCode = sessionCode;
         this.isLeader = true;
 
         // Add leader as participant
@@ -108,9 +110,17 @@ class SessionManager {
             throw new Error('Only BASIC or PRO users can join sessions');
         }
 
+        // Format code: add dash if missing (e.g., "A3F7K2" -> "A3F-7K2")
+        let formattedCode = sessionCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (formattedCode.length === 6 && !sessionCode.includes('-')) {
+            formattedCode = formattedCode.slice(0, 3) + '-' + formattedCode.slice(3);
+        } else {
+            formattedCode = sessionCode.toUpperCase();
+        }
+
         // Find session by code
         const sessionsRef = this.database.ref('sessions');
-        const snapshot = await sessionsRef.orderByChild('metadata/sessionCode').equalTo(sessionCode).once('value');
+        const snapshot = await sessionsRef.orderByChild('metadata/sessionCode').equalTo(formattedCode).once('value');
 
         if (!snapshot.exists()) {
             throw new Error('Session not found. Check the code and try again.');
@@ -129,6 +139,7 @@ class SessionManager {
 
         // Set as active session (after listenToSessionUpdates which calls cleanup())
         this.activeSession = sessionId;
+        this.activeSessionCode = sessionCode;
         this.isLeader = (session.metadata.leaderId === this.currentUser.uid);
         this.inLiveMode = true; // Start in live mode
 
@@ -165,12 +176,19 @@ class SessionManager {
 
     /**
      * Join a session as singer (anonymous, lyrics only)
-     * @param {string} sessionCode - 6-character code (e.g., "A3F-7K2")
+     * @param {string} sessionCode - 6-character code (e.g., "A3F-7K2" or "A3F7K2")
      */
     async joinAsSinger(sessionCode) {
+        // Format code: add dash if missing (e.g., "A3F7K2" -> "A3F-7K2")
+        let formattedCode = sessionCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (formattedCode.length === 6 && !formattedCode.includes('-')) {
+            formattedCode = formattedCode.slice(0, 3) + '-' + formattedCode.slice(3);
+        }
+        console.log('🎤 Joining as singer with code:', formattedCode);
+
         // Find session by code
         const sessionsRef = this.database.ref('sessions');
-        const snapshot = await sessionsRef.orderByChild('metadata/sessionCode').equalTo(sessionCode).once('value');
+        const snapshot = await sessionsRef.orderByChild('metadata/sessionCode').equalTo(formattedCode).once('value');
 
         if (!snapshot.exists()) {
             throw new Error('Session not found. Check the code and try again.');
@@ -210,6 +228,7 @@ class SessionManager {
 
         // Set as active session
         this.activeSession = sessionId;
+        this.activeSessionCode = sessionCode;
         this.isLeader = false;
         this.isSinger = true;
         this.inLiveMode = true;
@@ -489,24 +508,8 @@ class SessionManager {
         return this.inLiveMode;
     }
 
-    /**
-     * Set local transpose for a specific song
-     * @param {string} songId - Song identifier
-     * @param {number} steps - Transpose steps
-     */
-    setLocalTranspose(songId, steps) {
-        this.localTransposeMap[songId] = steps;
-        console.log(`🎵 Set local transpose for ${songId}: ${steps} steps`);
-    }
-
-    /**
-     * Get local transpose for a specific song
-     * @param {string} songId - Song identifier
-     * @returns {number} Transpose steps (0 if not set)
-     */
-    getLocalTranspose(songId) {
-        return this.localTransposeMap[songId] || 0;
-    }
+    // Per-song transpose now handled by live-mode.js saveSongPreferences()
+    // Stored at: sessions/{sessionId}/playerPreferences/{uid}/{songId}/transposeSteps
 
     /**
      * Get the leader's current song (for "Return to Live" feature)
@@ -604,6 +607,7 @@ class SessionManager {
 
         // Set as active session
         this.activeSession = sessionId;
+        this.activeSessionCode = session.metadata.sessionCode;
         this.isLeader = true;
 
         // Rejoin as participant
@@ -626,10 +630,11 @@ class SessionManager {
         });
         this.listeners = [];
         this.activeSession = null;
+        this.activeSessionCode = null;
         this.isLeader = false;
         this.isSinger = false;
         this.inLiveMode = true;
-        this.localTransposeMap = {};
+        // Per-song preferences stored in session - cleared when session ends
         this.leaderCurrentSong = null;
     }
 
