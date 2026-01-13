@@ -3440,17 +3440,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 }
             }
 
-            // ✅ Convert arrangement line to styled badges (supports RTL via CSS)
+            // ✅ Skip arrangement line (line with only inline notation)
+            // Badges are rendered from songStructure in the song-header
             if (isArrangementLine(line)) {
-                const styledBadges = convertBadgeLineToStyled(line);
-                if (styledBadges && songStructure.length === 0) {
-                    // Only add if we didn't already add badges from songStructure
-                    if (currentSection) {
-                        sectionContent.push(styledBadges);
-                    } else {
-                        formatted.push(styledBadges);
-                    }
-                }
                 continue;
             }
 
