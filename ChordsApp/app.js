@@ -2822,12 +2822,36 @@ Our [Em7]hearts will cry, these bones will [D]sing
         setDirectionalLayout(songbookOutput, songbookOutput.value);
     };
 
+    // Helper function to reverse arrangement line badges for RTL content
+    const reverseArrangementLineForRTL = (content) => {
+        const isRTL = detectRTL(content);
+        if (!isRTL) return content;
+
+        // Pattern to match arrangement lines like "(V1) (V2) (B) (C)" or "(I) (V1) (PC) (C)"
+        const arrangementLinePattern = /^([\s]*)(\([A-Z]+\d*\)(?:\s*\([A-Z]+\d*\))+)([\s]*)$/gim;
+
+        return content.replace(arrangementLinePattern, (match, prefix, badges, suffix) => {
+            // Extract individual badges and reverse them
+            const badgePattern = /\([A-Z]+\d*\)/gi;
+            const badgeMatches = badges.match(badgePattern);
+            if (badgeMatches && badgeMatches.length > 1) {
+                const reversed = badgeMatches.reverse().join(' ');
+                console.log('🔄 RTL: Reversed arrangement line badges:', badgeMatches.length, 'badges');
+                return prefix + reversed + suffix;
+            }
+            return match;
+        });
+    };
+
     // Format Chords App Format v4 content for preview
     const formatV4ForPreview = (content, options = {}) => {
         const { enableSectionBlocks = false } = options;
         const parser = window.chordsAppParser;
         const formatted = [];
         let sectionCounter = 0;
+
+        // Reverse arrangement line badges for RTL content BEFORE processing
+        content = reverseArrangementLineForRTL(content);
 
         // Strip HTML tags before parsing (output may have bold tags)
         const cleanContent = content.replace(/<[^>]*>/g, '');
@@ -2937,14 +2961,25 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Arrangement badges with repeat counts (flow arrows only shown in chart body)
         if (arrangement.length > 0) {
-            const badges = arrangement
+            const isRTLContent = detectRTL(cleanContent);
+            let badgeItems = arrangement
                 .filter(item => item.type === 'badge') // Skip flow arrows in badge row
                 .map(item => {
                     const colorClass = parser.getBadgeColorClass(item.label);
                     const repeatSup = item.repeat > 1 ? `<sup class="repeat-count">${item.repeat}x</sup>` : '';
                     return `<span class="section-badge ${colorClass}">${item.label}${repeatSup}</span>`;
-                }).join('');
-            formatted.push(`<div class="section-badges-row">${badges}</div>`);
+                });
+            // Reverse badges array for RTL content so V1 appears on right
+            if (isRTLContent) {
+                badgeItems = badgeItems.reverse();
+            }
+            const badges = badgeItems.join('');
+            const badgesDir = isRTLContent ? 'rtl' : 'ltr';
+            console.log('🏷️ formatV4ForPreview BADGES RTL DEBUG:');
+            console.log('  isRTLContent:', isRTLContent);
+            console.log('  badgesDir:', badgesDir);
+            console.log('  badges reversed:', isRTLContent);
+            formatted.push(`<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`);
         }
 
         formatted.push('</div>'); // Close song-header
@@ -3223,6 +3258,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Format content with structured HTML for professional display
     const formatForPreview = (content, options = {}) => {
         const { enableSectionBlocks = false } = options;
+
+        // Reverse arrangement line badges for RTL content BEFORE processing
+        content = reverseArrangementLineForRTL(content);
+
         const lines = content.split('\n');
         const formatted = [];
         let inMetadata = true;
@@ -3285,7 +3324,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const matches = [...line.matchAll(badgePattern)];
             if (matches.length === 0) return null;
 
-            const badges = matches.map(m => {
+            const isRTLContent = detectRTL(cleanContent);
+            let badgeItems = matches.map(m => {
                 const label = m[1].toUpperCase();
                 const colorClass =
                     label.startsWith('I') && !label.startsWith('INT') ? 'badge-intro' :
@@ -3300,9 +3340,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     label.startsWith('INT') ? 'badge-interlude' :
                     'badge-other';
                 return `<span class="section-badge ${colorClass}">${label}</span>`;
-            }).join('');
-
-            return `<div class="section-badges-row">${badges}</div>`;
+            });
+            // Reverse badges array for RTL content so V1 appears on right
+            if (isRTLContent) {
+                badgeItems = badgeItems.reverse();
+            }
+            const badges = badgeItems.join('');
+            const badgesDir = isRTLContent ? 'rtl' : 'ltr';
+            return `<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`;
         };
 
         const finishSection = () => {
@@ -3415,7 +3460,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                         // ✅ ADD CIRCULAR SECTION BADGES WITH REPEAT COUNT
                         if (songStructure.length > 0) {
-                            const badges = songStructure.map(section => {
+                            const isRTLContent = detectRTL(cleanContent);
+                            let badgeItems = songStructure.map(section => {
                                 const label = section.num ? `${section.type}${section.num}` : section.type;
                                 // Add repeat count as superscript if > 1
                                 const repeatCount = section.count > 1 ? `<sup class="repeat-count">${section.count}</sup>` : '';
@@ -3430,8 +3476,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
                                     section.type === 'BRK' ? 'badge-break' :
                                     'badge-other';
                                 return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
-                            }).join('');
-                            formatted.push(`<div class="section-badges-row">${badges}</div>`);
+                            });
+                            // Reverse badges array for RTL content so V1 appears on right
+                            if (isRTLContent) {
+                                badgeItems = badgeItems.reverse();
+                            }
+                            const badges = badgeItems.join('');
+                            const badgesDir = isRTLContent ? 'rtl' : 'ltr';
+                            console.log('🏷️ formatForPreview BADGES RTL DEBUG:');
+                            console.log('  isRTLContent:', isRTLContent);
+                            console.log('  badges reversed:', isRTLContent);
+                            formatted.push(`<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`);
                         }
 
                         formatted.push('</div>'); // Close song-header

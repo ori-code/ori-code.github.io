@@ -1882,6 +1882,16 @@ a {
     unicode-bidi: embed;
 }
 
+/* Keep chord <b> tags LTR in RTL mode (so "F#" doesn't become "#F") */
+[dir="rtl"] .chord-line b,
+.live-preview[dir="rtl"] .chord-line b,
+[dir="rtl"] .preview-page b,
+.preview-page[dir="rtl"] b {
+    direction: ltr;
+    unicode-bidi: embed;
+    display: inline-block;
+}
+
 /* Preview Logo - The Faith Sound */
 .preview-page {
     position: relative;
@@ -2261,10 +2271,16 @@ a {
 }
 
 /* RTL: Reverse badge order so V1 V2 V3 V4 reads right-to-left */
+/* Direct selector when dir is on badges-row itself */
+.section-badges-row[dir="rtl"] {
+    flex-direction: row-reverse !important;
+    justify-content: flex-end !important;
+}
+/* Fallback: ancestor-based selector */
 [dir="rtl"] .section-badges-row,
 .live-preview[dir="rtl"] .section-badges-row {
-    flex-direction: row-reverse;
-    justify-content: flex-end;
+    flex-direction: row-reverse !important;
+    justify-content: flex-end !important;
 }
 
 /* Reduce space after badges row */

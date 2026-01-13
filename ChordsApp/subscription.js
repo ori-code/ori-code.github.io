@@ -377,18 +377,28 @@ class SubscriptionManager {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to increment analysis count');
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Failed to increment analysis count:', errorData);
+                throw new Error(errorData.error || 'Failed to increment analysis count');
             }
 
             const result = await response.json();
 
-            // Update local usage count
+            // Update local state based on what type of scan was used
             if (result.usedBonus) {
-                console.log(`Used bonus analysis. ${result.bonusRemaining} bonus analyses remaining.`);
+                console.log(`✅ Used bonus scan. ${result.bonusRemaining} bonus scans remaining.`);
+            } else if (result.usedPurchasedScan) {
+                // BOOK tier: Update local purchased scans count
+                this.userPurchasedScans = result.purchasedScansRemaining;
+                console.log(`✅ Used purchased scan. ${result.purchasedScansRemaining} scans remaining.`);
             } else {
+                // Regular tier: Update monthly usage
                 this.userUsage.analysesThisMonth = result.analysesThisMonth;
-                console.log(`Analysis count incremented to ${result.analysesThisMonth}`);
+                console.log(`✅ Analysis count incremented to ${result.analysesThisMonth}`);
             }
+
+            // Notify UI to update
+            this.notifySubscriptionChange();
 
         } catch (error) {
             console.error('Error incrementing analysis count:', error);

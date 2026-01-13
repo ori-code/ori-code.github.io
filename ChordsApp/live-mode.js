@@ -668,7 +668,11 @@ const liveMode = {
                     }
 
                     if (badgesList.length > 0) {
-                        const badges = badgesList
+                        // Detect RTL for badge ordering
+                        const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+                        const isRTLContent = rtlChars.test(cleanContent);
+
+                        let badgeItems = badgesList
                             .filter(item => item.type === 'badge' || (typeof item === 'string' && item !== '>')) // Skip flow arrows
                             .map(item => {
                                 // Handle badges (support both object and string formats)
@@ -687,13 +691,23 @@ const liveMode = {
                                        'badge-other');
                                 const repeatSup = repeat > 1 ? `<sup class="repeat-count">${repeat}x</sup>` : '';
                                 return `<span class="section-badge ${colorClass}">${label}${repeatSup}</span>`;
-                            }).join('');
+                            });
+
+                        // Reverse badges array for RTL content so V1 appears on right
+                        if (isRTLContent) {
+                            badgeItems = badgeItems.reverse();
+                        }
+                        const badges = badgeItems.join('');
 
                         const badgesRow = document.createElement('div');
                         badgesRow.className = 'section-badges-row';
+                        const badgesDir = isRTLContent ? 'rtl' : 'ltr';
+                        badgesRow.setAttribute('dir', badgesDir);
                         badgesRow.innerHTML = badges;
                         chartDisplay.insertBefore(badgesRow, chartDisplay.firstChild);
-                        console.log('🏷️ Live Mode: Added arrangement badges');
+                        console.log('🏷️ Live Mode BADGES RTL DEBUG:');
+                        console.log('  isRTLContent:', isRTLContent);
+                        console.log('  badges reversed:', isRTLContent);
                     }
                 }
 

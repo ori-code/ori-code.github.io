@@ -60,10 +60,22 @@ const padPlayer = {
         'B': 'B'
     },
 
-    // Path to pad sound files (can be external CDN URL)
-    // Options: 'pads/' (local), or external CDN URL ending with /
-    // Note: jsDelivr blocks large files. Use Cloudflare R2 for free CDN if needed.
-    soundPath: 'pads/',
+    // Cloudinary CDN URLs for each pad sound
+    // Using individual URLs because Cloudinary adds unique suffixes
+    soundUrls: {
+        'C': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327507/C_llwtg0.mp3',
+        'Csharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327505/Csharp_oyqnko.mp3',
+        'D': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327503/D_j0a54j.mp3',
+        'Dsharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327508/Dsharp_jjmy9l.mp3',
+        'E': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327508/E_a3iyi5.mp3',
+        'F': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327508/F_jumjlo.mp3',
+        'Fsharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327501/Fsharp_lk9kc4.mp3',
+        'G': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327500/G_sw9bgt.mp3',
+        'Gsharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327504/Gsharp_nz4mag.mp3',
+        'A': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327500/A_hvrjts.mp3',
+        'Asharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327497/Asharp_uniszd.mp3',
+        'B': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327502/B_clzz3u.mp3'
+    },
 
     // Loading state
     isLoading: false,
@@ -93,7 +105,11 @@ const padPlayer = {
                     return;
                 }
 
-                const url = `${this.soundPath}${key}.mp3`;
+                const url = this.soundUrls[key];
+                if (!url) {
+                    console.warn(`No URL configured for pad: ${key}`);
+                    return;
+                }
                 const response = await fetch(url);
 
                 if (!response.ok) {
@@ -238,7 +254,11 @@ const padPlayer = {
                     console.log(`Using preloaded cache for: ${key}`);
                 } else {
                     // Fetch if not preloaded
-                    const url = `${this.soundPath}${key}.mp3`;
+                    const url = this.soundUrls[key];
+                    if (!url) {
+                        console.warn(`No URL configured for pad: ${key}`);
+                        return;
+                    }
                     const response = await fetch(url);
 
                     if (!response.ok) {

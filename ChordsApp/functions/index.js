@@ -382,16 +382,18 @@ exports.canAnalyze = functions.https.onRequest((req, res) => {
                 return res.status(401).json({ error: 'Unauthorized - Invalid token' });
             }
 
-            // Get user subscription and usage
-            const [subscriptionSnap, usageSnap, bonusSnap] = await Promise.all([
+            // Get user subscription, usage, bonus, and purchased scans
+            const [subscriptionSnap, usageSnap, bonusSnap, purchasedScansSnap] = await Promise.all([
                 db.ref(`users/${uid}/subscription`).once('value'),
                 db.ref(`users/${uid}/usage`).once('value'),
-                db.ref(`users/${uid}/bonusAnalyses`).once('value')
+                db.ref(`users/${uid}/bonusAnalyses`).once('value'),
+                db.ref(`users/${uid}/purchasedScans`).once('value')
             ]);
 
             const subscription = subscriptionSnap.val() || { tier: 'FREE' };
             let usage = usageSnap.val() || { analysesThisMonth: 0, monthStartDate: new Date().toISOString() };
             const bonusAnalyses = bonusSnap.val() || 0;
+            const purchasedScans = purchasedScansSnap.val() || 0;
 
             // Check if month has changed (reset usage)
             const monthStart = new Date(usage.monthStartDate);
@@ -401,21 +403,31 @@ exports.canAnalyze = functions.https.onRequest((req, res) => {
                 await db.ref(`users/${uid}/usage`).set(usage);
             }
 
-            // Define tier limits
-            const tierLimits = { FREE: 3, BASIC: 20, PRO: -1 };
-            const limit = tierLimits[subscription.tier] || 3;
+            // Define tier limits (BOOK uses purchasedScans, not monthly limit)
+            const tierLimits = { FREE: 3, BASIC: 20, PRO: 50, BOOK: 0 };
+            const limit = tierLimits[subscription.tier] !== undefined ? tierLimits[subscription.tier] : 3;
             const used = usage.analysesThisMonth || 0;
 
             // Check if can analyze
-            const canAnalyze = limit === -1 || used < limit || bonusAnalyses > 0;
+            let canAnalyze = false;
+            if (bonusAnalyses > 0) {
+                canAnalyze = true;
+            } else if (subscription.tier === 'BOOK') {
+                canAnalyze = purchasedScans > 0;
+            } else if (limit === -1) {
+                canAnalyze = true;
+            } else {
+                canAnalyze = used < limit;
+            }
 
             return res.status(200).json({
                 canAnalyze,
                 tier: subscription.tier,
-                limit: limit === -1 ? 'unlimited' : limit,
+                limit: subscription.tier === 'BOOK' ? 'pay-per-scan' : (limit === -1 ? 'unlimited' : limit),
                 used,
-                remaining: limit === -1 ? 'unlimited' : Math.max(0, limit - used),
-                bonusAnalyses
+                remaining: subscription.tier === 'BOOK' ? purchasedScans : (limit === -1 ? 'unlimited' : Math.max(0, limit - used)),
+                bonusAnalyses,
+                purchasedScans
             });
 
         } catch (error) {
@@ -441,32 +453,55 @@ exports.incrementAnalysis = functions.https.onRequest((req, res) => {
                 return res.status(401).json({ error: 'Unauthorized - Invalid token' });
             }
 
-            const [usageSnap, bonusSnap] = await Promise.all([
+            const [subscriptionSnap, usageSnap, bonusSnap, purchasedScansSnap] = await Promise.all([
+                db.ref(`users/${uid}/subscription`).once('value'),
                 db.ref(`users/${uid}/usage`).once('value'),
-                db.ref(`users/${uid}/bonusAnalyses`).once('value')
+                db.ref(`users/${uid}/bonusAnalyses`).once('value'),
+                db.ref(`users/${uid}/purchasedScans`).once('value')
             ]);
 
+            const subscription = subscriptionSnap.val() || { tier: 'FREE' };
             const usage = usageSnap.val() || { analysesThisMonth: 0, monthStartDate: new Date().toISOString() };
             const bonusAnalyses = bonusSnap.val() || 0;
+            const purchasedScans = purchasedScansSnap.val() || 0;
 
-            // If user has bonus analyses, use those first
+            // Priority 1: If user has bonus analyses, use those first
             if (bonusAnalyses > 0) {
                 await db.ref(`users/${uid}/bonusAnalyses`).set(bonusAnalyses - 1);
+                console.log(`User ${uid}: Used bonus scan. Remaining: ${bonusAnalyses - 1}`);
                 return res.status(200).json({
                     success: true,
                     usedBonus: true,
                     bonusRemaining: bonusAnalyses - 1
                 });
-            } else {
-                // Otherwise increment monthly count
-                usage.analysesThisMonth = (usage.analysesThisMonth || 0) + 1;
-                await db.ref(`users/${uid}/usage`).set(usage);
+            }
+
+            // Priority 2: BOOK tier uses purchased scans
+            if (subscription.tier === 'BOOK') {
+                if (purchasedScans <= 0) {
+                    return res.status(403).json({
+                        error: 'No scans remaining',
+                        purchasedScans: 0
+                    });
+                }
+                await db.ref(`users/${uid}/purchasedScans`).set(purchasedScans - 1);
+                console.log(`User ${uid} (BOOK): Used purchased scan. Remaining: ${purchasedScans - 1}`);
                 return res.status(200).json({
                     success: true,
-                    usedBonus: false,
-                    analysesThisMonth: usage.analysesThisMonth
+                    usedPurchasedScan: true,
+                    purchasedScansRemaining: purchasedScans - 1
                 });
             }
+
+            // Priority 3: Regular tier - increment monthly count
+            usage.analysesThisMonth = (usage.analysesThisMonth || 0) + 1;
+            await db.ref(`users/${uid}/usage`).set(usage);
+            console.log(`User ${uid} (${subscription.tier}): Incremented monthly count to ${usage.analysesThisMonth}`);
+            return res.status(200).json({
+                success: true,
+                usedBonus: false,
+                analysesThisMonth: usage.analysesThisMonth
+            });
 
         } catch (error) {
             console.error('Error incrementing analysis count:', error);
