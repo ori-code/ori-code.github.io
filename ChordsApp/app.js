@@ -5362,6 +5362,20 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
         }
 
+        // Update side menu scans indicator (for BOOK tier users)
+        const sideMenuScansIndicator = document.getElementById('sideMenuScansIndicator');
+        const sideMenuScansText = document.getElementById('sideMenuScansText');
+        if (sideMenuScansIndicator && sideMenuScansText && window.subscriptionManager) {
+            const purchasedScans = window.subscriptionManager.getPurchasedScans() || 0;
+            // Show for BOOK tier users who have purchased scans
+            if (summary.tier === 'BOOK' || purchasedScans > 0) {
+                sideMenuScansIndicator.style.display = 'block';
+                sideMenuScansText.textContent = purchasedScans;
+            } else {
+                sideMenuScansIndicator.style.display = 'none';
+            }
+        }
+
         if (sideMenuUpgradeButton) {
             sideMenuUpgradeButton.style.display = (summary.tier === 'FREE' || summary.tier === 'BASIC') ? 'block' : 'none';
         }

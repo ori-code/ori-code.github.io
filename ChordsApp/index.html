@@ -461,6 +461,11 @@
                     <div id="sideMenuUsageIndicator" style="margin-top: 12px; padding: 10px 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; text-align: center;">
                         <span id="sideMenuUsageText" style="font-size: 13px; color: #3b82f6; font-weight: 500;">Loading...</span>
                     </div>
+                    <!-- Scans Remaining -->
+                    <div id="sideMenuScansIndicator" style="margin-top: 8px; padding: 10px 12px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; text-align: center; display: none;">
+                        <span style="font-size: 11px; color: #a78bfa;">Scans remaining:</span>
+                        <span id="sideMenuScansText" style="font-size: 15px; color: #8b5cf6; font-weight: 600; margin-left: 6px;">0</span>
+                    </div>
                     <!-- Upgrade Button -->
                     <button id="sideMenuUpgradeButton" class="side-menu-btn" style="margin-top: 10px; width: 100%; background: linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%); color: white; font-weight: 600; border: none; display: none;">
                         ⭐ Upgrade
@@ -1156,18 +1161,22 @@
         .pricing-grid-responsive {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 1fr;
             gap: 16px;
+            align-items: stretch;
+            padding-top: 14px;
         }
         .pricing-grid-responsive .pricing-card,
         .pricing-grid-responsive > div {
             display: flex;
             flex-direction: column;
-            min-height: 380px;
+            position: relative;
+            height: 100%;
+            box-sizing: border-box;
         }
         .pricing-grid-responsive .pricing-card ul,
         .pricing-grid-responsive > div ul {
             flex: 1;
-            min-height: 140px;
         }
         @media (max-width: 800px) {
             .pricing-grid-responsive {
@@ -1177,10 +1186,11 @@
         @media (max-width: 500px) {
             .pricing-grid-responsive {
                 grid-template-columns: 1fr;
+                grid-auto-rows: auto;
             }
             .pricing-grid-responsive .pricing-card,
             .pricing-grid-responsive > div {
-                min-height: auto;
+                height: auto;
             }
         }
         .scan-packs-grid {
