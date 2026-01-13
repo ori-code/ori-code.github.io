@@ -2260,10 +2260,11 @@ a {
     page-break-inside: avoid;
 }
 
-/* RTL: Align badges to the right to match first column */
+/* RTL: Reverse badge order so V1 V2 V3 V4 reads right-to-left */
 [dir="rtl"] .section-badges-row,
 .live-preview[dir="rtl"] .section-badges-row {
-    justify-content: flex-start;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
 }
 
 /* Reduce space after badges row */
