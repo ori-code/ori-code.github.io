@@ -3279,6 +3279,32 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return hasBadges && onlyBadges;
         };
 
+        // ✅ Convert plain text badge line to styled badges
+        const convertBadgeLineToStyled = (line) => {
+            const badgePattern = /\(([A-Z]+\d*)\)/gi;
+            const matches = [...line.matchAll(badgePattern)];
+            if (matches.length === 0) return null;
+
+            const badges = matches.map(m => {
+                const label = m[1].toUpperCase();
+                const colorClass =
+                    label.startsWith('I') && !label.startsWith('INT') ? 'badge-intro' :
+                    label.startsWith('V') ? 'badge-verse' :
+                    label.startsWith('C') && !label.startsWith('CD') ? 'badge-chorus' :
+                    label.startsWith('B') && !label.startsWith('BRK') ? 'badge-bridge' :
+                    label.startsWith('PC') ? 'badge-prechorus' :
+                    label.startsWith('O') ? 'badge-outro' :
+                    label.startsWith('TURN') ? 'badge-turn' :
+                    label.startsWith('BRK') ? 'badge-break' :
+                    label.startsWith('TAG') ? 'badge-tag' :
+                    label.startsWith('INT') ? 'badge-interlude' :
+                    'badge-other';
+                return `<span class="section-badge ${colorClass}">${label}</span>`;
+            }).join('');
+
+            return `<div class="section-badges-row">${badges}</div>`;
+        };
+
         const finishSection = () => {
             if (currentSection) {
                 const sectionId = `section-${sectionCounter++}`;
@@ -3318,10 +3344,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Skip chord progression summary lines (e.g., "C | 1 | G | 5 D/F | 2# Em | 3")
                 const isChordProgression = /^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(line);
 
-                // ✅ Check if line is arrangement line - skip it but DON'T stop metadata collection
+                // ✅ Check if line is arrangement line - convert to styled badges
                 const lineIsArrangement = isArrangementLine(line);
                 if (lineIsArrangement) {
-                    continue; // Skip arrangement line, keep collecting metadata
+                    // Don't add to metadata, will be rendered as styled badges later
+                    continue;
                 }
 
                 // Check if it's a metadata line (contains Key:, BPM:, Tempo:, Authors:, etc.)
@@ -3413,8 +3440,17 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 }
             }
 
-            // ✅ Skip arrangement line (line with only inline notation)
+            // ✅ Convert arrangement line to styled badges (supports RTL via CSS)
             if (isArrangementLine(line)) {
+                const styledBadges = convertBadgeLineToStyled(line);
+                if (styledBadges && songStructure.length === 0) {
+                    // Only add if we didn't already add badges from songStructure
+                    if (currentSection) {
+                        sectionContent.push(styledBadges);
+                    } else {
+                        formatted.push(styledBadges);
+                    }
+                }
                 continue;
             }
 
