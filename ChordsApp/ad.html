@@ -906,6 +906,172 @@
             gap: 12px;
         }
 
+        /* Media Promo Section */
+        #media {
+            background: var(--bg-2);
+            min-height: auto;
+            padding: 80px 20px;
+        }
+
+        .media-card {
+            background: linear-gradient(135deg, var(--card), var(--card-2));
+            border-radius: 30px;
+            padding: 60px;
+            border: 2px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(192, 38, 211, 0.3);
+        }
+
+        .media-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(192, 38, 211, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .media-card-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .media-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        .media-title {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, var(--text), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .media-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .media-items {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .media-item {
+            background: var(--bg);
+            border-radius: 20px;
+            padding: 30px 20px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .media-item:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(192, 38, 211, 0.2);
+        }
+
+        .media-item-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 20px;
+        }
+
+        .media-item:nth-child(1) .media-item-icon {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+        }
+        .media-item:nth-child(2) .media-item-icon {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+        }
+        .media-item:nth-child(3) .media-item-icon {
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+        }
+
+        .media-item h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .media-item p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .media-item-tag {
+            display: inline-block;
+            background: var(--card-2);
+            color: var(--text-muted);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .media-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 18px 45px;
+            border-radius: 35px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 15px 40px rgba(192, 38, 211, 0.4);
+        }
+
+        .media-cta-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 25px 60px rgba(192, 38, 211, 0.5);
+        }
+
+        .media-cta-btn .arrow {
+            font-size: 22px;
+            transition: transform 0.3s;
+        }
+
+        .media-cta-btn:hover .arrow {
+            transform: translateX(5px);
+        }
+
+        [dir="rtl"] .media-cta-btn:hover .arrow {
+            transform: translateX(-5px);
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .hero-title { font-size: 60px; }
@@ -931,6 +1097,10 @@
             .nav-cta { padding: 8px 16px; font-size: 12px; }
             .theme-toggle { width: 32px; height: 32px; font-size: 14px; }
             .nav-controls { gap: 8px; }
+            .media-card { padding: 30px 20px; }
+            .media-title { font-size: 28px; }
+            .media-items { grid-template-columns: 1fr; }
+            .media-cta-btn { padding: 14px 30px; font-size: 16px; }
         }
     </style>
 </head>
@@ -997,6 +1167,53 @@
                     <a href="#tools" class="btn-secondary">
                         <span class="en">✨ Show All Features</span>
                         <span class="he">✨ הצג את כל התכונות</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Media Promo Section -->
+    <section id="media">
+        <div class="container">
+            <div class="media-card">
+                <div class="media-card-content">
+                    <div class="media-badge">
+                        <span class="en">Media Kit</span>
+                        <span class="he">ערכת מדיה</span>
+                    </div>
+                    <h2 class="media-title">
+                        <span class="en">Watch aChordim in Action</span>
+                        <span class="he">צפה ב-aChordim בפעולה</span>
+                    </h2>
+                    <p class="media-subtitle">
+                        <span class="en">Video tutorials, audio demos, and detailed guides in Hebrew, English & Arabic</span>
+                        <span class="he">סרטוני הדרכה, הדגמות אודיו ומדריכים מפורטים בעברית, אנגלית וערבית</span>
+                    </p>
+                    <div class="media-items">
+                        <a href="https://drive.google.com/drive/folders/1tOhEKuED_c9FPMXq79FIN8mvPvoUK0WW?usp=sharing" target="_blank" class="media-item">
+                            <div class="media-item-icon">🎬</div>
+                            <h4><span class="en">Video Demo</span><span class="he">הדגמת וידאו</span></h4>
+                            <p><span class="en">See aChordim transform your worship</span><span class="he">ראה איך aChordim משנה את ההלל שלך</span></p>
+                            <span class="media-item-tag">MP4 • 28MB</span>
+                        </a>
+                        <a href="https://drive.google.com/drive/folders/1tOhEKuED_c9FPMXq79FIN8mvPvoUK0WW?usp=sharing" target="_blank" class="media-item">
+                            <div class="media-item-icon">🎧</div>
+                            <h4><span class="en">Audio Guide</span><span class="he">מדריך אודיו</span></h4>
+                            <p><span class="en">Listen to how aChordim works</span><span class="he">האזן לאיך aChordim עובד</span></p>
+                            <span class="media-item-tag">M4A • 22MB</span>
+                        </a>
+                        <a href="https://drive.google.com/drive/folders/1tOhEKuED_c9FPMXq79FIN8mvPvoUK0WW?usp=sharing" target="_blank" class="media-item">
+                            <div class="media-item-icon">📄</div>
+                            <h4><span class="en">Full Guide PDF</span><span class="he">מדריך PDF מלא</span></h4>
+                            <p><span class="en">Complete ministry transformation guide</span><span class="he">מדריך מלא לשינוי השירות המוזיקלי</span></p>
+                            <span class="media-item-tag">PDF • 14MB</span>
+                        </a>
+                    </div>
+                    <a href="https://drive.google.com/drive/folders/1tOhEKuED_c9FPMXq79FIN8mvPvoUK0WW?usp=sharing" target="_blank" class="media-cta-btn">
+                        <span class="en">Open Media Kit</span>
+                        <span class="he">פתח ערכת מדיה</span>
+                        <span class="arrow">→</span>
                     </a>
                 </div>
             </div>
