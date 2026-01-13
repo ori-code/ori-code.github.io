@@ -1160,7 +1160,7 @@
     <style>
         .pricing-grid-responsive {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             grid-auto-rows: 1fr;
             gap: 16px;
             align-items: stretch;
@@ -1172,7 +1172,18 @@
             flex-direction: column;
             position: relative;
             height: 100%;
+            width: 100%;
+            min-width: 0;
             box-sizing: border-box;
+            overflow: visible;
+        }
+        /* Contain PayPal buttons within cards */
+        .pricing-grid-responsive .pricing-card > div:last-child,
+        .pricing-grid-responsive > div > div:last-child {
+            overflow: hidden;
+        }
+        [id^="paypal-button-"] {
+            overflow: hidden;
         }
         .pricing-grid-responsive .pricing-card ul,
         .pricing-grid-responsive > div ul {
@@ -1210,7 +1221,7 @@
         }
     </style>
     <div id="subscriptionModal" class="modal-overlay">
-        <div class="modal-container" style="max-width: 950px; width: 95%; background: #f8fafc;">
+        <div class="modal-container" style="max-width: 1100px; width: 95%; background: #f8fafc;">
             <div class="modal-header" style="background: transparent; border-bottom: 1px solid rgba(0,0,0,0.1);">
                 <h3 style="color: #1f2937; font-weight: 700; font-size: 20px;">Choose Your Plan</h3>
                 <button class="modal-close" id="subscriptionModalClose">&times;</button>
@@ -1329,7 +1340,7 @@
 
     <!-- Registration Prompt Modal (for non-logged-in users) -->
     <div id="registrationPromptModal" class="modal-overlay">
-        <div class="modal-container" style="max-width: 950px; width: 95%; background: #f8fafc;">
+        <div class="modal-container" style="max-width: 1100px; width: 95%; background: #f8fafc;">
             <div class="modal-header" style="background: transparent; border-bottom: 1px solid rgba(0,0,0,0.1); padding: 16px 20px;">
                 <h3 style="color: #1f2937; font-weight: 700; font-size: 20px;">Choose Your Plan</h3>
                 <button class="modal-close" id="registrationPromptClose">&times;</button>
