@@ -17,21 +17,20 @@ const PAYPAL_ENV = (() => {
 console.log(`PayPal Environment: ${PAYPAL_ENV}`);
 
 // PayPal Client IDs
-// NOTE: Using production client ID for both environments since plans were created in live account with test prices
 const PAYPAL_CLIENT_IDS = {
-    sandbox: 'AZObqKE5ztYeUcv5jiLNxiM7XgV6OZ7HdEzd6xfEB7_feWVC6z4HrsPdYvtvWcJYi3lAs6xgSRxAXwW8',  // Using production for testing
-    production: 'AZObqKE5ztYeUcv5jiLNxiM7XgV6OZ7HdEzd6xfEB7_feWVC6z4HrsPdYvtvWcJYi3lAs6xgSRxAXwW8'
+    sandbox: 'AW_rE_IRVwI7jamScSd1CE4-_Uuws0NmRxe0--YLUH-pjxqCtM51tnsK7u2t6QFqKesEnfHhxZbrRXOe',
+    production: 'AUjr_VTe9_mnojYbrv2wEhvIlYN3nXES7HG2hIfHpNhZchdcNGCh6WeHJtxwXkDBqS09gb2RjX-HAYEK'
 };
 
 // PayPal Plan IDs (from PayPal Developer Dashboard)
 const PAYPAL_PLAN_IDS = {
     sandbox: {
-        BASIC: 'P-8J890296A3354335HNFP76AY',  // Sandbox Basic plan
-        PRO: 'P-0LC262226Y1697300NFP77MY'     // Sandbox Pro plan
+        BASIC: 'P-6PG918695K486915UNEJWL2Q',  // Basic plan $0.99/month
+        PRO: 'P-4VN66533B0865510NNEJWZTI'     // Pro plan $1.99/month
     },
     production: {
-        BASIC: 'P-8J890296A3354335HNFP76AY',  // Production Basic plan $0.99/month
-        PRO: 'P-0LC262226Y1697300NFP77MY'     // Production Pro plan $1.99/month
+        BASIC: 'P-6PG918695K486915UNEJWL2Q',  // Basic plan $0.99/month
+        PRO: 'P-4VN66533B0865510NNEJWZTI'     // Pro plan $1.99/month
     }
 };
 
@@ -91,7 +90,8 @@ class PayPalSubscriptionManager {
             }
 
             // Load PayPal SDK with environment-specific client ID
-            // Note: Don't specify intent to allow both subscriptions AND one-time orders
+            // Don't use intent=subscription to allow both orders AND subscriptions
+            // Change button labels to work without intent restriction
             const script = document.createElement('script');
             script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&currency=USD`;
             console.log(`Loading PayPal SDK for ${PAYPAL_ENV} environment`);
@@ -135,12 +135,13 @@ class PayPalSubscriptionManager {
         container.innerHTML = '';
 
         // Render PayPal subscription button
+        // Note: Using label: 'paypal' instead of 'subscribe' to work without intent=subscription
         window.paypal.Buttons({
             style: {
                 shape: 'rect',
                 color: 'gold',
                 layout: 'vertical',
-                label: 'subscribe'
+                label: 'paypal'
             },
 
             createSubscription: (data, actions) => {
@@ -177,7 +178,11 @@ class PayPalSubscriptionManager {
                 console.log('Subscription cancelled by user');
                 this.showSubscriptionCancelled();
             }
-        }).render(`#${containerId}`);
+        }).render(`#${containerId}`).then(() => {
+            console.log(`Subscription button (${planType}) rendered successfully`);
+        }).catch(err => {
+            console.error(`Failed to render subscription button (${planType}):`, err);
+        });
     }
 
     /**

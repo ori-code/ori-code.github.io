@@ -1,6 +1,12 @@
-# PayPal Subscription Setup Guide for ChordsApp
+# PayPal Subscription & Payment Setup Guide for aChordim
 
-This guide will help you set up PayPal subscriptions for ChordsApp.
+This guide will help you set up PayPal subscriptions and one-time payments for aChordim.
+
+## Payment Types
+
+aChordim uses two types of PayPal payments:
+1. **Subscriptions** (Basic & Pro plans) - Recurring monthly payments with 3-day free trial
+2. **One-time payments** (Book plan & Scan packs) - Single purchase using PayPal Orders API
 
 ## Prerequisites
 
@@ -20,8 +26,8 @@ This guide will help you set up PayPal subscriptions for ChordsApp.
    - Navigate to "Catalog" → "Products" → "Create Product"
    - Product Details:
      - Type: `Service`
-     - Name: `ChordsApp Basic`
-     - Description: `20 AI analyses/month + Save to Library`
+     - Name: `aChordim Basic`
+     - Description: `20 scans/month + Save to Library`
    - Click "Save"
    - Click "Add Pricing" → "Create Plan"
    - Plan Details:
@@ -32,21 +38,27 @@ This guide will help you set up PayPal subscriptions for ChordsApp.
      - Trial period: `3 days` (free)
    - Save the **Plan ID** (starts with `P-`)
 
-   ### Pro Plan ($2.99/month)
+   ### Pro Plan ($1.99/month)
    - Navigate to "Catalog" → "Products" → "Create Product"
    - Product Details:
      - Type: `Service`
-     - Name: `ChordsApp Pro`
-     - Description: `Unlimited AI analyses + Nashville Numbers + Save to Library`
+     - Name: `aChordim Pro`
+     - Description: `50 scans/month + Nashville Numbers + Live Sessions + Save to Library`
    - Click "Save"
    - Click "Add Pricing" → "Create Plan"
    - Plan Details:
-     - Name: `ChordsApp Pro Monthly`
+     - Name: `aChordim Pro Monthly`
      - Billing cycle: `Monthly`
-     - Price: `$2.99 USD`
+     - Price: `$1.99 USD`
      - Setup fee: `$0.00`
      - Trial period: `3 days` (free)
    - Save the **Plan ID** (starts with `P-`)
+
+   ### Book Plan ($9.99 one-time) - NO SUBSCRIPTION PLAN NEEDED
+   - The Book plan uses PayPal one-time payments (Orders API), not subscriptions
+   - No need to create a subscription plan in PayPal Dashboard
+   - The price is set directly in `paypal-subscription.js` under `PAYPAL_PRICES`
+   - Uses `actions.order.create()` instead of `actions.subscription.create()`
 
 ## Step 2: Get Your Client ID
 
@@ -69,9 +81,16 @@ const PAYPAL_PLAN_IDS = {
 ```
 
 ```javascript
-// Line 25: Replace with your actual Client ID
-script.src = 'https://www.paypal.com/sdk/js?client-id=YOUR_ACTUAL_CLIENT_ID&vault=true&intent=subscription';
+// Line 97: Replace with your actual Client ID
+// NOTE: We don't use intent=subscription to allow BOTH subscriptions AND one-time purchases
+script.src = `https://www.paypal.com/sdk/js?client-id=${PAYPAL_CLIENT_ID}&vault=true&currency=USD`;
 ```
+
+**Important SDK Notes:**
+- We do NOT use `intent=subscription` because it prevents one-time purchases (Book plan)
+- We do NOT use `intent=capture` because it prevents subscription creation
+- Without intent parameter, the SDK supports BOTH `actions.subscription.create()` AND `actions.order.create()`
+- Subscription buttons use `label: 'paypal'` instead of `label: 'subscribe'` (which requires intent=subscription)
 
 **Note:** Use **Sandbox Client ID** for testing, and **Live Client ID** for production.
 
@@ -197,11 +216,14 @@ app.listen(3000, () => {
 
 - [ ] Basic subscription flow works
 - [ ] Pro subscription flow works
+- [ ] Book one-time purchase works (uses Orders API)
+- [ ] Scan pack purchases work (uses Orders API)
 - [ ] 3-day trial activates correctly
 - [ ] Firebase subscription data updates
 - [ ] Usage limits are enforced
 - [ ] Save/Load features are gated properly
-- [ ] Nashville Numbers gated for Pro only
+- [ ] Nashville Numbers gated for Pro/Book only
+- [ ] Live Sessions gated for Pro only
 - [ ] Webhooks trigger on subscription events
 
 ## Step 6: Go Live
@@ -213,8 +235,13 @@ app.listen(3000, () => {
 
 2. **Update Code**
    ```javascript
-   // paypal-subscription.js - Line 25
-   script.src = 'https://www.paypal.com/sdk/js?client-id=YOUR_LIVE_CLIENT_ID&vault=true&intent=subscription';
+   // paypal-subscription.js - Update PAYPAL_CLIENT_IDS with your Live Client ID
+   const PAYPAL_CLIENT_IDS = {
+       sandbox: 'YOUR_SANDBOX_CLIENT_ID',
+       production: 'YOUR_LIVE_CLIENT_ID'  // Update this for production
+   };
+   // The SDK URL is built automatically without intent parameter:
+   // https://www.paypal.com/sdk/js?client-id=${CLIENT_ID}&vault=true&currency=USD
    ```
 
 3. **Deploy**

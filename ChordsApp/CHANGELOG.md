@@ -1,5 +1,24 @@
 # ChordsApp Changelog
 
+## v1.7 - 2026-01-13
+### Fixed
+- **PayPal Book tier purchase:**
+  - Removed `intent=subscription` from PayPal SDK loading to support both subscriptions AND one-time orders
+  - Changed subscription button label from 'subscribe' to 'paypal' to work without intent restriction
+  - Book plan one-time purchases now work correctly with `actions.order.create()`
+
+### Improved
+- **Pricing cards UI:**
+  - Made pricing grids symmetrical with `grid-auto-rows: 1fr` for equal row heights
+  - Added "No credit card" subtitle to Free tier for consistent card structure
+  - Changed button placement to `margin-top: auto` for bottom-aligned buttons
+  - Improved card styling with thicker borders (2px) for paid tiers
+  - Consistent 2x2 grid layout in subscription and registration modals
+
+### Changed
+- Rebranded from AI mentions to aChordim branding
+- Updated pricing card fonts: 14px headers, 24px prices, 11px features
+
 ## v1.6 - 2025-12-15
 ### Fixed
 - **Transpose metadata corruption bug:**

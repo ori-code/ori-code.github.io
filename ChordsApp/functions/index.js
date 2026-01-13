@@ -32,6 +32,7 @@ CHORDS APP FORMAT v4 - MANDATORY OUTPUT FORMAT
 {key: G}
 {time: 4/4}
 {tempo: 120}
+{duration: 5:00}
 {layout: 2}
 
 ## LAYOUT DETECTION
@@ -101,6 +102,7 @@ COMPLETE OUTPUT EXAMPLE
 {key: G}
 {time: 3/4}
 {tempo: 76}
+{duration: 5:00}
 {layout: 1}
 (I) (V1) (V2) (TURN) (V3) (C) (TAG) (O)
 
