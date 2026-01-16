@@ -170,30 +170,13 @@ document.addEventListener('DOMContentLoaded', () => {
         yearSpan.textContent = new Date().getFullYear();
     }
 
-    // Preload pad sounds from jsDelivr CDN on page load (no user interaction needed)
-    // Files are fetched and cached, decoded when user first plays a pad
+    // Preload pad sounds from Cloudinary CDN on page load (no user interaction needed)
+    // Files are fetched and cached silently, decoded when user first plays a pad
     if (window.padPlayer) {
-        // Show loading indicator
-        const loadingIndicator = document.createElement('div');
-        loadingIndicator.id = 'padLoadingIndicator';
-        loadingIndicator.innerHTML = '🎹 Loading pads... <span id="padLoadProgress">0/12</span>';
-        loadingIndicator.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: opacity 0.5s;';
-        document.body.appendChild(loadingIndicator);
-
-        window.padPlayer.preloadFiles((loaded, total) => {
-            const progress = document.getElementById('padLoadProgress');
-            if (progress) progress.textContent = `${loaded}/${total}`;
-        }).then(count => {
+        window.padPlayer.preloadFiles().then(count => {
             console.log(`🎹 Pads preloaded from CDN: ${count} files ready`);
-            loadingIndicator.innerHTML = '🎹 Pads ready!';
-            loadingIndicator.style.background = 'linear-gradient(135deg, #059669, #10b981)';
-            setTimeout(() => {
-                loadingIndicator.style.opacity = '0';
-                setTimeout(() => loadingIndicator.remove(), 500);
-            }, 1500);
         }).catch(err => {
             console.log('Pad preloading error:', err.message);
-            loadingIndicator.remove();
         });
     }
 
