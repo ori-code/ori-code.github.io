@@ -799,7 +799,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
     };
     // Match chords in brackets [C] [Em] [Em7] [Cma7] [Cmaj7] [D/F#] [Gsus4] etc.
     // Pattern: Root + sharp/flat + quality (maj/ma/min/m/M/dim/aug/sus/add) + number + bass
-    const CHORD_REGEX = /\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g;
+    // Now also captures optional + or - modifier after bracket for half-step adjustment
+    const CHORD_REGEX = /\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g;
+
+    // Helper function to apply + or - modifier to a chord (half step up/down)
+    const applyChordModifier = (chord, modifier) => {
+        if (!modifier) return chord;
+        const shift = modifier === '+' ? 1 : -1;
+        return transposeChord(chord, shift);
+    };
 
     let uploadedFile = null;
     let previewObjectURL = null;
@@ -3155,15 +3163,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Format chord grid
                 let formattedGrid = trimmedLine;
 
-                // First handle bracketed chords [G] in grids (from wrapChordGridChords)
-                formattedGrid = formattedGrid.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g, (match, chord) => {
-                    const number = chordToNashville(chord, key);
+                // First handle bracketed chords [G] in grids - supports +/- modifiers
+                formattedGrid = formattedGrid.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g, (match, chord, modifier) => {
+                    const finalChord = applyChordModifier(chord, modifier);
+                    const number = chordToNashville(finalChord, key);
                     if (mode === 'both' && number) {
-                        return `<b>${chord}|${number}</b>`;
+                        return `<b>${finalChord}|${number}</b>`;
                     } else if (mode === 'numbers' && number) {
                         return `<b>${number}</b>`;
                     } else {
-                        return `<b>${chord}</b>`;
+                        return `<b>${finalChord}</b>`;
                     }
                 });
 
@@ -3196,18 +3205,20 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             if (hasChords) {
                 if (mode === 'lyrics') {
-                    // Lyrics mode: remove chord brackets entirely
-                    formattedLine = formattedLine.replace(/\[[^\]]+\]/g, '');
+                    // Lyrics mode: remove chord brackets entirely (including +/- modifiers)
+                    formattedLine = formattedLine.replace(/\[[^\]]+\][+-]?/g, '');
                 } else {
-                    // Style chord brackets
-                    formattedLine = formattedLine.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g, (match, chord) => {
-                        const number = chordToNashville(chord, key);
+                    // Style chord brackets - now handles +/- modifiers for half-step adjustment
+                    formattedLine = formattedLine.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g, (match, chord, modifier) => {
+                        // Apply +/- modifier if present (half step up/down)
+                        const finalChord = applyChordModifier(chord, modifier);
+                        const number = chordToNashville(finalChord, key);
                         if (mode === 'both' && number) {
-                            return `<span class="inline-chord"><b>${chord}|${number}</b></span>`;
+                            return `<span class="inline-chord"><b>${finalChord}|${number}</b></span>`;
                         } else if (mode === 'numbers' && number) {
                             return `<span class="inline-chord"><b>${number}</b></span>`;
                         } else {
-                            return `<span class="inline-chord"><b>${chord}</b></span>`;
+                            return `<span class="inline-chord"><b>${finalChord}</b></span>`;
                         }
                     });
                 }
@@ -3666,28 +3677,30 @@ Our [Em7]hearts will cry, these bones will [D]sing
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
 
-            // Handle inline [chord] bracket notation (e.g., [Am]word [G]word2)
+            // Handle inline [chord] bracket notation (e.g., [Am]word [G]word2) - supports +/- modifiers
             if (hasInlineBrackets && /\[[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\]/.test(line)) {
-                const bracketPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g;
+                const bracketPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g;
 
                 if (mode === 'lyrics') {
-                    // Lyrics mode: remove chord brackets entirely
+                    // Lyrics mode: remove chord brackets entirely (including +/- modifiers)
                     line = line.replace(bracketPattern, '');
                     result.push(line);
                 } else if (isRTL) {
                     // RTL content: extract chords and put on line above lyrics
                     const chords = [];
                     let match;
-                    const tempPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g;
+                    const tempPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g;
                     while ((match = tempPattern.exec(line)) !== null) {
                         const chord = match[1];
-                        const number = chordToNashville(chord, key);
+                        const modifier = match[2];
+                        const finalChord = applyChordModifier(chord, modifier);
+                        const number = chordToNashville(finalChord, key);
                         if (mode === 'both' && number) {
-                            chords.push(`<b>${number} | ${chord}</b>`);
+                            chords.push(`<b>${number} | ${finalChord}</b>`);
                         } else if (mode === 'numbers' && number) {
                             chords.push(`<b>${number}</b>`);
                         } else {
-                            chords.push(`<b>${chord}</b>`);
+                            chords.push(`<b>${finalChord}</b>`);
                         }
                     }
                     // Create chord line above lyrics
@@ -3698,14 +3711,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     result.push(line.replace(bracketPattern, ''));
                 } else {
                     // LTR content: style chord brackets inline
-                    line = line.replace(bracketPattern, (_, chord) => {
-                        const number = chordToNashville(chord, key);
+                    line = line.replace(bracketPattern, (_, chord, modifier) => {
+                        const finalChord = applyChordModifier(chord, modifier);
+                        const number = chordToNashville(finalChord, key);
                         if (mode === 'both' && number) {
-                            return `<span class="inline-chord"><b>${chord}|${number}</b></span>`;
+                            return `<span class="inline-chord"><b>${finalChord}|${number}</b></span>`;
                         } else if (mode === 'numbers' && number) {
                             return `<span class="inline-chord"><b>${number}</b></span>`;
                         } else {
-                            return `<span class="inline-chord"><b>${chord}</b></span>`;
+                            return `<span class="inline-chord"><b>${finalChord}</b></span>`;
                         }
                     });
                     result.push(line);

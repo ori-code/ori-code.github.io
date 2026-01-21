@@ -6,7 +6,8 @@ const chordsAppParser = {
 
     // Matches chords in brackets: [G], [Am7], [F#m], [C/G], [Dsus4], [Cadd9], [Cmaj7], [Cma7]
     // Pattern: Root + optional sharp/flat + optional quality (maj/ma/min/m/M/dim/aug/sus/add) + optional number + optional bass
-    CHORD_REGEX: /\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g,
+    // Also captures optional +/- modifier after bracket for half-step adjustment: [G]+, [C]-
+    CHORD_REGEX: /\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g,
 
     // Matches directives: {title: value}, {key: G}, etc.
     DIRECTIVE_REGEX: /\{(\w+):\s*([^}]*)\}/g,
