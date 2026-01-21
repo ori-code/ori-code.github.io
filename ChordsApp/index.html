@@ -686,8 +686,22 @@
                 </div>
             </div>
 
-            <!-- Edit Workspace (right before preview) -->
-            <section id="editor" class="editor" style="display: none;">
+            <!-- Editor + Preview Side-by-Side Wrapper -->
+            <div class="editor-preview-wrapper">
+
+            <!-- Preview Container (LEFT) -->
+            <div class="preview-container" style="position: relative; padding: 0; overflow: hidden;">
+                <div id="pageCounter" style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">Page 1 of 1 (A4)</div>
+                <div id="pagesWrapper" style="display: flex; flex-direction: column; gap: 20px;">
+                    <div class="preview-page" data-page="1">
+                        <!-- Logo removed per user request -->
+                        <div id="livePreview" class="live-preview" style="min-height: 1123px; border: none; padding: 20px 20px 20px 20px; width: 100%; max-width: 210mm;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Workspace (RIGHT) -->
+            <section id="editor" class="editor" style="display: block;">
                 <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h2 style="margin: 0;">Edit workspace</h2>
                 </div>
@@ -724,15 +738,7 @@
                 </div>
             </section>
 
-            <div class="preview-container" style="position: relative; padding: 0; overflow: hidden;">
-                <div id="pageCounter" style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">Page 1 of 1 (A4)</div>
-                <div id="pagesWrapper" style="display: flex; flex-direction: column; gap: 20px;">
-                    <div class="preview-page" data-page="1">
-                        <!-- Logo removed per user request -->
-                        <div id="livePreview" class="live-preview" style="min-height: 1123px; border: none; padding: 20px 20px 20px 20px; width: 100%; max-width: 210mm;"></div>
-                    </div>
-                </div>
-            </div>
+            </div><!-- End editor-preview-wrapper -->
         </section>
 
         <section class="editor" id="songbookSection" style="display: none;">
