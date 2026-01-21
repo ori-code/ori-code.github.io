@@ -703,10 +703,6 @@
             <!-- Edit Workspace (RIGHT) -->
             <section id="editor" class="editor" style="display: block;">
                 <div id="chordWorkspaceContent">
-                    <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
-                        <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
-                        <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
-                    </div>
                     <div class="editor-panel">
                         <!-- TEXTAREA EDITOR -->
                         <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
@@ -717,6 +713,11 @@
                                 <span id="editorFontSizeValue" style="font-size: 0.9rem; color: var(--primary); font-weight: 600; min-width: 40px;">10px</span>
                                 <input type="range" id="editorFontSizeSlider" min="8" max="24" value="10" step="1" style="flex: 1; min-width: 120px;">
                             </label>
+                        </div>
+                        <!-- KEY ANALYSIS (below font slider) -->
+                        <div id="keyAnalysis" style="margin-top: 12px; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
+                            <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
+                            <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
                         </div>
 
                         <!-- VISUAL WORKSPACE SECTION (BOTTOM) -->
