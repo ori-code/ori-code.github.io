@@ -799,13 +799,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
     };
     // Match chords in brackets [C] [Em] [Em7] [Cma7] [Cmaj7] [D/F#] [Gsus4] etc.
     // Pattern: Root + sharp/flat + quality (maj/ma/min/m/M/dim/aug/sus/add) + number + bass
-    // Now also captures optional + or - modifier after bracket for half-step adjustment
-    const CHORD_REGEX = /\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g;
+    // Now also captures optional +/- modifiers after bracket for half-step adjustment (supports ++, +++, --, etc.)
+    const CHORD_REGEX = /\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-]+)?/g;
 
-    // Helper function to apply + or - modifier to a chord (half step up/down)
+    // Helper function to apply +/- modifiers to a chord (each + = half step up, each - = half step down)
+    // Supports multiple: ++ = 2 semitones up, +++ = 3 up, -- = 2 down, etc.
     const applyChordModifier = (chord, modifier) => {
         if (!modifier) return chord;
-        const shift = modifier === '+' ? 1 : -1;
+        // Count the number of + and - characters
+        const plusCount = (modifier.match(/\+/g) || []).length;
+        const minusCount = (modifier.match(/-/g) || []).length;
+        const shift = plusCount - minusCount;
+        if (shift === 0) return chord;
         return transposeChord(chord, shift);
     };
 
@@ -3127,23 +3132,26 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
 
             // Check if line is a chord-only line (chords above lyrics format)
-            // This detects lines like "G    C    G" or "D/F#  Em7  Cma7" that appear above lyrics
+            // This detects lines like "G    C    G" or "D/F#  Em7  Cma7" or "F++  G--" that appear above lyrics
             const tokens = trimmedLine.split(/\s+/).filter(t => t.length > 0);
             const isChordOnlyLine = tokens.length > 0 &&
-                tokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?$/.test(token)) &&
+                tokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?[+-]*$/.test(token)) &&
                 !trimmedLine.includes('|'); // Not a chord grid
 
             if (isChordOnlyLine && mode !== 'lyrics') {
                 // Preserve original spacing - replace chords in-place with formatted versions
-                const chordPattern = /([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?)/g;
-                const formattedChordLine = line.replace(chordPattern, (chord) => {
-                    const number = chordToNashville(chord, key);
+                // Now supports +/- modifiers: F++, G--, Em+, etc.
+                const chordPattern = /([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?)([+-]+)?/g;
+                const formattedChordLine = line.replace(chordPattern, (match, chord, modifier) => {
+                    if (!chord) return match; // Skip empty matches
+                    const finalChord = applyChordModifier(chord, modifier);
+                    const number = chordToNashville(finalChord, key);
                     if (mode === 'both' && number) {
-                        return `<b>${chord}|${number}</b>`;
+                        return `<b>${finalChord}|${number}</b>`;
                     } else if (mode === 'numbers' && number) {
                         return `<b>${number}</b>`;
                     } else {
-                        return `<b>${chord}</b>`;
+                        return `<b>${finalChord}</b>`;
                     }
                 });
 
@@ -3163,8 +3171,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Format chord grid
                 let formattedGrid = trimmedLine;
 
-                // First handle bracketed chords [G] in grids - supports +/- modifiers
-                formattedGrid = formattedGrid.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g, (match, chord, modifier) => {
+                // First handle bracketed chords [G] in grids - supports +/- modifiers (++, --, etc.)
+                formattedGrid = formattedGrid.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-]+)?/g, (match, chord, modifier) => {
                     const finalChord = applyChordModifier(chord, modifier);
                     const number = chordToNashville(finalChord, key);
                     if (mode === 'both' && number) {
@@ -3206,10 +3214,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (hasChords) {
                 if (mode === 'lyrics') {
                     // Lyrics mode: remove chord brackets entirely (including +/- modifiers)
-                    formattedLine = formattedLine.replace(/\[[^\]]+\][+-]?/g, '');
+                    formattedLine = formattedLine.replace(/\[[^\]]+\][+-]*/g, '');
                 } else {
-                    // Style chord brackets - now handles +/- modifiers for half-step adjustment
-                    formattedLine = formattedLine.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g, (match, chord, modifier) => {
+                    // Style chord brackets - handles +/- modifiers for half-step adjustment (++, --, etc.)
+                    formattedLine = formattedLine.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-]+)?/g, (match, chord, modifier) => {
                         // Apply +/- modifier if present (half step up/down)
                         const finalChord = applyChordModifier(chord, modifier);
                         const number = chordToNashville(finalChord, key);
@@ -3532,9 +3540,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const cleanLineForCheck = line.replace(/<[^>]*>/g, '').trim();
             const hasRTLChars = /[\u0590-\u05FF\u0600-\u06FF]/.test(cleanLineForCheck);
             const chordTokens = cleanLineForCheck.split(/\s+/).filter(t => t.length > 0);
-            // Token pattern includes Nashville numbers like "Am|6" or "G|5"
+            // Token pattern includes Nashville numbers like "Am|6" or "G|5", and +/- modifiers
             const isChordOnlyLine = !hasRTLChars && chordTokens.length > 0 &&
-                chordTokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?(?:\|[0-9#b]+)?$/.test(token));
+                chordTokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?[+-]*(?:\|[0-9#b]+)?$/.test(token));
 
             // Detect if line has chord patterns (either <b>chord</b> or bare chords)
             const hasChordBoldTags = /<b>[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?(?:\|[0-9#b]+)?<\/b>/.test(line);
@@ -3677,9 +3685,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
 
-            // Handle inline [chord] bracket notation (e.g., [Am]word [G]word2) - supports +/- modifiers
+            // Handle inline [chord] bracket notation (e.g., [Am]word [G]word2) - supports +/- modifiers (++, --, etc.)
             if (hasInlineBrackets && /\[[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\]/.test(line)) {
-                const bracketPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g;
+                const bracketPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-]+)?/g;
 
                 if (mode === 'lyrics') {
                     // Lyrics mode: remove chord brackets entirely (including +/- modifiers)
@@ -3689,7 +3697,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     // RTL content: extract chords and put on line above lyrics
                     const chords = [];
                     let match;
-                    const tempPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-])?/g;
+                    const tempPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-]+)?/g;
                     while ((match = tempPattern.exec(line)) !== null) {
                         const chord = match[1];
                         const modifier = match[2];
@@ -3760,10 +3768,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     continue;
                 }
 
-                // Check if this is a chord-only line
+                // Check if this is a chord-only line (supports +/- modifiers)
                 const hasRTLChars = /[\u0590-\u05FF\u0600-\u06FF]/.test(line);
-                const chordPattern = /\b[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\b/g;
-                const lineWithoutChords = line.replace(chordPattern, '').trim();
+                const chordPatternForRemove = /\b[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?[+-]*\b/g;
+                const lineWithoutChords = line.replace(chordPatternForRemove, '').trim();
 
                 // If line has RTL characters, it's lyrics - keep it
                 if (hasRTLChars) {
@@ -3789,31 +3797,34 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Only process chords if line has NO Hebrew/Arabic characters
                 // This means it's a pure chord line above the lyrics
                 if (!hasHebrewChars) {
-                    // Process chord-only lines for RTL content
-                    const chordPattern = /(^|\s)([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(\s|$)/g;
-                    line = line.replace(chordPattern, (_, before, chord, after) => {
-                        const number = chordToNashville(chord, key);
+                    // Process chord-only lines for RTL content (supports +/- modifiers)
+                    const chordPattern = /(^|\s)([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)([+-]+)?(\s|$)/g;
+                    line = line.replace(chordPattern, (_, before, chord, modifier, after) => {
+                        const finalChord = applyChordModifier(chord, modifier);
+                        const number = chordToNashville(finalChord, key);
                         if (mode === 'both' && number) {
-                            return `${before}<b>${number} | ${chord}</b>${after}`;
+                            return `${before}<b>${number} | ${finalChord}</b>${after}`;
                         } else if (mode === 'numbers' && number) {
                             return `${before}<b>${number}</b>${after}`;
                         } else {
-                            return `${before}<b>${chord}</b>${after}`;
+                            return `${before}<b>${finalChord}</b>${after}`;
                         }
                     });
                 }
                 // If line has Hebrew chars, leave it completely as-is (don't try to parse chords from mixed text)
             } else {
-                // For English text, use normal pattern
-                const chordPattern = /\b([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
-                line = line.replace(chordPattern, (chord) => {
-                    const number = chordToNashville(chord, key);
+                // For English text, use normal pattern (supports +/- modifiers)
+                const chordPattern = /\b([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)([+-]+)?\b/g;
+                line = line.replace(chordPattern, (match, chord, modifier) => {
+                    if (!chord) return match;
+                    const finalChord = applyChordModifier(chord, modifier);
+                    const number = chordToNashville(finalChord, key);
                     if (mode === 'both' && number) {
-                        return `<b>${chord} | ${number}</b>`;
+                        return `<b>${finalChord} | ${number}</b>`;
                     } else if (mode === 'numbers' && number) {
                         return `<b>${number}</b>`;
                     } else {
-                        return `<b>${chord}</b>`;
+                        return `<b>${finalChord}</b>`;
                     }
                 });
             }
@@ -4476,12 +4487,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
         let metadataLines = [];
         let arrangementLine = '';
         let inMetadata = true;
+        let foundFirstContent = false;
 
         const sectionPattern = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|INTERLUDE|TAG|CODA|TURN|TURNAROUND|BREAK)\s*(\d*):?$/i;
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmedLine = line.trim();
+
+            // Skip empty lines at the start
+            if (!trimmedLine && !foundFirstContent) {
+                continue;
+            }
 
             // Check if it's an arrangement line
             const cleanLine = trimmedLine.replace(/<[^>]*>/g, '');
@@ -4490,23 +4507,26 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             if (isArrangementLine) {
                 arrangementLine = line;
-                continue;
-            }
-
-            // Check if it's metadata
-            const isMetadata = /^(Title|Key|BPM|Tempo|Time|Authors?|Artists?):/i.test(trimmedLine) ||
-                              trimmedLine.includes('Key:') || trimmedLine.includes('BPM:') ||
-                              trimmedLine.startsWith('{');
-
-            if (inMetadata && isMetadata) {
-                metadataLines.push(line);
+                foundFirstContent = true;
                 continue;
             }
 
             // Check if it's a section header
             const sectionMatch = trimmedLine.match(sectionPattern);
+
+            if (inMetadata && !sectionMatch) {
+                // Still in metadata section - capture all lines before first section
+                // This includes song title (first line), author line, key/BPM line, etc.
+                if (trimmedLine) {
+                    metadataLines.push(line);
+                    foundFirstContent = true;
+                }
+                continue;
+            }
+
             if (sectionMatch) {
                 inMetadata = false;
+                foundFirstContent = true;
 
                 // Save previous section if exists
                 if (currentSectionName && currentSectionContent.length > 0) {
@@ -4524,9 +4544,6 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Add line to current section
             if (currentSectionName) {
                 currentSectionContent.push(line);
-            } else if (!inMetadata && trimmedLine) {
-                // Content before any section header - treat as unnamed section
-                inMetadata = false;
             }
         }
 
@@ -4911,23 +4928,33 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Update the time signature in the visual editor content
             let content = visualEditor.value;
+            let replaced = false;
 
-            // Replace existing "Time: ..." pattern
-            const timeSigRegex = /^(.*Time:\s*)([^\n\r|]+)/m;
-            if (timeSigRegex.test(content)) {
-                content = content.replace(timeSigRegex, `$1${newTimeSig}`);
-            } else {
-                // If no time signature line exists, add it after BPM or Key
+            // Try to replace existing time signature in various formats:
+            // 1. {time: 4/4} directive
+            if (/\{time:\s*[^}]+\}/i.test(content)) {
+                content = content.replace(/\{time:\s*[^}]+\}/i, `{time: ${newTimeSig}}`);
+                replaced = true;
+            }
+            // 2. "Time: 4/4" format
+            else if (/Time:\s*\d+\/\d+/i.test(content)) {
+                content = content.replace(/Time:\s*\d+\/\d+/i, `Time: ${newTimeSig}`);
+                replaced = true;
+            }
+            // 3. Standalone time signature at end of metadata line (after comma): ", 4/4" or "| 4/4"
+            else if (/[,|]\s*\d+\/\d+\s*$/m.test(content)) {
+                content = content.replace(/([,|]\s*)\d+\/\d+(\s*)$/m, `$1${newTimeSig}$2`);
+                replaced = true;
+            }
+
+            if (!replaced) {
+                // If no time signature exists, add it after BPM or Key
                 const lines = content.split('\n');
-                const bpmIndex = lines.findIndex(line => line.match(/BPM:/i));
-                const keyIndex = lines.findIndex(line => line.match(/Key:/i));
+                const metaIndex = lines.findIndex(line => /BPM|Key:/i.test(line));
 
-                if (bpmIndex >= 0) {
-                    // Insert after BPM line
-                    lines[bpmIndex] = lines[bpmIndex] + ` | Time: ${newTimeSig}`;
-                } else if (keyIndex >= 0) {
-                    // Insert into key line
-                    lines[keyIndex] = lines[keyIndex] + ` | Time: ${newTimeSig}`;
+                if (metaIndex >= 0) {
+                    // Append to metadata line
+                    lines[metaIndex] = lines[metaIndex].replace(/\s*$/, '') + `, ${newTimeSig}`;
                 } else {
                     // Add as first line
                     lines.unshift(`Time: ${newTimeSig}`);
@@ -4949,19 +4976,33 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Update the BPM in the visual editor content
             let content = visualEditor.value;
+            let replaced = false;
 
-            // Replace existing "BPM: ..." pattern
-            const bpmRegex = /^(.*BPM:\s*)(\d+)/mi;
-            if (bpmRegex.test(content)) {
-                content = content.replace(bpmRegex, `$1${newBPM}`);
-            } else {
-                // If no BPM line exists, add it after Key
+            // Try to replace existing BPM in various formats:
+            // 1. {tempo: 120} directive
+            if (/\{tempo:\s*\d+\}/i.test(content)) {
+                content = content.replace(/\{tempo:\s*\d+\}/i, `{tempo: ${newBPM}}`);
+                replaced = true;
+            }
+            // 2. "BPM: 120" format
+            else if (/BPM:\s*\d+/i.test(content)) {
+                content = content.replace(/BPM:\s*\d+/i, `BPM: ${newBPM}`);
+                replaced = true;
+            }
+            // 3. "120 BPM" format (number before BPM)
+            else if (/\d+\s*BPM/i.test(content)) {
+                content = content.replace(/\d+(\s*BPM)/i, `${newBPM}$1`);
+                replaced = true;
+            }
+
+            if (!replaced) {
+                // If no BPM exists, add it after Key
                 const lines = content.split('\n');
                 const keyIndex = lines.findIndex(line => line.match(/Key:/i));
 
                 if (keyIndex >= 0) {
-                    // Insert into key line
-                    lines[keyIndex] = lines[keyIndex] + ` | BPM: ${newBPM}`;
+                    // Append to key line
+                    lines[keyIndex] = lines[keyIndex].replace(/\s*$/, '') + `, ${newBPM} BPM`;
                 } else {
                     // Add as first line
                     lines.unshift(`BPM: ${newBPM}`);
