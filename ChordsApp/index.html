@@ -702,30 +702,22 @@
 
             <!-- Edit Workspace (RIGHT) -->
             <section id="editor" class="editor" style="display: block;">
-                <div class="editor-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2 style="margin: 0;">Edit workspace</h2>
-                </div>
                 <div id="chordWorkspaceContent">
                     <div id="keyAnalysis" style="margin: 20px 0; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; display: none;">
                         <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.95rem; font-weight: 600;">🎵 Key Analysis</h4>
                         <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
                     </div>
                     <div class="editor-panel">
-                        <!-- TEXTAREA SECTION (TOP) -->
-                        <header class="visual-editor-header">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <h3 style="margin: 0;">Visual Editor (edit here)</h3>
-                            </div>
-                            <small class="visual-editor-subtitle">Chords above lyrics - adjust spacing freely</small>
-                        </header>
-                        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; margin-bottom: 12px;">
+                        <!-- TEXTAREA EDITOR -->
+                        <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
+                        <!-- FONT SIZE SLIDER (below editor) -->
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; margin-top: 12px;">
                             <label style="flex: 1; display: flex; align-items: center; gap: 8px; margin: 0;">
                                 <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500; white-space: nowrap;">Edit Font Size:</span>
                                 <span id="editorFontSizeValue" style="font-size: 0.9rem; color: var(--primary); font-weight: 600; min-width: 40px;">10px</span>
                                 <input type="range" id="editorFontSizeSlider" min="8" max="24" value="10" step="1" style="flex: 1; min-width: 120px;">
                             </label>
                         </div>
-                        <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
 
                         <!-- VISUAL WORKSPACE SECTION (BOTTOM) -->
                         <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
