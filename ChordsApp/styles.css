@@ -1816,22 +1816,25 @@ a {
 }
 
 /* Side-by-side layout: Preview (left) + Editor (right) - 50/50 */
+/* Side-by-side layout: Both A4 format */
 .editor-preview-wrapper {
     display: flex;
     gap: 20px;
     align-items: flex-start;
+    justify-content: center;
     width: 100%;
 }
 
 .editor-preview-wrapper .preview-container {
-    flex: 1 1 50%;
+    flex: 0 0 210mm; /* A4 width */
     margin: 0;
-    width: auto !important;
+    width: 210mm !important;
     min-width: 0;
 }
 
 .editor-preview-wrapper .editor {
-    flex: 1 1 50%;
+    flex: 0 0 210mm; /* A4 width - same as preview */
+    width: 210mm;
     min-width: 0;
     margin: 0;
     position: sticky;
@@ -1841,22 +1844,19 @@ a {
 }
 
 /* Responsive: stack on smaller screens */
-@media (max-width: 1000px) {
+@media (max-width: 1600px) {
     .editor-preview-wrapper {
         flex-direction: column-reverse;
+        align-items: center;
     }
 
     .editor-preview-wrapper .preview-container,
     .editor-preview-wrapper .editor {
-        flex: 1 1 100%;
-        max-width: 100%;
-        position: static;
-        max-height: none;
-    }
-
-    .editor-preview-wrapper .preview-container {
+        flex: 0 0 auto;
         width: 210mm !important;
         max-width: 100% !important;
+        position: static;
+        max-height: none;
         margin: 0 auto;
     }
 }

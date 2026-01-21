@@ -711,18 +711,10 @@
                         <p id="keyAnalysisText" style="margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;"></p>
                     </div>
                     <div class="editor-panel">
+                        <!-- TEXTAREA SECTION (TOP) -->
                         <header class="visual-editor-header">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                 <h3 style="margin: 0;">Visual Editor (edit here)</h3>
-                            </div>
-                            <div class="mini-preview" id="miniWorkspacePreview">
-                                <img id="miniWorkspacePreviewImage" alt="Uploaded chart preview">
-                                <span class="mini-preview-placeholder">Preview appears here after upload.</span>
-                            </div>
-                            <div class="reanalyze-block">
-                                <label for="reanalyzeFeedback">Need a better pass? Tell us what to fix.</label>
-                                <textarea id="reanalyzeFeedback" placeholder="Example: Verse 1 chords drift left; please align with lyrics and double-check key."></textarea>
-                                <button class="ghost-button" id="reanalyzeButton" disabled>Re-analyze with feedback</button>
                             </div>
                             <small class="visual-editor-subtitle">Chords above lyrics - adjust spacing freely</small>
                         </header>
@@ -734,6 +726,19 @@
                             </label>
                         </div>
                         <textarea id="visualEditor" placeholder="Edit chords and lyrics with visual spacing..."></textarea>
+
+                        <!-- VISUAL WORKSPACE SECTION (BOTTOM) -->
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+                            <div class="mini-preview" id="miniWorkspacePreview">
+                                <img id="miniWorkspacePreviewImage" alt="Uploaded chart preview">
+                                <span class="mini-preview-placeholder">Preview appears here after upload.</span>
+                            </div>
+                            <div class="reanalyze-block">
+                                <label for="reanalyzeFeedback">Need a better pass? Tell us what to fix.</label>
+                                <textarea id="reanalyzeFeedback" placeholder="Example: Verse 1 chords drift left; please align with lyrics and double-check key."></textarea>
+                                <button class="ghost-button" id="reanalyzeButton" disabled>Re-analyze with feedback</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

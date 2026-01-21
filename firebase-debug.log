@@ -875,3 +875,86 @@
 [debug] [2026-01-09T13:03:35.330Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
 [debug] [2026-01-09T13:03:35.333Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
 [debug] [2026-01-09T13:03:35.333Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.357Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.357Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.358Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.358Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.359Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.369Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.369Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.369Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.370Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.370Z] > refreshing access token with scopes: []
+[debug] [2026-01-13T19:21:47.370Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-13T19:21:47.370Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.358Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.358Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.359Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.369Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.369Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.370Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.370Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.370Z] > refreshing access token with scopes: []
+[debug] [2026-01-13T19:21:47.371Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-13T19:21:47.371Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.537Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.537Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.537Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.537Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.537Z] > refreshing access token with scopes: []
+[debug] [2026-01-13T19:21:47.538Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-13T19:21:47.538Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.539Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.540Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.540Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.540Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.540Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.540Z] > refreshing access token with scopes: []
+[debug] [2026-01-13T19:21:47.540Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-13T19:21:47.540Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.539Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.539Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.540Z] Checked if tokens are valid: false, expires at: 1768332659670
+[debug] [2026-01-13T19:21:47.540Z] > refreshing access token with scopes: []
+[debug] [2026-01-13T19:21:47.540Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-13T19:21:47.540Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.541Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-13T19:21:47.542Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-13T19:21:47.541Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.563Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo [none]
+[debug] [2026-01-13T19:21:47.542Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.563Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo [none]
+[debug] [2026-01-13T19:21:47.571Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:47.571Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:47.571Z] Checked if tokens are valid: true, expires at: 1768335706541
+[debug] [2026-01-13T19:21:47.571Z] Checked if tokens are valid: true, expires at: 1768335706541
+[debug] [2026-01-13T19:21:47.571Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo [none]
+[debug] [2026-01-13T19:21:47.707Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-13T19:21:47.730Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-13T19:21:47.708Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.736Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo [none]
+[debug] [2026-01-13T19:21:47.744Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-13T19:21:47.730Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.741Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo [none]
+[debug] [2026-01-13T19:21:47.744Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-13T19:21:47.756Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo [none]
+[debug] [2026-01-13T19:21:48.385Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
+[debug] [2026-01-13T19:21:48.385Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
+[debug] [2026-01-13T19:21:48.671Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
+[debug] [2026-01-13T19:21:48.671Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
+[debug] [2026-01-13T19:21:48.675Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:48.676Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:48.680Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
+[debug] [2026-01-13T19:21:48.680Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
+[debug] [2026-01-13T19:21:48.682Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:48.683Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:49.033Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
+[debug] [2026-01-13T19:21:49.033Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
+[debug] [2026-01-13T19:21:49.033Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
+[debug] [2026-01-13T19:21:49.034Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:49.034Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:49.033Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
+[debug] [2026-01-13T19:21:49.034Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-13T19:21:49.035Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-13T19:21:49.042Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
+[debug] [2026-01-13T19:21:49.042Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
