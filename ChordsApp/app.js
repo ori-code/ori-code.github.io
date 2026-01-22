@@ -1,19 +1,19 @@
 // ============= DISABLE PINCH-TO-ZOOM ON MOBILE =============
-document.addEventListener('gesturestart', function(e) {
+document.addEventListener('gesturestart', function (e) {
     e.preventDefault();
 }, { passive: false });
 
-document.addEventListener('gesturechange', function(e) {
+document.addEventListener('gesturechange', function (e) {
     e.preventDefault();
 }, { passive: false });
 
-document.addEventListener('gestureend', function(e) {
+document.addEventListener('gestureend', function (e) {
     e.preventDefault();
 }, { passive: false });
 
 // Prevent double-tap zoom
 let lastTouchEnd = 0;
-document.addEventListener('touchend', function(e) {
+document.addEventListener('touchend', function (e) {
     const now = Date.now();
     if (now - lastTouchEnd <= 300) {
         e.preventDefault();
@@ -762,6 +762,11 @@ document.addEventListener('DOMContentLoaded', () => {
         setDirectionalLayout(printPreview, '');
     }
 
+    // Re-apply RTL layout whenever visual editor content changes
+    visualEditor.addEventListener('input', () => {
+        setDirectionalLayout(visualEditor, visualEditor.value);
+    });
+
     const SAMPLE_CHART = `Title: Great Are You Lord
 Artist: All Sons & Daughters
 Key: G Major
@@ -1212,6 +1217,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
+            // ✅ REMOVE AI-GENERATED ARRANGEMENT BADGE LINES
+            // Skip lines that look like arrangement badges: (V1) (C) (V2) etc.
+            // This allows our smart arrangement generator to create the proper arrangement
+            if (/^\s*\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)(?:\s+\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\))+\s*$/i.test(line)) {
+                console.log('🗑️ Removing AI-generated arrangement line:', line);
+                continue;
+            }
+
             cleaned.push(lines[i]); // Keep original line with spacing
         }
 
@@ -1462,7 +1475,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Read PDF and render first page
             const fileReader = new FileReader();
-            fileReader.onload = async function(e) {
+            fileReader.onload = async function (e) {
                 const typedarray = new Uint8Array(e.target.result);
 
                 try {
@@ -1636,8 +1649,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Default: Show chords above lyrics (cleaner view)
                 let visualFormat = convertToAboveLineFormat(normalizedChart, true);
 
-                // ✅ Auto-insert arrangement line (V1) (C) (V2) etc.
-                visualFormat = autoInsertArrangementLine(visualFormat);
+                // ✅ Auto-insert arrangement line - SMART mode for AI analyzed songs
+                visualFormat = autoInsertArrangementLine(visualFormat, true);
 
                 // ✅ Ensure BPM and Time Signature metadata exist with defaults
                 visualFormat = ensureMetadata(visualFormat);
@@ -1646,6 +1659,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 visualFormat = normalizeMetadataSpacing(visualFormat);
 
                 visualEditor.value = visualFormat;
+                setDirectionalLayout(visualEditor, visualFormat);
 
                 // Display normalized content in songbook output
                 songbookOutput.value = normalizedChart;
@@ -1724,8 +1738,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Default: Show chords above lyrics
             let visualFormat = convertToAboveLineFormat(normalizedChart, true);
 
-            // ✅ Auto-insert arrangement line (V1) (C) (V2) etc.
-            visualFormat = autoInsertArrangementLine(visualFormat);
+            // ✅ Auto-insert arrangement line - DEFAULT mode for demo/fallback
+            visualFormat = autoInsertArrangementLine(visualFormat, false);
 
             // ✅ Ensure BPM and Time Signature metadata exist with defaults
             visualFormat = ensureMetadata(visualFormat);
@@ -1734,6 +1748,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             visualFormat = normalizeMetadataSpacing(visualFormat);
 
             visualEditor.value = visualFormat;
+            setDirectionalLayout(visualEditor, visualFormat);
 
             // Display normalized content in songbook output
             songbookOutput.value = normalizedChart;
@@ -1809,9 +1824,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const transposedLines = lines.map((line, index) => {
                 // Skip metadata/title lines - they contain pipe-separated info or key/bpm labels
                 const isMetadataLine = /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line) ||
-                                       /^(Key|Title|Artists?|Authors?|BPM|Tempo|Capo):/i.test(line) ||
-                                       /\|\s*Key:/i.test(line) ||
-                                       /^Key:\s*[A-G].*\|.*BPM:/i.test(line);
+                    /^(Key|Title|Artists?|Authors?|BPM|Tempo|Capo):/i.test(line) ||
+                    /\|\s*Key:/i.test(line) ||
+                    /^Key:\s*[A-G].*\|.*BPM:/i.test(line);
                 if (isMetadataLine) {
                     console.log(`  ⏭️ Line ${index} is metadata, skipping:`, line.substring(0, 60));
                     return line;
@@ -2083,7 +2098,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // V4 format: Convert to above-line format for visual editor display
                 console.log('🎼 Converting v4 format to above-line for editor display');
                 let transposedVisual = convertToAboveLineFormat(normalizedTransposed, true);
-                transposedVisual = autoInsertArrangementLine(transposedVisual);
+                transposedVisual = autoInsertArrangementLine(transposedVisual, false);
                 transposedVisual = ensureMetadata(transposedVisual);
                 transposedVisual = normalizeMetadataSpacing(transposedVisual);
                 visualEditor.value = transposedVisual;
@@ -2094,8 +2109,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 console.log('📊 Visual format length:', transposedVisual.length);
                 console.log('📊 Visual format first 200 chars:', transposedVisual.substring(0, 200));
 
-                // Add arrangement line
-                transposedVisual = autoInsertArrangementLine(transposedVisual);
+                // Add arrangement line - DEFAULT mode for transpose
+                transposedVisual = autoInsertArrangementLine(transposedVisual, false);
 
                 // Ensure metadata format is correct
                 transposedVisual = ensureMetadata(transposedVisual);
@@ -2109,8 +2124,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const sourceVisual = baselineVisualContent || visualEditor.value;
             let transposedVisual = transposeVisualFormat(sourceVisual, currentTransposeSteps);
 
-            // Add arrangement line
-            transposedVisual = autoInsertArrangementLine(transposedVisual);
+            // Add arrangement line - DEFAULT mode for transpose
+            transposedVisual = autoInsertArrangementLine(transposedVisual, false);
 
             // Ensure metadata format is correct
             transposedVisual = ensureMetadata(transposedVisual);
@@ -2349,8 +2364,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Convert to visual format (from normalized content)
             let visualFormat = convertToAboveLineFormat(normalizedChart, true);
 
-            // Re-insert arrangement line (preserve it during reset)
-            visualFormat = autoInsertArrangementLine(visualFormat);
+            // Re-insert arrangement line - DEFAULT mode for reset
+            visualFormat = autoInsertArrangementLine(visualFormat, false);
 
             visualEditor.value = visualFormat;
 
@@ -2548,6 +2563,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
+            // Skip single badge markers like (V1), (C), (PC) that appear on their own line
+            // These are section shorthand markers that should not appear in the output
+            // (Full arrangement lines with multiple badges are handled separately)
+            const trimmedLine = line.trim();
+            if (/^\s*\((?:PC|CD|INT|TAG|CODA|TURN|BRK|[VBICOT])\d*\)\s*$/i.test(trimmedLine)) {
+                console.log('🚫 Skipping single badge marker in convertToAboveLineFormat:', trimmedLine);
+                continue;
+            }
+
             // Handle row space tag {rs} - preserve as blank line
             if (line.match(/^\{rs\}$/i)) {
                 formatted.push('{rs}');
@@ -2720,12 +2744,28 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const isRTL = detectRTL(content || '');
         const direction = isRTL ? 'rtl' : 'ltr';
 
-        element.setAttribute('dir', direction);
-        element.style.direction = direction;
-        element.style.textAlign = isRTL ? 'right' : 'left';
+        console.log(`📐 setDirectionalLayout: element=${element.id || element.className}, isRTL=${isRTL}, dir=${direction}`);
 
-        // Ensure mixed-language content renders in natural order
-        element.style.unicodeBidi = 'plaintext';
+        element.setAttribute('dir', direction);
+
+        // Force !important for both direction and text-align to override all CSS
+        if (element.tagName === 'TEXTAREA') {
+            element.style.setProperty('direction', direction, 'important');
+            element.style.setProperty('text-align', isRTL ? 'right' : 'left', 'important');
+            element.style.setProperty('unicode-bidi', 'plaintext', 'important');
+            console.log(`   🔧 TEXTAREA: Forcing dir=${direction}, text-align=${isRTL ? 'right' : 'left'} with !important`);
+        } else {
+            element.style.direction = direction;
+            element.style.textAlign = isRTL ? 'right' : 'left';
+        }
+
+        console.log(`   Applied: dir="${element.getAttribute('dir')}", style.textAlign="${element.style.textAlign}"`);
+        console.log(`   Computed style: textAlign="${window.getComputedStyle(element).textAlign}"`);
+
+        // Ensure mixed-language content renders in natural order (for non-textarea elements)
+        if (element.tagName !== 'TEXTAREA') {
+            element.style.unicodeBidi = 'plaintext';
+        }
 
         // Also set direction on parent preview-page for logo positioning
         const previewPage = element.closest('.preview-page');
@@ -2852,6 +2892,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Strip HTML tags before parsing (output may have bold tags)
         const cleanContent = content.replace(/<[^>]*>/g, '');
 
+        // ✅ Detect RTL content early for use throughout the function
+        const isRTLContent = detectRTL(cleanContent);
+
         // Extract metadata using parser (from clean content)
         const metadata = parser.extractMetadata(cleanContent);
         const arrangement = parser.parseArrangementFull(cleanContent);
@@ -2956,26 +2999,40 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }
 
         // Arrangement badges with repeat counts (flow arrows only shown in chart body)
+        console.log('🎯 ARRANGEMENT DEBUG:');
+        console.log('  Raw arrangement:', JSON.stringify(arrangement));
+        console.log('  Number of badges:', arrangement.filter(i => i.type === 'badge').length);
+
         if (arrangement.length > 0) {
-            const isRTLContent = detectRTL(cleanContent);
-            let badgeItems = arrangement
+            // Deduplicate badges - remove duplicate labels while preserving order
+            const seenLabels = new Set();
+            const uniqueArrangement = arrangement.filter(item => {
+                if (item.type !== 'badge') return true; // Keep flow arrows
+                if (seenLabels.has(item.label)) {
+                    console.log('  ⚠️ Removing duplicate badge:', item.label);
+                    return false;
+                }
+                seenLabels.add(item.label);
+                return true;
+            });
+
+            let badgeItems = uniqueArrangement
                 .filter(item => item.type === 'badge') // Skip flow arrows in badge row
                 .map(item => {
                     const colorClass = parser.getBadgeColorClass(item.label);
                     const repeatSup = item.repeat > 1 ? `<sup class="repeat-count">${item.repeat}x</sup>` : '';
                     return `<span class="section-badge ${colorClass}">${item.label}${repeatSup}</span>`;
                 });
-            // Reverse badges array for RTL content so V1 appears on right
-            if (isRTLContent) {
-                badgeItems = badgeItems.reverse();
-            }
+            // DON'T reverse badges - let CSS handle RTL visual order
             const badges = badgeItems.join('');
             const badgesDir = isRTLContent ? 'rtl' : 'ltr';
+            // DISABLED: No inline styles, just dir attribute
+            const finalHTML = `<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`;
             console.log('🏷️ formatV4ForPreview BADGES RTL DEBUG:');
             console.log('  isRTLContent:', isRTLContent);
             console.log('  badgesDir:', badgesDir);
-            console.log('  badges reversed:', isRTLContent);
-            formatted.push(`<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`);
+            console.log('  Final badge HTML:', finalHTML);
+            formatted.push(finalHTML);
         }
 
         formatted.push('</div>'); // Close song-header
@@ -3007,7 +3064,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Render comment INLINE as span inside header
                 const commentSpan = sectionComment ? `<span class="section-comment">${sectionComment}</span>` : '';
                 formatted.push(`<div class="section-header">${headerText}${commentSpan}</div>`);
+                // Debug: Log section content being added
+                console.log(`📦 finishSection "${sectionName}": ${sectionContent.length} items`);
                 if (sectionContent.length > 0) {
+                    sectionContent.forEach((item, idx) => {
+                        if (item.includes('lyric-line') && /[\u0590-\u05FF]/.test(item)) {
+                            console.log(`  📝 Item ${idx} (Hebrew lyric):`, item.substring(0, 100));
+                        }
+                    });
                     formatted.push(...sectionContent);
                 }
 
@@ -3027,6 +3091,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         for (const line of lines) {
             const trimmedLine = line.trim();
+
+            // Debug: Log all lines being processed (check for unexpected badge lines)
+            if (/\([A-Z]+\d*\)/.test(trimmedLine)) {
+                console.log('⚡ Processing line with badge-like content:', trimmedLine);
+            }
 
             // Skip empty lines
             if (!trimmedLine) {
@@ -3051,10 +3120,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Skip arrangement badge line - multiple detection methods
             if (parser.BADGE_LINE_REGEX.test(trimmedLine)) {
+                console.log('🚫 Skipping badge line (parser.BADGE_LINE_REGEX):', trimmedLine);
                 continue;
             }
             // Fallback: line with only badge patterns like (I), (V1), (TURN), (BRK), etc.
-            if (/^[\s]*(\([A-Z]+\d*\)\s*)+[\s]*$/i.test(trimmedLine)) {
+            const singleBadgePattern = /^[\s]*(\([A-Z]+\d*\)\s*)+[\s]*$/i;
+            if (singleBadgePattern.test(trimmedLine)) {
+                console.log('🚫 Skipping badge line (fallback pattern):', trimmedLine);
+                continue;
+            }
+            // Also check for single badge with parentheses like "(V1)" alone on a line
+            if (/^\s*\([A-Z]+\d*\)\s*$/i.test(trimmedLine)) {
+                console.log('🚫 Skipping single badge line:', trimmedLine);
                 continue;
             }
 
@@ -3234,6 +3311,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Add line to output - wrap in lyric-line div for proper layout
             const outputLine = `<div class="lyric-line">${formattedLine}</div>`;
+            // Debug: Log Hebrew-only lines to verify they're being processed
+            const isHebrewOnly = /^[\u0590-\u05FF\s]+$/.test(formattedLine);
+            if (isHebrewOnly) {
+                console.log('🔤 Hebrew-only line:', formattedLine, '→', outputLine);
+            }
             if (currentSection) {
                 sectionContent.push(outputLine);
             } else {
@@ -3274,6 +3356,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // ✅ STRIP HTML TAGS from content before parsing (fixes <b>C</b> issue)
         const cleanContent = content.replace(/<[^>]*>/g, '');
+
+        // ✅ Detect RTL content early for use throughout the function
+        const isRTLContent = detectRTL(cleanContent);
 
         // Check if this is Chords App Format v4 or normalized format
         const isV4Format = /\{(?:title|key|tempo|subtitle|artist|time|capo):/i.test(cleanContent);
@@ -3326,29 +3411,26 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const matches = [...line.matchAll(badgePattern)];
             if (matches.length === 0) return null;
 
-            const isRTLContent = detectRTL(cleanContent);
             let badgeItems = matches.map(m => {
                 const label = m[1].toUpperCase();
                 const colorClass =
                     label.startsWith('I') && !label.startsWith('INT') ? 'badge-intro' :
-                    label.startsWith('V') ? 'badge-verse' :
-                    label.startsWith('C') && !label.startsWith('CD') ? 'badge-chorus' :
-                    label.startsWith('B') && !label.startsWith('BRK') ? 'badge-bridge' :
-                    label.startsWith('PC') ? 'badge-prechorus' :
-                    label.startsWith('O') ? 'badge-outro' :
-                    label.startsWith('TURN') ? 'badge-turn' :
-                    label.startsWith('BRK') ? 'badge-break' :
-                    label.startsWith('TAG') ? 'badge-tag' :
-                    label.startsWith('INT') ? 'badge-interlude' :
-                    'badge-other';
+                        label.startsWith('V') ? 'badge-verse' :
+                            label.startsWith('C') && !label.startsWith('CD') ? 'badge-chorus' :
+                                label.startsWith('B') && !label.startsWith('BRK') ? 'badge-bridge' :
+                                    label.startsWith('PC') ? 'badge-prechorus' :
+                                        label.startsWith('O') ? 'badge-outro' :
+                                            label.startsWith('TURN') ? 'badge-turn' :
+                                                label.startsWith('BRK') ? 'badge-break' :
+                                                    label.startsWith('TAG') ? 'badge-tag' :
+                                                        label.startsWith('INT') ? 'badge-interlude' :
+                                                            'badge-other';
                 return `<span class="section-badge ${colorClass}">${label}</span>`;
             });
-            // Reverse badges array for RTL content so V1 appears on right
-            if (isRTLContent) {
-                badgeItems = badgeItems.reverse();
-            }
+            // DON'T reverse badges - let CSS handle RTL visual order
             const badges = badgeItems.join('');
             const badgesDir = isRTLContent ? 'rtl' : 'ltr';
+            // DISABLED: No inline styles, just dir attribute
             return `<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`;
         };
 
@@ -3386,7 +3468,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Check if line is a section header - if so, it's not metadata
                 // Allow optional comment in parentheses: "Verse 1: (Comment)"
                 const isSectionHeader = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA|TURN|TURNAROUND|BREAK|INTERLUDE|INSTRUMENTAL|SOLO|ENDING|VAMP)\s*\d*:?(?:\s*\([^)]+\))?$/i.test(line) ||
-                                       /^(V|C|B)\s*\d+:(?:\s*\([^)]+\))?$/i.test(line);
+                    /^(V|C|B)\s*\d+:(?:\s*\([^)]+\))?$/i.test(line);
 
                 // Skip chord progression summary lines (e.g., "C | 1 | G | 5 D/F | 2# Em | 3")
                 const isChordProgression = /^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(line);
@@ -3462,32 +3544,29 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                         // ✅ ADD CIRCULAR SECTION BADGES WITH REPEAT COUNT
                         if (songStructure.length > 0) {
-                            const isRTLContent = detectRTL(cleanContent);
                             let badgeItems = songStructure.map(section => {
                                 const label = section.num ? `${section.type}${section.num}` : section.type;
                                 // Add repeat count as superscript if > 1
                                 const repeatCount = section.count > 1 ? `<sup class="repeat-count">${section.count}</sup>` : '';
                                 const colorClass =
                                     section.type === 'I' ? 'badge-intro' :
-                                    section.type === 'V' ? 'badge-verse' :
-                                    section.type === 'C' ? 'badge-chorus' :
-                                    section.type === 'B' ? 'badge-bridge' :
-                                    section.type === 'PC' ? 'badge-prechorus' :
-                                    section.type === 'O' ? 'badge-outro' :
-                                    section.type === 'TURN' ? 'badge-turn' :
-                                    section.type === 'BRK' ? 'badge-break' :
-                                    'badge-other';
+                                        section.type === 'V' ? 'badge-verse' :
+                                            section.type === 'C' ? 'badge-chorus' :
+                                                section.type === 'B' ? 'badge-bridge' :
+                                                    section.type === 'PC' ? 'badge-prechorus' :
+                                                        section.type === 'O' ? 'badge-outro' :
+                                                            section.type === 'TURN' ? 'badge-turn' :
+                                                                section.type === 'BRK' ? 'badge-break' :
+                                                                    'badge-other';
                                 return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
                             });
-                            // Reverse badges array for RTL content so V1 appears on right
-                            if (isRTLContent) {
-                                badgeItems = badgeItems.reverse();
-                            }
+                            // DON'T reverse badges - let CSS handle RTL visual order
                             const badges = badgeItems.join('');
                             const badgesDir = isRTLContent ? 'rtl' : 'ltr';
+                            // DISABLED: No inline styles, just dir attribute
                             console.log('🏷️ formatForPreview BADGES RTL DEBUG:');
                             console.log('  isRTLContent:', isRTLContent);
-                            console.log('  badges reversed:', isRTLContent);
+                            console.log('  badgesDir:', badgesDir);
                             formatted.push(`<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`);
                         }
 
@@ -3550,7 +3629,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Wrap lines in appropriate divs to preserve spacing
             let outputLine;
             if (isChordOnlyLine && hasChordBoldTags) {
-                // Chord-only line: use original untrimmed line, convert spaces to &nbsp;
+                // Chord-only line: convert spaces to &nbsp;
                 const spacedLine = lines[i].replace(/ /g, '&nbsp;');
                 outputLine = `<div class="chord-line">${spacedLine}</div>`;
             } else if (hasRTLChars || line.trim()) {
@@ -3694,29 +3773,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     line = line.replace(bracketPattern, '');
                     result.push(line);
                 } else if (isRTL) {
-                    // RTL content: extract chords and put on line above lyrics
-                    const chords = [];
-                    let match;
-                    const tempPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]([+-]+)?/g;
-                    while ((match = tempPattern.exec(line)) !== null) {
-                        const chord = match[1];
-                        const modifier = match[2];
-                        const finalChord = applyChordModifier(chord, modifier);
-                        const number = chordToNashville(finalChord, key);
-                        if (mode === 'both' && number) {
-                            chords.push(`<b>${number} | ${finalChord}</b>`);
-                        } else if (mode === 'numbers' && number) {
-                            chords.push(`<b>${number}</b>`);
-                        } else {
-                            chords.push(`<b>${finalChord}</b>`);
-                        }
-                    }
                     // Create chord line above lyrics
                     if (chords.length > 0) {
                         result.push(chords.join('    ')); // Chord line
                     }
-                    // Lyrics line without brackets
-                    result.push(line.replace(bracketPattern, ''));
+                    // Lyrics line
+                    result.push(lyricLine);
                 } else {
                     // LTR content: style chord brackets inline
                     line = line.replace(bracketPattern, (_, chord, modifier) => {
@@ -3735,7 +3797,6 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 continue;
             }
 
-            // Skip metadata lines (combined format like "Title | Key: X | BPM: Y" or standalone)
             if (/^(Key|Title|Artist|BPM|Tempo|Capo):/i.test(line) || /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line)) {
                 result.push(line);
                 continue;
@@ -3761,7 +3822,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Must be a standalone header, not a chord line starting with C, B, etc.
                 const trimmedLine = line.trim();
                 const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|TURN|BREAK)\s*\d*\s*:?$/i.test(trimmedLine) ||
-                                       /^(V|PC)\d+\s*:?$/i.test(trimmedLine); // V1, V2, PC1, etc.
+                    /^(V|PC)\d+\s*:?$/i.test(trimmedLine); // V1, V2, PC1, etc.
                 if (isSectionHeader) {
                     result.push(''); // Add blank line before section header
                     result.push(line);
@@ -4379,15 +4440,39 @@ Our [Em7]hearts will cry, these bones will [D]sing
     setTimeout(updatePagination, 200);
 
     // ✅ AUTO-INSERT ARRANGEMENT LINE - Extract sections and add (V1) (C) notation
-    function autoInsertArrangementLine(content) {
-        // ALWAYS use default arrangement structure - don't scan for sections
-        // Intro → Verse → Pre-Chorus → Chorus → Verse → Pre-Chorus → Chorus → Bridge → Chorus → Outro
-        const arrangementLine = '(I) (V1) (PC) (C) (V2) (PC) (C) (B) (C) (O)';
-
+    function autoInsertArrangementLine(content, isAIAnalyzed = false) {
         // Check if arrangement line already exists - don't duplicate (looks for at least 2 consecutive tags)
         if (/\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)[\s·]*\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)/i.test(content)) {
             console.log('Arrangement line already exists, skipping insertion');
             return content;
+        }
+
+        let arrangementLine;
+
+        if (isAIAnalyzed) {
+            // SMART MODE: Extract actual sections from content
+            console.log('🤖 AI analyzed - generating arrangement from detected sections');
+            arrangementLine = generateArrangementFromSections(content);
+
+            // If no sections found, fall back to default
+            if (!arrangementLine) {
+                console.log('⚠️ No sections detected, using default arrangement');
+                arrangementLine = '(I) (V1) (PC) (C) (V2) (PC) (C) (B) (C) (O)';
+            }
+        } else {
+            // DEFAULT MODE: Use standard mapping
+            console.log('📝 Manual mode - using default arrangement');
+            arrangementLine = '(I) (V1) (PC) (C) (V2) (PC) (C) (B) (C) (O)';
+        }
+
+        // RTL: Reverse badge order in text for proper RTL display
+        const isRTL = detectRTL(content);
+        if (isRTL) {
+            const badgeMatches = arrangementLine.match(/\([^)]+\)/g);
+            if (badgeMatches) {
+                arrangementLine = badgeMatches.reverse().join(' ');
+                console.log('🔄 RTL: Reversed badges in text:', arrangementLine);
+            }
         }
 
         const lines = content.split('\n');
@@ -4402,8 +4487,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Check if this is a metadata line (Title, Key, BPM, Authors, etc.)
             const isMetadata = /^(Title|Key|BPM|Tempo|Time|Authors?|Artists?):/i.test(line) ||
-                              line.includes('Key:') || line.includes('BPM:') || line.includes('Time:') ||
-                              line.startsWith('{');
+                line.includes('Key:') || line.includes('BPM:') || line.includes('Time:') ||
+                line.startsWith('{');
 
             if (isMetadata) {
                 lastMetadataIndex = i;
@@ -4427,6 +4512,80 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Insert the arrangement line before the first section/content
         lines.splice(insertIndex, 0, '', arrangementLine, '');
         return lines.join('\n');
+    }
+
+    // ✅ GENERATE ARRANGEMENT FROM DETECTED SECTIONS
+    function generateArrangementFromSections(content) {
+        const lines = content.split('\n');
+        const badges = [];
+
+        // Known section types that can be converted to badges
+        const knownSections = ['intro', 'verse', 'pre-chorus', 'prechorus', 'chorus',
+            'bridge', 'outro', 'interlude', 'tag', 'coda',
+            'turn', 'turnaround', 'break'];
+
+        const v4SectionPattern = /^\{c:\s*([^}]+)\}/i;
+        const normalizedSectionPattern = /^(Intro|Verse|Pre-?Chorus|Chorus|Bridge|Outro|Interlude|Tag|Coda|Turn|Turnaround|Break)\s*\d*:?/i;
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            let sectionName = null;
+
+            // Check v4 format
+            const v4Match = trimmed.match(v4SectionPattern);
+            if (v4Match) {
+                sectionName = v4Match[1].replace(/:$/, '').trim();
+            }
+            // Check normalized format
+            else if (normalizedSectionPattern.test(trimmed)) {
+                sectionName = trimmed.replace(/:$/, '').trim();
+            }
+
+            if (sectionName) {
+                // Check if this is a known section type
+                const baseName = sectionName.toLowerCase().replace(/\s*\d+$/, '').trim();
+                if (knownSections.includes(baseName)) {
+                    // Convert to badge
+                    const badge = window.chordsAppParser.sectionToBadge(sectionName);
+
+                    // Keep ALL occurrences, including consecutive duplicates
+                    badges.push(badge);
+                    console.log(`✅ Found section "${sectionName}" → badge (${badge})`);
+                } else {
+                    console.log(`⚠️ Skipping unknown section type: "${sectionName}"`);
+                }
+            }
+        }
+
+        // If no sections found, return null to trigger default
+        if (badges.length === 0) {
+            console.log('⚠️ No known sections detected');
+            return null;
+        }
+
+        console.log('🔍 Badges before adding intro/outro:', badges);
+
+        // Add intro at start if missing
+        if (badges[0] !== 'I') {
+            badges.unshift('I');
+            console.log('✅ Added intro at start');
+        } else {
+            console.log('ℹ️ Intro already exists, not adding');
+        }
+
+        // Add outro at end if missing
+        if (badges[badges.length - 1] !== 'O') {
+            badges.push('O');
+            console.log('✅ Added outro at end');
+        } else {
+            console.log('ℹ️ Outro already exists, not adding');
+        }
+
+        // Build arrangement line: "(I) (V1) (C) (C) (O)"
+        const arrangementLine = badges.map(b => `(${b})`).join(' ');
+        console.log(`✅ Generated arrangement from ${badges.length} sections:`, arrangementLine);
+
+        return arrangementLine;
     }
 
     // ============= FOLLOW ARRANGEMENT TAGS FEATURE =============
@@ -4804,25 +4963,37 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         editorStructure.style.display = 'block';
 
+        // ✅ Detect RTL content for badge ordering
+        const isRTLContent = detectRTL(content);
+
         // Generate badges HTML with repeat count
-        const badges = songStructure.map(section => {
+        let badgeItems = songStructure.map(section => {
             const label = section.num ? `${section.type}${section.num}` : section.type;
             // ✅ Add repeat count as superscript if > 1
             const repeatCount = section.count && section.count > 1 ? `<sup class="repeat-count">${section.count}</sup>` : '';
             const colorClass =
                 section.type === 'I' ? 'badge-intro' :
-                section.type === 'V' ? 'badge-verse' :
-                section.type === 'C' ? 'badge-chorus' :
-                section.type === 'B' ? 'badge-bridge' :
-                section.type === 'PC' ? 'badge-prechorus' :
-                section.type === 'O' ? 'badge-outro' :
-                section.type === 'TURN' ? 'badge-turn' :
-                section.type === 'BRK' ? 'badge-break' :
-                'badge-other';
+                    section.type === 'V' ? 'badge-verse' :
+                        section.type === 'C' ? 'badge-chorus' :
+                            section.type === 'B' ? 'badge-bridge' :
+                                section.type === 'PC' ? 'badge-prechorus' :
+                                    section.type === 'O' ? 'badge-outro' :
+                                        section.type === 'TURN' ? 'badge-turn' :
+                                            section.type === 'BRK' ? 'badge-break' :
+                                                'badge-other';
             return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
-        }).join('');
+        });
 
+        // ✅ Reverse badges array for RTL content so V1 appears on right
+        if (isRTLContent) {
+            badgeItems = badgeItems.reverse();
+        }
+
+        const badges = badgeItems.join('');
         badgesRow.innerHTML = badges;
+
+        // ✅ Set RTL direction on badges row container
+        badgesRow.setAttribute('dir', isRTLContent ? 'rtl' : 'ltr');
     }
 
     // ✅ Call once on page load if there's content
@@ -5863,7 +6034,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     window.updateSubscriptionModal = updateSubscriptionModal;
 
     // Global function to show subscription modal
-    window.showSubscriptionModal = async function() {
+    window.showSubscriptionModal = async function () {
         const modal = document.getElementById('subscriptionModal');
         if (modal) {
             // Refresh usage data from Firebase before showing modal
@@ -5878,7 +6049,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Global function to show registration prompt for non-logged-in users
     // Now shows the subscription modal directly with all plans
-    window.showRegistrationPrompt = function() {
+    window.showRegistrationPrompt = function () {
         window.showSubscriptionModal();
     };
 
@@ -6411,8 +6582,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Convert ChordPro to visual format (same as analyze flow)
             let visualFormat = convertToAboveLineFormat(normalizedChart, true);
 
-            // Auto-insert arrangement line
-            visualFormat = autoInsertArrangementLine(visualFormat);
+            // Auto-insert arrangement line - DEFAULT mode for pad load
+            visualFormat = autoInsertArrangementLine(visualFormat, false);
 
             // Ensure metadata exists
             visualFormat = ensureMetadata(visualFormat);
@@ -7002,7 +7173,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Check if line is an arrangement line (contains multiple tags like "(V1) (C) (V2)")
             const isArrangementLine = /\([A-Z\d]+\)/.test(currentLine) &&
-                                      currentLine.split(/\([A-Z\d]+\)/).length > 2;
+                currentLine.split(/\([A-Z\d]+\)/).length > 2;
 
             if (isArrangementLine) {
                 // Find which tag was clicked

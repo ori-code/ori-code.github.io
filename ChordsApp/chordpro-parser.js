@@ -68,9 +68,11 @@ const chordsAppParser = {
         for (const line of lines) {
             // Check if line contains badges (with optional repeats and flow arrows)
             if (this.BADGE_LINE_REGEX.test(line)) {
+                console.log('📋 PARSER: Found badge line:', line.trim());
                 // Parse the line token by token
                 // Split by spaces but keep track of position
                 const tokens = line.trim().split(/\s+/);
+                console.log('📋 PARSER: Tokens:', tokens);
 
                 for (const token of tokens) {
                     // Check for flow arrow

@@ -14,7 +14,8 @@
 }
 
 /* Disable pinch-to-zoom on mobile (iOS Safari ignores viewport meta) */
-html, body {
+html,
+body {
     touch-action: manipulation;
 }
 
@@ -1077,8 +1078,15 @@ a {
 }
 
 @keyframes pageFloat {
-    0%, 100% { transform: rotateX(5deg) translateY(0); }
-    50% { transform: rotateX(5deg) translateY(-3px); }
+
+    0%,
+    100% {
+        transform: rotateX(5deg) translateY(0);
+    }
+
+    50% {
+        transform: rotateX(5deg) translateY(-3px);
+    }
 }
 
 .scanner-lines {
@@ -1097,11 +1105,25 @@ a {
     border-radius: 2px;
 }
 
-.scanner-lines span:nth-child(1) { width: 90%; }
-.scanner-lines span:nth-child(2) { width: 75%; }
-.scanner-lines span:nth-child(3) { width: 85%; }
-.scanner-lines span:nth-child(4) { width: 60%; }
-.scanner-lines span:nth-child(5) { width: 70%; }
+.scanner-lines span:nth-child(1) {
+    width: 90%;
+}
+
+.scanner-lines span:nth-child(2) {
+    width: 75%;
+}
+
+.scanner-lines span:nth-child(3) {
+    width: 85%;
+}
+
+.scanner-lines span:nth-child(4) {
+    width: 60%;
+}
+
+.scanner-lines span:nth-child(5) {
+    width: 70%;
+}
 
 .scanner-music-note {
     position: absolute;
@@ -1113,10 +1135,13 @@ a {
 }
 
 @keyframes noteGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         color: rgba(255, 59, 92, 0.4);
         text-shadow: 0 0 10px rgba(255, 59, 92, 0.3);
     }
+
     50% {
         color: rgba(255, 59, 92, 0.8);
         text-shadow: 0 0 20px rgba(255, 59, 92, 0.6);
@@ -1130,12 +1155,11 @@ a {
     right: -5px;
     height: 3px;
     background: linear-gradient(90deg,
-        transparent 0%,
-        rgba(255, 59, 92, 0.8) 20%,
-        #ff3b5c 50%,
-        rgba(255, 59, 92, 0.8) 80%,
-        transparent 100%
-    );
+            transparent 0%,
+            rgba(255, 59, 92, 0.8) 20%,
+            #ff3b5c 50%,
+            rgba(255, 59, 92, 0.8) 80%,
+            transparent 100%);
     box-shadow:
         0 0 15px rgba(255, 59, 92, 0.8),
         0 0 30px rgba(255, 59, 92, 0.5),
@@ -1145,11 +1169,30 @@ a {
 }
 
 @keyframes scanBeam {
-    0% { top: 0; opacity: 1; }
-    45% { top: calc(100% - 3px); opacity: 1; }
-    50% { top: calc(100% - 3px); opacity: 0.3; }
-    55% { top: calc(100% - 3px); opacity: 1; }
-    100% { top: 0; opacity: 1; }
+    0% {
+        top: 0;
+        opacity: 1;
+    }
+
+    45% {
+        top: calc(100% - 3px);
+        opacity: 1;
+    }
+
+    50% {
+        top: calc(100% - 3px);
+        opacity: 0.3;
+    }
+
+    55% {
+        top: calc(100% - 3px);
+        opacity: 1;
+    }
+
+    100% {
+        top: 0;
+        opacity: 1;
+    }
 }
 
 /* Status Content */
@@ -1226,8 +1269,13 @@ a {
 }
 
 @keyframes progressShimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 .status-hint {
@@ -1237,10 +1285,13 @@ a {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
         opacity: 1;
     }
+
     50% {
         transform: scale(1.4);
         opacity: 0.5;
@@ -1411,19 +1462,16 @@ a {
 
 .mini-preview {
     width: 100%;
-    min-height: 460px;
-    border: 1px dashed rgba(255, 255, 255, 0.18);
-    border-radius: 12px;
     background: rgba(20, 20, 28, 0.75);
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: flex-start;
     padding: 10px;
 }
 
 .mini-preview img {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: auto;
     border-radius: 8px;
     display: none;
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
@@ -1437,7 +1485,8 @@ a {
 }
 
 .reanalyze-block {
-    display: none; /* Temporarily hidden until feedback flow is ready */
+    display: none;
+    /* Temporarily hidden until feedback flow is ready */
 }
 
 .reanalyze-block label {
@@ -1490,6 +1539,15 @@ a {
     white-space: pre;
     overflow-x: auto;
     word-wrap: normal;
+}
+
+/* RTL support for visual editor */
+#visualEditor[dir="rtl"],
+.editor-panel textarea[dir="rtl"],
+.editor-panel #visualEditor[dir="rtl"] {
+    text-align: right !important;
+    direction: rtl !important;
+    unicode-bidi: plaintext !important;
 }
 
 /* SongBook Format - make it shorter since it's just a reference */
@@ -1646,7 +1704,7 @@ a {
     z-index: 100 !important;
 }
 
-.layout-music-row > div {
+.layout-music-row>div {
     position: relative !important;
     z-index: 50 !important;
 }
@@ -1663,16 +1721,16 @@ a {
     }
 
     /* Music row: 4 items stretch equally */
-    .layout-music-row > div {
+    .layout-music-row>div {
         flex: 1 !important;
         padding: 5px 8px !important;
         font-size: 0.75rem !important;
     }
 
     /* Display row: 7 items stretch equally */
-    .layout-display-row > div,
-    .layout-display-row > label,
-    .layout-display-row > button {
+    .layout-display-row>div,
+    .layout-display-row>label,
+    .layout-display-row>button {
         flex: 1 !important;
         padding: 5px 8px !important;
         font-size: 0.75rem !important;
@@ -1698,7 +1756,7 @@ a {
         gap: 8px !important;
     }
 
-    .layout-sliders-row > label {
+    .layout-sliders-row>label {
         flex: 1 1 30% !important;
         min-width: 120px !important;
     }
@@ -1706,7 +1764,7 @@ a {
 
 /* Mobile: Keep full-width stretched layout */
 @media (max-width: 768px) {
-    .preview-controls-row > div {
+    .preview-controls-row>div {
         flex-direction: column !important;
         align-items: stretch !important;
     }
@@ -1732,7 +1790,7 @@ a {
         justify-content: space-between !important;
     }
 
-    .layout-music-row > div {
+    .layout-music-row>div {
         flex: 1 !important;
         min-width: 60px !important;
         justify-content: center !important;
@@ -1753,7 +1811,7 @@ a {
     }
 
     /* Ensure parent containers don't block clicks */
-    .layout-music-row > div {
+    .layout-music-row>div {
         position: relative !important;
         z-index: 50 !important;
     }
@@ -1773,8 +1831,8 @@ a {
     }
 
     /* First 4 items (Badges, 2 Col, 1 Pg, Follow) - fit 4 per row */
-    .layout-display-row > div,
-    .layout-display-row > label {
+    .layout-display-row>div,
+    .layout-display-row>label {
         flex: 1 1 22% !important;
         min-width: 60px !important;
         max-width: 25% !important;
@@ -1784,7 +1842,7 @@ a {
     }
 
     /* Last 3 items (Image, Print, Auto Fit) - fit 3 per row */
-    .layout-display-row > button {
+    .layout-display-row>button {
         flex: 1 1 30% !important;
         min-width: 80px !important;
         justify-content: center !important;
@@ -1808,7 +1866,7 @@ a {
         gap: 10px !important;
     }
 
-    .layout-sliders-row > label {
+    .layout-sliders-row>label {
         flex: 1 1 100% !important;
         min-width: 100% !important;
         width: 100%;
@@ -1826,14 +1884,16 @@ a {
 }
 
 .editor-preview-wrapper .preview-container {
-    flex: 0 0 210mm; /* A4 width */
+    flex: 0 0 210mm;
+    /* A4 width */
     margin: 0;
     width: 210mm !important;
     min-width: 0;
 }
 
 .editor-preview-wrapper .editor {
-    flex: 0 0 210mm; /* A4 width - same as preview */
+    flex: 0 0 210mm;
+    /* A4 width - same as preview */
     width: 210mm;
     min-width: 0;
     margin: 0;
@@ -1866,8 +1926,10 @@ a {
     border-radius: 12px;
     padding: 0;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    width: 210mm; /* A4 width */
-    min-height: 297mm; /* A4 height */
+    width: 210mm;
+    /* A4 width */
+    min-height: 297mm;
+    /* A4 height */
     max-width: 100%;
     margin: 0 auto;
 }
@@ -1885,11 +1947,12 @@ a {
     column-fill: auto;
     margin: 0 auto;
     position: relative;
-    min-height: 297mm; /* A4 height */
+    min-height: 297mm;
+    /* A4 height */
     /* Direction will be set dynamically by JavaScript based on content */
 }
 
-.live-preview > *:first-child {
+.live-preview>*:first-child {
     margin-top: 0 !important;
     padding-top: 0 !important;
 }
@@ -1899,9 +1962,12 @@ a {
     margin: 0;
     padding: 0;
     line-height: 1.2;
-    margin-top: 0.5em;  /* Small gap before chord line */
-    margin-bottom: 0;   /* No gap after - lyrics follow immediately */
-    white-space: pre;   /* Preserve spacing for chord alignment */
+    margin-top: 0.5em;
+    /* Small gap before chord line */
+    margin-bottom: 0;
+    /* No gap after - lyrics follow immediately */
+    white-space: pre;
+    /* Preserve spacing for chord alignment */
     font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -1910,32 +1976,46 @@ a {
     margin: 0;
     padding: 0;
     line-height: 1.4;
-    white-space: pre;   /* Preserve spacing for alignment with chords */
+    white-space: pre;
+    /* Preserve spacing for alignment with chords */
     font-family: Arial, Helvetica, sans-serif;
 }
 
-/* RTL: Let chord lines flow RTL so chords appear in correct visual order */
+/* RTL: Chord lines - keep LTR internally, align to right */
 [dir="rtl"] .chord-line,
-.live-preview[dir="rtl"] .chord-line {
+.live-preview[dir="rtl"] .chord-line,
+.preview-page[dir="rtl"] .chord-line {
+    direction: rtl;
+    /* Flow chords right-to-left for Hebrew */
+    text-align: right;
+    /* Align entire line to right */
+    unicode-bidi: plaintext;
+    /* Allow natural bidirectional text flow */
+    white-space: pre;
+    /* Preserve spacing */
+}
+
+/* RTL: Lyric lines flow RTL naturally */
+[dir="rtl"] .lyric-line,
+.live-preview[dir="rtl"] .lyric-line,
+.preview-page[dir="rtl"] .lyric-line {
     direction: rtl;
     text-align: right;
+    unicode-bidi: plaintext;
+    white-space: pre-wrap;
+    /* Ensure Hebrew-only lines don't collapse */
+    display: block;
+    /* Ensure block display for proper layout */
+    min-height: 1em;
+    /* Ensure minimum height for Hebrew text */
 }
 
-/* Keep individual chord text LTR (so "Am" doesn't become "mA") */
-[dir="rtl"] .chord-line .chord,
-.live-preview[dir="rtl"] .chord-line .chord {
-    direction: ltr;
-    unicode-bidi: embed;
-}
-
-/* Keep chord <b> tags LTR in RTL mode (so "F#" doesn't become "#F") */
+/* Keep chord names LTR within RTL context (so "Am" doesn't become "mA") */
 [dir="rtl"] .chord-line b,
 .live-preview[dir="rtl"] .chord-line b,
-[dir="rtl"] .preview-page b,
-.preview-page[dir="rtl"] b {
+.preview-page[dir="rtl"] .chord-line b {
     direction: ltr;
-    unicode-bidi: embed;
-    display: inline-block;
+    unicode-bidi: isolate;
 }
 
 /* Preview Logo - The Faith Sound */
@@ -1950,7 +2030,8 @@ a {
     z-index: 10;
     opacity: 0.85;
     pointer-events: none;
-    direction: ltr; /* Always render logo LTR regardless of content direction */
+    direction: ltr;
+    /* Always render logo LTR regardless of content direction */
 }
 
 /* RTL: Move logo to left corner */
@@ -1958,7 +2039,8 @@ a {
 .preview-page[dir="rtl"] .preview-logo {
     right: auto;
     left: 20px;
-    direction: ltr; /* Keep logo text LTR */
+    direction: ltr;
+    /* Keep logo text LTR */
 }
 
 /* Print styles for logo */
@@ -2010,6 +2092,7 @@ a {
         opacity: 0;
         transform: translateY(-20px) scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -2202,7 +2285,7 @@ a {
         padding: 20px !important;
     }
 
-    #subscriptionModal .modal-body > div[style*="grid"] {
+    #subscriptionModal .modal-body>div[style*="grid"] {
         grid-template-columns: 1fr !important;
         gap: 16px !important;
     }
@@ -2250,8 +2333,8 @@ a {
 }
 
 /* Remove gap between header and first section */
-.song-header + .song-section-block,
-.song-header + * {
+.song-header+.song-section-block,
+.song-header+* {
     margin-top: 0 !important;
 }
 
@@ -2298,7 +2381,8 @@ a {
     font-size: inherit;
     color: #666;
     font-weight: 400;
-    text-decoration: none;  /* Remove underline inherited from parent */
+    text-decoration: none;
+    /* Remove underline inherited from parent */
     margin-left: 8px;
 }
 
@@ -2306,8 +2390,10 @@ a {
 .section-badges-row {
     display: flex;
     align-items: center;
-    gap: 12px;  /* Space for dots between badges - minimalistic */
-    margin: 4px 0 12px 0;  /* Reduced margins - minimalistic */
+    gap: 12px;
+    /* Space for dots between badges - minimalistic */
+    margin: 4px 0 12px 0;
+    /* Reduced margins - minimalistic */
     flex-wrap: wrap;
     /* Span across all columns so both columns start at same height */
     column-span: all;
@@ -2316,21 +2402,29 @@ a {
     page-break-inside: avoid;
 }
 
-/* RTL: Reverse badge order so V1 V2 V3 V4 reads right-to-left */
-/* Direct selector when dir is on badges-row itself */
+/* RTL: Align badges to right side (badges already reversed in text, so keep LTR flex direction) */
 .section-badges-row[dir="rtl"] {
-    flex-direction: row-reverse !important;
+    direction: ltr !important;
+    /* Keep LTR so flex items don't reverse */
     justify-content: flex-end !important;
+    /* Align to right */
+    float: right !important;
+    clear: right !important;
 }
-/* Fallback: ancestor-based selector */
+
 [dir="rtl"] .section-badges-row,
-.live-preview[dir="rtl"] .section-badges-row {
-    flex-direction: row-reverse !important;
+.live-preview[dir="rtl"] .section-badges-row,
+.preview-page[dir="rtl"] .section-badges-row {
+    direction: ltr !important;
+    /* Keep LTR so flex items don't reverse */
     justify-content: flex-end !important;
+    /* Align to right */
+    float: right !important;
+    clear: right !important;
 }
 
 /* Reduce space after badges row */
-.section-badges-row + * {
+.section-badges-row+* {
     margin-top: 0 !important;
 }
 
@@ -2345,7 +2439,7 @@ a {
     padding-top: 0 !important;
 }
 
-#liveModeChartDisplay > *:first-child {
+#liveModeChartDisplay>*:first-child {
     margin-top: 0 !important;
     padding-top: 0 !important;
 }
@@ -2425,15 +2519,21 @@ a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 2px 8px;               /* Smaller - minimalistic style */
-    border-radius: 10px;            /* Smaller radius */
+    padding: 2px 8px;
+    /* Smaller - minimalistic style */
+    border-radius: 10px;
+    /* Smaller radius */
     font-weight: 500;
-    font-size: 9px !important;      /* Smaller font - minimalistic */
+    font-size: 9px !important;
+    /* Smaller font - minimalistic */
     line-height: normal !important;
     letter-spacing: normal !important;
-    background: transparent;        /* No fill - outline only */
-    color: #444;                    /* Darker gray text */
-    border: 1px solid #444;         /* Thinner border */
+    background: transparent;
+    /* No fill - outline only */
+    color: #444;
+    /* Darker gray text */
+    border: 1px solid #444;
+    /* Thinner border */
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
@@ -2454,7 +2554,7 @@ a {
 }
 
 /* Dot separator BETWEEN badges (outside, not inside) */
-.section-badge + .section-badge::before {
+.section-badge+.section-badge::before {
     content: '·';
     position: absolute;
     left: -9px;
@@ -2466,8 +2566,8 @@ a {
 }
 
 /* RTL: Position dot on the right side instead of left */
-[dir="rtl"] .section-badge + .section-badge::before,
-.live-preview[dir="rtl"] .section-badge + .section-badge::before {
+[dir="rtl"] .section-badge+.section-badge::before,
+.live-preview[dir="rtl"] .section-badge+.section-badge::before {
     left: auto;
     right: -9px;
 }
@@ -2483,14 +2583,14 @@ a {
         font-size: 8px !important;
     }
 
-    .section-badge + .section-badge::before {
+    .section-badge+.section-badge::before {
         left: -8px;
         font-size: 10px;
     }
 
     /* RTL mobile fix */
-    [dir="rtl"] .section-badge + .section-badge::before,
-    .live-preview[dir="rtl"] .section-badge + .section-badge::before {
+    [dir="rtl"] .section-badge+.section-badge::before,
+    .live-preview[dir="rtl"] .section-badge+.section-badge::before {
         left: auto;
         right: -8px;
     }
@@ -2507,14 +2607,14 @@ a {
         font-size: 7px !important;
     }
 
-    .section-badge + .section-badge::before {
+    .section-badge+.section-badge::before {
         left: -7px;
         font-size: 9px;
     }
 
     /* RTL extra small mobile fix */
-    [dir="rtl"] .section-badge + .section-badge::before,
-    .live-preview[dir="rtl"] .section-badge + .section-badge::before {
+    [dir="rtl"] .section-badge+.section-badge::before,
+    .live-preview[dir="rtl"] .section-badge+.section-badge::before {
         left: auto;
         right: -7px;
     }
@@ -2585,11 +2685,13 @@ a {
 .song-section-block {
     margin: 1px 0;
     padding: 2px 4px;
-    border: 1px dashed #f97316; /* ORANGE DASHED BORDER - section blocks */
+    border: 1px dashed #f97316;
+    /* ORANGE DASHED BORDER - section blocks */
     border-radius: 3px;
     cursor: pointer;
     transition: background-color 0.15s ease;
-    background-color: rgba(249, 115, 22, 0.02); /* Very subtle orange tint */
+    background-color: rgba(249, 115, 22, 0.02);
+    /* Very subtle orange tint */
     /* Keep each section block together - don't split across columns/pages */
     break-inside: avoid;
     -webkit-column-break-inside: avoid;
@@ -2611,10 +2713,13 @@ a {
 }
 
 @keyframes sectionBlink {
-    0%, 100% {
+
+    0%,
+    100% {
         background: rgba(139, 92, 246, 0.08);
         box-shadow: 0 0 4px rgba(139, 92, 246, 0.3);
     }
+
     50% {
         background: rgba(139, 92, 246, 0.25);
         box-shadow: 0 0 12px rgba(139, 92, 246, 0.6);
@@ -2674,9 +2779,12 @@ a {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.1);
     }
@@ -2845,7 +2953,7 @@ a {
     }
 
     /* Hide A4 label during print */
-    .preview-container > div[style*="position: absolute"] {
+    .preview-container>div[style*="position: absolute"] {
         display: none !important;
     }
 
@@ -3309,9 +3417,12 @@ a {
 /* When scaling is active, preview container needs fixed dimensions */
 .preview-container.mobile-scaled {
     transform-origin: top left;
-    width: 793px !important;      /* Fixed A4 width - prevents reflow */
-    max-width: none !important;   /* Override the 100% constraint */
-    min-width: 793px !important;  /* Prevent any shrinking */
+    width: 793px !important;
+    /* Fixed A4 width - prevents reflow */
+    max-width: none !important;
+    /* Override the 100% constraint */
+    min-width: 793px !important;
+    /* Prevent any shrinking */
     /* Scale value set by JavaScript */
 }
 
@@ -3320,10 +3431,11 @@ a {
     .preview-scale-wrapper {
         background: #1a1a1a;
         border-radius: 8px;
-        box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
     }
 
     .preview-container.mobile-scaled {
-        margin: 0; /* Remove auto margin when transformed */
+        margin: 0;
+        /* Remove auto margin when transformed */
     }
 }
