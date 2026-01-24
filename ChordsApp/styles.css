@@ -2043,6 +2043,58 @@ a {
     /* Keep logo text LTR */
 }
 
+/* Preview Page Footer - TheFaithSound branding */
+.preview-page-footer {
+    position: absolute;
+    bottom: 6px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    opacity: 0.4;
+    direction: ltr;
+}
+
+.preview-page-footer .footer-icon {
+    width: 12px;
+    height: 12px;
+}
+
+.preview-page-footer .footer-brand {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 8px;
+    font-weight: 600;
+    color: #666;
+}
+
+.preview-page-footer .footer-url {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 8px;
+    font-weight: 400;
+    color: #999;
+    letter-spacing: 0.2px;
+}
+
+.preview-page-footer .footer-highlight {
+    color: #e91e63;
+    font-weight: 500;
+}
+
+/* Print styles for footer */
+@media print {
+    .preview-page-footer {
+        position: absolute;
+        bottom: 5mm;
+        left: 0;
+        right: 0;
+        opacity: 0.5;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
+
 /* Print styles for logo */
 @media print {
     .preview-logo {
