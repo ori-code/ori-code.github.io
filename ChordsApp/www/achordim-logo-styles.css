@@ -1,0 +1,166 @@
+/**
+ * aChordim Logo CSS Components
+ * Version 4: Rounded + Badge style
+ */
+
+/* ============================================
+   Logo Color Palette
+   ============================================ */
+:root {
+    --logo-a: #a855f7;      /* Purple */
+    --logo-C: #e879f9;      /* Pink */
+    --logo-h: #f0abfc;      /* Light pink */
+    --logo-o: #fda4af;      /* Peach */
+    --logo-r: #fca5a5;      /* Light coral */
+    --logo-d: #fecaca;      /* Light peach */
+    --logo-im: #ffffff;     /* White */
+    --logo-dark-bg: #1a1d27;
+}
+
+/* ============================================
+   Main Logo Text
+   ============================================ */
+.achordim-logo-text {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.achordim-logo-text.small {
+    font-size: 36px;
+}
+
+.achordim-logo-text.large {
+    font-size: 64px;
+}
+
+.achordim-logo-text .a { color: var(--logo-a); }
+.achordim-logo-text .C { color: var(--logo-C); }
+.achordim-logo-text .h { color: var(--logo-h); }
+.achordim-logo-text .o { color: var(--logo-o); }
+.achordim-logo-text .r { color: var(--logo-r); }
+.achordim-logo-text .d { color: var(--logo-d); }
+.achordim-logo-text .i,
+.achordim-logo-text .m { color: var(--logo-im); }
+
+/* Dark mode: i and m are dark */
+.achordim-logo-text.light-bg .i,
+.achordim-logo-text.light-bg .m { color: var(--logo-dark-bg); }
+
+/* Hebrew text */
+.achordim-hebrew {
+    font-family: 'Rubik', system-ui, sans-serif;
+    font-size: 20px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 6px;
+    text-align: center;
+}
+
+.achordim-hebrew.light-bg {
+    color: rgba(0,0,0,0.4);
+}
+
+/* ============================================
+   Icon: Rounded + Badge (Version 4)
+   ============================================ */
+.achordim-icon {
+    width: 46px;
+    height: 46px;
+    position: relative;
+    display: inline-flex;
+    margin-right: 14px;
+}
+
+.achordim-icon.large {
+    width: 66px;
+    height: 66px;
+}
+
+.achordim-icon .rounded-frame {
+    position: absolute;
+    inset: 0;
+    border: 3px solid transparent;
+    border-radius: 10px;
+    background:
+        linear-gradient(var(--logo-dark-bg), var(--logo-dark-bg)) padding-box,
+        linear-gradient(135deg, #a855f7, #e879f9) border-box;
+}
+
+.achordim-icon.light-bg .rounded-frame {
+    background:
+        linear-gradient(#fff, #fff) padding-box,
+        linear-gradient(135deg, #a855f7, #e879f9) border-box;
+}
+
+.achordim-icon .center-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 26px;
+}
+
+.achordim-icon.large .center-content {
+    width: 36px;
+    gap: 4px;
+}
+
+.achordim-icon .grad-line {
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #a855f7, #e879f9, #fda4af);
+}
+
+.achordim-icon.large .grad-line {
+    height: 4px;
+}
+
+.achordim-icon .grad-line:nth-child(2) { width: 70%; }
+.achordim-icon .grad-line:nth-child(4) { width: 60%; }
+
+.achordim-icon .note-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, #a855f7, #e879f9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #fff;
+    font-family: system-ui, sans-serif;
+}
+
+.achordim-icon.large .note-badge {
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+}
+
+/* ============================================
+   Full Logo Component
+   ============================================ */
+.achordim-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.achordim-logo-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

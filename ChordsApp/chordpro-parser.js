@@ -16,13 +16,14 @@ const chordsAppParser = {
     SECTION_REGEX: /\{c:\s*([^}]+)\}/g,
 
     // Matches arrangement badge line: (I) (V1) (C) (V2) (C) (O) or with repeats/arrows: (I)2x (V1) (C) > (I)
-    BADGE_LINE_REGEX: /^[\s]*((\([A-Z]+\d*\)(\d+x)?\s*)|>\s*)+[\s]*$/i,
+    // Updated to allow (0) for Outro (OCR error/variation)
+    BADGE_LINE_REGEX: /^[\s]*((\([A-Z0-9]+\)(\d+x)?\s*)|>\s*)+[\s]*$/i,
 
-    // Matches individual badges: (I), (V1), (PC), (C), (B), (O), (TURN), (BRK), etc.
-    BADGE_REGEX: /\(([A-Z]+\d*)\)/g,
+    // Matches individual badges: (I), (V1), (PC), (C), (B), (O), (TURN), (BRK), (0), etc.
+    BADGE_REGEX: /\(([A-Z0-9]+)\)/g,
 
     // Matches badge with optional repeat count: (I)2x, (C)3x
-    BADGE_WITH_REPEAT_REGEX: /\(([A-Z]+\d*)\)(\d+)?x?/gi,
+    BADGE_WITH_REPEAT_REGEX: /\(([A-Z0-9]+)\)(\d+)?x?/gi,
 
     // Matches chord grids: | G | C | D |
     CHORD_GRID_REGEX: /^\s*\|[^|]+\|/,
@@ -455,6 +456,9 @@ const chordsAppParser = {
      * @returns {string} - CSS class name
      */
     getBadgeColorClass(badge) {
+        // Handle '0' as Outro
+        if (badge === '0') return 'badge-outro';
+
         const type = badge.replace(/\d+$/, '').toUpperCase();
 
         const colorMap = {

@@ -754,6 +754,35 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     };
 
+    // Helper to convert Nashville number to Roman numeral
+    const nashvilleToRoman = (nashvilleStr) => {
+        if (!nashvilleStr) return '';
+
+        // Handle slash chords recursively
+        if (nashvilleStr.includes('/')) {
+            return nashvilleStr.split('/').map(part => nashvilleToRoman(part)).join('/');
+        }
+
+        // Parse accidental, number, modifier
+        // Example: "b3" -> accidental="b", number="3", modifier=""
+        // Example: "2°" -> accidental="", number="2", modifier="°"
+        const match = nashvilleStr.match(/^([b#]?)(\d+)(.*)$/);
+        if (!match) return nashvilleStr;
+
+        const accidental = match[1];
+        const number = match[2];
+        const modifier = match[3];
+
+        const romanMap = {
+            '1': 'I', '2': 'II', '3': 'III', '4': 'IV',
+            '5': 'V', '6': 'VI', '7': 'VII'
+        };
+
+        const roman = romanMap[number] || number;
+
+        return `${accidental}${roman}${modifier}`;
+    };
+
     // Initialize directional layout defaults
     setDirectionalLayout(visualEditor, '');
     setDirectionalLayout(songbookOutput, '');
@@ -2910,7 +2939,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const num = label.match(/\d+$/)?.[0] || '';
             const nameMap = {
                 'I': 'Intro', 'V': 'Verse', 'PC': 'Pre-Chorus', 'C': 'Chorus',
-                'B': 'Bridge', 'O': 'Outro', 'INT': 'Interlude', 'TAG': 'Tag',
+                'B': 'Bridge', 'O': 'Outro', '0': 'Outro', 'INT': 'Interlude', 'TAG': 'Tag',
                 'CODA': 'Coda', 'TURN': 'Turn', 'BRK': 'Break'
             };
             const baseName = nameMap[baseLabel] || baseLabel;
@@ -3005,6 +3034,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         if (arrangement.length > 0) {
             // Deduplicate badges - remove duplicate labels while preserving order
+            // FIX: Allow duplicates to show full arrangement structure as typed
+            const uniqueArrangement = arrangement; // Keep all items
+            /*
             const seenLabels = new Set();
             const uniqueArrangement = arrangement.filter(item => {
                 if (item.type !== 'badge') return true; // Keep flow arrows
@@ -3015,9 +3047,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 seenLabels.add(item.label);
                 return true;
             });
+            */
 
             let badgeItems = uniqueArrangement
-                .filter(item => item.type === 'badge') // Skip flow arrows in badge row
+                .filter(item => item.type === 'badge' && item.label && item.label.trim().length > 0) // Skip flow arrows and empty badges
                 .map(item => {
                     const colorClass = parser.getBadgeColorClass(item.label);
                     const repeatSup = item.repeat > 1 ? `<sup class="repeat-count">${item.repeat}x</sup>` : '';
@@ -3227,6 +3260,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         return `<b>${finalChord}|${number}</b>`;
                     } else if (mode === 'numbers' && number) {
                         return `<b>${number}</b>`;
+                    } else if (mode === 'roman_both' && number) {
+                        return `<b>${finalChord}|${nashvilleToRoman(number)}</b>`;
+                    } else if (mode === 'roman' && number) {
+                        return `<b>${nashvilleToRoman(number)}</b>`;
                     } else {
                         return `<b>${finalChord}</b>`;
                     }
@@ -3256,6 +3293,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         return `<b>${finalChord}|${number}</b>`;
                     } else if (mode === 'numbers' && number) {
                         return `<b>${number}</b>`;
+                    } else if (mode === 'roman_both' && number) {
+                        return `<b>${finalChord}|${nashvilleToRoman(number)}</b>`;
+                    } else if (mode === 'roman' && number) {
+                        return `<b>${nashvilleToRoman(number)}</b>`;
                     } else {
                         return `<b>${finalChord}</b>`;
                     }
@@ -3270,6 +3311,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         return `${prefix}<b>${chord}|${number}</b>`;
                     } else if (mode === 'numbers' && number) {
                         return `${prefix}<b>${number}</b>`;
+                    } else if (mode === 'roman_both' && number) {
+                        return `${prefix}<b>${chord}|${nashvilleToRoman(number)}</b>`;
+                    } else if (mode === 'roman' && number) {
+                        return `${prefix}<b>${nashvilleToRoman(number)}</b>`;
                     } else {
                         return `${prefix}<b>${chord}</b>`;
                     }
@@ -3302,6 +3347,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                             return `<span class="inline-chord"><b>${finalChord}|${number}</b></span>`;
                         } else if (mode === 'numbers' && number) {
                             return `<span class="inline-chord"><b>${number}</b></span>`;
+                        } else if (mode === 'roman_both' && number) {
+                            return `<span class="inline-chord"><b>${finalChord}|${nashvilleToRoman(number)}</b></span>`;
+                        } else if (mode === 'roman' && number) {
+                            return `<span class="inline-chord"><b>${nashvilleToRoman(number)}</b></span>`;
                         } else {
                             return `<span class="inline-chord"><b>${finalChord}</b></span>`;
                         }
@@ -3773,12 +3822,65 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     line = line.replace(bracketPattern, '');
                     result.push(line);
                 } else if (isRTL) {
-                    // Create chord line above lyrics
-                    if (chords.length > 0) {
-                        result.push(chords.join('    ')); // Chord line
+                    // RTL content: Use INLINE-BLOCK approach for precise alignment
+                    // Instead of splitting lines, we keep chord-word pairs together in stacked spans.
+
+                    // Split line by bracketed chords, keeping delimiters.
+                    const segments = line.split(/(\[[^\]]+\](?:[+-]+)?)/);
+
+                    let newLineHtml = `<div class="rtl-line-container">`;
+
+                    for (let j = 0; j < segments.length; j++) {
+                        const seg = segments[j];
+                        if (!seg) continue; // Skip empty
+
+                        // Check if segment is start of a chord
+                        const simpleChordMatch = seg.match(/^\[([^\]]+)\]([+-]+)?$/);
+
+                        if (simpleChordMatch) {
+                            const chordRaw = simpleChordMatch[1];
+                            const modifier = simpleChordMatch[2];
+
+                            // Get associated text (next segment)
+                            let nextText = '';
+                            if (j + 1 < segments.length) {
+                                let potentialText = segments[j + 1];
+                                if (!potentialText.match(/^\[([^\]]+)\]([+-]+)?$/)) {
+                                    nextText = potentialText;
+                                    j++; // Consume next segment
+                                }
+                            }
+
+                            // Process chord
+                            const finalChord = applyChordModifier(chordRaw, modifier);
+                            const number = chordToNashville(finalChord, key);
+                            let displayChord = finalChord;
+                            if (mode === 'both' && number) {
+                                displayChord = `${number}|${finalChord}`;
+                            } else if (mode === 'numbers' && number) {
+                                displayChord = number;
+                            } else if (mode === 'roman_both' && number) {
+                                displayChord = `${nashvilleToRoman(number)}|${finalChord}`;
+                            } else if (mode === 'roman' && number) {
+                                displayChord = nashvilleToRoman(number);
+                            }
+
+                            // Render Pair
+                            const safeText = nextText || '&nbsp;';
+
+                            newLineHtml += `<span class="chord-pair">
+                                <span class="chord-above"><b>${displayChord}</b></span>
+                                <span class="lyric-below">${safeText}</span>
+                            </span>`;
+                        } else {
+                            // Just text (e.g. Intro at start, or text without chords)
+                            newLineHtml += `<span class="lyric-only">${seg}</span>`;
+                        }
                     }
-                    // Lyrics line
-                    result.push(lyricLine);
+
+                    newLineHtml += `</div>`;
+                    result.push(newLineHtml);
+
                 } else {
                     // LTR content: style chord brackets inline
                     line = line.replace(bracketPattern, (_, chord, modifier) => {
@@ -3788,6 +3890,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                             return `<span class="inline-chord"><b>${finalChord}|${number}</b></span>`;
                         } else if (mode === 'numbers' && number) {
                             return `<span class="inline-chord"><b>${number}</b></span>`;
+                        } else if (mode === 'roman_both' && number) {
+                            return `<span class="inline-chord"><b>${finalChord}|${nashvilleToRoman(number)}</b></span>`;
+                        } else if (mode === 'roman' && number) {
+                            return `<span class="inline-chord"><b>${nashvilleToRoman(number)}</b></span>`;
                         } else {
                             return `<span class="inline-chord"><b>${finalChord}</b></span>`;
                         }
@@ -3867,6 +3973,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                             return `${before}<b>${number} | ${finalChord}</b>${after}`;
                         } else if (mode === 'numbers' && number) {
                             return `${before}<b>${number}</b>${after}`;
+                        } else if (mode === 'roman_both' && number) {
+                            return `${before}<b>${nashvilleToRoman(number)} | ${finalChord}</b>${after}`;
+                        } else if (mode === 'roman' && number) {
+                            return `${before}<b>${nashvilleToRoman(number)}</b>${after}`;
                         } else {
                             return `${before}<b>${finalChord}</b>${after}`;
                         }
@@ -3884,6 +3994,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         return `<b>${finalChord} | ${number}</b>`;
                     } else if (mode === 'numbers' && number) {
                         return `<b>${number}</b>`;
+                    } else if (mode === 'roman_both' && number) {
+                        return `<b>${finalChord} | ${nashvilleToRoman(number)}</b>`;
+                    } else if (mode === 'roman' && number) {
+                        return `<b>${nashvilleToRoman(number)}</b>`;
                     } else {
                         return `<b>${finalChord}</b>`;
                     }
@@ -4600,7 +4714,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         'INT': 'Interlude',
         'TAG': 'Tag',
         'CODA': 'Coda',
-        'O': 'Outro',
+        'O': 'Outro', '0': 'Outro',
         'TURN': 'Turn', 'TURN1': 'Turn 1', 'TURN2': 'Turn 2',
         'BRK': 'Break', 'BRK1': 'Break 1', 'BRK2': 'Break 2'
     };
@@ -4616,7 +4730,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Check if line is an arrangement line (contains multiple tags like "(V1) (C) (V2)" or "(I) · (V1) · (C)")
             const cleanLine = line.replace(/<[^>]*>/g, '').trim();
             // Match common arrangement tags: V, C, B, I, O, T, PC, CD, INT, TAG, CODA, TURN, BRK, etc.
-            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)/i.test(cleanLine);
+            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT0])\d*\)/i.test(cleanLine);
             // Allow letters, digits, parentheses, whitespace, middle dots (·), pipes (|), dashes, commas
             const onlyInlineNotation = /^[\s\(\)A-Z0-9·|,\-–—]+$/i.test(cleanLine) && hasInlineNotation;
 
@@ -4661,7 +4775,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Check if it's an arrangement line
             const cleanLine = trimmedLine.replace(/<[^>]*>/g, '');
-            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT])\d*\)/i.test(cleanLine);
+            const hasInlineNotation = /\((?:PC|CD|INT|TAG|CODA|TURN|BRK|TURNAROUND|[VBICOT0])\d*\)/i.test(cleanLine);
             const isArrangementLine = /^[\s\(\)A-Z0-9·|,\-–—]+$/i.test(cleanLine) && hasInlineNotation;
 
             if (isArrangementLine) {
@@ -4724,10 +4838,19 @@ Our [Em7]hearts will cry, these bones will [D]sing
      * On repeat: only show section header (tag), not full content - saves space
      */
     function rebuildByArrangement(content) {
-        const tags = getArrangementTags(content);
+        let tags = getArrangementTags(content);
         if (tags.length === 0) {
             console.log('No arrangement tags found, returning original content');
             return content;
+        }
+
+        // FIX: Detect RTL content and reverse tags
+        // In RTL languages (Hebrew/Arabic), the arrangement line is written Right-to-Left (e.g. (Intro) (Verse) (Chorus))
+        // But the file content stores it LTR order: (Chorus) (Verse) (Intro).
+        // So we need to reverse the tags to build the song in the correct logical order (Intro -> Outro).
+        if (detectRTL(content)) {
+            console.log('🔄 RTL Content detected: Reversing arrangement tags for Follow function.');
+            tags = tags.reverse();
         }
 
         const parsed = parseSectionsFromContent(content);
@@ -4817,6 +4940,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 }
             } else {
                 console.log(`Section not found for tag: ${tag} (${sectionName})`);
+                // FIX: Show header even if content is missing (e.g. Intro, Outro)
+                // Use standard "Section:" format so formatForPreview applies consistent styling
+                rebuiltParts.push('');
+                rebuiltParts.push(`${actualSectionName}:`);
+                shownSections.add(actualSectionName);
             }
         }
 
@@ -5721,19 +5849,26 @@ Our [Em7]hearts will cry, these bones will [D]sing
             nashvilleMode.style.opacity = '1';
 
             // Disable/enable Nashville-specific options based on subscription
-            const nashvilleOptions = nashvilleMode.querySelectorAll('option[value="both"], option[value="numbers"]');
+            const nashvilleOptions = nashvilleMode.querySelectorAll('option[value="both"], option[value="numbers"], option[value="roman_both"], option[value="roman"]');
             nashvilleOptions.forEach(opt => {
+                // Determine base label
+                let baseLabel = opt.value;
+                if (opt.value === 'both') baseLabel = 'Nash+Chords';
+                else if (opt.value === 'numbers') baseLabel = 'Nashville';
+                else if (opt.value === 'roman_both') baseLabel = 'Roman+Chords';
+                else if (opt.value === 'roman') baseLabel = 'Roman Only'; // Or "Roman"
+
                 if (!summary.canUseNashville) {
                     opt.disabled = true;
-                    opt.textContent = opt.value === 'both' ? 'Nash+Chords ⭐' : 'Nashville ⭐';
+                    opt.textContent = `${baseLabel} ⭐`;
                 } else {
                     opt.disabled = false;
-                    opt.textContent = opt.value === 'both' ? 'Nash+Chords' : 'Nashville';
+                    opt.textContent = baseLabel;
                 }
             });
 
             // If currently on a Nashville mode without access, switch to chords
-            if (!summary.canUseNashville && (nashvilleMode.value === 'both' || nashvilleMode.value === 'numbers')) {
+            if (!summary.canUseNashville && ['both', 'numbers', 'roman_both', 'roman'].includes(nashvilleMode.value)) {
                 nashvilleMode.value = 'chords';
             }
 

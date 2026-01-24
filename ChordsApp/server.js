@@ -87,11 +87,14 @@ Analysis: [Your key detection reasoning]
 
 ## HEBREW TEXT HANDLING (CRITICAL)
 
-1. **Reading Direction**: Hebrew lyrics are written RIGHT-TO-LEFT
-2. **Chord Positioning**: In the source image, chords appear ABOVE the syllable where the chord changes
-3. **Inline Conversion**: Place [chord] bracket IMMEDIATELY BEFORE the Hebrew word/syllable it applies to
-4. **Word Order**: Preserve Hebrew word order exactly as written (RTL reading)
-5. **Transliteration**: Do NOT transliterate Hebrew - keep original Hebrew characters
+1. **Reading Direction**: Hebrew lyrics are written RIGHT-TO-LEFT.
+2. **Scanning Logic (CRITICAL)**: You must scan the line from **RIGHT TO LEFT**.
+   - The "First Chord" of the line is the **RIGHTMOST** chord visually.
+   - The "Last Chord" of the line is the **LEFTMOST** chord visually.
+   - **DO NOT** scan chords Left-to-Right. This will reverse the logical order.
+3. **Inline Conversion**: Place [chord] bracket IMMEDIATELY BEFORE (to the right of) the Hebrew word/syllable it applies to.
+4. **Word Order**: Preserve Hebrew word order exactly as written (RTL reading).
+5. **Transliteration**: Do NOT transliterate Hebrew - keep original Hebrew characters.
 
 ## SECTION MARKERS - HEBREW TO ENGLISH MAPPING
 
@@ -109,18 +112,21 @@ Recognize these Hebrew section names and output with English equivalent:
 ## INLINE CHORD FORMAT RULES
 
 1. Chords go in square brackets: [C] [Am] [F] [G] [Dm] etc.
-2. Place chord bracket at the START of the word/syllable where chord changes
-3. If multiple chords on one line, space them according to lyric timing
-4. For chord-only lines (like intros), write: [F] | [C] | [G] | [Am]
+2. Place chord bracket at the START (Right side) of the word/syllable.
+3. **RTL SCANNING EXAMPLE (CRITICAL)**:
+   
+   **Visual Image (Right to Left):**
+   (Left)    [C]       [F]    (Right)
+         עולם      שלום
 
-### Example Conversion:
+   **WRONG (Left-to-Right Scan):** 
+   [C]שלום [F]עולם  (This places the Left chord C on the Right word Shalom) -> ERROR!
 
-**Source (chords above lyrics):**
-    F              C
-אני חוזר אליך, ומחליף עולי בשלך
+   **CORRECT (Right-to-Left Scan):**
+   [F]שלום [C]עולם  (Rightmost chord F is first, Leftmost chord C is second) -> CORRECT!
 
-**Output (inline format, RTL preserved):**
-[F]אני חוזר אליך, ומ[C]חליף עולי בשלך
+   **If spacing is wide:**
+   [F]שלום.......[C]עולם
 
 ## KEY DETECTION ALGORITHM
 
@@ -203,6 +209,7 @@ Correct output order:
 - All sections labeled (VERSE, CHORUS, etc.)
 - Chords are in [brackets]
 - Hebrew text preserved exactly (not transliterated)
+- **RTL SCAN CHECK**: Did you read the chords from Right to Left? (Rightmost chord = First chord)
 - Multi-column layout read in correct order (right-to-left columns)
 - Analysis section explains key choice
 

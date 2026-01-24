@@ -2312,10 +2312,18 @@ a {
 }
 
 /* Style chords bold and inline */
-#livePreview b {
+#livePreview b,
+.chord-above b,
+.inline-chord b {
     color: #000;
-    font-weight: 600;
+    font-weight: 700 !important;
     font-size: 1em;
+}
+
+/* Ensure lyrics are NOT bold */
+.lyric-below,
+.lyric-only {
+    font-weight: 400 !important;
 }
 
 /* Song Header Container - fixed line-height */
@@ -2554,15 +2562,10 @@ a {
 }
 
 /* Dot separator BETWEEN badges (outside, not inside) */
+/* Dot separator removed */
 .section-badge+.section-badge::before {
-    content: '·';
-    position: absolute;
-    left: -9px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    font-size: 12px;
-    font-weight: 400;
+    content: none;
+    display: none;
 }
 
 /* RTL: Position dot on the right side instead of left */
@@ -3438,4 +3441,71 @@ a {
         margin: 0;
         /* Remove auto margin when transformed */
     }
+}
+
+/* ============= RTL CHORD ALIGNMENT ============= */
+.rtl-line-container {
+    display: flex;
+    flex-direction: row;
+    /* Standard Flex flow */
+    align-items: flex-end;
+    /* Align bottom of lyrics */
+    /* Wait, RTL flow? If parent is RTL, flex-flow row starts from right. */
+    /* We don't need explicit row-reverse if the parent container (e.g. #livePreview) has dir="rtl" */
+    flex-wrap: wrap;
+    margin-bottom: 0.5em;
+    /* Spacing between lines */
+}
+
+/* Ensure the preview container has RTL direction when content is Hebrew */
+.live-preview[dir="rtl"] .rtl-line-container {
+    /* Standard row in RTL context means: Starts right, goes left. perfect. */
+}
+
+.chord-pair {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    /* Center chord over its text segment */
+    /* Or flex-start? If chord is "G" and text is long "Shalom", we want G centered? Or at start? */
+    /* Prompt says "Immediatley before". Visual convention is usually centered or start-aligned. */
+    /* "Center" is safest for variable lengths. */
+    /* Actually for RTL, "flex-start" would be right-aligned? No, "flex-start" is Cross-Axis top, Main-Axis start. */
+    /* Column direction: Main axis is vertical. Cross axis is horizontal. */
+    /* alignItems: center -> Horizontally centered. */
+
+    vertical-align: text-bottom;
+}
+
+.chord-above {
+    font-weight: bold;
+    color: var(--primary, #ff3b5c);
+    /* Use app primary color or fallback */
+    margin-bottom: 2px;
+    /* Space between chord and lyric */
+    font-size: 0.9em;
+    /* Slightly smaller chord? or keep 1em */
+    line-height: 1;
+    white-space: pre;
+    /* Prevent collapsing */
+}
+
+.lyric-below {
+    line-height: 1.4;
+    white-space: pre;
+    /* Preserve spaces from OCR */
+}
+
+.lyric-only {
+    white-space: pre;
+    /* Preserve spaces */
+    line-height: 1.4;
+    /* Match lyric-below */
+    padding-top: 1.2em;
+    /* Push down to match baseline of text with chords above? */
+    /* No, flex items align-items: flex-end on container handles the baseline alignment of text... */
+    /* BUT .chord-pair has height = lyric + chord. .lyric-only has height = lyric. */
+    /* If we align-items: flex-end, they align at bottom. */
+    /* So chords stick up. This is correct. */
+    /* But .lyric-only needs to sit on the same baseline. */
 }
