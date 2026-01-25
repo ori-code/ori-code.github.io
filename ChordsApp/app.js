@@ -6509,6 +6509,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Regenerate preview first
         updateSongBookFromVisual();
 
+        // Check for music links in the loaded song
+        if (typeof checkForMusicLinks === 'function') {
+            checkForMusicLinks();
+        }
+
         // Per-song preferences (transpose, etc.) are now handled by Live Mode
         // via loadSongPreferences() in updateFromBroadcast()
 
@@ -6692,6 +6697,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Regenerate preview
         updateSongBookFromVisual();
         updateEditorBadges(); // ✅ Update badges in edit mode
+
+        // Check for music links in the loaded song
+        if (typeof checkForMusicLinks === 'function') {
+            checkForMusicLinks();
+        }
 
         // If leader, broadcast this song
         if (window.sessionManager && window.sessionManager.isLeader) {
