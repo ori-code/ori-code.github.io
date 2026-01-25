@@ -1219,6 +1219,9 @@
                 console.log('Has songbookFormat:', !!song.songbookFormat);
                 console.log('Baseline length:', baseline.length);
                 console.log('First 200 chars:', baseline.substring(0, 200));
+                console.log('🎵 YouTube in baselineChart:', song.baselineChart?.includes('YouTube:') || false);
+                console.log('🎵 YouTube in content:', song.content?.includes('YouTube:') || false);
+                console.log('🎵 content first 500 chars:', song.content?.substring(0, 500) || 'N/A');
 
                 // Store currently loaded song for update functionality (BEFORE dispatching event)
                 currentLoadedSong = {

@@ -2915,6 +2915,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const formatted = [];
         let sectionCounter = 0;
 
+        // ✅ Filter out music link lines from preview (YouTube, Spotify, etc.)
+        const musicLinkPattern = /^(YouTube|Spotify|AppleMusic|SoundCloud|Link):\s*https?:\/\/.*/i;
+        content = content.split('\n').filter(line => !musicLinkPattern.test(line.trim())).join('\n');
+
         // Reverse arrangement line badges for RTL content BEFORE processing
         content = reverseArrangementLineForRTL(content);
 
@@ -3391,6 +3395,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Format content with structured HTML for professional display
     const formatForPreview = (content, options = {}) => {
         const { enableSectionBlocks = false } = options;
+
+        // ✅ Filter out music link lines from preview (YouTube, Spotify, etc.)
+        const musicLinkPattern = /^(YouTube|Spotify|AppleMusic|SoundCloud|Link):\s*https?:\/\/.*/i;
+        content = content.split('\n').filter(line => !musicLinkPattern.test(line.trim())).join('\n');
 
         // Reverse arrangement line badges for RTL content BEFORE processing
         content = reverseArrangementLineForRTL(content);
@@ -6743,6 +6751,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // ✅ Restore music links from rawContent (they may not be in baselineChart)
             const rawContent = detail.rawContent || '';
+            console.log('🎵 rawContent length:', rawContent.length);
+            console.log('🎵 rawContent first 500 chars:', rawContent.substring(0, 500));
+            console.log('🎵 Has YouTube in rawContent:', rawContent.includes('YouTube:'));
             if (rawContent) {
                 const musicLinkPatterns = [
                     /^YouTube:\s*https?:\/\/[^\n]+/m,
