@@ -1513,71 +1513,83 @@ a {
     box-shadow: 0 0 0 3px rgba(255, 59, 92, 0.1);
 }
 
-/* YouTube Section */
-.youtube-section {
+/* Music Links Section */
+.music-section {
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid var(--border);
 }
 
-.youtube-add-btn {
+.music-add-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
     padding: 16px 24px;
-    background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(255, 0, 0, 0.05));
-    border: 2px dashed rgba(255, 0, 0, 0.3);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+    border: 2px dashed rgba(139, 92, 246, 0.3);
     border-radius: 12px;
-    color: #ff4444;
+    color: var(--primary);
     font-weight: 600;
     font-size: 0.95rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.youtube-add-btn:hover {
-    background: linear-gradient(135deg, rgba(255, 0, 0, 0.15), rgba(255, 0, 0, 0.08));
-    border-color: rgba(255, 0, 0, 0.5);
+.music-add-btn:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.08));
+    border-color: rgba(139, 92, 246, 0.5);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
 }
 
-.youtube-add-btn .youtube-icon {
+.music-add-btn .music-icon {
     width: 24px;
     height: 24px;
 }
 
-.youtube-player-container {
+/* YouTube Player (Primary - Large) */
+.music-player-container {
     background: rgba(10, 10, 18, 0.9);
-    border: 1px solid rgba(255, 0, 0, 0.2);
     border-radius: 12px;
     overflow: hidden;
+    margin-bottom: 12px;
 }
 
-.youtube-player-header {
+.music-player-container.youtube-player {
+    border: 1px solid rgba(255, 0, 0, 0.2);
+}
+
+.music-player-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 10px 14px;
-    background: linear-gradient(135deg, rgba(255, 0, 0, 0.15), rgba(255, 0, 0, 0.05));
-    border-bottom: 1px solid rgba(255, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.youtube-label {
+.music-player-header[data-platform="youtube"] {
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.15), rgba(255, 0, 0, 0.05));
+    border-bottom-color: rgba(255, 0, 0, 0.15);
+}
+
+.music-label {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #ff4444;
     font-weight: 600;
     font-size: 0.85rem;
 }
 
-.youtube-label svg {
+.music-player-header[data-platform="youtube"] .music-label {
+    color: #ff4444;
+}
+
+.music-player-header[data-platform="youtube"] .music-label svg {
     fill: #ff0000;
 }
 
-.youtube-remove-btn {
+.music-remove-btn {
     background: rgba(255, 255, 255, 0.1);
     border: none;
     color: var(--text-muted);
@@ -1592,23 +1604,135 @@ a {
     transition: all 0.2s;
 }
 
-.youtube-remove-btn:hover {
+.music-remove-btn:hover {
     background: rgba(255, 0, 0, 0.3);
     color: white;
 }
 
-.youtube-iframe-wrapper {
+.music-iframe-wrapper {
     position: relative;
     width: 100%;
     padding-bottom: 56.25%; /* 16:9 aspect ratio */
 }
 
-.youtube-iframe-wrapper iframe {
+.music-iframe-wrapper iframe {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+}
+
+/* Music Link Buttons Row */
+.music-links-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.music-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.music-link-btn svg {
+    flex-shrink: 0;
+}
+
+.music-link-btn span {
+    white-space: nowrap;
+}
+
+/* Platform-specific colors */
+.music-link-btn.spotify {
+    background: rgba(29, 185, 84, 0.15);
+    border: 1px solid rgba(29, 185, 84, 0.3);
+    color: #1DB954;
+}
+
+.music-link-btn.spotify:hover {
+    background: rgba(29, 185, 84, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(29, 185, 84, 0.2);
+}
+
+.music-link-btn.spotify svg {
+    fill: #1DB954;
+}
+
+.music-link-btn.apple {
+    background: rgba(252, 60, 68, 0.15);
+    border: 1px solid rgba(252, 60, 68, 0.3);
+    color: #fc3c44;
+}
+
+.music-link-btn.apple:hover {
+    background: rgba(252, 60, 68, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(252, 60, 68, 0.2);
+}
+
+.music-link-btn.apple svg {
+    fill: #fc3c44;
+}
+
+.music-link-btn.soundcloud {
+    background: rgba(255, 85, 0, 0.15);
+    border: 1px solid rgba(255, 85, 0, 0.3);
+    color: #ff5500;
+}
+
+.music-link-btn.soundcloud:hover {
+    background: rgba(255, 85, 0, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 85, 0, 0.2);
+}
+
+.music-link-btn.soundcloud svg {
+    fill: #ff5500;
+}
+
+.music-link-btn.generic {
+    background: rgba(107, 114, 128, 0.15);
+    border: 1px solid rgba(107, 114, 128, 0.3);
+    color: #9ca3af;
+}
+
+.music-link-btn.generic:hover {
+    background: rgba(107, 114, 128, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.2);
+}
+
+.music-link-btn.generic svg {
+    fill: #9ca3af;
+}
+
+/* Remove button on link buttons */
+.music-link-remove {
+    background: transparent;
+    border: none;
+    color: inherit;
+    opacity: 0.6;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0 0 0 8px;
+    margin-left: auto;
+    transition: opacity 0.2s;
+}
+
+.music-link-remove:hover {
+    opacity: 1;
 }
 
 .editor-panel textarea {

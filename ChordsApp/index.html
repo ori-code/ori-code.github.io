@@ -893,31 +893,69 @@
                                         feedback</button>
                                 </div>
 
-                                <!-- YouTube Link Section -->
-                                <div class="youtube-section" id="youtubeSection">
-                                    <div class="youtube-add-btn" id="youtubeAddBtn" onclick="openYoutubeModal()">
-                                        <svg class="youtube-icon" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                <!-- Music Links Section -->
+                                <div class="music-section" id="musicSection">
+                                    <!-- Add Music Link Button -->
+                                    <div class="music-add-btn" id="musicAddBtn" onclick="openMusicModal()">
+                                        <svg class="music-icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                                         </svg>
-                                        <span>Add YouTube Link</span>
+                                        <span>Add Music Link</span>
                                     </div>
-                                    <div class="youtube-player-container" id="youtubePlayerContainer" style="display: none;">
-                                        <div class="youtube-player-header">
-                                            <span class="youtube-label">
+
+                                    <!-- YouTube Player (Primary - Large) -->
+                                    <div class="music-player-container youtube-player" id="youtubePlayerContainer" style="display: none;">
+                                        <div class="music-player-header" data-platform="youtube">
+                                            <span class="music-label">
                                                 <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
                                                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                                                 </svg>
                                                 YouTube
                                             </span>
-                                            <button class="youtube-remove-btn" onclick="removeYoutubeLink()" title="Remove YouTube link">✕</button>
+                                            <button class="music-remove-btn" onclick="removeMusicLink('youtube')" title="Remove">✕</button>
                                         </div>
-                                        <div class="youtube-iframe-wrapper">
-                                            <iframe id="youtubeIframe"
-                                                frameborder="0"
+                                        <div class="music-iframe-wrapper">
+                                            <iframe id="youtubeIframe" frameborder="0"
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                 allowfullscreen>
                                             </iframe>
                                         </div>
+                                    </div>
+
+                                    <!-- Other Music Links (Compact Buttons) -->
+                                    <div class="music-links-row" id="musicLinksRow" style="display: none;">
+                                        <!-- Spotify -->
+                                        <a class="music-link-btn spotify" id="spotifyLinkBtn" href="#" target="_blank" style="display: none;">
+                                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                                            </svg>
+                                            <span>Spotify</span>
+                                            <button class="music-link-remove" onclick="event.preventDefault(); removeMusicLink('spotify')">✕</button>
+                                        </a>
+                                        <!-- Apple Music -->
+                                        <a class="music-link-btn apple" id="appleLinkBtn" href="#" target="_blank" style="display: none;">
+                                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                                <path d="M23.994 6.124a9.23 9.23 0 00-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043a5.022 5.022 0 00-1.877-.726 10.496 10.496 0 00-1.564-.15c-.04-.003-.083-.01-.124-.013H5.986c-.152.01-.303.017-.455.026-.747.043-1.49.123-2.193.4-1.336.53-2.3 1.452-2.865 2.78-.192.448-.292.925-.363 1.408-.056.392-.088.785-.1 1.18 0 .032-.007.062-.01.093v12.223c.01.14.017.283.027.424.05.815.154 1.624.497 2.373.65 1.42 1.738 2.353 3.234 2.801.42.127.856.187 1.293.228.555.053 1.11.06 1.667.06h11.03c.525 0 1.048-.034 1.57-.1.823-.106 1.597-.35 2.296-.81a5.046 5.046 0 001.88-2.207c.186-.42.293-.87.37-1.324.113-.675.138-1.358.137-2.04-.002-3.8 0-7.595-.003-11.393zm-6.423 3.99v5.712c0 .417-.058.827-.244 1.206-.29.59-.76.962-1.388 1.14-.35.1-.706.157-1.07.173-.95.042-1.775-.597-1.942-1.498-.096-.517-.006-1.013.323-1.445.329-.432.776-.705 1.299-.84.292-.076.59-.125.89-.167.376-.053.754-.088 1.128-.145.19-.03.336-.134.388-.332.015-.053.023-.11.023-.165V9.834a.46.46 0 00-.06-.245c-.055-.083-.15-.115-.253-.093l-4.12.893c-.09.02-.163.076-.202.167-.027.063-.04.13-.04.197v7.196c0 .204-.02.407-.06.608a1.794 1.794 0 01-.864 1.236c-.322.197-.677.304-1.052.36-.14.02-.28.038-.42.046-.832.044-1.574-.362-1.876-1.087-.265-.637-.21-1.285.155-1.88.313-.51.775-.838 1.345-.986.365-.095.735-.146 1.107-.185.31-.032.62-.073.927-.124.27-.046.433-.217.475-.49.01-.072.013-.146.013-.22V6.234c0-.12.022-.234.076-.34.08-.157.2-.25.372-.295L17.23 4.59c.123-.03.246-.044.37-.024.212.033.37.16.418.38.018.082.026.166.026.25v4.918h.527z"/>
+                                            </svg>
+                                            <span>Apple Music</span>
+                                            <button class="music-link-remove" onclick="event.preventDefault(); removeMusicLink('apple')">✕</button>
+                                        </a>
+                                        <!-- SoundCloud -->
+                                        <a class="music-link-btn soundcloud" id="soundcloudLinkBtn" href="#" target="_blank" style="display: none;">
+                                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                                <path d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.049-.1-.084-.1zm-.899 1.77c-.053 0-.092.04-.101.1l-.153 1.395.153 1.36c.009.057.048.097.101.097.05 0 .09-.04.1-.1l.178-1.357-.178-1.396c-.01-.06-.05-.1-.1-.1zm1.822-1.395c-.063 0-.108.053-.117.113l-.213 2.28.213 2.227c.009.065.054.112.117.112.063 0 .105-.047.115-.112l.244-2.227-.244-2.28c-.01-.06-.052-.113-.115-.113zm.88-.318c-.07 0-.125.058-.133.126l-.192 2.598.192 2.54c.008.072.063.125.133.125s.12-.053.13-.125l.22-2.54-.22-2.598c-.01-.068-.06-.126-.13-.126zm.94-.41c-.082 0-.137.065-.146.145l-.173 3.008.173 2.93c.009.086.064.145.146.145.082 0 .134-.059.144-.145l.2-2.93-.2-3.008c-.01-.08-.062-.145-.144-.145zm.928-.242c-.09 0-.15.074-.16.163l-.152 3.25.152 3.14c.01.093.07.163.16.163s.145-.07.156-.163l.176-3.14-.176-3.25c-.01-.09-.066-.163-.156-.163zm.98-.163c-.1 0-.167.082-.176.18l-.132 3.413.132 3.3c.009.103.076.18.176.18.099 0 .163-.077.173-.18l.153-3.3-.153-3.413c-.01-.098-.074-.18-.173-.18zm.973-.118c-.108 0-.18.09-.188.197l-.112 3.53.112 3.44c.008.11.08.198.188.198.107 0 .177-.088.187-.198l.13-3.44-.13-3.53c-.01-.108-.08-.197-.187-.197zm1.022-.028c-.117 0-.193.096-.2.212l-.092 3.558.093 3.5c.007.117.082.212.2.212.116 0 .19-.095.198-.212l.108-3.5-.108-3.558c-.008-.116-.082-.212-.199-.212zm.99-.015c-.125 0-.206.104-.212.227l-.073 3.573.073 3.533c.006.125.087.228.212.228.124 0 .203-.103.21-.228l.085-3.533-.084-3.573c-.008-.123-.087-.227-.211-.227zm1.068.01c-.135 0-.22.112-.226.245l-.054 3.563.054 3.508c.006.132.09.244.226.244.135 0 .216-.112.223-.244l.062-3.508-.062-3.563c-.007-.133-.088-.245-.223-.245zm.957-.05c-.142 0-.233.12-.238.26l-.035 3.613.035 3.558c.005.14.096.26.238.26.14 0 .23-.12.236-.26l.04-3.558-.04-3.613c-.006-.14-.096-.26-.236-.26zm1.06.01c-.15 0-.246.127-.252.275l-.015 3.603.015 3.548c.006.148.1.275.25.275.15 0 .243-.127.25-.275l.016-3.548-.017-3.603c-.007-.148-.1-.275-.248-.275zm1.03.02c-.16 0-.262.135-.267.29v7.15c.005.153.107.29.267.29.16 0 .26-.137.266-.29V12.39c-.005-.155-.106-.29-.266-.29zm1.03-.016c-.07 0-.135.03-.183.078-.05.05-.082.12-.085.192v7.21c.003.145.114.27.27.27.077 0 .147-.032.196-.083.05-.05.082-.122.084-.187v-7.21c-.002-.07-.034-.142-.084-.192-.05-.048-.12-.078-.198-.078zm1.028 0c-.075 0-.147.03-.197.08-.048.047-.08.117-.082.188v7.208c0 .072.034.14.082.188.05.05.122.082.197.082.17 0 .28-.125.28-.27V12.66c0-.143-.11-.27-.28-.27zm3.05.05c-.168 0-.33.022-.488.068-1.903.57-3.34 2.32-3.553 4.412-.037.352.25.642.593.642h7.25c.203 0 .395-.08.537-.22.142-.14.22-.33.22-.537V15.58c0-1.847-1.493-3.34-3.34-3.34-.077 0-.146.003-.22.01z"/>
+                                            </svg>
+                                            <span>SoundCloud</span>
+                                            <button class="music-link-remove" onclick="event.preventDefault(); removeMusicLink('soundcloud')">✕</button>
+                                        </a>
+                                        <!-- Generic Link -->
+                                        <a class="music-link-btn generic" id="genericLinkBtn" href="#" target="_blank" style="display: none;">
+                                            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+                                                <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                                            </svg>
+                                            <span id="genericLinkText">Link</span>
+                                            <button class="music-link-remove" onclick="event.preventDefault(); removeMusicLink('generic')">✕</button>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -1569,34 +1607,38 @@
         }
     </style>
 
-    <!-- YouTube Link Modal -->
-    <div id="youtubeModal" class="modal-overlay" style="display: none;">
+    <!-- Music Link Modal -->
+    <div id="musicModal" class="modal-overlay" style="display: none;">
         <div class="modal-container" style="max-width: 500px; width: 90%;">
             <div class="modal-header">
                 <h3 style="display: flex; align-items: center; gap: 10px;">
-                    <svg viewBox="0 0 24 24" fill="#ff0000" width="24" height="24">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    <svg viewBox="0 0 24 24" fill="var(--primary)" width="24" height="24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                     </svg>
-                    Add YouTube Link
+                    Add Music Link
                 </h3>
-                <button class="modal-close" onclick="closeYoutubeModal()">&times;</button>
+                <button class="modal-close" onclick="closeMusicModal()">&times;</button>
             </div>
             <div class="modal-body" style="padding: 24px;">
                 <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">
-                    Paste a YouTube link to add a video player to your song.
+                    Paste any music link (YouTube, Spotify, Apple Music, SoundCloud, or any URL)
                 </p>
-                <input type="text" id="youtubeUrlInput"
-                    placeholder="https://www.youtube.com/watch?v=..."
+                <input type="text" id="musicUrlInput"
+                    placeholder="https://youtube.com/... or https://open.spotify.com/..."
                     style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); font-size: 1rem; box-sizing: border-box;">
-                <p id="youtubeUrlError" style="color: #ff4444; font-size: 0.85rem; margin-top: 8px; display: none;">
-                    Please enter a valid YouTube URL
+                <p id="musicUrlError" style="color: #ff4444; font-size: 0.85rem; margin-top: 8px; display: none;">
+                    Please enter a valid URL
                 </p>
+                <div id="detectedPlatform" style="display: none; margin-top: 12px; padding: 10px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2);">
+                    <span style="font-size: 0.85rem; color: var(--text-muted);">Detected: </span>
+                    <span id="detectedPlatformName" style="font-weight: 600; color: var(--primary);"></span>
+                </div>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button onclick="closeYoutubeModal()" style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500;">
+                    <button onclick="closeMusicModal()" style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500;">
                         Cancel
                     </button>
-                    <button onclick="saveYoutubeLink()" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: linear-gradient(135deg, #ff0000, #cc0000); color: white; cursor: pointer; font-weight: 600;">
-                        Add Video
+                    <button id="addMusicBtn" onclick="saveMusicLink()" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; cursor: pointer; font-weight: 600;">
+                        Add Link
                     </button>
                 </div>
             </div>

@@ -3792,9 +3792,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
         }, 100);
 
-        // Check for YouTube link in content
-        if (typeof checkForYoutubeLink === 'function') {
-            checkForYoutubeLink();
+        // Check for music links in content
+        if (typeof checkForMusicLinks === 'function') {
+            checkForMusicLinks();
         }
 
         console.log('Live preview updated successfully');
@@ -7348,44 +7348,150 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Initialize subscription UI
     initSubscriptionUI();
 
-    // Initialize YouTube section
-    initYoutubeSection();
+    // Initialize Music Links section
+    initMusicSection();
 });
 
-// ============= YOUTUBE LINK FUNCTIONALITY =============
+// ============= MUSIC LINKS FUNCTIONALITY =============
 
-let currentYoutubeUrl = '';
+// Platform configurations
+const MUSIC_PLATFORMS = {
+    youtube: {
+        name: 'YouTube',
+        color: '#ff0000',
+        contentKey: 'YouTube',
+        pattern: /(?:youtube\.com|youtu\.be)/i,
+        extractId: (url) => {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
+                /^([a-zA-Z0-9_-]{11})$/
+            ];
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) return match[1];
+            }
+            return null;
+        },
+        embedType: 'iframe',
+        getEmbedUrl: (id) => `https://www.youtube.com/embed/${id}?rel=0`
+    },
+    spotify: {
+        name: 'Spotify',
+        color: '#1DB954',
+        contentKey: 'Spotify',
+        pattern: /open\.spotify\.com/i,
+        embedType: 'link'
+    },
+    apple: {
+        name: 'Apple Music',
+        color: '#fc3c44',
+        contentKey: 'AppleMusic',
+        pattern: /music\.apple\.com/i,
+        embedType: 'link'
+    },
+    soundcloud: {
+        name: 'SoundCloud',
+        color: '#ff5500',
+        contentKey: 'SoundCloud',
+        pattern: /soundcloud\.com/i,
+        embedType: 'link'
+    },
+    generic: {
+        name: 'Link',
+        color: '#6b7280',
+        contentKey: 'Link',
+        pattern: null,
+        embedType: 'link'
+    }
+};
+
+// Current music links state
+let currentMusicLinks = {};
 
 /**
- * Initialize YouTube section on page load
+ * Initialize Music section on page load
  */
-function initYoutubeSection() {
-    // Check if there's a YouTube link in the current content
-    checkForYoutubeLink();
+function initMusicSection() {
+    checkForMusicLinks();
+
+    // Add input listener for platform detection
+    const input = document.getElementById('musicUrlInput');
+    if (input) {
+        input.addEventListener('input', detectPlatformFromInput);
+    }
 }
 
 /**
- * Open the YouTube link modal
+ * Detect platform from URL as user types
  */
-function openYoutubeModal() {
-    const modal = document.getElementById('youtubeModal');
-    const input = document.getElementById('youtubeUrlInput');
-    const error = document.getElementById('youtubeUrlError');
+function detectPlatformFromInput() {
+    const input = document.getElementById('musicUrlInput');
+    const detectedDiv = document.getElementById('detectedPlatform');
+    const detectedName = document.getElementById('detectedPlatformName');
+
+    if (!input || !detectedDiv || !detectedName) return;
+
+    const url = input.value.trim();
+    if (!url) {
+        detectedDiv.style.display = 'none';
+        return;
+    }
+
+    const platform = detectPlatform(url);
+    if (platform) {
+        detectedName.textContent = MUSIC_PLATFORMS[platform].name;
+        detectedName.style.color = MUSIC_PLATFORMS[platform].color;
+        detectedDiv.style.display = 'block';
+    } else {
+        detectedDiv.style.display = 'none';
+    }
+}
+
+/**
+ * Detect which platform a URL belongs to
+ */
+function detectPlatform(url) {
+    if (!url) return null;
+
+    for (const [key, platform] of Object.entries(MUSIC_PLATFORMS)) {
+        if (platform.pattern && platform.pattern.test(url)) {
+            return key;
+        }
+    }
+
+    // Check if it's a valid URL for generic link
+    try {
+        new URL(url);
+        return 'generic';
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Open the Music link modal
+ */
+function openMusicModal() {
+    const modal = document.getElementById('musicModal');
+    const input = document.getElementById('musicUrlInput');
+    const error = document.getElementById('musicUrlError');
+    const detectedDiv = document.getElementById('detectedPlatform');
 
     if (modal) {
         modal.style.display = 'flex';
         if (input) {
-            input.value = currentYoutubeUrl || '';
+            input.value = '';
             input.focus();
-            error.style.display = 'none';
+            if (error) error.style.display = 'none';
+            if (detectedDiv) detectedDiv.style.display = 'none';
 
             // Add Enter key support
             input.onkeydown = (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    saveYoutubeLink();
+                    saveMusicLink();
                 } else if (e.key === 'Escape') {
-                    closeYoutubeModal();
+                    closeMusicModal();
                 }
             };
         }
@@ -7393,188 +7499,251 @@ function openYoutubeModal() {
 }
 
 /**
- * Close the YouTube link modal
+ * Close the Music link modal
  */
-function closeYoutubeModal() {
-    const modal = document.getElementById('youtubeModal');
+function closeMusicModal() {
+    const modal = document.getElementById('musicModal');
     if (modal) {
         modal.style.display = 'none';
     }
 }
 
 /**
- * Extract YouTube video ID from various URL formats
+ * Save the music link from the modal
  */
-function extractYoutubeVideoId(url) {
-    if (!url) return null;
-
-    // Handle various YouTube URL formats
-    const patterns = [
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
-        /^([a-zA-Z0-9_-]{11})$/ // Just the video ID
-    ];
-
-    for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match && match[1]) {
-            return match[1];
-        }
-    }
-
-    return null;
-}
-
-/**
- * Save the YouTube link from the modal
- */
-function saveYoutubeLink() {
-    const input = document.getElementById('youtubeUrlInput');
-    const error = document.getElementById('youtubeUrlError');
+function saveMusicLink() {
+    const input = document.getElementById('musicUrlInput');
+    const error = document.getElementById('musicUrlError');
     const url = input?.value?.trim() || '';
 
-    const videoId = extractYoutubeVideoId(url);
-
-    if (!videoId) {
+    if (!url) {
         if (error) error.style.display = 'block';
         return;
     }
 
-    currentYoutubeUrl = url;
+    const platform = detectPlatform(url);
 
-    // Add/update YouTube line in the editor content
-    updateYoutubeInContent(url);
+    if (!platform) {
+        if (error) {
+            error.textContent = 'Please enter a valid URL';
+            error.style.display = 'block';
+        }
+        return;
+    }
 
-    // Show the player
-    showYoutubePlayer(videoId);
+    // For YouTube, validate the video ID
+    if (platform === 'youtube') {
+        const videoId = MUSIC_PLATFORMS.youtube.extractId(url);
+        if (!videoId) {
+            if (error) {
+                error.textContent = 'Please enter a valid YouTube URL';
+                error.style.display = 'block';
+            }
+            return;
+        }
+    }
+
+    // Save the link
+    currentMusicLinks[platform] = url;
+    updateMusicLinkInContent(platform, url);
+    updateMusicUI();
 
     // Close modal
-    closeYoutubeModal();
+    closeMusicModal();
 }
 
 /**
- * Update or add YouTube link in the editor content
+ * Update or add music link in the editor content
  */
-function updateYoutubeInContent(url) {
+function updateMusicLinkInContent(platform, url) {
     const visualEditor = document.getElementById('visualEditor');
     if (!visualEditor) return;
 
+    const contentKey = MUSIC_PLATFORMS[platform].contentKey;
     let content = visualEditor.value;
-    const youtubeLinePattern = /^YouTube:\s*https?:\/\/[^\n]+$/m;
+    const linePattern = new RegExp(`^${contentKey}:\\s*https?:\\/\\/[^\\n]+$`, 'm');
 
-    if (youtubeLinePattern.test(content)) {
-        // Update existing YouTube line
-        content = content.replace(youtubeLinePattern, `YouTube: ${url}`);
+    if (linePattern.test(content)) {
+        // Update existing line
+        content = content.replace(linePattern, `${contentKey}: ${url}`);
     } else {
-        // Add YouTube line after the metadata (Key/BPM lines)
+        // Add line after metadata
         const lines = content.split('\n');
         let insertIndex = 0;
 
-        // Find the last metadata line (lines starting with Key:, BPM:, Time:, etc.)
-        for (let i = 0; i < Math.min(lines.length, 10); i++) {
+        // Find insertion point after metadata
+        for (let i = 0; i < Math.min(lines.length, 15); i++) {
             const line = lines[i].trim();
-            if (line.match(/^(Key|BPM|Time|Author|Title):/i) || line === '' || i < 3) {
+            if (line.match(/^(Key|BPM|Time|Author|Title|YouTube|Spotify|AppleMusic|SoundCloud|Link):/i) || line === '' || i < 3) {
                 insertIndex = i + 1;
             }
         }
 
-        // Insert YouTube line
-        lines.splice(insertIndex, 0, `YouTube: ${url}`);
+        lines.splice(insertIndex, 0, `${contentKey}: ${url}`);
         content = lines.join('\n');
     }
 
     visualEditor.value = content;
-
-    // Trigger updates
-    if (typeof updateSongBookFromVisual === 'function') {
-        updateSongBookFromVisual();
-    }
-    if (typeof updateLivePreview === 'function') {
-        updateLivePreview();
-    }
+    triggerEditorUpdate();
 }
 
 /**
- * Show the YouTube embedded player
+ * Remove a music link
  */
-function showYoutubePlayer(videoId) {
-    const addBtn = document.getElementById('youtubeAddBtn');
-    const playerContainer = document.getElementById('youtubePlayerContainer');
-    const iframe = document.getElementById('youtubeIframe');
-
-    if (addBtn) addBtn.style.display = 'none';
-    if (playerContainer) playerContainer.style.display = 'block';
-    if (iframe) {
-        iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0`;
-    }
-}
-
-/**
- * Hide the YouTube player and show the add button
- */
-function hideYoutubePlayer() {
-    const addBtn = document.getElementById('youtubeAddBtn');
-    const playerContainer = document.getElementById('youtubePlayerContainer');
-    const iframe = document.getElementById('youtubeIframe');
-
-    if (addBtn) addBtn.style.display = 'flex';
-    if (playerContainer) playerContainer.style.display = 'none';
-    if (iframe) iframe.src = '';
-}
-
-/**
- * Remove YouTube link from content
- */
-function removeYoutubeLink() {
+function removeMusicLink(platform) {
     const visualEditor = document.getElementById('visualEditor');
     if (!visualEditor) return;
 
-    // Remove YouTube line from content
+    const contentKey = MUSIC_PLATFORMS[platform].contentKey;
     let content = visualEditor.value;
-    content = content.replace(/^YouTube:\s*https?:\/\/[^\n]*\n?/m, '');
+    const linePattern = new RegExp(`^${contentKey}:\\s*https?:\\/\\/[^\\n]*\\n?`, 'm');
+    content = content.replace(linePattern, '');
     visualEditor.value = content;
 
-    currentYoutubeUrl = '';
-
-    // Hide player
-    hideYoutubePlayer();
-
-    // Trigger updates
-    if (typeof updateSongBookFromVisual === 'function') {
-        updateSongBookFromVisual();
-    }
-    if (typeof updateLivePreview === 'function') {
-        updateLivePreview();
-    }
+    delete currentMusicLinks[platform];
+    updateMusicUI();
+    triggerEditorUpdate();
 }
 
 /**
- * Check if there's a YouTube link in the current content and display player if so
+ * Check for music links in content and update UI
  */
-function checkForYoutubeLink() {
+function checkForMusicLinks() {
     const visualEditor = document.getElementById('visualEditor');
     if (!visualEditor) return;
 
     const content = visualEditor.value;
-    const match = content.match(/^YouTube:\s*(https?:\/\/[^\n]+)/m);
+    currentMusicLinks = {};
 
-    if (match && match[1]) {
-        const url = match[1].trim();
-        const videoId = extractYoutubeVideoId(url);
-
-        if (videoId) {
-            currentYoutubeUrl = url;
-            showYoutubePlayer(videoId);
+    // Check for each platform
+    for (const [key, platform] of Object.entries(MUSIC_PLATFORMS)) {
+        const pattern = new RegExp(`^${platform.contentKey}:\\s*(https?:\\/\\/[^\\n]+)`, 'm');
+        const match = content.match(pattern);
+        if (match && match[1]) {
+            currentMusicLinks[key] = match[1].trim();
         }
-    } else {
-        hideYoutubePlayer();
+    }
+
+    updateMusicUI();
+}
+
+/**
+ * Update the music section UI based on current links
+ */
+function updateMusicUI() {
+    const addBtn = document.getElementById('musicAddBtn');
+    const youtubeContainer = document.getElementById('youtubePlayerContainer');
+    const youtubeIframe = document.getElementById('youtubeIframe');
+    const linksRow = document.getElementById('musicLinksRow');
+
+    const hasYoutube = !!currentMusicLinks.youtube;
+
+    // YouTube player
+    if (hasYoutube && youtubeContainer && youtubeIframe) {
+        const videoId = MUSIC_PLATFORMS.youtube.extractId(currentMusicLinks.youtube);
+        if (videoId) {
+            youtubeIframe.src = `https://www.youtube.com/embed/${videoId}?rel=0`;
+            youtubeContainer.style.display = 'block';
+        }
+    } else if (youtubeContainer) {
+        youtubeContainer.style.display = 'none';
+        if (youtubeIframe) youtubeIframe.src = '';
+    }
+
+    // Other platform buttons
+    if (linksRow) {
+        let hasVisibleLinks = false;
+
+        // Spotify
+        const spotifyBtn = document.getElementById('spotifyLinkBtn');
+        if (spotifyBtn) {
+            if (currentMusicLinks.spotify) {
+                spotifyBtn.href = currentMusicLinks.spotify;
+                spotifyBtn.style.display = 'inline-flex';
+                hasVisibleLinks = true;
+            } else {
+                spotifyBtn.style.display = 'none';
+            }
+        }
+
+        // Apple Music
+        const appleBtn = document.getElementById('appleLinkBtn');
+        if (appleBtn) {
+            if (currentMusicLinks.apple) {
+                appleBtn.href = currentMusicLinks.apple;
+                appleBtn.style.display = 'inline-flex';
+                hasVisibleLinks = true;
+            } else {
+                appleBtn.style.display = 'none';
+            }
+        }
+
+        // SoundCloud
+        const soundcloudBtn = document.getElementById('soundcloudLinkBtn');
+        if (soundcloudBtn) {
+            if (currentMusicLinks.soundcloud) {
+                soundcloudBtn.href = currentMusicLinks.soundcloud;
+                soundcloudBtn.style.display = 'inline-flex';
+                hasVisibleLinks = true;
+            } else {
+                soundcloudBtn.style.display = 'none';
+            }
+        }
+
+        // Generic Link
+        const genericBtn = document.getElementById('genericLinkBtn');
+        const genericText = document.getElementById('genericLinkText');
+        if (genericBtn) {
+            if (currentMusicLinks.generic) {
+                genericBtn.href = currentMusicLinks.generic;
+                genericBtn.style.display = 'inline-flex';
+                // Try to show domain name
+                try {
+                    const domain = new URL(currentMusicLinks.generic).hostname.replace('www.', '');
+                    if (genericText) genericText.textContent = domain;
+                } catch {
+                    if (genericText) genericText.textContent = 'Link';
+                }
+                hasVisibleLinks = true;
+            } else {
+                genericBtn.style.display = 'none';
+            }
+        }
+
+        linksRow.style.display = hasVisibleLinks ? 'flex' : 'none';
+    }
+
+    // Show/hide add button based on whether there are any links
+    // Always show add button so user can add more links
+    if (addBtn) {
+        addBtn.style.display = 'flex';
+    }
+}
+
+/**
+ * Trigger editor content update
+ */
+function triggerEditorUpdate() {
+    if (typeof updateSongBookFromVisual === 'function') {
+        updateSongBookFromVisual();
+    }
+    if (typeof updateLivePreview === 'function') {
+        updateLivePreview();
     }
 }
 
 // Make functions globally accessible
-window.openYoutubeModal = openYoutubeModal;
-window.closeYoutubeModal = closeYoutubeModal;
-window.saveYoutubeLink = saveYoutubeLink;
-window.removeYoutubeLink = removeYoutubeLink;
-window.checkForYoutubeLink = checkForYoutubeLink;
+window.openMusicModal = openMusicModal;
+window.closeMusicModal = closeMusicModal;
+window.saveMusicLink = saveMusicLink;
+window.removeMusicLink = removeMusicLink;
+window.checkForMusicLinks = checkForMusicLinks;
 
-// ============= END YOUTUBE LINK FUNCTIONALITY =============
+// Backward compatibility aliases
+window.openYoutubeModal = openMusicModal;
+window.closeYoutubeModal = closeMusicModal;
+window.saveYoutubeLink = saveMusicLink;
+window.removeYoutubeLink = () => removeMusicLink('youtube');
+window.checkForYoutubeLink = checkForMusicLinks;
+
+// ============= END MUSIC LINKS FUNCTIONALITY =============
