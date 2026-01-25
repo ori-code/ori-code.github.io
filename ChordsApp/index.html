@@ -892,6 +892,34 @@
                                     <button class="ghost-button" id="reanalyzeButton" disabled>Re-analyze with
                                         feedback</button>
                                 </div>
+
+                                <!-- YouTube Link Section -->
+                                <div class="youtube-section" id="youtubeSection">
+                                    <div class="youtube-add-btn" id="youtubeAddBtn" onclick="openYoutubeModal()">
+                                        <svg class="youtube-icon" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                        </svg>
+                                        <span>Add YouTube Link</span>
+                                    </div>
+                                    <div class="youtube-player-container" id="youtubePlayerContainer" style="display: none;">
+                                        <div class="youtube-player-header">
+                                            <span class="youtube-label">
+                                                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                                </svg>
+                                                YouTube
+                                            </span>
+                                            <button class="youtube-remove-btn" onclick="removeYoutubeLink()" title="Remove YouTube link">✕</button>
+                                        </div>
+                                        <div class="youtube-iframe-wrapper">
+                                            <iframe id="youtubeIframe"
+                                                frameborder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowfullscreen>
+                                            </iframe>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1540,6 +1568,41 @@
             }
         }
     </style>
+
+    <!-- YouTube Link Modal -->
+    <div id="youtubeModal" class="modal-overlay" style="display: none;">
+        <div class="modal-container" style="max-width: 500px; width: 90%;">
+            <div class="modal-header">
+                <h3 style="display: flex; align-items: center; gap: 10px;">
+                    <svg viewBox="0 0 24 24" fill="#ff0000" width="24" height="24">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    Add YouTube Link
+                </h3>
+                <button class="modal-close" onclick="closeYoutubeModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">
+                    Paste a YouTube link to add a video player to your song.
+                </p>
+                <input type="text" id="youtubeUrlInput"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); font-size: 1rem; box-sizing: border-box;">
+                <p id="youtubeUrlError" style="color: #ff4444; font-size: 0.85rem; margin-top: 8px; display: none;">
+                    Please enter a valid YouTube URL
+                </p>
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button onclick="closeYoutubeModal()" style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500;">
+                        Cancel
+                    </button>
+                    <button onclick="saveYoutubeLink()" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: linear-gradient(135deg, #ff0000, #cc0000); color: white; cursor: pointer; font-weight: 600;">
+                        Add Video
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="subscriptionModal" class="modal-overlay">
         <div class="modal-container" style="max-width: 1100px; width: 95%; background: #f8fafc;">
             <div class="modal-header" style="background: transparent; border-bottom: 1px solid rgba(0,0,0,0.1);">

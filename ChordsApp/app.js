@@ -3792,6 +3792,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
         }, 100);
 
+        // Check for YouTube link in content
+        if (typeof checkForYoutubeLink === 'function') {
+            checkForYoutubeLink();
+        }
+
         console.log('Live preview updated successfully');
     };
 
@@ -7342,4 +7347,234 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Initialize subscription UI
     initSubscriptionUI();
+
+    // Initialize YouTube section
+    initYoutubeSection();
 });
+
+// ============= YOUTUBE LINK FUNCTIONALITY =============
+
+let currentYoutubeUrl = '';
+
+/**
+ * Initialize YouTube section on page load
+ */
+function initYoutubeSection() {
+    // Check if there's a YouTube link in the current content
+    checkForYoutubeLink();
+}
+
+/**
+ * Open the YouTube link modal
+ */
+function openYoutubeModal() {
+    const modal = document.getElementById('youtubeModal');
+    const input = document.getElementById('youtubeUrlInput');
+    const error = document.getElementById('youtubeUrlError');
+
+    if (modal) {
+        modal.style.display = 'flex';
+        if (input) {
+            input.value = currentYoutubeUrl || '';
+            input.focus();
+            error.style.display = 'none';
+
+            // Add Enter key support
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveYoutubeLink();
+                } else if (e.key === 'Escape') {
+                    closeYoutubeModal();
+                }
+            };
+        }
+    }
+}
+
+/**
+ * Close the YouTube link modal
+ */
+function closeYoutubeModal() {
+    const modal = document.getElementById('youtubeModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Extract YouTube video ID from various URL formats
+ */
+function extractYoutubeVideoId(url) {
+    if (!url) return null;
+
+    // Handle various YouTube URL formats
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
+        /^([a-zA-Z0-9_-]{11})$/ // Just the video ID
+    ];
+
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Save the YouTube link from the modal
+ */
+function saveYoutubeLink() {
+    const input = document.getElementById('youtubeUrlInput');
+    const error = document.getElementById('youtubeUrlError');
+    const url = input?.value?.trim() || '';
+
+    const videoId = extractYoutubeVideoId(url);
+
+    if (!videoId) {
+        if (error) error.style.display = 'block';
+        return;
+    }
+
+    currentYoutubeUrl = url;
+
+    // Add/update YouTube line in the editor content
+    updateYoutubeInContent(url);
+
+    // Show the player
+    showYoutubePlayer(videoId);
+
+    // Close modal
+    closeYoutubeModal();
+}
+
+/**
+ * Update or add YouTube link in the editor content
+ */
+function updateYoutubeInContent(url) {
+    const visualEditor = document.getElementById('visualEditor');
+    if (!visualEditor) return;
+
+    let content = visualEditor.value;
+    const youtubeLinePattern = /^YouTube:\s*https?:\/\/[^\n]+$/m;
+
+    if (youtubeLinePattern.test(content)) {
+        // Update existing YouTube line
+        content = content.replace(youtubeLinePattern, `YouTube: ${url}`);
+    } else {
+        // Add YouTube line after the metadata (Key/BPM lines)
+        const lines = content.split('\n');
+        let insertIndex = 0;
+
+        // Find the last metadata line (lines starting with Key:, BPM:, Time:, etc.)
+        for (let i = 0; i < Math.min(lines.length, 10); i++) {
+            const line = lines[i].trim();
+            if (line.match(/^(Key|BPM|Time|Author|Title):/i) || line === '' || i < 3) {
+                insertIndex = i + 1;
+            }
+        }
+
+        // Insert YouTube line
+        lines.splice(insertIndex, 0, `YouTube: ${url}`);
+        content = lines.join('\n');
+    }
+
+    visualEditor.value = content;
+
+    // Trigger updates
+    if (typeof updateSongBookFromVisual === 'function') {
+        updateSongBookFromVisual();
+    }
+    if (typeof updateLivePreview === 'function') {
+        updateLivePreview();
+    }
+}
+
+/**
+ * Show the YouTube embedded player
+ */
+function showYoutubePlayer(videoId) {
+    const addBtn = document.getElementById('youtubeAddBtn');
+    const playerContainer = document.getElementById('youtubePlayerContainer');
+    const iframe = document.getElementById('youtubeIframe');
+
+    if (addBtn) addBtn.style.display = 'none';
+    if (playerContainer) playerContainer.style.display = 'block';
+    if (iframe) {
+        iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0`;
+    }
+}
+
+/**
+ * Hide the YouTube player and show the add button
+ */
+function hideYoutubePlayer() {
+    const addBtn = document.getElementById('youtubeAddBtn');
+    const playerContainer = document.getElementById('youtubePlayerContainer');
+    const iframe = document.getElementById('youtubeIframe');
+
+    if (addBtn) addBtn.style.display = 'flex';
+    if (playerContainer) playerContainer.style.display = 'none';
+    if (iframe) iframe.src = '';
+}
+
+/**
+ * Remove YouTube link from content
+ */
+function removeYoutubeLink() {
+    const visualEditor = document.getElementById('visualEditor');
+    if (!visualEditor) return;
+
+    // Remove YouTube line from content
+    let content = visualEditor.value;
+    content = content.replace(/^YouTube:\s*https?:\/\/[^\n]*\n?/m, '');
+    visualEditor.value = content;
+
+    currentYoutubeUrl = '';
+
+    // Hide player
+    hideYoutubePlayer();
+
+    // Trigger updates
+    if (typeof updateSongBookFromVisual === 'function') {
+        updateSongBookFromVisual();
+    }
+    if (typeof updateLivePreview === 'function') {
+        updateLivePreview();
+    }
+}
+
+/**
+ * Check if there's a YouTube link in the current content and display player if so
+ */
+function checkForYoutubeLink() {
+    const visualEditor = document.getElementById('visualEditor');
+    if (!visualEditor) return;
+
+    const content = visualEditor.value;
+    const match = content.match(/^YouTube:\s*(https?:\/\/[^\n]+)/m);
+
+    if (match && match[1]) {
+        const url = match[1].trim();
+        const videoId = extractYoutubeVideoId(url);
+
+        if (videoId) {
+            currentYoutubeUrl = url;
+            showYoutubePlayer(videoId);
+        }
+    } else {
+        hideYoutubePlayer();
+    }
+}
+
+// Make functions globally accessible
+window.openYoutubeModal = openYoutubeModal;
+window.closeYoutubeModal = closeYoutubeModal;
+window.saveYoutubeLink = saveYoutubeLink;
+window.removeYoutubeLink = removeYoutubeLink;
+window.checkForYoutubeLink = checkForYoutubeLink;
+
+// ============= END YOUTUBE LINK FUNCTIONALITY =============
