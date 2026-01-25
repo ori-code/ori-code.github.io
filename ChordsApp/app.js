@@ -6741,6 +6741,41 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Normalize spacing
             visualFormat = normalizeMetadataSpacing(visualFormat);
 
+            // ✅ Restore music links from rawContent (they may not be in baselineChart)
+            const rawContent = detail.rawContent || '';
+            if (rawContent) {
+                const musicLinkPatterns = [
+                    /^YouTube:\s*https?:\/\/[^\n]+/m,
+                    /^Spotify:\s*https?:\/\/[^\n]+/m,
+                    /^AppleMusic:\s*https?:\/\/[^\n]+/m,
+                    /^SoundCloud:\s*https?:\/\/[^\n]+/m,
+                    /^Link:\s*https?:\/\/[^\n]+/m
+                ];
+
+                const linksToAdd = [];
+                for (const pattern of musicLinkPatterns) {
+                    const match = rawContent.match(pattern);
+                    if (match && !visualFormat.includes(match[0])) {
+                        linksToAdd.push(match[0]);
+                    }
+                }
+
+                if (linksToAdd.length > 0) {
+                    // Insert music links after metadata (after first few lines)
+                    const lines = visualFormat.split('\n');
+                    let insertIndex = 0;
+                    for (let i = 0; i < Math.min(lines.length, 10); i++) {
+                        const line = lines[i].trim();
+                        if (line.match(/^(Key|BPM|Time|Author|Title):/i) || line === '' || i < 3) {
+                            insertIndex = i + 1;
+                        }
+                    }
+                    lines.splice(insertIndex, 0, ...linksToAdd);
+                    visualFormat = lines.join('\n');
+                    console.log('✅ Restored music links:', linksToAdd);
+                }
+            }
+
             // Store as baseline visual content for direct transpose
             baselineVisualContent = visualFormat;
 

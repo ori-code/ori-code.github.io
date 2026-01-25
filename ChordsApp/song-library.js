@@ -1264,6 +1264,7 @@
                     window.dispatchEvent(new CustomEvent('songLoaded', {
                         detail: {
                             baselineChart: baseline,
+                            rawContent: song.content || '', // Include raw content for music links
                             originalKey: song.originalKey || '',
                             bpm: song.bpm || null,
                             timeSignature: song.timeSignature || '4/4',
