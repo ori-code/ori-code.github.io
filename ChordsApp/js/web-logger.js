@@ -1,8 +1,13 @@
 /**
- * Web Logger - Captures browser console logs and sends to server
- * Include this script in index.html to enable remote logging
+ * Web Logger - Sends explicit logs to server for debugging
  *
- * Logs are saved to: ChordsApp/web-debug.log
+ * USAGE:
+ *   webLog('message');                    // Simple log
+ *   webLog('message', { data: 123 });     // Log with data
+ *   webLog.error('error message');        // Error log
+ *   webLog.warn('warning');               // Warning log
+ *
+ * Logs are saved to: ChordsApp/web-debug.log (localhost only)
  * View logs: GET /api/logs?adminKey=YOUR_KEY&lines=100
  * Clear logs: DELETE /api/logs?adminKey=YOUR_KEY
  */
@@ -12,12 +17,10 @@
 
     // Configuration
     const CONFIG = {
-        // Only send logs when running on localhost (development)
         enabledHosts: ['localhost', '127.0.0.1'],
         serverUrl: 'http://localhost:3002/api/log',
-        batchInterval: 2000, // Send logs every 2 seconds
-        maxBatchSize: 50,    // Max logs per batch
-        logLevels: ['log', 'warn', 'error', 'info', 'debug']
+        batchInterval: 1000,
+        maxBatchSize: 50
     };
 
     // Check if logging should be enabled
@@ -25,61 +28,9 @@
         window.location.hostname.includes(host)
     );
 
-    if (!isEnabled) {
-        console.log('[WebLogger] Disabled - not on localhost');
-        return;
-    }
-
-    // Store original console methods
-    const originalConsole = {
-        log: console.log.bind(console),
-        warn: console.warn.bind(console),
-        error: console.error.bind(console),
-        info: console.info.bind(console),
-        debug: console.debug.bind(console)
-    };
-
     // Log queue for batching
     let logQueue = [];
     let isSending = false;
-
-    // Format any value for logging
-    function formatValue(value) {
-        if (value === undefined) return 'undefined';
-        if (value === null) return 'null';
-        if (value instanceof Error) {
-            return {
-                name: value.name,
-                message: value.message,
-                stack: value.stack
-            };
-        }
-        if (typeof value === 'object') {
-            try {
-                return JSON.parse(JSON.stringify(value));
-            } catch (e) {
-                return String(value);
-            }
-        }
-        return value;
-    }
-
-    // Create log entry
-    function createLogEntry(level, args) {
-        const formatted = Array.from(args).map(formatValue);
-        const message = formatted.map(v =>
-            typeof v === 'object' ? JSON.stringify(v) : String(v)
-        ).join(' ');
-
-        return {
-            level: level,
-            message: message,
-            data: formatted.length > 1 ? formatted : (formatted[0] || null),
-            timestamp: new Date().toISOString(),
-            url: window.location.href,
-            userAgent: navigator.userAgent
-        };
-    }
 
     // Send logs to server
     async function sendLogs() {
@@ -96,72 +47,88 @@
                     body: JSON.stringify(log)
                 });
             } catch (e) {
-                // Silently fail - don't spam console with fetch errors
+                // Silently fail
             }
         }
 
         isSending = false;
     }
 
-    // Override console methods
-    CONFIG.logLevels.forEach(level => {
-        console[level] = function(...args) {
-            // Call original console method
-            originalConsole[level](...args);
-
-            // Skip logging our own internal messages
-            const firstArg = args[0];
-            if (typeof firstArg === 'string' && firstArg.startsWith('[WebLogger]')) {
-                return;
-            }
-
-            // Add to queue
-            logQueue.push(createLogEntry(level, args));
+    // Create log entry
+    function createLogEntry(level, message, data) {
+        return {
+            level: level,
+            message: String(message),
+            data: data || null,
+            timestamp: new Date().toISOString(),
+            url: window.location.pathname,
+            userAgent: navigator.userAgent.substring(0, 50)
         };
-    });
+    }
 
-    // Capture unhandled errors
+    // Main logging function
+    function webLog(message, data) {
+        if (!isEnabled) return;
+        console.log('[webLog]', message, data || '');
+        logQueue.push(createLogEntry('log', message, data));
+    }
+
+    // Log levels
+    webLog.log = function(message, data) {
+        if (!isEnabled) return;
+        console.log('[webLog]', message, data || '');
+        logQueue.push(createLogEntry('log', message, data));
+    };
+
+    webLog.info = function(message, data) {
+        if (!isEnabled) return;
+        console.info('[webLog]', message, data || '');
+        logQueue.push(createLogEntry('info', message, data));
+    };
+
+    webLog.warn = function(message, data) {
+        if (!isEnabled) return;
+        console.warn('[webLog]', message, data || '');
+        logQueue.push(createLogEntry('warn', message, data));
+    };
+
+    webLog.error = function(message, data) {
+        if (!isEnabled) return;
+        console.error('[webLog]', message, data || '');
+        logQueue.push(createLogEntry('error', message, data));
+    };
+
+    // Capture unhandled errors (always useful)
     window.addEventListener('error', function(event) {
-        logQueue.push(createLogEntry('error', [{
-            type: 'uncaughtError',
-            message: event.message,
+        if (!isEnabled) return;
+        logQueue.push(createLogEntry('error', 'Uncaught: ' + event.message, {
             filename: event.filename,
-            lineno: event.lineno,
-            colno: event.colno,
-            error: event.error ? {
-                name: event.error.name,
-                message: event.error.message,
-                stack: event.error.stack
-            } : null
-        }]));
+            line: event.lineno,
+            col: event.colno
+        }));
     });
 
-    // Capture unhandled promise rejections
     window.addEventListener('unhandledrejection', function(event) {
-        logQueue.push(createLogEntry('error', [{
-            type: 'unhandledRejection',
-            reason: formatValue(event.reason)
-        }]));
+        if (!isEnabled) return;
+        logQueue.push(createLogEntry('error', 'Unhandled Promise: ' + String(event.reason)));
     });
 
     // Start batch sending
-    setInterval(sendLogs, CONFIG.batchInterval);
+    if (isEnabled) {
+        setInterval(sendLogs, CONFIG.batchInterval);
 
-    // Send remaining logs before page unload
-    window.addEventListener('beforeunload', function() {
-        if (logQueue.length > 0) {
-            // Use sendBeacon for reliability
-            const logs = logQueue.splice(0);
-            logs.forEach(log => {
-                navigator.sendBeacon(CONFIG.serverUrl, JSON.stringify(log));
-            });
-        }
-    });
+        // Send remaining logs before page unload
+        window.addEventListener('beforeunload', function() {
+            if (logQueue.length > 0) {
+                logQueue.forEach(log => {
+                    navigator.sendBeacon(CONFIG.serverUrl, JSON.stringify(log));
+                });
+            }
+        });
 
-    // Expose manual logging function
-    window.webLog = function(message, data) {
-        logQueue.push(createLogEntry('log', [{ webLog: true, message, data }]));
-    };
+        console.log('[WebLogger] Ready - use webLog() to send logs to server');
+    }
 
-    originalConsole.log('[WebLogger] Enabled - logs will be sent to server');
+    // Expose to global
+    window.webLog = webLog;
 })();
