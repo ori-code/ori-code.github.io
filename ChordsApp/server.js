@@ -223,6 +223,104 @@ If image is unclear or partially visible:
 
 NEVER say "I cannot read this" - always attempt transcription with confidence markers.`;
 
+// ============= WEB LOGGING SYSTEM =============
+const LOG_FILE = path.join(__dirname, 'web-debug.log');
+
+// Rotate log file if it gets too big (> 1MB)
+function rotateLogIfNeeded() {
+    try {
+        if (fs.existsSync(LOG_FILE)) {
+            const stats = fs.statSync(LOG_FILE);
+            if (stats.size > 1024 * 1024) { // 1MB
+                const backupFile = LOG_FILE.replace('.log', `-${Date.now()}.log`);
+                fs.renameSync(LOG_FILE, backupFile);
+                console.log(`Log rotated to ${backupFile}`);
+            }
+        }
+    } catch (e) {
+        console.error('Log rotation error:', e);
+    }
+}
+
+// POST /api/log - Receive logs from browser
+app.post('/api/log', (req, res) => {
+    try {
+        const { level, message, data, timestamp, userAgent, url } = req.body;
+
+        rotateLogIfNeeded();
+
+        const logEntry = {
+            time: timestamp || new Date().toISOString(),
+            level: level || 'LOG',
+            message: message || '',
+            data: data || null,
+            url: url || '',
+            userAgent: userAgent || ''
+        };
+
+        const logLine = `[${logEntry.time}] [${logEntry.level.toUpperCase()}] ${logEntry.message}${logEntry.data ? ' | Data: ' + JSON.stringify(logEntry.data) : ''} | URL: ${logEntry.url}\n`;
+
+        fs.appendFileSync(LOG_FILE, logLine);
+
+        // Also log to server console for real-time viewing
+        const consoleMethod = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
+        consoleMethod(`[WEB] ${logEntry.level}: ${logEntry.message}`);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error writing log:', error);
+        res.status(500).json({ error: 'Failed to write log' });
+    }
+});
+
+// GET /api/logs - View recent logs (for debugging)
+app.get('/api/logs', (req, res) => {
+    try {
+        const { lines = 100, adminKey } = req.query;
+
+        // Require admin key to view logs
+        if (adminKey !== process.env.ADMIN_KEY) {
+            return res.status(403).json({ error: 'Admin key required' });
+        }
+
+        if (!fs.existsSync(LOG_FILE)) {
+            return res.json({ logs: [], message: 'No logs yet' });
+        }
+
+        const content = fs.readFileSync(LOG_FILE, 'utf8');
+        const allLines = content.split('\n').filter(l => l.trim());
+        const recentLines = allLines.slice(-parseInt(lines));
+
+        res.json({
+            logs: recentLines,
+            totalLines: allLines.length,
+            showing: recentLines.length
+        });
+    } catch (error) {
+        console.error('Error reading logs:', error);
+        res.status(500).json({ error: 'Failed to read logs' });
+    }
+});
+
+// DELETE /api/logs - Clear logs (admin only)
+app.delete('/api/logs', (req, res) => {
+    try {
+        const { adminKey } = req.query;
+
+        if (adminKey !== process.env.ADMIN_KEY) {
+            return res.status(403).json({ error: 'Admin key required' });
+        }
+
+        if (fs.existsSync(LOG_FILE)) {
+            fs.writeFileSync(LOG_FILE, '');
+        }
+
+        res.json({ success: true, message: 'Logs cleared' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to clear logs' });
+    }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'aChordimClaude API is running' });
