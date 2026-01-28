@@ -303,41 +303,119 @@ document.addEventListener('DOMContentLoaded', () => {
         window.refreshMobileScaling = applyScaling;
 
         // ============= PINCH-TO-ZOOM LOGIC =============
-        let currentScale = 1;
-        let startScale = 1;
+        // This changes the actual font size (like the slider) instead of visual CSS transform
+        let startFontSize = 10;
 
         function initPinchZoom() {
             const el = document.querySelector('.preview-container');
             if (!el) return;
 
+            // Get references to font controls
+            function getFontControls() {
+                return {
+                    slider: document.getElementById('fontSizeSlider'),
+                    value: document.getElementById('fontSizeValue'),
+                    preview: document.getElementById('livePreview'),
+                    sideSlider: document.getElementById('sideMenuFontSize'),
+                    sideValue: document.getElementById('sideMenuFontSizeVal')
+                };
+            }
+
+            // Apply font size change
+            function applyFontSize(newSize) {
+                const controls = getFontControls();
+                if (!controls.preview) return;
+
+                // Clamp to slider min/max (8-24)
+                const minSize = controls.slider ? parseFloat(controls.slider.min) || 8 : 8;
+                const maxSize = controls.slider ? parseFloat(controls.slider.max) || 24 : 24;
+                newSize = Math.max(minSize, Math.min(maxSize, newSize));
+                newSize = Math.round(newSize * 2) / 2; // Round to 0.5
+
+                // Apply to preview
+                controls.preview.style.fontSize = newSize + 'pt';
+
+                // Update main slider
+                if (controls.slider) controls.slider.value = newSize;
+                if (controls.value) controls.value.textContent = newSize;
+
+                // Update side menu slider
+                if (controls.sideSlider) controls.sideSlider.value = newSize;
+                if (controls.sideValue) controls.sideValue.textContent = newSize;
+
+                // Update pagination
+                if (typeof updateA4Indicator === 'function') updateA4Indicator();
+                if (typeof updatePagination === 'function') {
+                    setTimeout(updatePagination, 100);
+                }
+            }
+
             // Safari/iOS Gesture Events
             el.addEventListener('gesturestart', function (e) {
                 e.preventDefault();
-                startScale = currentScale;
+                const controls = getFontControls();
+                startFontSize = controls.slider ? parseFloat(controls.slider.value) : 10;
+                lastScale = 1;
             });
 
             el.addEventListener('gesturechange', function (e) {
                 e.preventDefault();
-                // Limit zoom levels
-                const newScale = startScale * e.scale;
-                if (newScale >= 0.5 && newScale <= 3) {
-                    currentScale = newScale;
-                    // Apply both the base mobile scaling (if active) and the pinch zoom
-                    // Note: This overrides the simple 'mobile-scaled' transform if we are not careful.
-                    // But here we are just setting transform. If mobile scaling set a transform, we should multiply?
-                    // Simpler: Just apply the scale to the element. The auto-scaler sets width & scale.
-                    // We might need to modify the auto-scaler to respect this.
-                    el.style.transform = `scale(${currentScale})`;
-                    // Update wrapper size to match visual size? 
-                    // Usually zooming doesn't reflow, just zooms.
-                }
+                // Calculate font size based on gesture scale
+                // sensitivity = points to change per 1.0 scale change
+                const sensitivity = 8;
+                const newFontSize = startFontSize + (e.scale - 1) * sensitivity;
+                applyFontSize(newFontSize);
             });
 
             el.addEventListener('gestureend', function (e) {
                 e.preventDefault();
+                // Update startFontSize for next gesture
+                const controls = getFontControls();
+                if (controls.slider) {
+                    startFontSize = parseFloat(controls.slider.value);
+                }
             });
 
-            // Standard Touch Events (Android) could be added here if needed
+            // Android touch events for pinch zoom
+            let initialDistance = 0;
+            let initialFontSize = 10;
+
+            el.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    initialDistance = Math.sqrt(dx * dx + dy * dy);
+                    const controls = getFontControls();
+                    initialFontSize = controls.slider ? parseFloat(controls.slider.value) : 10;
+                }
+            }, { passive: false });
+
+            el.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const currentDistance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (initialDistance > 0) {
+                        const scale = currentDistance / initialDistance;
+                        const sensitivity = 8;
+                        const newFontSize = initialFontSize + (scale - 1) * sensitivity;
+                        applyFontSize(newFontSize);
+                    }
+                }
+            }, { passive: false });
+
+            el.addEventListener('touchend', function(e) {
+                if (e.touches.length < 2) {
+                    initialDistance = 0;
+                    const controls = getFontControls();
+                    if (controls.slider) {
+                        initialFontSize = parseFloat(controls.slider.value);
+                    }
+                }
+            });
         }
 
         // Initialize Pinch Zoom
