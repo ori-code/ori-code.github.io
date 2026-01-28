@@ -6048,30 +6048,21 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Update plan name
             if (currentPlanName) {
                 currentPlanName.textContent = summary.tierName;
+                // Color based on tier
+                currentPlanName.style.color = summary.tier === 'PRO' ? '#dc2626' : '#059669';
             }
 
-            // Update status
+            // Update status (inline format)
             if (currentPlanStatus) {
                 if (subscription.status === 'cancelled') {
-                    currentPlanStatus.textContent = 'Cancelled - Access until billing period ends';
+                    currentPlanStatus.textContent = '(Cancelled)';
                     currentPlanStatus.style.color = '#dc2626';
                     if (cancelBtn) cancelBtn.style.display = 'none';
                 } else {
-                    currentPlanStatus.textContent = 'Active subscription';
+                    currentPlanStatus.textContent = '(Active)';
                     currentPlanStatus.style.color = '#10b981';
-                    if (cancelBtn) cancelBtn.style.display = 'block';
+                    if (cancelBtn) cancelBtn.style.display = 'inline-block';
                 }
-            }
-
-            // Style based on tier
-            if (summary.tier === 'PRO') {
-                currentSubInfo.style.background = 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)';
-                currentSubInfo.style.borderColor = '#fca5a5';
-                if (currentPlanName) currentPlanName.style.color = '#dc2626';
-            } else {
-                currentSubInfo.style.background = 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)';
-                currentSubInfo.style.borderColor = '#6ee7b7';
-                if (currentPlanName) currentPlanName.style.color = '#047857';
             }
         } else {
             currentSubInfo.style.display = 'none';
