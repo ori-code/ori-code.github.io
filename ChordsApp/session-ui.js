@@ -87,19 +87,19 @@ class SessionUI {
         const sessionsList = document.getElementById('sessionsList');
         if (!sessionsList) return;
 
-        sessionsList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Loading sessions...</p>';
+        sessionsList.innerHTML = `<p style="text-align: center; color: var(--text-muted);">${window.t('session.loading')}</p>`;
 
         try {
             const sessions = await window.sessionManager.getUserSessions();
 
             if (sessions.length === 0) {
-                sessionsList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No sessions yet. Create your first session!</p>';
+                sessionsList.innerHTML = `<p style="text-align: center; color: var(--text-muted);">${window.t('session.empty')}</p>`;
                 return;
             }
 
             sessionsList.innerHTML = sessions.map(session => {
                 const date = new Date(session.createdAt).toLocaleDateString();
-                const role = session.isOwner ? '👑 Leader' : '🎵 Player';
+                const role = session.isOwner ? window.t('session.role_leader') : window.t('session.role_player');
 
                 return `
                     <div class="session-item" style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 12px;">
@@ -114,8 +114,8 @@ class SessionUI {
                                     <button onclick="sessionUI.addCurrentSongToSession('${session.id}')"
                                             style="padding: 6px 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;">
                                         ${window.pendingSongsToAdd && window.pendingSongsToAdd.length > 0
-                                            ? `➕ Add ${window.pendingSongsToAdd.length} Song${window.pendingSongsToAdd.length > 1 ? 's' : ''}`
-                                            : (window.pendingSongToAdd ? '➕ Add Selected Song' : '➕ Add Current Song')}
+                            ? `➕ Add ${window.pendingSongsToAdd.length} Song${window.pendingSongsToAdd.length > 1 ? 's' : ''}`
+                            : (window.pendingSongToAdd ? '➕ Add Selected Song' : '➕ Add Current Song')}
                                     </button>
                                     <button onclick="sessionUI.reactivateSession('${session.id}')"
                                             style="padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
@@ -618,7 +618,7 @@ class SessionUI {
         const leaderButtons = isLeader ? `
             <button onclick="sessionUI.showShareBadge('${sessionCode}')"
                     style="padding: 6px 12px; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: 6px; color: #60a5fa; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px;">
-                <span>🔗</span> Share
+                <span>🔗</span> ${window.t('session.btn.share')}
             </button>
         ` : '';
 
@@ -627,17 +627,17 @@ class SessionUI {
                 <span style="font-size: 20px;">${isLeader ? '📡' : '📻'}</span>
                 <div style="flex: 1; min-width: 150px;">
                     <div style="font-weight: 600; color: #10b981; font-size: 14px;">
-                        ${isLeader ? 'Broadcasting' : 'Connected'} • ${sessionCode}
+                        ${isLeader ? window.t('session.status.broadcasting') : window.t('session.status.connected')} • ${sessionCode}
                     </div>
                     <div style="font-size: 12px; color: var(--text-muted);">
-                        ${isLeader ? 'You are the session leader' : 'Following session leader'}
+                        ${isLeader ? window.t('session.status.leader') : window.t('session.status.follower')}
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     ${leaderButtons}
                     <button onclick="sessionUI.showSessionControls()"
                             style="padding: 6px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: var(--text); cursor: pointer; font-size: 12px;">
-                        Options
+                        ${window.t('session.btn.options')}
                     </button>
                 </div>
             </div>
@@ -760,7 +760,7 @@ class SessionUI {
                 </button>
 
                 <h3 style="margin: 0 0 20px 0; text-align: center; color: #ffffff; font-size: 18px; font-weight: 600;">
-                    Share Session
+                    ${window.t('session.share_title')}
                 </h3>
 
                 <!-- Session Code -->
@@ -775,13 +775,13 @@ class SessionUI {
 
                 <!-- Join Link -->
                 <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 12px; color: #9ca3af; margin-bottom: 6px;">Join Link (Players)</label>
+                    <label style="display: block; font-size: 12px; color: #9ca3af; margin-bottom: 6px;">${window.t('session.label.link')}</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" value="${joinLink}" readonly
                                style="flex: 1; padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; background: rgba(255,255,255,0.08); color: #e5e5e5; font-size: 12px;">
-                        <button onclick="navigator.clipboard.writeText('${joinLink}'); sessionUI.showToast('📋 Join link copied!')"
+                        <button onclick="navigator.clipboard.writeText('${joinLink}'); sessionUI.showToast('${window.t('msg.link_copied')}')"
                                 style="padding: 10px 16px; background: #10b981; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 12px; white-space: nowrap;">
-                            Copy
+                            ${window.t('session.btn.copy')}
                         </button>
                     </div>
                 </div>
@@ -793,8 +793,8 @@ class SessionUI {
                                onchange="sessionUI.handleShareBadgeSingerToggle(this.checked, '${sessionCode}')"
                                style="width: 18px; height: 18px; cursor: pointer;">
                         <div>
-                            <div style="font-size: 14px; color: #e5e5e5;">Allow Singers</div>
-                            <div style="font-size: 11px; color: #9ca3af;">Lyrics only, no account needed</div>
+                            <div style="font-size: 14px; color: #e5e5e5;">${window.t('session.label.singers')}</div>
+                            <div style="font-size: 11px; color: #9ca3af;">${window.t('session.desc.singers')}</div>
                         </div>
                     </label>
                 </div>
@@ -922,15 +922,15 @@ class SessionUI {
                     <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
                         <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">🎤 Singers (${singers.length})</div>
                         ${singers.map(p => {
-                            const statusIcon = p.status === 'connected' ? '🟢' : '⚪';
-                            return `
+                    const statusIcon = p.status === 'connected' ? '🟢' : '⚪';
+                    return `
                                 <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(139, 92, 246, 0.1); border-radius: 6px; margin-bottom: 4px;">
                                     <span>${statusIcon}</span>
                                     <span style="flex: 1; color: var(--text); font-size: 13px; opacity: 0.8;">${p.name}</span>
                                     <span style="font-size: 11px; color: #8b5cf6;">Lyrics only</span>
                                 </div>
                             `;
-                        }).join('')}
+                }).join('')}
                     </div>
                 `;
             }
@@ -1283,12 +1283,12 @@ const sessionUI = new SessionUI();
 window.sessionUI = sessionUI;
 
 // Expose loadUserSessions for song-library.js to call
-window.loadMySessions = async function() {
+window.loadMySessions = async function () {
     await sessionUI.loadUserSessions();
 };
 
 // Filter sessions list by title
-window.filterSessionsList = function(searchText) {
+window.filterSessionsList = function (searchText) {
     const sessionsList = document.getElementById('sessionsList');
     if (!sessionsList) return;
 

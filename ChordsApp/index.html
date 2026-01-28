@@ -33,6 +33,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- Localization -->
+    <script src="js/translations.js"></script>
+    <script src="js/localization.js"></script>
 </head>
 
 <body>
@@ -54,13 +58,13 @@
             <div class="header-actions">
 
                 <div style="position: relative;">
-                    <button class="ghost-button" id="signInButton" type="button">Sign In</button>
+                    <button class="ghost-button" id="signInButton" type="button" data-i18n="nav.signin">Sign In</button>
                     <div id="profileMenu"
                         style="display: none; position: absolute; top: 45px; right: 0; background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; min-width: 150px; z-index: 1000;">
-                        <button id="mySubscriptionBtn"
+                        <button id="mySubscriptionBtn" data-i18n="nav.profile.subscription"
                             style="width: 100%; padding: 8px 12px; background: transparent; color: var(--text); border: none; text-align: left; cursor: pointer; border-radius: 4px; transition: background 0.2s;">My
                             Subscription</button>
-                        <button id="signOutBtn"
+                        <button id="signOutBtn" data-i18n="nav.signout"
                             style="width: 100%; padding: 8px 12px; background: transparent; color: var(--text); border: none; text-align: left; cursor: pointer; border-radius: 4px; transition: background 0.2s;">Sign
                             Out</button>
                     </div>
@@ -79,44 +83,51 @@
     <main class="container">
         <section class="hero" id="top">
             <div class="hero-text">
-                <h1>Turn any chord sheet into a clean, printable chart.</h1>
-                <p>Upload a handwritten sheet or photo, extract the music, refine the result, transpose to any key, then
+                <h1 data-i18n="hero.title">Turn any chord sheet into a clean, printable chart.</h1>
+                <p data-i18n="hero.subtitle">Upload a handwritten sheet or photo, extract the music, refine the result,
+                    transpose to any key, then
                     print with confidence.</p>
             </div>
         </section>
 
         <section class="workflow" id="workflow">
-            <h2>Three simple steps</h2>
+            <h2 data-i18n="workflow.title">Three simple steps</h2>
             <div class="workflow-grid">
                 <article class="step-card">
-                    <span class="step-number">1</span>
-                    <h3>Upload your chart</h3>
-                    <p>Accepts images (JPG, PNG, HEIC) and PDFs. High contrast photos deliver the best recognition
+                    <span class="step-number" data-i18n="step1.number">1</span>
+                    <h3 data-i18n="step1.title">Upload your chart</h3>
+                    <p data-i18n="step1.desc">Accepts images (JPG, PNG, HEIC) and PDFs. High contrast photos deliver the
+                        best recognition
                         results.</p>
                     <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
-                    <label class="primary-action" for="chartFileInput" style="width: 100%;">Upload</label>
+                    <label class="primary-action" for="chartFileInput" style="width: 100%;"
+                        data-i18n="step1.btn">Upload</label>
                     <div class="preview-panel" id="uploadPreview">
                         <img id="previewImage" alt="Uploaded chart preview">
-                        <p class="preview-placeholder">No file selected yet. Supported: JPG, PNG, HEIC, PDF.</p>
+                        <p class="preview-placeholder" data-i18n="step1.placeholder">No file selected yet. Supported:
+                            JPG, PNG, HEIC, PDF.</p>
                     </div>
                 </article>
                 <article class="step-card">
-                    <span class="step-number">2</span>
-                    <h3>transcription ready!</h3>
-                    <p>Edit visually in the bottom Editor.</p>
+                    <span class="step-number" data-i18n="step2.number">2</span>
+                    <h3 data-i18n="step2.title">transcription ready!</h3>
+                    <p data-i18n="step2.desc">Edit visually in the bottom Editor.</p>
                     <label
                         style="display: block; margin-top: 12px; font-size: 0.9rem; color: var(--text); cursor: pointer; user-select: none;">
                         <input type="checkbox" id="autoAnalyzeCheckbox" checked
                             style="margin-right: 8px; cursor: pointer;">
-                        ⚡ Auto-analyze uploads <span
+                        <span data-i18n="step2.auto_analyze">⚡ Auto-analyze uploads</span> <span
+                            data-i18n="step2.recommended"
                             style="color: var(--text-muted); font-size: 0.8rem;">(recommended)</span>
                     </label>
-                    <button id="analyzeButton" class="primary-action" disabled>Analyze</button>
+                    <button id="analyzeButton" class="primary-action" disabled
+                        data-i18n="step2.btn.analyze">Analyze</button>
                     <label id="intenseScanOption"
                         style="display: none; margin-top: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; user-select: none;">
                         <input type="checkbox" id="intenseScanCheckbox" style="margin-right: 6px; cursor: pointer;">
-                        <span style="color: #f59e0b;">⚡</span> Intense Scan <span
-                            style="color: var(--text-muted); font-size: 0.75rem;">(Pro - better for hard scans)</span>
+                        <span style="color: #f59e0b;">⚡</span> <span data-i18n="step2.intense">Intense Scan</span> <span
+                            data-i18n="step2.intense.desc" style="color: var(--text-muted); font-size: 0.75rem;">(Pro -
+                            better for hard scans)</span>
                     </label>
                     <div class="status-panel" id="analysisStatus" role="status" aria-live="polite">
                         <div class="scanner-animation">
@@ -132,34 +143,37 @@
                         </div>
                         <div class="status-content">
                             <span class="status-dot idle"></span>
-                            <span class="status-text">Waiting for an upload…</span>
+                            <span class="status-text" data-i18n="step2.status.waiting">Waiting for an upload…</span>
                         </div>
                         <div class="progress-bar-container">
                             <div class="progress-bar-fill"></div>
                         </div>
                     </div>
-                    <small class="status-hint">Analysis typically takes 15-60 seconds. Supports all languages texts. If
-                        the result is not good, try to run analyze again. Processing costs us money - please consider <a
-                            href="#support" style="color: var(--primary); text-decoration: underline;">donating</a> to
-                        keep this free tool running.</small>
+                    <small class="status-hint"><span data-i18n="step2.status.hint">Analysis typically takes 15-60
+                            seconds. Supports all languages texts. If
+                            the result is not good, try to run analyze again. Processing costs us money - please
+                            consider </span><a href="#support"
+                            style="color: var(--primary); text-decoration: underline;"
+                            data-i18n="step2.donate">donating</a> <span data-i18n="step2.status.hint_end">to
+                            keep this free tool running.</span></small>
                 </article>
                 <article class="step-card">
-                    <span class="step-number">3</span>
-                    <h3>Refine, transpose &amp; print</h3>
-                    <p>Edit chords visually, transpose to any key, and <strong>enjoy playing</strong> and
-                        <strong>singing</strong> your favorite worship songs beautifully!
-                    </p>
+                    <span class="step-number" data-i18n="step3.number">3</span>
+                    <h3 data-i18n="step3.title">Refine, transpose &amp; print</h3>
+                    <p data-i18n="step3.desc">Edit chords visually, transpose to any key, and enjoy playing and singing
+                        your favorite worship songs beautifully!</p>
                     <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                        <button id="showAllFeaturesBtn" class="primary-action"
+                        <button id="showAllFeaturesBtn" class="primary-action" data-i18n="step3.btn.features"
                             style="flex: 1; background: linear-gradient(135deg, var(--primary) 0%, #c53030 100%);">✨
                             Show All Features</button>
-                        <button id="showRawOutputBtn" class="primary-action"
+                        <button id="showRawOutputBtn" class="primary-action" data-i18n="step3.btn.raw"
                             style="flex: 0 0 auto; padding: 12px; background: #6366f1; font-size: 12px;"
                             title="View raw output">👁️ Raw</button>
                     </div>
                     <div class="ai-reference-preview" id="aiReferencePreview"
                         style="flex: 1; display: none; max-height: 300px; overflow-y: auto; background: #1e1e2e; border-radius: 8px; padding: 12px; margin-top: 8px;">
-                        <h4 style="margin: 0 0 8px 0; color: #a5b4fc; font-size: 12px;">Raw Output (v4 Format)</h4>
+                        <h4 style="margin: 0 0 8px 0; color: #a5b4fc; font-size: 12px;" data-i18n="step3.raw.title">Raw
+                            Output (v4 Format)</h4>
                         <pre class="reference-content" id="aiReferenceContent"
                             style="margin: 0; white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 11px; color: #e2e8f0; line-height: 1.4;">transcription will appear here after analysis.</pre>
                     </div>
@@ -170,35 +184,43 @@
         <section class="preview-section" id="previewSection">
             <div class="preview-header">
                 <div class="preview-header-row">
-                    <h2 id="previewHeaderTitle">Print Preview</h2>
+                    <h2 id="previewHeaderTitle" data-i18n="preview.title">Print Preview</h2>
 
                     <!-- View Toggle Group -->
                     <div class="header-btn-group view-toggles">
-                        <button id="toggleControlsBtn2" class="header-btn display-toggle">🎛️ Controls</button>
-                        <button id="toggleEditorBtn2" class="header-btn display-toggle">✏️ Editor</button>
+                        <button id="toggleControlsBtn2" class="header-btn display-toggle"
+                            data-i18n="preview.btn.controls">🎛️ Controls</button>
+                        <button id="toggleEditorBtn2" class="header-btn display-toggle"
+                            data-i18n="preview.btn.editor">✏️ Editor</button>
                     </div>
 
                     <!-- Music Tools Group -->
                     <div class="header-btn-group music-tools">
-                        <button class="header-btn pads-btn" id="headerPadsBtn">🎹 Pads</button>
-                        <button class="header-btn metro-btn" id="headerMetronomeBtn">🎵 Metro</button>
+                        <button class="header-btn pads-btn" id="headerPadsBtn" data-i18n="preview.btn.pads">🎹
+                            Pads</button>
+                        <button class="header-btn metro-btn" id="headerMetronomeBtn" data-i18n="preview.btn.metro">🎵
+                            Metro</button>
                     </div>
 
                     <!-- Live Session Group -->
                     <div class="header-btn-group live-group">
-                        <button class="header-btn go-live-btn" id="headerGoLiveBtn">📡 Go Live</button>
-                        <button class="header-btn live-preview-btn" id="headerLivePreview">📺 Preview</button>
+                        <button class="header-btn go-live-btn" id="headerGoLiveBtn" data-i18n="preview.btn.golive">📡 Go
+                            Live</button>
+                        <button class="header-btn live-preview-btn" id="headerLivePreview"
+                            data-i18n="preview.btn.preview">📺 Preview</button>
                     </div>
 
                     <div class="header-spacer"></div>
 
                     <!-- File Actions Group -->
                     <div class="header-btn-group file-actions">
-                        <button class="header-btn" id="headerSaveSong">💾 Save</button>
-                        <button class="header-btn" id="headerLoadSong">📂 Load</button>
-                        <button class="header-btn" id="headerSaveAsImage">📷 Image</button>
-                        <button class="header-btn" id="printButton">🖨️ Print</button>
-                        <button class="header-btn" id="headerAutoFit">📐 Auto Fit</button>
+                        <button class="header-btn" id="headerSaveSong" data-i18n="preview.btn.save">💾 Save</button>
+                        <button class="header-btn" id="headerLoadSong" data-i18n="preview.btn.load">📂 Load</button>
+                        <button class="header-btn" id="headerSaveAsImage" data-i18n="preview.btn.image">📷
+                            Image</button>
+                        <button class="header-btn" id="printButton" data-i18n="preview.btn.print">🖨️ Print</button>
+                        <button class="header-btn" id="headerAutoFit" data-i18n="preview.btn.autofit">📐 Auto
+                            Fit</button>
                     </div>
                 </div>
             </div>
@@ -210,119 +232,122 @@
         <!-- Side Menu Panel -->
         <aside id="sideMenuPanel" class="side-menu-panel">
             <div class="side-menu-header">
-                <h3>Controls</h3>
+                <h3 data-i18n="menu.title">Controls</h3>
                 <button id="sideMenuClose" class="side-menu-close">&times;</button>
             </div>
             <div class="side-menu-content">
                 <!-- Quick Actions -->
                 <div class="side-menu-section">
-                    <h4>Quick Actions</h4>
+                    <h4 data-i18n="menu.section.actions">Quick Actions</h4>
                     <div class="side-menu-buttons">
-                        <button class="side-menu-btn primary" id="sideMenuPrint">🖨️ Print Chart</button>
-                        <button class="side-menu-btn orange" id="saveAsImageButton">📷 Save as Image</button>
-                        <button class="side-menu-btn purple" id="livePreviewToggle">📺 Live Preview</button>
-                        <button class="side-menu-btn" id="saveLayoutButton">💾 Save Layout</button>
+                        <button class="side-menu-btn primary" id="sideMenuPrint" data-i18n="menu.btn.print">🖨️ Print
+                            Chart</button>
+                        <button class="side-menu-btn orange" id="saveAsImageButton" data-i18n="menu.btn.image">📷 Save
+                            as Image</button>
+                        <button class="side-menu-btn purple" id="livePreviewToggle" data-i18n="menu.btn.live">📺 Live
+                            Preview</button>
+                        <button class="side-menu-btn" id="saveLayoutButton" data-i18n="menu.btn.save_layout">💾 Save
+                            Layout</button>
                     </div>
                 </div>
 
                 <!-- Display Mode -->
                 <div class="side-menu-section">
-                    <h4>Display</h4>
+                    <h4 data-i18n="menu.section.display">Display</h4>
                     <div class="side-menu-row">
-                        <label>Mode:</label>
+                        <label data-i18n="menu.label.mode">Mode:</label>
                         <select id="sideMenuNashvilleMode" class="side-menu-select">
-                            <option value="chords" selected>Chords</option>
-                            <option value="both">Nashville + Chords</option>
-                            <option value="numbers">Nashville Only</option>
-                            <option value="roman_both">Roman + Chords</option>
-                            <option value="roman">Roman Only</option>
-                            <option value="lyrics">Lyrics Only</option>
+                            <option value="chords" selected data-i18n="menu.mode.chords">Chords</option>
+                            <option value="both" data-i18n="menu.mode.both">Nashville + Chords</option>
+                            <option value="numbers" data-i18n="menu.mode.numbers">Nashville Only</option>
+                            <option value="roman_both" data-i18n="menu.mode.roman_both">Roman + Chords</option>
+                            <option value="roman" data-i18n="menu.mode.roman">Roman Only</option>
+                            <option value="lyrics" data-i18n="menu.mode.lyrics">Lyrics Only</option>
                         </select>
                     </div>
                     <div class="side-menu-row">
-                        <label>Font Size:</label>
+                        <label data-i18n="menu.label.fontsize">Font Size:</label>
                         <input type="range" id="sideMenuFontSize" min="8" max="28" value="8.5" step="0.5">
                         <span id="sideMenuFontSizeVal">8.5pt</span>
                     </div>
                     <div class="side-menu-row">
-                        <label>Line Spacing:</label>
+                        <label data-i18n="menu.label.linespacing">Line Spacing:</label>
                         <input type="range" id="sideMenuLineHeight" min="1.0" max="2.0" value="1.2" step="0.1">
                         <span id="sideMenuLineHeightVal">1.2</span>
                     </div>
                     <div class="side-menu-row">
-                        <label>Char Spacing:</label>
+                        <label data-i18n="menu.label.charspacing">Char Spacing:</label>
                         <input type="range" id="sideMenuCharSpacing" min="0" max="8" value="0" step="0.5">
                         <span id="sideMenuCharSpacingVal">0px</span>
                     </div>
                     <div class="side-menu-row">
                         <label class="side-menu-checkbox">
                             <input type="checkbox" id="sideMenuBadges" checked>
-                            <span>Show Badges</span>
+                            <span data-i18n="menu.check.badges">Show Badges</span>
                         </label>
                     </div>
                     <div class="side-menu-row">
                         <label class="side-menu-checkbox">
                             <input type="checkbox" id="followArrangementBtn">
-                            <span>Follow Arrangement</span>
+                            <span data-i18n="menu.check.arrangement">Follow Arrangement</span>
                         </label>
                     </div>
                     <div class="side-menu-row">
                         <label class="side-menu-checkbox">
                             <input type="checkbox" id="sideMenuShowControls">
-                            <span>Show Main Controls</span>
+                            <span data-i18n="menu.check.controls">Show Main Controls</span>
                         </label>
                     </div>
                     <div class="side-menu-row">
                         <label class="side-menu-checkbox">
                             <input type="checkbox" id="sideMenuShowEditor">
-                            <span>Show Edit Workspace</span>
+                            <span data-i18n="menu.check.editor">Show Edit Workspace</span>
                         </label>
                     </div>
                     <div class="side-menu-row">
                         <label class="side-menu-checkbox">
                             <input type="checkbox" id="sideMenuShowSongbook">
-                            <span>Show SongBook Format</span>
+                            <span data-i18n="menu.check.songbook">Show SongBook Format</span>
                         </label>
                     </div>
                     <div class="side-menu-row">
                         <label class="side-menu-checkbox">
                             <input type="checkbox" id="sideMenuDarkMode">
-                            <span>Dark Mode</span>
+                            <span data-i18n="menu.check.darkmode">Dark Mode</span>
                         </label>
                     </div>
                 </div>
 
                 <!-- Layout -->
                 <div class="side-menu-section">
-                    <h4>Layout</h4>
+                    <h4 data-i18n="menu.section.layout">Layout</h4>
                     <div class="side-menu-row">
-                        <label>Columns:</label>
+                        <label data-i18n="menu.label.columns">Columns:</label>
                         <select id="sideMenuColumns" class="side-menu-select">
-                            <option value="1">1 Column</option>
-                            <option value="2" selected>2 Columns</option>
-                            <option value="3">3 Columns</option>
-                            <option value="4">4 Columns</option>
+                            <option value="1" data-i18n="menu.col.1">1 Column</option>
+                            <option value="2" selected data-i18n="menu.col.2">2 Columns</option>
+                            <option value="3" data-i18n="menu.col.3">3 Columns</option>
+                            <option value="4" data-i18n="menu.col.4">4 Columns</option>
                         </select>
                     </div>
                     <div class="side-menu-row">
-                        <label>Pages:</label>
-                        <select id="sideMenuPages" class="side-menu-select">
-                            <option value="1" selected>1 Page</option>
-                            <option value="2">2 Pages</option>
-                            <option value="3">3 Pages</option>
-                            <option value="4">4 Pages</option>
+                        <label>🌐 Sections:</label>
+                        <select id="sideMenuLanguage" class="side-menu-select">
+                            <option value="en" selected>English</option>
+                            <option value="he">עברית</option>
                         </select>
                     </div>
-                    <button class="side-menu-btn purple full-width" id="sideMenuAutoFit">✨ Auto-fit to 1 Page</button>
+                    <button class="side-menu-btn purple full-width" id="sideMenuAutoFit"
+                        data-i18n="menu.btn.autofit_full">✨ Auto-fit to 1 Page</button>
                 </div>
 
                 <!-- Transpose -->
                 <div class="side-menu-section">
-                    <h4>Transpose</h4>
+                    <h4 data-i18n="menu.section.transpose">Transpose</h4>
                     <div class="side-menu-row">
-                        <label>Key:</label>
+                        <label data-i18n="menu.label.key">Key:</label>
                         <select id="sideMenuKey" class="side-menu-select">
-                            <optgroup label="Major Keys">
+                            <optgroup label="Major Keys" data-i18n="menu.group.major">
                                 <option value="C Major">C Major</option>
                                 <option value="D Major">D Major</option>
                                 <option value="E Major">E Major</option>
@@ -331,7 +356,7 @@
                                 <option value="A Major">A Major</option>
                                 <option value="B Major">B Major</option>
                             </optgroup>
-                            <optgroup label="Minor Keys">
+                            <optgroup label="Minor Keys" data-i18n="menu.group.minor">
                                 <option value="A Minor">A Minor</option>
                                 <option value="B Minor">B Minor</option>
                                 <option value="C Minor">C Minor</option>
@@ -353,19 +378,20 @@
                         <button class="side-menu-btn" id="sideMenuTransposeDown">−1</button>
                         <span id="sideMenuTransposeVal">0</span>
                         <button class="side-menu-btn" id="sideMenuTransposeUp">+1</button>
-                        <button class="side-menu-btn" id="sideMenuTransposeReset">Reset</button>
+                        <button class="side-menu-btn" id="sideMenuTransposeReset"
+                            data-i18n="menu.btn.reset">Reset</button>
                     </div>
                 </div>
 
                 <!-- Song Info -->
                 <div class="side-menu-section">
-                    <h4>Song Info</h4>
+                    <h4 data-i18n="menu.section.info">Song Info</h4>
                     <div class="side-menu-row">
-                        <label>BPM:</label>
+                        <label data-i18n="menu.label.bpm">BPM:</label>
                         <input type="number" id="sideMenuBPM" value="120" min="40" max="240" class="side-menu-input">
                     </div>
                     <div class="side-menu-row">
-                        <label>Time:</label>
+                        <label data-i18n="menu.label.time">Time:</label>
                         <select id="sideMenuTime" class="side-menu-select">
                             <option value="4/4" selected>4/4</option>
                             <option value="3/4">3/4</option>
@@ -377,29 +403,37 @@
 
                 <!-- Library -->
                 <div class="side-menu-section">
-                    <h4>Library</h4>
+                    <h4 data-i18n="menu.section.library">Library</h4>
                     <div class="side-menu-buttons">
-                        <button class="side-menu-btn" id="sideMenuSave">💾 Save Song</button>
-                        <button class="side-menu-btn" id="sideMenuLoad">📂 Load Song</button>
-                        <button class="side-menu-btn" id="sideMenuBulkImport">📥 Bulk Import</button>
-                        <button class="side-menu-btn" id="sideMenuUpdate">🔄 Update Song</button>
+                        <button class="side-menu-btn" id="sideMenuSave" data-i18n="menu.btn.save_song">💾 Save
+                            Song</button>
+                        <button class="side-menu-btn" id="sideMenuLoad" data-i18n="menu.btn.load_song">📂 Load
+                            Song</button>
+                        <button class="side-menu-btn" id="sideMenuBulkImport" data-i18n="menu.btn.import">📥 Bulk
+                            Import</button>
+                        <button class="side-menu-btn" id="sideMenuUpdate" data-i18n="menu.btn.update">🔄 Update
+                            Song</button>
                     </div>
                 </div>
 
                 <!-- Live Sessions -->
                 <div class="side-menu-section">
-                    <h4>Live Sessions</h4>
+                    <h4 data-i18n="menu.section.sessions">Live Sessions</h4>
                     <div class="side-menu-buttons">
-                        <button class="side-menu-btn green" id="sideMenuCreateSession">📡 Create Session</button>
-                        <button class="side-menu-btn blue" id="sideMenuJoinSession">📻 Join Session</button>
-                        <button class="side-menu-btn" id="sideMenuMySessions">📋 My Sessions</button>
-                        <button class="side-menu-btn purple" id="sideMenuGoLive">📺 Go Live</button>
+                        <button class="side-menu-btn green" id="sideMenuCreateSession"
+                            data-i18n="menu.btn.create_session">📡 Create Session</button>
+                        <button class="side-menu-btn blue" id="sideMenuJoinSession" data-i18n="menu.btn.join_session">📻
+                            Join Session</button>
+                        <button class="side-menu-btn" id="sideMenuMySessions" data-i18n="menu.btn.my_sessions">📋 My
+                            Sessions</button>
+                        <button class="side-menu-btn purple" id="sideMenuGoLive" data-i18n="menu.btn.go_live">📺 Go
+                            Live</button>
                     </div>
                 </div>
 
                 <!-- Pads Mini Player -->
                 <div class="side-menu-section">
-                    <h4>Worship Pads</h4>
+                    <h4 data-i18n="menu.section.pads">Worship Pads</h4>
                     <!-- Mini 12-key grid -->
                     <div id="miniPadsGrid"
                         style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-bottom: 10px;">
@@ -428,7 +462,7 @@
                     </div>
                     <!-- Full controls button -->
                     <div class="side-menu-buttons">
-                        <button class="side-menu-btn" id="sideMenuOpenPads"
+                        <button class="side-menu-btn" id="sideMenuOpenPads" data-i18n="menu.btn.full_pads"
                             style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%); border-color: rgba(139, 92, 246, 0.4); font-size: 12px;">
                             🎛️ Full Controls
                         </button>
@@ -437,7 +471,7 @@
 
                 <!-- Metronome Mini Player -->
                 <div class="side-menu-section">
-                    <h4>Metronome</h4>
+                    <h4 data-i18n="menu.section.metronome">Metronome</h4>
                     <!-- BPM and Controls -->
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                         <button id="miniMetronomePlay" class="mini-metronome-btn" onclick="metronome.toggle();"
@@ -456,6 +490,7 @@
                         <button id="miniMetronomeMult" onclick="metronome.toggleDoubleTime();"
                             style="padding: 4px 8px; border-radius: 6px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); color: var(--text); font-size: 10px; font-weight: 700; cursor: pointer; min-width: 28px;">x1</button>
                         <button id="miniMetronomeTap" class="mini-metronome-tap" onclick="metronome.tap();"
+                            data-i18n="menu.btn.tap"
                             style="padding: 4px 8px; border-radius: 6px; background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.4); color: var(--text); font-size: 10px; font-weight: 600; cursor: pointer;">TAP</button>
                     </div>
                     <!-- BPM Slider -->
@@ -476,7 +511,7 @@
                     </div>
                     <!-- Full controls button -->
                     <div class="side-menu-buttons">
-                        <button class="side-menu-btn" id="sideMenuOpenMetronome"
+                        <button class="side-menu-btn" id="sideMenuOpenMetronome" data-i18n="menu.btn.full_metro"
                             style="background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(249, 115, 22, 0.2) 100%); border-color: rgba(234, 179, 8, 0.4); font-size: 12px;">
                             🎵 Full Controls
                         </button>
@@ -554,7 +589,8 @@
         <section class="session-section">
             <div class="session-controls"
                 style="margin: 20px 0; padding: 16px; background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px;">
-                <h4 style="margin: 0 0 12px 0; color: #8b5cf6; font-size: 0.9rem; font-weight: 600;">Live Section</h4>
+                <h4 style="margin: 0 0 12px 0; color: #8b5cf6; font-size: 0.9rem; font-weight: 600;"
+                    data-i18n="session.title">Live Section</h4>
                 <!-- Session Status Indicator (shown when in session) -->
                 <div id="sessionStatusIndicator" style="display: none; margin-bottom: 12px;"></div>
 
@@ -563,9 +599,10 @@
                     style="display: none; margin-bottom: 12px; padding: 12px 16px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; align-items: center; justify-content: space-between; gap: 12px;">
                     <span id="nowPlayingLabel" style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
                         <span style="animation: pulse 2s infinite;">🎵</span>
-                        <span>Now Playing: <strong id="nowPlayingSong" style="color: var(--primary);">-</strong></span>
+                        <span data-i18n="session.label.now_playing">Now Playing:</span> <strong id="nowPlayingSong"
+                            style="color: var(--primary);">-</strong>
                     </span>
-                    <button id="returnToLiveBtn" onclick="window.returnToLeaderSong()"
+                    <button id="returnToLiveBtn" onclick="window.returnToLeaderSong()" data-i18n="session.btn.return"
                         style="display: none; padding: 6px 12px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;">
                         ↩ Return to Live
                     </button>
@@ -574,11 +611,11 @@
                 <!-- Session Action Buttons (shown when not in session) -->
                 <div id="sessionActionButtons"
                     style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-                    <button class="ghost-button" id="createSessionBtn"
+                    <button class="ghost-button" id="createSessionBtn" data-i18n="session.btn.create_pro"
                         style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; display: none;">
                         📡 Create Live Session (PRO)
                     </button>
-                    <button class="ghost-button" id="joinSessionBtn"
+                    <button class="ghost-button" id="joinSessionBtn" data-i18n="session.btn.join_basic"
                         style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; display: none;">
                         📻 Join Session (Basic)
                     </button>
@@ -601,12 +638,13 @@
                 <!-- 1. Transpose Controls (FIRST) -->
                 <div
                     style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 16px;">
-                    <h4 style="margin: 0 0 12px 0; color: #3b82f6; font-size: 0.9rem; font-weight: 600;">Transpose</h4>
+                    <h4 style="margin: 0 0 12px 0; color: #3b82f6; font-size: 0.9rem; font-weight: 600;"
+                        data-i18n="adv.transpose.title">Transpose</h4>
 
                     <!-- Quick Key Transpose -->
                     <div style="margin-bottom: 12px;">
-                        <label
-                            style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Quick
+                        <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;"
+                            data-i18n="adv.label.quick">Quick
                             Transpose to Key:</label>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                             <button class="ghost-button quick-key-transpose" data-target-key="C"
@@ -635,14 +673,15 @@
                         </div>
                         <label class="transpose-label"
                             style="display: flex; align-items: center; gap: 6px; white-space: nowrap; justify-content: center; flex: 1 1 100px; min-width: 100px;">
-                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">Steps</span>
+                            <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;"
+                                data-i18n="adv.label.steps">Steps</span>
                             <input type="number" id="transposeStepInput" value="0" min="-11" max="11"
                                 style="width: 50px; padding: 8px;">
                         </label>
                         <div style="display: flex; gap: 8px; flex: 1 1 150px; min-width: 150px;">
-                            <button class="ghost-button" id="applyTranspose"
+                            <button class="ghost-button" id="applyTranspose" data-i18n="adv.btn.apply"
                                 style="flex: 1; padding: 10px 12px;">Apply</button>
-                            <button class="ghost-button" id="resetTranspose"
+                            <button class="ghost-button" id="resetTranspose" data-i18n="menu.btn.reset"
                                 style="flex: 1; padding: 10px 12px;">Reset</button>
                         </div>
                     </div>
@@ -651,20 +690,21 @@
                 <!-- 2. Layout Customization (SECOND) -->
                 <div
                     style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 8px; padding: 16px;">
-                    <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.9rem; font-weight: 600;">Layout
+                    <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 0.9rem; font-weight: 600;"
+                        data-i18n="adv.layout.title">Layout
                         Customization</h4>
                     <!-- Save & Load Buttons (at top) -->
                     <div class="layout-actions-row"
                         style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;">
-                        <button class="ghost-button" id="saveSongButton"
+                        <button class="ghost-button" id="saveSongButton" data-i18n="adv.btn.save"
                             style="padding: 8px 12px; font-size: 0.8rem;">💾 Save</button>
-                        <button class="ghost-button" id="loadSongButton"
+                        <button class="ghost-button" id="loadSongButton" data-i18n="adv.btn.load"
                             style="padding: 8px 12px; font-size: 0.8rem;">📂 Load</button>
-                        <button class="ghost-button" id="bulkImportButton"
+                        <button class="ghost-button" id="bulkImportButton" data-i18n="adv.btn.import"
                             style="padding: 8px 12px; font-size: 0.8rem;">📥 Import</button>
                         <input type="file" id="bulkImportInput" multiple accept=".txt,.cho,.chordpro,.chopro"
                             style="display: none;">
-                        <button class="ghost-button" id="updateSongButton"
+                        <button class="ghost-button" id="updateSongButton" data-i18n="adv.btn.update"
                             style="padding: 8px 12px; font-size: 0.8rem; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #10b981;">🔄
                             Update</button>
                     </div>
@@ -675,7 +715,7 @@
                             style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; flex: 1;">
                             <span style="font-size: 0.75rem;">🔢</span>
                             <select id="nashvilleMode"
-                                style="padding: 4px 6px; background: rgba(139, 92, 246, 0.15); color: var(--text); border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1; -webkit-appearance: menulist; border-radius: 4px;">
+                                style="padding: 4px 6px; background: rgba(139, 92, 246, 0.15); color: var(--text); border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1; -webkit-appearance: menulist; appearance: menulist; border-radius: 4px;">
                                 <option value="chords" selected>Chords</option>
                                 <option value="both">Nash+Chords</option>
                                 <option value="numbers">Nashville</option>
@@ -688,7 +728,7 @@
                             style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(255, 59, 92, 0.08); border: 1px solid rgba(255, 59, 92, 0.3); border-radius: 6px; flex: 1;">
                             <span style="font-size: 0.75rem;">🎹</span>
                             <select id="keySelector"
-                                style="padding: 4px 6px; background: rgba(255, 59, 92, 0.15); color: var(--primary); border: none; font-size: 0.8rem; font-weight: 500; cursor: pointer; flex: 1; -webkit-appearance: menulist; border-radius: 4px;">
+                                style="padding: 4px 6px; background: rgba(255, 59, 92, 0.15); color: var(--primary); border: none; font-size: 0.8rem; font-weight: 500; cursor: pointer; flex: 1; -webkit-appearance: menulist; appearance: menulist; border-radius: 4px;">
                                 <optgroup label="Major">
                                     <option value="C Major" selected>C</option>
                                     <option value="C# Major">C#</option>
@@ -731,7 +771,7 @@
                             style="display: flex; align-items: center; gap: 4px; padding: 6px 10px; background: rgba(34, 211, 238, 0.08); border: 1px solid rgba(34, 211, 238, 0.3); border-radius: 6px; flex: 1;">
                             <span style="font-size: 0.75rem;">⏱️</span>
                             <select id="timeSignature"
-                                style="padding: 4px 6px; background: rgba(34, 211, 238, 0.15); color: var(--text); border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1; -webkit-appearance: menulist; border-radius: 4px;">
+                                style="padding: 4px 6px; background: rgba(34, 211, 238, 0.15); color: var(--text); border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1; -webkit-appearance: menulist; appearance: menulist; border-radius: 4px;">
                                 <option value="4/4" selected>4/4</option>
                                 <option value="3/4">3/4</option>
                                 <option value="6/8">6/8</option>
@@ -756,12 +796,13 @@
                             style="display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; flex: 1;">
                             <input type="checkbox" id="showBadges" checked
                                 style="width: 14px; height: 14px; cursor: pointer;">
-                            <span style="font-size: 0.8rem; color: #10b981; font-weight: 500;">Badges</span>
+                            <span style="font-size: 0.8rem; color: #10b981; font-weight: 500;"
+                                data-i18n="adv.check.badges">Badges</span>
                         </label>
                         <div
                             style="display: flex; align-items: center; padding: 6px 10px; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 6px; flex: 1; justify-content: center;">
                             <select id="columnCount"
-                                style="padding: 4px 6px; background: rgba(168, 85, 247, 0.15); color: #a855f7; border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; -webkit-appearance: menulist; border-radius: 4px;">
+                                style="padding: 4px 6px; background: rgba(168, 85, 247, 0.15); color: #a855f7; border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; -webkit-appearance: menulist; appearance: menulist; border-radius: 4px;">
                                 <option value="1">1 Col</option>
                                 <option value="2" selected>2 Col</option>
                                 <option value="3">3 Col</option>
@@ -769,28 +810,28 @@
                             </select>
                         </div>
                         <div
-                            style="display: flex; align-items: center; padding: 6px 10px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; flex: 1; justify-content: center;">
-                            <select id="pageCount"
-                                style="padding: 4px 6px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; -webkit-appearance: menulist; border-radius: 4px;">
-                                <option value="1" selected>1 Pg</option>
-                                <option value="2">2 Pg</option>
-                                <option value="3">3 Pg</option>
-                                <option value="4">4 Pg</option>
+                            style="display: flex; align-items: center; padding: 6px 10px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 6px; flex: 1; justify-content: center;">
+                            <span style="margin-right: 4px;">🌐</span>
+                            <select id="sectionLanguage"
+                                style="padding: 4px 6px; background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: none; font-size: 0.8rem; cursor: pointer; font-weight: 500; -webkit-appearance: menulist; appearance: menulist; border-radius: 4px;">
+                                <option value="en" selected>EN</option>
+                                <option value="he">עב</option>
                             </select>
                         </div>
                         <label
                             style="display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 6px 10px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; flex: 1; justify-content: center;">
                             <input type="checkbox" id="followArrangementBtn2"
                                 style="width: 14px; height: 14px; cursor: pointer;">
-                            <span style="font-size: 0.8rem; color: #10b981; font-weight: 500;">Follow</span>
+                            <span style="font-size: 0.8rem; color: #10b981; font-weight: 500;"
+                                data-i18n="adv.check.follow">Follow</span>
                         </label>
-                        <button id="layoutSaveAsImage"
+                        <button id="layoutSaveAsImage" data-i18n="adv.btn.image_short"
                             style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; background: rgba(236, 72, 153, 0.08); border: 1px solid rgba(236, 72, 153, 0.3); border-radius: 6px; color: #ec4899; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1;">📷
                             Image</button>
-                        <button id="layoutPrintButton"
+                        <button id="layoutPrintButton" data-i18n="adv.btn.print_short"
                             style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 6px; color: #6366f1; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1;">🖨️
                             Print</button>
-                        <button id="layoutAutoFitButton"
+                        <button id="layoutAutoFitButton" data-i18n="adv.btn.autofit_short"
                             style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 6px; color: #8b5cf6; font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1;">✨
                             Auto Fit</button>
                     </div>
@@ -825,7 +866,8 @@
             </div>
 
             <!-- Editor + Preview Side-by-Side Wrapper -->
-            <div class="editor-preview-wrapper">
+            <!-- Force LTR for this section so chords/editor structure remains Left-to-Right even in Hebrew -->
+            <div class="editor-preview-wrapper" dir="ltr">
 
                 <!-- Preview Container (LEFT) -->
                 <div class="preview-container" style="position: relative; padding: 0; overflow: hidden;">
@@ -842,7 +884,8 @@
                             <div class="preview-page-footer">
                                 <img src="achordim-icon-app.svg" alt="" class="footer-icon">
                                 <span class="footer-brand">א/aChordim</span>
-                                <span class="footer-url">www.thefaith<span class="footer-highlight">sound</span>.com</span>
+                                <span class="footer-url">www.thefaith<span
+                                        class="footer-highlight">sound</span>.com</span>
                             </div>
                         </div>
                     </div>
@@ -898,21 +941,25 @@
                                     <!-- Add Music Link Button -->
                                     <div class="music-add-btn" id="musicAddBtn" onclick="openMusicModal()">
                                         <svg class="music-icon" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                                            <path
+                                                d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                                         </svg>
                                         <span>Add Music Link</span>
                                     </div>
 
                                     <!-- YouTube Player (Primary - Large) -->
-                                    <div class="music-player-container youtube-player" id="youtubePlayerContainer" style="display: none;">
+                                    <div class="music-player-container youtube-player" id="youtubePlayerContainer"
+                                        style="display: none;">
                                         <div class="music-player-header" data-platform="youtube">
                                             <span class="music-label">
                                                 <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                                                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                                                    <path
+                                                        d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                                                 </svg>
                                                 YouTube
                                             </span>
-                                            <button class="music-remove-btn" onclick="removeMusicLink('youtube')" title="Remove">✕</button>
+                                            <button class="music-remove-btn" onclick="removeMusicLink('youtube')"
+                                                title="Remove">✕</button>
                                         </div>
                                         <div class="music-iframe-wrapper">
                                             <iframe id="youtubeIframe" frameborder="0"
@@ -925,36 +972,48 @@
                                     <!-- Other Music Links (Compact Buttons) -->
                                     <div class="music-links-row" id="musicLinksRow" style="display: none;">
                                         <!-- Spotify -->
-                                        <a class="music-link-btn spotify" id="spotifyLinkBtn" href="#" target="_blank" style="display: none;">
+                                        <a class="music-link-btn spotify" id="spotifyLinkBtn" href="#" target="_blank"
+                                            style="display: none;">
                                             <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                                                <path
+                                                    d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
                                             </svg>
                                             <span>Spotify</span>
-                                            <button class="music-link-remove" onclick="event.preventDefault(); removeMusicLink('spotify')">✕</button>
+                                            <button class="music-link-remove"
+                                                onclick="event.preventDefault(); removeMusicLink('spotify')">✕</button>
                                         </a>
                                         <!-- Apple Music -->
-                                        <a class="music-link-btn apple" id="appleLinkBtn" href="#" target="_blank" style="display: none;">
+                                        <a class="music-link-btn apple" id="appleLinkBtn" href="#" target="_blank"
+                                            style="display: none;">
                                             <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                                <path d="M23.994 6.124a9.23 9.23 0 00-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043a5.022 5.022 0 00-1.877-.726 10.496 10.496 0 00-1.564-.15c-.04-.003-.083-.01-.124-.013H5.986c-.152.01-.303.017-.455.026-.747.043-1.49.123-2.193.4-1.336.53-2.3 1.452-2.865 2.78-.192.448-.292.925-.363 1.408-.056.392-.088.785-.1 1.18 0 .032-.007.062-.01.093v12.223c.01.14.017.283.027.424.05.815.154 1.624.497 2.373.65 1.42 1.738 2.353 3.234 2.801.42.127.856.187 1.293.228.555.053 1.11.06 1.667.06h11.03c.525 0 1.048-.034 1.57-.1.823-.106 1.597-.35 2.296-.81a5.046 5.046 0 001.88-2.207c.186-.42.293-.87.37-1.324.113-.675.138-1.358.137-2.04-.002-3.8 0-7.595-.003-11.393zm-6.423 3.99v5.712c0 .417-.058.827-.244 1.206-.29.59-.76.962-1.388 1.14-.35.1-.706.157-1.07.173-.95.042-1.775-.597-1.942-1.498-.096-.517-.006-1.013.323-1.445.329-.432.776-.705 1.299-.84.292-.076.59-.125.89-.167.376-.053.754-.088 1.128-.145.19-.03.336-.134.388-.332.015-.053.023-.11.023-.165V9.834a.46.46 0 00-.06-.245c-.055-.083-.15-.115-.253-.093l-4.12.893c-.09.02-.163.076-.202.167-.027.063-.04.13-.04.197v7.196c0 .204-.02.407-.06.608a1.794 1.794 0 01-.864 1.236c-.322.197-.677.304-1.052.36-.14.02-.28.038-.42.046-.832.044-1.574-.362-1.876-1.087-.265-.637-.21-1.285.155-1.88.313-.51.775-.838 1.345-.986.365-.095.735-.146 1.107-.185.31-.032.62-.073.927-.124.27-.046.433-.217.475-.49.01-.072.013-.146.013-.22V6.234c0-.12.022-.234.076-.34.08-.157.2-.25.372-.295L17.23 4.59c.123-.03.246-.044.37-.024.212.033.37.16.418.38.018.082.026.166.026.25v4.918h.527z"/>
+                                                <path
+                                                    d="M23.994 6.124a9.23 9.23 0 00-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043a5.022 5.022 0 00-1.877-.726 10.496 10.496 0 00-1.564-.15c-.04-.003-.083-.01-.124-.013H5.986c-.152.01-.303.017-.455.026-.747.043-1.49.123-2.193.4-1.336.53-2.3 1.452-2.865 2.78-.192.448-.292.925-.363 1.408-.056.392-.088.785-.1 1.18 0 .032-.007.062-.01.093v12.223c.01.14.017.283.027.424.05.815.154 1.624.497 2.373.65 1.42 1.738 2.353 3.234 2.801.42.127.856.187 1.293.228.555.053 1.11.06 1.667.06h11.03c.525 0 1.048-.034 1.57-.1.823-.106 1.597-.35 2.296-.81a5.046 5.046 0 001.88-2.207c.186-.42.293-.87.37-1.324.113-.675.138-1.358.137-2.04-.002-3.8 0-7.595-.003-11.393zm-6.423 3.99v5.712c0 .417-.058.827-.244 1.206-.29.59-.76.962-1.388 1.14-.35.1-.706.157-1.07.173-.95.042-1.775-.597-1.942-1.498-.096-.517-.006-1.013.323-1.445.329-.432.776-.705 1.299-.84.292-.076.59-.125.89-.167.376-.053.754-.088 1.128-.145.19-.03.336-.134.388-.332.015-.053.023-.11.023-.165V9.834a.46.46 0 00-.06-.245c-.055-.083-.15-.115-.253-.093l-4.12.893c-.09.02-.163.076-.202.167-.027.063-.04.13-.04.197v7.196c0 .204-.02.407-.06.608a1.794 1.794 0 01-.864 1.236c-.322.197-.677.304-1.052.36-.14.02-.28.038-.42.046-.832.044-1.574-.362-1.876-1.087-.265-.637-.21-1.285.155-1.88.313-.51.775-.838 1.345-.986.365-.095.735-.146 1.107-.185.31-.032.62-.073.927-.124.27-.046.433-.217.475-.49.01-.072.013-.146.013-.22V6.234c0-.12.022-.234.076-.34.08-.157.2-.25.372-.295L17.23 4.59c.123-.03.246-.044.37-.024.212.033.37.16.418.38.018.082.026.166.026.25v4.918h.527z" />
                                             </svg>
                                             <span>Apple Music</span>
-                                            <button class="music-link-remove" onclick="event.preventDefault(); removeMusicLink('apple')">✕</button>
+                                            <button class="music-link-remove"
+                                                onclick="event.preventDefault(); removeMusicLink('apple')">✕</button>
                                         </a>
                                         <!-- SoundCloud -->
-                                        <a class="music-link-btn soundcloud" id="soundcloudLinkBtn" href="#" target="_blank" style="display: none;">
+                                        <a class="music-link-btn soundcloud" id="soundcloudLinkBtn" href="#"
+                                            target="_blank" style="display: none;">
                                             <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                                <path d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.049-.1-.084-.1zm-.899 1.77c-.053 0-.092.04-.101.1l-.153 1.395.153 1.36c.009.057.048.097.101.097.05 0 .09-.04.1-.1l.178-1.357-.178-1.396c-.01-.06-.05-.1-.1-.1zm1.822-1.395c-.063 0-.108.053-.117.113l-.213 2.28.213 2.227c.009.065.054.112.117.112.063 0 .105-.047.115-.112l.244-2.227-.244-2.28c-.01-.06-.052-.113-.115-.113zm.88-.318c-.07 0-.125.058-.133.126l-.192 2.598.192 2.54c.008.072.063.125.133.125s.12-.053.13-.125l.22-2.54-.22-2.598c-.01-.068-.06-.126-.13-.126zm.94-.41c-.082 0-.137.065-.146.145l-.173 3.008.173 2.93c.009.086.064.145.146.145.082 0 .134-.059.144-.145l.2-2.93-.2-3.008c-.01-.08-.062-.145-.144-.145zm.928-.242c-.09 0-.15.074-.16.163l-.152 3.25.152 3.14c.01.093.07.163.16.163s.145-.07.156-.163l.176-3.14-.176-3.25c-.01-.09-.066-.163-.156-.163zm.98-.163c-.1 0-.167.082-.176.18l-.132 3.413.132 3.3c.009.103.076.18.176.18.099 0 .163-.077.173-.18l.153-3.3-.153-3.413c-.01-.098-.074-.18-.173-.18zm.973-.118c-.108 0-.18.09-.188.197l-.112 3.53.112 3.44c.008.11.08.198.188.198.107 0 .177-.088.187-.198l.13-3.44-.13-3.53c-.01-.108-.08-.197-.187-.197zm1.022-.028c-.117 0-.193.096-.2.212l-.092 3.558.093 3.5c.007.117.082.212.2.212.116 0 .19-.095.198-.212l.108-3.5-.108-3.558c-.008-.116-.082-.212-.199-.212zm.99-.015c-.125 0-.206.104-.212.227l-.073 3.573.073 3.533c.006.125.087.228.212.228.124 0 .203-.103.21-.228l.085-3.533-.084-3.573c-.008-.123-.087-.227-.211-.227zm1.068.01c-.135 0-.22.112-.226.245l-.054 3.563.054 3.508c.006.132.09.244.226.244.135 0 .216-.112.223-.244l.062-3.508-.062-3.563c-.007-.133-.088-.245-.223-.245zm.957-.05c-.142 0-.233.12-.238.26l-.035 3.613.035 3.558c.005.14.096.26.238.26.14 0 .23-.12.236-.26l.04-3.558-.04-3.613c-.006-.14-.096-.26-.236-.26zm1.06.01c-.15 0-.246.127-.252.275l-.015 3.603.015 3.548c.006.148.1.275.25.275.15 0 .243-.127.25-.275l.016-3.548-.017-3.603c-.007-.148-.1-.275-.248-.275zm1.03.02c-.16 0-.262.135-.267.29v7.15c.005.153.107.29.267.29.16 0 .26-.137.266-.29V12.39c-.005-.155-.106-.29-.266-.29zm1.03-.016c-.07 0-.135.03-.183.078-.05.05-.082.12-.085.192v7.21c.003.145.114.27.27.27.077 0 .147-.032.196-.083.05-.05.082-.122.084-.187v-7.21c-.002-.07-.034-.142-.084-.192-.05-.048-.12-.078-.198-.078zm1.028 0c-.075 0-.147.03-.197.08-.048.047-.08.117-.082.188v7.208c0 .072.034.14.082.188.05.05.122.082.197.082.17 0 .28-.125.28-.27V12.66c0-.143-.11-.27-.28-.27zm3.05.05c-.168 0-.33.022-.488.068-1.903.57-3.34 2.32-3.553 4.412-.037.352.25.642.593.642h7.25c.203 0 .395-.08.537-.22.142-.14.22-.33.22-.537V15.58c0-1.847-1.493-3.34-3.34-3.34-.077 0-.146.003-.22.01z"/>
+                                                <path
+                                                    d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.049-.1-.084-.1zm-.899 1.77c-.053 0-.092.04-.101.1l-.153 1.395.153 1.36c.009.057.048.097.101.097.05 0 .09-.04.1-.1l.178-1.357-.178-1.396c-.01-.06-.05-.1-.1-.1zm1.822-1.395c-.063 0-.108.053-.117.113l-.213 2.28.213 2.227c.009.065.054.112.117.112.063 0 .105-.047.115-.112l.244-2.227-.244-2.28c-.01-.06-.052-.113-.115-.113zm.88-.318c-.07 0-.125.058-.133.126l-.192 2.598.192 2.54c.008.072.063.125.133.125s.12-.053.13-.125l.22-2.54-.22-2.598c-.01-.068-.06-.126-.13-.126zm.94-.41c-.082 0-.137.065-.146.145l-.173 3.008.173 2.93c.009.086.064.145.146.145.082 0 .134-.059.144-.145l.2-2.93-.2-3.008c-.01-.08-.062-.145-.144-.145zm.928-.242c-.09 0-.15.074-.16.163l-.152 3.25.152 3.14c.01.093.07.163.16.163s.145-.07.156-.163l.176-3.14-.176-3.25c-.01-.09-.066-.163-.156-.163zm.98-.163c-.1 0-.167.082-.176.18l-.132 3.413.132 3.3c.009.103.076.18.176.18.099 0 .163-.077.173-.18l.153-3.3-.153-3.413c-.01-.098-.074-.18-.173-.18zm.973-.118c-.108 0-.18.09-.188.197l-.112 3.53.112 3.44c.008.11.08.198.188.198.107 0 .177-.088.187-.198l.13-3.44-.13-3.53c-.01-.108-.08-.197-.187-.197zm1.022-.028c-.117 0-.193.096-.2.212l-.092 3.558.093 3.5c.007.117.082.212.2.212.116 0 .19-.095.198-.212l.108-3.5-.108-3.558c-.008-.116-.082-.212-.199-.212zm.99-.015c-.125 0-.206.104-.212.227l-.073 3.573.073 3.533c.006.125.087.228.212.228.124 0 .203-.103.21-.228l.085-3.533-.084-3.573c-.008-.123-.087-.227-.211-.227zm1.068.01c-.135 0-.22.112-.226.245l-.054 3.563.054 3.508c.006.132.09.244.226.244.135 0 .216-.112.223-.244l.062-3.508-.062-3.563c-.007-.133-.088-.245-.223-.245zm.957-.05c-.142 0-.233.12-.238.26l-.035 3.613.035 3.558c.005.14.096.26.238.26.14 0 .23-.12.236-.26l.04-3.558-.04-3.613c-.006-.14-.096-.26-.236-.26zm1.06.01c-.15 0-.246.127-.252.275l-.015 3.603.015 3.548c.006.148.1.275.25.275.15 0 .243-.127.25-.275l.016-3.548-.017-3.603c-.007-.148-.1-.275-.248-.275zm1.03.02c-.16 0-.262.135-.267.29v7.15c.005.153.107.29.267.29.16 0 .26-.137.266-.29V12.39c-.005-.155-.106-.29-.266-.29zm1.03-.016c-.07 0-.135.03-.183.078-.05.05-.082.12-.085.192v7.21c.003.145.114.27.27.27.077 0 .147-.032.196-.083.05-.05.082-.122.084-.187v-7.21c-.002-.07-.034-.142-.084-.192-.05-.048-.12-.078-.198-.078zm1.028 0c-.075 0-.147.03-.197.08-.048.047-.08.117-.082.188v7.208c0 .072.034.14.082.188.05.05.122.082.197.082.17 0 .28-.125.28-.27V12.66c0-.143-.11-.27-.28-.27zm3.05.05c-.168 0-.33.022-.488.068-1.903.57-3.34 2.32-3.553 4.412-.037.352.25.642.593.642h7.25c.203 0 .395-.08.537-.22.142-.14.22-.33.22-.537V15.58c0-1.847-1.493-3.34-3.34-3.34-.077 0-.146.003-.22.01z" />
                                             </svg>
                                             <span>SoundCloud</span>
-                                            <button class="music-link-remove" onclick="event.preventDefault(); removeMusicLink('soundcloud')">✕</button>
+                                            <button class="music-link-remove"
+                                                onclick="event.preventDefault(); removeMusicLink('soundcloud')">✕</button>
                                         </a>
                                         <!-- Generic Link -->
-                                        <a class="music-link-btn generic" id="genericLinkBtn" href="#" target="_blank" style="display: none;">
+                                        <a class="music-link-btn generic" id="genericLinkBtn" href="#" target="_blank"
+                                            style="display: none;">
                                             <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                                <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                                                <path
+                                                    d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
                                             </svg>
                                             <span id="genericLinkText">Link</span>
-                                            <button class="music-link-remove" onclick="event.preventDefault(); removeMusicLink('generic')">✕</button>
+                                            <button class="music-link-remove"
+                                                onclick="event.preventDefault(); removeMusicLink('generic')">✕</button>
                                         </a>
                                     </div>
                                 </div>
@@ -1016,7 +1075,7 @@
 
                 <h2
                     style="font-size: clamp(1.5rem, 5vw, 2.2rem); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                    <span
+                    <span data-i18n="pricing.title"
                         style="background: linear-gradient(135deg, #ff3b5c 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; align-self: flex-start; margin-top: -4px;">Support</span>
                     <img src="achordim-icon-app.svg" alt=""
                         style="width: clamp(32px, 8vw, 44px); height: clamp(32px, 8vw, 44px); border-radius: 10px; align-self: flex-start;">
@@ -1028,7 +1087,7 @@
                     </span>
                 </h2>
 
-                <p
+                <p data-i18n="pricing.subtitle"
                     style="font-size: 1.15rem; color: var(--text-muted, #999); margin-bottom: 28px; line-height: 1.7; max-width: 550px; margin-left: auto; margin-right: auto;">
                     Join thousands of worship leaders using aChordim to transform their music ministry
                 </p>
@@ -1037,15 +1096,15 @@
                 <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-bottom: 32px;">
                     <div style="display: flex; align-items: center; gap: 8px; color: var(--text);">
                         <span style="font-size: 1.3rem;">🎵</span>
-                        <span style="font-size: 0.95rem;">More Scans</span>
+                        <span data-i18n="pricing.feat.scans" style="font-size: 0.95rem;">More Scans</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px; color: var(--text);">
                         <span style="font-size: 1.3rem;">⚡</span>
-                        <span style="font-size: 0.95rem;">Priority Processing</span>
+                        <span data-i18n="pricing.feat.priority" style="font-size: 0.95rem;">Priority Processing</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px; color: var(--text);">
                         <span style="font-size: 1.3rem;">💾</span>
-                        <span style="font-size: 0.95rem;">Cloud Sync</span>
+                        <span data-i18n="pricing.feat.cloud" style="font-size: 0.95rem;">Cloud Sync</span>
                     </div>
                 </div>
 
@@ -1054,53 +1113,65 @@
                     <!-- Free tier -->
                     <div
                         style="background: rgba(255, 255, 255, 0.08); border: 1px solid #999; border-radius: 8px; padding: 10px 12px; min-width: 90px;">
-                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;">Free</div>
+                        <div data-i18n="pricing.tier.free"
+                            style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;">Free</div>
                         <div style="font-size: 1.1rem; font-weight: 700; color: var(--text);">$0</div>
                         <div style="font-size: 0.6rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;">3
-                            scans/month</div>
+                            <span data-i18n="pricing.scans_month">scans/month</span>
+                        </div>
                     </div>
                     <!-- Basic tier -->
                     <div
                         style="background: rgba(16, 185, 129, 0.15); border: 1px solid #6ee7b7; border-radius: 8px; padding: 10px 12px; min-width: 90px;">
-                        <div style="font-size: 0.7rem; color: var(--text); margin-bottom: 2px;">Basic</div>
+                        <div data-i18n="pricing.tier.basic"
+                            style="font-size: 0.7rem; color: var(--text); margin-bottom: 2px;">Basic</div>
                         <div style="font-size: 1.1rem; font-weight: 700; color: var(--text);">$0.99<span
-                                style="font-size: 0.6rem; font-weight: 400; color: var(--text);">/mo</span></div>
+                                style="font-size: 0.6rem; font-weight: 400; color: var(--text);"
+                                data-i18n="pricing.per_month">/mo</span></div>
                         <div style="font-size: 0.6rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;">20
-                            scans/month</div>
+                            <span data-i18n="pricing.scans_month">scans/month</span>
+                        </div>
                     </div>
                     <!-- Pro tier -->
                     <div
                         style="background: linear-gradient(135deg, rgba(255, 59, 92, 0.2), rgba(139, 92, 246, 0.2)); border: 1px solid var(--primary); border-radius: 8px; padding: 10px 12px; position: relative; min-width: 90px;">
-                        <div
+                        <div data-i18n="pricing.badge.popular"
                             style="position: absolute; top: -6px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; font-size: 0.5rem; padding: 1px 4px; border-radius: 3px; font-weight: 600;">
                             POPULAR</div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;">Pro</div>
+                        <div data-i18n="pricing.tier.pro"
+                            style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;">Pro</div>
                         <div style="font-size: 1.1rem; font-weight: 700; color: var(--text);">$1.99<span
-                                style="font-size: 0.6rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
-                        <div style="font-size: 0.6rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;">
+                                style="font-size: 0.6rem; font-weight: 400; color: var(--text-muted);"
+                                data-i18n="pricing.per_month">/mo</span></div>
+                        <div data-i18n="pricing.feat.live"
+                            style="font-size: 0.6rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;">
                             Live Sessions</div>
                     </div>
                     <!-- Book tier -->
                     <div
                         style="background: rgba(139, 92, 246, 0.15); border: 1px solid #a78bfa; border-radius: 8px; padding: 10px 12px; min-width: 90px; position: relative;">
-                        <div
+                        <div data-i18n="pricing.badge.onetime"
                             style="position: absolute; top: -6px; left: 50%; transform: translateX(-50%); background: #8b5cf6; color: white; font-size: 0.5rem; padding: 1px 4px; border-radius: 3px; font-weight: 600;">
                             ONE-TIME</div>
-                        <div style="font-size: 0.7rem; color: #a78bfa; margin-bottom: 2px;">Book</div>
+                        <div data-i18n="pricing.tier.book"
+                            style="font-size: 0.7rem; color: #a78bfa; margin-bottom: 2px;">Book</div>
                         <div style="font-size: 1.1rem; font-weight: 700; color: var(--text);">$9.99<span
-                                style="font-size: 0.55rem; font-weight: 400; color: var(--text-muted);"> once</span>
+                                style="font-size: 0.55rem; font-weight: 400; color: var(--text-muted);"><span
+                                    data-i18n="pricing.once"> once</span></span>
                         </div>
                         <div style="font-size: 0.6rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;">20
-                            scans included</div>
+                            <span data-i18n="pricing.scans_included">scans included</span>
+                        </div>
                     </div>
                 </div>
 
                 <button class="primary-action" onclick="window.showSubscriptionModal()"
                     style="padding: 16px 40px; font-size: 1.15rem; background: linear-gradient(135deg, #ff3b5c 0%, #ff6b8a 100%); box-shadow: 0 8px 30px rgba(255, 59, 92, 0.4); border-radius: 12px; transition: all 0.3s ease;">
-                    🚀 Get Started Now
+                    🚀 <span data-i18n="pricing.btn">Get Started Now</span>
                 </button>
 
-                <p style="margin-top: 16px; font-size: 0.85rem; color: var(--text-muted);">Cancel anytime • Secure
+                <p data-i18n="pricing.note" style="margin-top: 16px; font-size: 0.85rem; color: var(--text-muted);">
+                    Cancel anytime • Secure
                     payment via PayPal</p>
             </div>
         </section>
@@ -1227,25 +1298,30 @@
 
             <!-- Login Form -->
             <div id="loginFormContainer">
-                <h2 style="margin-bottom: 10px; color: var(--text); font-size: 1.8rem;">Welcome Back</h2>
-                <p style="color: var(--text-muted); margin-bottom: 30px;">Sign in to continue to aChordim</p>
+                <h2 style="margin-bottom: 10px; color: var(--text); font-size: 1.8rem;" data-i18n="auth.welcome">Welcome
+                    Back</h2>
+                <p style="color: var(--text-muted); margin-bottom: 30px;" data-i18n="auth.signin_desc">Sign in to
+                    continue to aChordim</p>
 
                 <form id="loginForm">
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Email
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;"
+                            data-i18n="auth.email_label">Email
                             Address</label>
-                        <input type="email" id="loginEmail" placeholder="you@example.com" required
+                        <input type="email" id="loginEmail" placeholder="you@example.com"
+                            data-i18n-placeholder="auth.email_placeholder" required
                             style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
                     </div>
 
                     <div style="margin-bottom: 20px;">
-                        <label
-                            style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Password</label>
-                        <input type="password" id="loginPassword" placeholder="Enter your password" required
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;"
+                            data-i18n="auth.password_label">Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password"
+                            data-i18n-placeholder="auth.password_placeholder" required
                             style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
                     </div>
 
-                    <button type="submit"
+                    <button type="submit" data-i18n="auth.btn_signin"
                         style="width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px;">Sign
                         In</button>
 
@@ -1262,46 +1338,55 @@
                                     fill="#EA4335" />
                             </g>
                         </svg>
-                        Continue with Google
+                        <span data-i18n="auth.btn_google">Continue with Google</span>
                     </button>
 
                     <div style="text-align: center; margin-top: 20px; color: var(--text-muted);">
-                        Don't have an account? <a href="#" id="switchToSignup"
-                            style="color: var(--primary); text-decoration: none; font-weight: 500;">Sign up</a>
+                        <span data-i18n="auth.no_account">Don't have an account?</span> <a href="#" id="switchToSignup"
+                            style="color: var(--primary); text-decoration: none; font-weight: 500;"
+                            data-i18n="auth.link_signup">Sign up</a>
                         <br><a href="#" id="switchToReset"
-                            style="color: var(--primary); text-decoration: none; font-weight: 500;">Forgot password?</a>
+                            style="color: var(--primary); text-decoration: none; font-weight: 500;"
+                            data-i18n="auth.link_forgot">Forgot password?</a>
                     </div>
                 </form>
             </div>
 
             <!-- Signup Form -->
             <div id="signupFormContainer" style="display: none;">
-                <h2 style="margin-bottom: 10px; color: var(--text); font-size: 1.8rem;">Create Account</h2>
-                <p style="color: var(--text-muted); margin-bottom: 30px;">Join aChordim community</p>
+                <h2 style="margin-bottom: 10px; color: var(--text); font-size: 1.8rem;" data-i18n="auth.create_account">
+                    Create Account</h2>
+                <p style="color: var(--text-muted); margin-bottom: 30px;" data-i18n="auth.join_community">Join aChordim
+                    community</p>
 
                 <form id="signupForm">
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Full
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;"
+                            data-i18n="auth.fullname">Full
                             Name</label>
-                        <input type="text" id="signupName" placeholder="John Doe" required
+                        <input type="text" id="signupName" placeholder="John Doe"
+                            data-i18n-placeholder="auth.name_placeholder" required
                             style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
                     </div>
 
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Email
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;"
+                            data-i18n="auth.email_label">Email
                             Address</label>
-                        <input type="email" id="signupEmail" placeholder="you@example.com" required
+                        <input type="email" id="signupEmail" placeholder="you@example.com"
+                            data-i18n-placeholder="auth.email_placeholder" required
                             style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
                     </div>
 
                     <div style="margin-bottom: 20px;">
-                        <label
-                            style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Password</label>
-                        <input type="password" id="signupPassword" placeholder="At least 6 characters" required
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;"
+                            data-i18n="auth.password_label">Password</label>
+                        <input type="password" id="signupPassword" placeholder="At least 6 characters"
+                            data-i18n-placeholder="auth.password_min" required
                             style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
                     </div>
 
-                    <button type="submit"
+                    <button type="submit" data-i18n="auth.btn_create"
                         style="width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px;">Create
                         Account</button>
 
@@ -1318,36 +1403,44 @@
                                     fill="#EA4335" />
                             </g>
                         </svg>
-                        Sign up with Google
+                        <span data-i18n="auth.btn_google">Sign up with Google</span>
                     </button>
 
                     <div style="text-align: center; margin-top: 20px; color: var(--text-muted);">
-                        Already have an account? <a href="#" class="switchToLogin"
-                            style="color: var(--primary); text-decoration: none; font-weight: 500;">Sign in</a>
+                        <span data-i18n="auth.already_account">Already have an account?</span> <a href="#"
+                            class="switchToLogin"
+                            style="color: var(--primary); text-decoration: none; font-weight: 500;"
+                            data-i18n="auth.link_signin">Sign in</a>
                     </div>
                 </form>
             </div>
 
             <!-- Reset Password Form -->
             <div id="resetFormContainer" style="display: none;">
-                <h2 style="margin-bottom: 10px; color: var(--text); font-size: 1.8rem;">Reset Password</h2>
-                <p style="color: var(--text-muted); margin-bottom: 30px;">Enter your email to receive a reset link</p>
+                <h2 style="margin-bottom: 10px; color: var(--text); font-size: 1.8rem;" data-i18n="auth.title_reset">
+                    Reset Password</h2>
+                <p style="color: var(--text-muted); margin-bottom: 30px;" data-i18n="auth.desc_reset">Enter your email
+                    to receive a reset link</p>
 
                 <form id="resetForm">
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;">Email
+                        <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 500;"
+                            data-i18n="auth.email_label">Email
                             Address</label>
-                        <input type="email" id="resetEmail" placeholder="you@example.com" required
+                        <input type="email" id="resetEmail" placeholder="you@example.com"
+                            data-i18n-placeholder="auth.email_placeholder" required
                             style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); font-size: 1rem;">
                     </div>
 
-                    <button type="submit"
+                    <button type="submit" data-i18n="auth.btn_send_reset"
                         style="width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px;">Send
                         Reset Link</button>
 
                     <div style="text-align: center; margin-top: 20px; color: var(--text-muted);">
-                        Remember your password? <a href="#" class="switchToLogin"
-                            style="color: var(--primary); text-decoration: none; font-weight: 500;">Sign in</a>
+                        <span data-i18n="auth.remember_pass">Remember your password?</span> <a href="#"
+                            class="switchToLogin"
+                            style="color: var(--primary); text-decoration: none; font-weight: 500;"
+                            data-i18n="auth.link_signin">Sign in</a>
                     </div>
                 </form>
             </div>
@@ -1358,17 +1451,17 @@
     <div id="saveSongModal" class="modal-overlay">
         <div class="modal-container">
             <div class="modal-header">
-                <h3>💾 Save Song to Library</h3>
+                <h3 data-i18n="modal.save.title">💾 Save Song to Library</h3>
                 <button class="modal-close" id="saveSongClose">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Enter a name for this song:</p>
+                <p data-i18n="modal.save.desc">Enter a name for this song:</p>
                 <input type="text" id="songNameInput" class="modal-input" placeholder="Song name (e.g., Amazing Grace)"
-                    style="display: block;">
+                    data-i18n-placeholder="modal.save.placeholder" style="display: block;">
             </div>
             <div class="modal-footer">
-                <button class="ghost-button" id="saveSongCancel">Cancel</button>
-                <button class="primary-action" id="saveSongConfirm">Save</button>
+                <button class="ghost-button" id="saveSongCancel" data-i18n="modal.btn.cancel">Cancel</button>
+                <button class="primary-action" id="saveSongConfirm" data-i18n="modal.btn.save">Save</button>
             </div>
         </div>
     </div>
@@ -1613,7 +1706,8 @@
             <div class="modal-header">
                 <h3 style="display: flex; align-items: center; gap: 10px;">
                     <svg viewBox="0 0 24 24" fill="var(--primary)" width="24" height="24">
-                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                        <path
+                            d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                     </svg>
                     Add Music Link
                 </h3>
@@ -1629,15 +1723,18 @@
                 <p id="musicUrlError" style="color: #ff4444; font-size: 0.85rem; margin-top: 8px; display: none;">
                     Please enter a valid URL
                 </p>
-                <div id="detectedPlatform" style="display: none; margin-top: 12px; padding: 10px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2);">
+                <div id="detectedPlatform"
+                    style="display: none; margin-top: 12px; padding: 10px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2);">
                     <span style="font-size: 0.85rem; color: var(--text-muted);">Detected: </span>
                     <span id="detectedPlatformName" style="font-weight: 600; color: var(--primary);"></span>
                 </div>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button onclick="closeMusicModal()" style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500;">
+                    <button onclick="closeMusicModal()"
+                        style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--text); cursor: pointer; font-weight: 500;">
                         Cancel
                     </button>
-                    <button id="addMusicBtn" onclick="saveMusicLink()" style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: linear-gradient(135deg, #e91e63, #c2185b); color: white; cursor: pointer; font-weight: 600;">
+                    <button id="addMusicBtn" onclick="saveMusicLink()"
+                        style="flex: 1; padding: 12px; border: none; border-radius: 10px; background: linear-gradient(135deg, #e91e63, #c2185b); color: white; cursor: pointer; font-weight: 600;">
                         Add Link
                     </button>
                 </div>
@@ -1648,7 +1745,8 @@
     <div id="subscriptionModal" class="modal-overlay">
         <div class="modal-container" style="max-width: 1100px; width: 95%; background: #f8fafc;">
             <div class="modal-header" style="background: transparent; border-bottom: 1px solid rgba(0,0,0,0.1);">
-                <h3 style="color: #1f2937; font-weight: 700; font-size: 20px;">Choose Your Plan</h3>
+                <h3 data-i18n="modal.plan.title" style="color: #1f2937; font-weight: 700; font-size: 20px;">Choose Your
+                    Plan</h3>
                 <button class="modal-close" id="subscriptionModalClose">&times;</button>
             </div>
             <div class="modal-body" style="padding: 24px;">
@@ -1663,16 +1761,19 @@
                     <!-- Free Tier -->
                     <div id="pricing-card-free" class="pricing-card"
                         style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; background: white; display: flex; flex-direction: column;">
-                        <h3 style="margin: 0 0 8px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Free</h3>
+                        <h3 data-i18n="modal.plan.free"
+                            style="margin: 0 0 8px 0; color: #1f2937; font-size: 18px; font-weight: 600;">Free</h3>
                         <div style="font-size: 36px; font-weight: 700; color: #1f2937;">$0</div>
-                        <div style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">No credit card</div>
+                        <div data-i18n="modal.plan.no_card"
+                            style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">No credit card</div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: #374151;">
-                            <li>✓ 3 scans/month</li>
-                            <li>✓ Transpose</li>
-                            <li>✓ Print/Export</li>
-                            <li style="opacity: 0.5;">✗ Save to Library</li>
-                            <li style="opacity: 0.5;">✗ Nashville Numbers</li>
+                            <li>✓ <span data-i18n="modal.plan.scans3">3 scans/month</span></li>
+                            <li>✓ <span data-i18n="modal.plan.transpose">Transpose</span></li>
+                            <li>✓ <span data-i18n="modal.plan.print">Print/Export</span></li>
+                            <li style="opacity: 0.5;">✗ <span data-i18n="modal.plan.save">Save to Library</span></li>
+                            <li style="opacity: 0.5;">✗ <span data-i18n="modal.plan.nashville">Nashville Numbers</span>
+                            </li>
                         </ul>
                         <div id="pricing-free-action" style="margin-top: auto; padding-top: 16px;"></div>
                     </div>
@@ -1680,17 +1781,21 @@
                     <!-- Basic Tier -->
                     <div id="pricing-card-basic" class="pricing-card"
                         style="border: 2px solid #6ee7b7; border-radius: 12px; padding: 20px; background: #ecfdf5; display: flex; flex-direction: column;">
-                        <h3 style="margin: 0 0 8px 0; color: #059669; font-size: 18px; font-weight: 600;">Basic</h3>
+                        <h3 data-i18n="modal.plan.basic"
+                            style="margin: 0 0 8px 0; color: #059669; font-size: 18px; font-weight: 600;">Basic</h3>
                         <div style="font-size: 36px; font-weight: 700; color: #059669;">$0.99<span
-                                style="font-size: 16px; font-weight: 400; color: #10b981;">/mo</span></div>
-                        <div style="font-size: 13px; color: #10b981; margin-bottom: 16px;">3-day free trial</div>
+                                style="font-size: 16px; font-weight: 400; color: #10b981;"
+                                data-i18n="pricing.per_month">/mo</span></div>
+                        <div data-i18n="modal.plan.trial" style="font-size: 13px; color: #10b981; margin-bottom: 16px;">
+                            3-day free trial</div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: #059669;">
-                            <li>✓ 20 scans/month</li>
-                            <li>✓ Save to Library</li>
-                            <li>✓ Transpose</li>
-                            <li>✓ Print/Export</li>
-                            <li style="opacity: 0.5; color: #374151;">✗ Nashville Numbers</li>
+                            <li>✓ <span data-i18n="modal.plan.scans20">20 scans/month</span></li>
+                            <li>✓ <span data-i18n="modal.plan.save">Save to Library</span></li>
+                            <li>✓ <span data-i18n="modal.plan.transpose">Transpose</span></li>
+                            <li>✓ <span data-i18n="modal.plan.print">Print/Export</span></li>
+                            <li style="opacity: 0.5; color: #374151;">✗ <span data-i18n="modal.plan.nashville">Nashville
+                                    Numbers</span></li>
                         </ul>
                         <div id="pricing-basic-action" style="margin-top: auto; padding-top: 16px;">
                             <div id="paypal-basic-button"></div>
@@ -1700,20 +1805,23 @@
                     <!-- Pro Tier -->
                     <div id="pricing-card-pro" class="pricing-card"
                         style="border: 2px solid #fca5a5; border-radius: 12px; padding: 20px; background: #fef2f2; position: relative; display: flex; flex-direction: column;">
-                        <div
+                        <div data-i18n="pricing.badge.popular"
                             style="position: absolute; top: -10px; right: 12px; background: #fbbf24; color: #1f2937; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;">
                             POPULAR</div>
-                        <h3 style="margin: 0 0 8px 0; color: #dc2626; font-size: 18px; font-weight: 600;">Pro</h3>
+                        <h3 data-i18n="modal.plan.pro"
+                            style="margin: 0 0 8px 0; color: #dc2626; font-size: 18px; font-weight: 600;">Pro</h3>
                         <div style="font-size: 36px; font-weight: 700; color: #dc2626;">$1.99<span
-                                style="font-size: 16px; font-weight: 400; color: #ef4444;">/mo</span></div>
-                        <div style="font-size: 13px; color: #ef4444; margin-bottom: 16px;">3-day free trial</div>
+                                style="font-size: 16px; font-weight: 400; color: #ef4444;"
+                                data-i18n="pricing.per_month">/mo</span></div>
+                        <div data-i18n="modal.plan.trial" style="font-size: 13px; color: #ef4444; margin-bottom: 16px;">
+                            3-day free trial</div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: #dc2626;">
-                            <li>✓ 50 scans/month</li>
-                            <li>✓ Save to Library</li>
-                            <li>✓ Nashville Numbers</li>
-                            <li>✓ Live Sessions</li>
-                            <li>✓ Transpose & Export</li>
+                            <li>✓ <span data-i18n="modal.plan.scans50">50 scans/month</span></li>
+                            <li>✓ <span data-i18n="modal.plan.save">Save to Library</span></li>
+                            <li>✓ <span data-i18n="modal.plan.nashville">Nashville Numbers</span></li>
+                            <li>✓ <span data-i18n="modal.plan.live">Live Sessions</span></li>
+                            <li>✓ <span data-i18n="modal.plan.transpose_export">Transpose & Export</span></li>
                         </ul>
                         <div id="pricing-pro-action" style="margin-top: auto; padding-top: 16px;">
                             <div id="paypal-pro-button"></div>
@@ -1723,20 +1831,24 @@
                     <!-- Book Tier (One-time purchase) -->
                     <div id="pricing-card-book" class="pricing-card"
                         style="border: 2px solid #c4b5fd; border-radius: 12px; padding: 20px; background: #f5f3ff; position: relative; display: flex; flex-direction: column;">
-                        <div
+                        <div data-i18n="pricing.badge.onetime"
                             style="position: absolute; top: -10px; right: 12px; background: #fbbf24; color: #1f2937; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;">
                             ONE-TIME</div>
-                        <h3 style="margin: 0 0 8px 0; color: #7c3aed; font-size: 18px; font-weight: 600;">Book</h3>
+                        <h3 data-i18n="modal.plan.book"
+                            style="margin: 0 0 8px 0; color: #7c3aed; font-size: 18px; font-weight: 600;">Book</h3>
                         <div style="font-size: 36px; font-weight: 700; color: #7c3aed;">$9.99<span
-                                style="font-size: 16px; font-weight: 400; color: #8b5cf6;"> once</span></div>
-                        <div style="font-size: 13px; color: #8b5cf6; margin-bottom: 16px;">Lifetime + 20 scans</div>
+                                style="font-size: 16px; font-weight: 400; color: #8b5cf6;" data-i18n="pricing.once">
+                                once</span></div>
+                        <div data-i18n="modal.plan.lifetime"
+                            style="font-size: 13px; color: #8b5cf6; margin-bottom: 16px;">Lifetime + 20 scans</div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: #7c3aed;">
-                            <li>✓ 20 scans included</li>
-                            <li>✓ Buy more scan packs</li>
-                            <li>✓ Save & Nashville</li>
-                            <li>✓ Transpose & Export</li>
-                            <li style="opacity: 0.5; color: #374151;">✗ Live Sessions</li>
+                            <li>✓ <span data-i18n="modal.plan.scans20_included">20 scans included</span></li>
+                            <li>✓ <span data-i18n="modal.plan.buy_packs">Buy more scan packs</span></li>
+                            <li>✓ <span data-i18n="modal.plan.save_nashville">Save & Nashville</span></li>
+                            <li>✓ <span data-i18n="modal.plan.transpose_export">Transpose & Export</span></li>
+                            <li style="opacity: 0.5; color: #374151;">✗ <span data-i18n="modal.plan.live">Live
+                                    Sessions</span></li>
                         </ul>
                         <div id="pricing-book-action" style="margin-top: auto; padding-top: 16px;">
                             <div id="paypal-book-button"></div>
@@ -1747,19 +1859,23 @@
                 <!-- Scan Packs Section (for Book users) -->
                 <div id="scanPacksSection"
                     style="display: none; margin-top: 24px; padding: 24px; background: #f5f3ff; border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px;">
-                    <h4 style="margin: 0 0 8px 0; color: #8b5cf6; font-size: 18px;">Buy More Scans</h4>
-                    <p style="margin: 0 0 20px 0; font-size: 15px; color: #64748b;">Your scans: <span
-                            id="currentScansCount" style="font-weight: 600; color: #8b5cf6;">0</span></p>
+                    <h4 data-i18n="modal.scan.title" style="margin: 0 0 8px 0; color: #8b5cf6; font-size: 18px;">Buy
+                        More Scans</h4>
+                    <p style="margin: 0 0 20px 0; font-size: 15px; color: #64748b;"><span
+                            data-i18n="modal.scan.your_scans">Your scans:</span> <span id="currentScansCount"
+                            style="font-weight: 600; color: #8b5cf6;">0</span></p>
                     <div class="scan-packs-grid">
                         <div
                             style="text-align: center; padding: 20px; background: white; border-radius: 10px; border: 1px solid rgba(139, 92, 246, 0.2);">
-                            <div style="font-weight: 600; font-size: 16px; color: #1f2937;">5 Scans</div>
+                            <div data-i18n="modal.scan.5" style="font-weight: 600; font-size: 16px; color: #1f2937;">5
+                                Scans</div>
                             <div style="font-size: 28px; font-weight: 700; color: #8b5cf6; margin: 8px 0;">$0.99</div>
                             <div id="paypal-scan-starter" style="margin-top: 12px;"></div>
                         </div>
                         <div
                             style="text-align: center; padding: 20px; background: white; border-radius: 10px; border: 1px solid rgba(139, 92, 246, 0.3);">
-                            <div style="font-weight: 600; font-size: 16px; color: #1f2937;">15 Scans</div>
+                            <div data-i18n="modal.scan.15" style="font-weight: 600; font-size: 16px; color: #1f2937;">15
+                                Scans</div>
                             <div style="font-size: 28px; font-weight: 700; color: #8b5cf6; margin: 8px 0;">$1.99</div>
                             <div id="paypal-scan-value" style="margin-top: 12px;"></div>
                         </div>
@@ -1768,7 +1884,8 @@
                             <div
                                 style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;">
                                 BEST VALUE</div>
-                            <div style="font-weight: 600; font-size: 16px; color: #1f2937;">50 Scans</div>
+                            <div data-i18n="modal.scan.50" style="font-weight: 600; font-size: 16px; color: #1f2937;">50
+                                Scans</div>
                             <div style="font-size: 28px; font-weight: 700; color: #8b5cf6; margin: 8px 0;">$4.99</div>
                             <div id="paypal-scan-bundle" style="margin-top: 12px;"></div>
                         </div>
@@ -1776,7 +1893,8 @@
                 </div>
 
                 <div style="text-align: center; font-size: 13px; color: #6b7280; margin-top: 20px;">
-                    <p style="margin: 0;">Subscriptions include 3-day free trial. Cancel anytime. Secure payment via
+                    <p data-i18n="modal.footer.note" style="margin: 0;">Subscriptions include 3-day free trial. Cancel
+                        anytime. Secure payment via
                         PayPal.</p>
                     <p id="subscriptionSignInLink" style="display: none; margin-top: 12px;">
                         <span style="font-size: 13px; color: #6b7280;">Already have an account? </span>
@@ -2025,22 +2143,27 @@
     <div id="createSessionModal" class="modal-overlay">
         <div class="modal-container" style="max-width: 500px;">
             <div class="modal-header">
-                <h3>📡 Create Live Session</h3>
+                <h3 data-i18n="session.modal.create_title">📡 Create Live Session</h3>
                 <button class="modal-close" onclick="sessionUI.hideCreateSessionModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom: 16px; color: var(--text-muted);">Create a live session to broadcast songs to
-                    your band in real-time.</p>
-                <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600;">Session
+                <p style="margin-bottom: 16px; color: var(--text-muted);" data-i18n="session.modal.create_desc">Create a
+                    live session to broadcast songs to your band in real-time.</p>
+                <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600;"
+                    data-i18n="session.label.title">Session
                     Title</label>
                 <input type="text" id="sessionTitleInput" class="modal-input"
-                    placeholder="e.g., Sunday Worship Set 14.11.25" style="display: block; margin-bottom: 16px;">
-                <p style="font-size: 13px; color: var(--text-muted);">💡 Tip: Share the session code with your band
+                    placeholder="e.g., Sunday Worship Set 14.11.25" data-i18n-placeholder="session.placeholder.title"
+                    style="display: block; margin-bottom: 16px;">
+                <p style="font-size: 13px; color: var(--text-muted);" data-i18n="session.tip.share">💡 Tip: Share the
+                    session code with your band
                     members so they can join and follow along.</p>
             </div>
             <div class="modal-footer">
-                <button class="ghost-button" onclick="sessionUI.hideCreateSessionModal()">Cancel</button>
-                <button class="primary-action" onclick="sessionUI.handleCreateSession()">Create Session</button>
+                <button class="ghost-button" onclick="sessionUI.hideCreateSessionModal()"
+                    data-i18n="modal.btn.cancel">Cancel</button>
+                <button class="primary-action" onclick="sessionUI.handleCreateSession()"
+                    data-i18n="session.btn.create">Create Session</button>
             </div>
         </div>
     </div>
@@ -2049,22 +2172,28 @@
     <div id="joinSessionModal" class="modal-overlay">
         <div class="modal-container" style="max-width: 500px;">
             <div class="modal-header">
-                <h3>📻 Join Session</h3>
+                <h3 data-i18n="session.modal.join_title">📻 Join Session</h3>
                 <button class="modal-close" onclick="sessionUI.hideJoinSessionModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom: 16px; color: var(--text-muted);">Enter the session code provided by your
+                <p style="margin-bottom: 16px; color: var(--text-muted);" data-i18n="session.modal.join_desc">Enter the
+                    session code provided by your
                     worship leader.</p>
-                <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600;">Session
+                <label style="display: block; margin-bottom: 8px; color: var(--text); font-weight: 600;"
+                    data-i18n="session.label.code">Session
                     Code</label>
-                <input type="text" id="sessionCodeInput" class="modal-input" placeholder="e.g., A3F-7K2" maxlength="7"
+                <input type="text" id="sessionCodeInput" class="modal-input" placeholder="e.g., A3F-7K2"
+                    data-i18n-placeholder="session.placeholder.code" maxlength="7"
                     style="display: block; margin-bottom: 16px; text-transform: uppercase; font-family: monospace; font-size: 18px; letter-spacing: 2px; text-align: center;">
-                <p style="font-size: 13px; color: var(--text-muted);">💡 Tip: You'll be able to adjust font size and
+                <p style="font-size: 13px; color: var(--text-muted);" data-i18n="session.tip.join">💡 Tip: You'll be
+                    able to adjust font size and
                     transpose locally while following the leader's song selection.</p>
             </div>
             <div class="modal-footer">
-                <button class="ghost-button" onclick="sessionUI.hideJoinSessionModal()">Cancel</button>
-                <button class="primary-action" onclick="sessionUI.handleJoinSession()">Join Session</button>
+                <button class="ghost-button" onclick="sessionUI.hideJoinSessionModal()"
+                    data-i18n="modal.btn.cancel">Cancel</button>
+                <button class="primary-action" onclick="sessionUI.handleJoinSession()" data-i18n="session.btn.join">Join
+                    Session</button>
             </div>
         </div>
     </div>
@@ -2073,24 +2202,28 @@
     <div id="mySessionsModal" class="modal-overlay">
         <div class="modal-container" style="max-width: 700px;">
             <div class="modal-header">
-                <h3>📋 My Sessions</h3>
+                <h3 data-i18n="session.modal.my_title">📋 My Sessions</h3>
                 <button class="modal-close" onclick="sessionUI.hideMySessionsModal()">&times;</button>
             </div>
             <div class="modal-body">
                 <div style="margin-bottom: 16px;">
                     <input type="text" id="sessionsSearchInput" placeholder="🔍 Search sessions by title..."
+                        data-i18n-placeholder="session.search_placeholder"
                         style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px;"
                         oninput="filterSessionsList(this.value)">
                 </div>
-                <p style="margin-bottom: 16px; color: var(--text-muted);">Your saved and recent sessions</p>
+                <p style="margin-bottom: 16px; color: var(--text-muted);" data-i18n="session.list_desc">Your saved and
+                    recent sessions</p>
                 <div id="sessionsList" style="max-height: 400px; overflow-y: auto;">
                     <!-- Sessions will be loaded here -->
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="ghost-button" onclick="sessionUI.hideMySessionsModal()">Close</button>
+                <button class="ghost-button" onclick="sessionUI.hideMySessionsModal()"
+                    data-i18n="session.btn.close">Close</button>
                 <button class="primary-button"
-                    onclick="sessionUI.hideMySessionsModal(); sessionUI.showCreateSessionModal();">+ Create
+                    onclick="sessionUI.hideMySessionsModal(); sessionUI.showCreateSessionModal();"
+                    data-i18n="session.btn.new">+ Create
                     Session</button>
             </div>
         </div>
@@ -3963,19 +4096,19 @@
                 });
             }
 
-            // Layout: Pages sync
-            const sideMenuPages = document.getElementById('sideMenuPages');
-            const mainPages = document.getElementById('pageCount');
-            if (sideMenuPages && mainPages) {
-                sideMenuPages.value = mainPages.value;
+            // Layout: Section Language sync
+            const sideMenuLanguage = document.getElementById('sideMenuLanguage');
+            const mainLanguage = document.getElementById('sectionLanguage');
+            if (sideMenuLanguage && mainLanguage) {
+                sideMenuLanguage.value = mainLanguage.value;
 
-                sideMenuPages.addEventListener('change', () => {
-                    mainPages.value = sideMenuPages.value;
-                    mainPages.dispatchEvent(new Event('change'));
+                sideMenuLanguage.addEventListener('change', () => {
+                    mainLanguage.value = sideMenuLanguage.value;
+                    mainLanguage.dispatchEvent(new Event('change'));
                 });
 
-                mainPages.addEventListener('change', () => {
-                    sideMenuPages.value = mainPages.value;
+                mainLanguage.addEventListener('change', () => {
+                    sideMenuLanguage.value = mainLanguage.value;
                 });
             }
 

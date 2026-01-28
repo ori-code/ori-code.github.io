@@ -172,7 +172,7 @@ class ChordsAuthManager {
 
     // Show modal when user is kicked out
     showKickedOutModal() {
-        const message = 'You have been logged out because the maximum number of devices was reached.';
+        const message = window.t('auth.logout_kicked');
 
         // Use custom showAlert if available, otherwise wait for it
         if (window.showAlert) {
@@ -201,7 +201,7 @@ class ChordsAuthManager {
             // Register session for single-device login
             await this.registerSession(userCredential.user.uid);
 
-            this.showMessage('Account created successfully!', 'success');
+            this.showMessage(window.t('auth.success_created'), 'success');
             this.closeAuthModal();
             return userCredential.user;
         } catch (error) {
@@ -218,7 +218,7 @@ class ChordsAuthManager {
             // Register session for single-device login (kicks out other devices)
             await this.registerSession(userCredential.user.uid);
 
-            this.showMessage('Signed in successfully!', 'success');
+            this.showMessage(window.t('auth.success_signin'), 'success');
             this.closeAuthModal();
             return userCredential.user;
         } catch (error) {
@@ -237,7 +237,7 @@ class ChordsAuthManager {
                 // Register session for single-device login (kicks out other devices)
                 await this.registerSession(result.user.uid);
 
-                this.showMessage('Signed in with Google successfully!', 'success');
+                this.showMessage(window.t('auth.success_signin'), 'success');
                 this.closeAuthModal();
                 console.log('Google sign-in successful:', result.user.email);
             }
@@ -261,7 +261,7 @@ class ChordsAuthManager {
             this.sessionId = null;
 
             await auth.signOut();
-            this.showMessage('Signed out successfully!', 'success');
+            this.showMessage(window.t('auth.success_signout'), 'success');
         } catch (error) {
             this.showMessage(this.getErrorMessage(error.code), 'error');
             throw error;
@@ -272,7 +272,7 @@ class ChordsAuthManager {
     async resetPassword(email) {
         try {
             await auth.sendPasswordResetEmail(email);
-            this.showMessage('Password reset email sent!', 'success');
+            this.showMessage(window.t('auth.success_reset'), 'success');
         } catch (error) {
             this.showMessage(this.getErrorMessage(error.code), 'error');
             throw error;
@@ -364,7 +364,7 @@ class ChordsAuthManager {
         } else {
             // User is signed out
             if (signInButton) {
-                signInButton.textContent = 'Sign In';
+                signInButton.textContent = window.t('nav.signin');
                 signInButton.onclick = () => this.showAuthModal('login');
             }
 

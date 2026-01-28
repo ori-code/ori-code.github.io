@@ -1,13 +1,16 @@
-// ============= DISABLE PINCH-TO-ZOOM ON MOBILE =============
+// ============= DISABLE PINCH-TO-ZOOM ON MOBILE (EXCEPT PREVIEW) =============
 document.addEventListener('gesturestart', function (e) {
+    if (e.target.closest('.preview-container') || e.target.closest('.preview-scale-wrapper')) return;
     e.preventDefault();
 }, { passive: false });
 
 document.addEventListener('gesturechange', function (e) {
+    if (e.target.closest('.preview-container') || e.target.closest('.preview-scale-wrapper')) return;
     e.preventDefault();
 }, { passive: false });
 
 document.addEventListener('gestureend', function (e) {
+    if (e.target.closest('.preview-container') || e.target.closest('.preview-scale-wrapper')) return;
     e.preventDefault();
 }, { passive: false });
 
@@ -23,7 +26,9 @@ document.addEventListener('touchend', function (e) {
 
 // ============= GLOBAL STYLED PROMPT FUNCTION =============
 // Replaces native browser prompt() with a styled modal
-window.styledPrompt = (message, defaultValue = '', title = 'Enter value') => {
+window.styledPrompt = (message, defaultValue = '', title = null) => {
+    // translate default title if not provided
+    if (!title) title = window.t ? window.t('prompt.enter_value') : 'Enter value';
     return new Promise((resolve) => {
         const modal = document.getElementById('styledPromptModal');
         const input = document.getElementById('styledPromptInput');
@@ -93,7 +98,8 @@ window.styledPrompt = (message, defaultValue = '', title = 'Enter value') => {
 };
 
 // ============= SUCCESS TOAST NOTIFICATION =============
-window.showSuccessToast = (message = 'Analysis complete!') => {
+window.showSuccessToast = (message) => {
+    if (!message) message = window.t ? window.t('msg.analysis_complete') : 'Analysis complete!';
     // Remove existing toast if any
     const existingToast = document.querySelector('.success-toast');
     if (existingToast) {
@@ -295,6 +301,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Expose for manual refresh if needed
         window.refreshMobileScaling = applyScaling;
+
+        // ============= PINCH-TO-ZOOM LOGIC =============
+        let currentScale = 1;
+        let startScale = 1;
+
+        function initPinchZoom() {
+            const el = document.querySelector('.preview-container');
+            if (!el) return;
+
+            // Safari/iOS Gesture Events
+            el.addEventListener('gesturestart', function (e) {
+                e.preventDefault();
+                startScale = currentScale;
+            });
+
+            el.addEventListener('gesturechange', function (e) {
+                e.preventDefault();
+                // Limit zoom levels
+                const newScale = startScale * e.scale;
+                if (newScale >= 0.5 && newScale <= 3) {
+                    currentScale = newScale;
+                    // Apply both the base mobile scaling (if active) and the pinch zoom
+                    // Note: This overrides the simple 'mobile-scaled' transform if we are not careful.
+                    // But here we are just setting transform. If mobile scaling set a transform, we should multiply?
+                    // Simpler: Just apply the scale to the element. The auto-scaler sets width & scale.
+                    // We might need to modify the auto-scaler to respect this.
+                    el.style.transform = `scale(${currentScale})`;
+                    // Update wrapper size to match visual size? 
+                    // Usually zooming doesn't reflow, just zooms.
+                }
+            });
+
+            el.addEventListener('gestureend', function (e) {
+                e.preventDefault();
+            });
+
+            // Standard Touch Events (Android) could be added here if needed
+        }
+
+        // Initialize Pinch Zoom
+        initPinchZoom();
     })();
 
     if (!fileInput || !analysisStatus || !visualEditor || !songbookOutput) {
@@ -663,6 +710,88 @@ document.addEventListener('DOMContentLoaded', () => {
     // Always use Firebase Cloud Function for chart analysis
     // To use local dev server instead, change to: `http://localhost:3002/api/analyze-chart`
     const API_URL = 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/analyzeChartGemini';
+
+    // ============= SECTION NAME TRANSLATIONS =============
+    const SECTION_TRANSLATIONS = {
+        en: {
+            'Intro': 'Intro',
+            'Verse': 'Verse',
+            'Pre-Chorus': 'Pre-Chorus',
+            'Chorus': 'Chorus',
+            'Bridge': 'Bridge',
+            'Outro': 'Outro',
+            'Interlude': 'Interlude',
+            'Tag': 'Tag',
+            'Coda': 'Coda',
+            'Turn': 'Turn',
+            'Turnaround': 'Turnaround',
+            'Break': 'Break',
+            'Instrumental': 'Instrumental',
+            'Solo': 'Solo',
+            'Ending': 'Ending',
+            'Vamp': 'Vamp'
+        },
+        he: {
+            'Intro': 'פתיחה',
+            'Verse': 'בית',
+            'Pre-Chorus': 'קדם-פזמון',
+            'Chorus': 'פזמון',
+            'Bridge': 'גשר',
+            'Outro': 'סיום',
+            'Interlude': 'אינטרלוד',
+            'Tag': 'תגית',
+            'Coda': 'קודה',
+            'Turn': 'מעבר',
+            'Turnaround': 'מעבר',
+            'Break': 'הפסקה',
+            'Instrumental': 'נגינה',
+            'Solo': 'סולו',
+            'Ending': 'סיום',
+            'Vamp': 'ואמפ'
+        }
+    };
+
+    // Get current section language
+    function getSectionLanguage() {
+        const selector = document.getElementById('sectionLanguage');
+        return selector ? selector.value : 'en';
+    }
+
+    // Translate section name based on selected language
+    function translateSectionName(sectionName) {
+        const lang = getSectionLanguage();
+        console.log('🌐 translateSectionName called:', sectionName, 'lang:', lang);
+        if (lang === 'en') return sectionName; // No translation needed for English
+
+        const translations = SECTION_TRANSLATIONS[lang] || SECTION_TRANSLATIONS.en;
+
+        // Remove trailing colon if present (e.g., "Verse 1:" -> "Verse 1")
+        const cleanName = sectionName.replace(/:$/, '').trim();
+
+        // Extract base section name and number (e.g., "Verse 1" -> "Verse", "1")
+        const match = cleanName.match(/^(\w+(?:-\w+)?)\s*(\d*)$/i);
+        console.log('🌐 cleanName:', cleanName, 'match:', match);
+        if (match) {
+            const baseName = match[1];
+            const number = match[2];
+
+            // Find translation (case-insensitive)
+            for (const [key, value] of Object.entries(translations)) {
+                if (key.toLowerCase() === baseName.toLowerCase()) {
+                    const result = number ? `${value} ${number}` : value;
+                    console.log('🌐 Translated:', sectionName, '->', result);
+                    return result;
+                }
+            }
+        }
+
+        console.log('🌐 No translation found for:', sectionName);
+        return sectionName; // Return original if no translation found
+    }
+
+    // Make translation function globally accessible
+    window.translateSectionName = translateSectionName;
+    window.getSectionLanguage = getSectionLanguage;
 
     // Nashville Number System state - default key is C Major
     let currentKey = 'C Major';
@@ -3089,13 +3218,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const sectionName = sectionMatch ? sectionMatch[1].trim() : currentSection;
                 const sectionComment = sectionMatch ? sectionMatch[2] : null;
 
+                // Translate section name based on selected language
+                const translatedSectionName = translateSectionName(sectionName);
+
                 const blockStart = enableSectionBlocks ? `<div class="${sectionClass}" data-section-id="${sectionId}" data-section-name="${sectionName}">` : '';
                 const blockEnd = enableSectionBlocks ? '</div>' : '';
 
                 // Check if section has a repeat count from arrangement
                 const repeatCount = sectionRepeatMap[sectionName] || sectionRepeatMap[currentSection];
                 const repeatSuffix = repeatCount > 1 ? ` (${repeatCount}x)` : '';
-                const headerText = `${sectionName}${repeatSuffix}`;
+                const headerText = `${translatedSectionName}${repeatSuffix}`;
 
                 formatted.push(blockStart);
                 // Render comment INLINE as span inside header
@@ -3501,13 +3633,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const sectionName = sectionMatch ? sectionMatch[1].trim() : currentSection;
                 const sectionComment = sectionMatch ? sectionMatch[2] : null;
 
+                // Translate section name based on selected language
+                const translatedSectionName = translateSectionName(sectionName);
+
                 const blockStart = enableSectionBlocks ? `<div class="${sectionClass}" data-section-id="${sectionId}" data-section-name="${sectionName}">` : '';
                 const blockEnd = enableSectionBlocks ? '</div>' : '';
 
                 formatted.push(blockStart);
                 // Render comment INLINE as span inside header
                 const commentSpan = sectionComment ? `<span class="section-comment">${sectionComment}</span>` : '';
-                formatted.push(`<div class="section-header">${sectionName}${commentSpan}</div>`);
+                formatted.push(`<div class="section-header">${translatedSectionName}${commentSpan}</div>`);
                 if (sectionContent.length > 0) {
                     formatted.push(...sectionContent);
                 }
@@ -4530,36 +4665,34 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }, 100);
     }
 
-    // Initialize with default values (2 columns, 1 page)
-    if (livePreview && columnCountSelect && pageCountSelect) {
+    // Initialize with default values (2 columns)
+    if (livePreview && columnCountSelect) {
         console.log('📋 Initializing layout dropdowns...');
         applyLayoutSettings();
 
         // Event listeners for dropdowns
         columnCountSelect.addEventListener('change', applyLayoutSettings);
-        pageCountSelect.addEventListener('change', () => {
-            // When selecting 1 page, automatically switch to 1 column for overview
-            if (parseInt(pageCountSelect.value) === 1) {
-                columnCountSelect.value = '1';
-                // Dispatch change event to update any dependent UI
-                columnCountSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            } else {
-                applyLayoutSettings();
-            }
-        });
 
         console.log('✅ Layout dropdowns initialized');
+    }
 
-        // Header Auto Fit button
-        const headerAutoFit = document.getElementById('headerAutoFit');
-        if (headerAutoFit) {
-            headerAutoFit.addEventListener('click', () => {
-                autoOptimizeLayout();
-                console.log('📐 Auto Fit triggered from header button');
-            });
-        }
-    } else {
-        console.log('⚠️ Layout dropdowns or livePreview not found!');
+    // Section language selector - refresh preview when language changes
+    const sectionLanguageSelect = document.getElementById('sectionLanguage');
+    if (sectionLanguageSelect) {
+        sectionLanguageSelect.addEventListener('change', () => {
+            console.log('🌐 Section language changed to:', sectionLanguageSelect.value);
+            updateLivePreview();
+        });
+        console.log('✅ Section language selector initialized');
+    }
+
+    // Header Auto Fit button
+    const headerAutoFit = document.getElementById('headerAutoFit');
+    if (headerAutoFit) {
+        headerAutoFit.addEventListener('click', () => {
+            autoOptimizeLayout();
+            console.log('📐 Auto Fit triggered from header button');
+        });
     }
 
     // Initialize A4 indicator position and pagination

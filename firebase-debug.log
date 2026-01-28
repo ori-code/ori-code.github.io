@@ -958,3 +958,65 @@
 [debug] [2026-01-13T19:21:49.035Z] > authorizing via signed-in user (dobosh.o@gmail.com)
 [debug] [2026-01-13T19:21:49.042Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
 [debug] [2026-01-13T19:21:49.042Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
+[debug] [2026-01-28T18:09:04.376Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-28T18:09:04.377Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-28T18:09:04.377Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-28T18:09:04.377Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-28T18:09:04.385Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-28T18:09:04.385Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-28T18:09:04.385Z] Checked if tokens are valid: false, expires at: 1769363551153
+[debug] [2026-01-28T18:09:04.386Z] Checked if tokens are valid: false, expires at: 1769363551153
+[debug] [2026-01-28T18:09:04.386Z] > refreshing access token with scopes: []
+[debug] [2026-01-28T18:09:04.386Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-28T18:09:04.386Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-28T18:09:04.408Z] Checked if tokens are valid: false, expires at: 1769363551153
+[debug] [2026-01-28T18:09:04.408Z] Checked if tokens are valid: false, expires at: 1769363551153
+[debug] [2026-01-28T18:09:04.408Z] > refreshing access token with scopes: []
+[debug] [2026-01-28T18:09:04.408Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-28T18:09:04.408Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-28T18:09:04.409Z] Checked if tokens are valid: false, expires at: 1769363551153
+[debug] [2026-01-28T18:09:04.409Z] Checked if tokens are valid: false, expires at: 1769363551153
+[debug] [2026-01-28T18:09:04.409Z] > refreshing access token with scopes: []
+[debug] [2026-01-28T18:09:04.409Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-01-28T18:09:04.409Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-28T18:09:04.545Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-28T18:09:04.545Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-28T18:09:04.569Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo [none]
+[debug] [2026-01-28T18:09:04.570Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-28T18:09:04.571Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-28T18:09:04.594Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [none]
+[debug] [2026-01-28T18:09:04.594Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com x-goog-quota-user=projects/
+[debug] [2026-01-28T18:09:04.595Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-01-28T18:09:04.595Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-01-28T18:09:04.606Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [none]
+[debug] [2026-01-28T18:09:04.606Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com x-goog-quota-user=projects/
+[debug] [2026-01-28T18:09:04.940Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
+[debug] [2026-01-28T18:09:04.940Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
+[debug] [2026-01-28T18:09:04.955Z] Checked if tokens are valid: true, expires at: 1769627343595
+[debug] [2026-01-28T18:09:04.955Z] Checked if tokens are valid: true, expires at: 1769627343595
+[debug] [2026-01-28T18:09:04.955Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/chordsapp-e10e7/services/firebaseappdistribution.googleapis.com [none]
+[debug] [2026-01-28T18:09:04.955Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/chordsapp-e10e7/services/firebaseappdistribution.googleapis.com x-goog-quota-user=projects/chordsapp-e10e7
+[debug] [2026-01-28T18:09:05.538Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com 400
+[debug] [2026-01-28T18:09:05.538Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [omitted]
+[debug] [2026-01-28T18:09:05.548Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com 400
+[debug] [2026-01-28T18:09:05.548Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects//services/firebaseappdistribution.googleapis.com [omitted]
+[debug] [2026-01-28T18:09:05.630Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-28T18:09:05.630Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-28T18:09:05.631Z] Checked if tokens are valid: true, expires at: 1769627343595
+[debug] [2026-01-28T18:09:05.631Z] Checked if tokens are valid: true, expires at: 1769627343595
+[debug] [2026-01-28T18:09:05.631Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo [none]
+[debug] [2026-01-28T18:09:05.635Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-28T18:09:05.636Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-28T18:09:05.636Z] Checked if tokens are valid: true, expires at: 1769627343595
+[debug] [2026-01-28T18:09:05.636Z] Checked if tokens are valid: true, expires at: 1769627343595
+[debug] [2026-01-28T18:09:05.636Z] >>> [apiv2][query] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo [none]
+[debug] [2026-01-28T18:09:06.058Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
+[debug] [2026-01-28T18:09:06.059Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
+[debug] [2026-01-28T18:09:06.061Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-28T18:09:06.062Z] > authorizing via signed-in user (dobosh.o@gmail.com)
+[debug] [2026-01-28T18:09:06.089Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/chordsapp-e10e7/services/firebaseappdistribution.googleapis.com 200
+[debug] [2026-01-28T18:09:06.089Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/chordsapp-e10e7/services/firebaseappdistribution.googleapis.com [omitted]
+[debug] [2026-01-28T18:09:06.279Z] <<< [apiv2][status] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo 200
+[debug] [2026-01-28T18:09:06.280Z] <<< [apiv2][body] GET https://cloudbilling.googleapis.com/v1/projects/chordsapp-e10e7/billingInfo {"name":"projects/chordsapp-e10e7/billingInfo","projectId":"chordsapp-e10e7","billingAccountName":"billingAccounts/01742F-5B4AE5-C7F93A","billingEnabled":true}
+[debug] [2026-01-28T18:09:06.284Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-01-28T18:09:06.285Z] > authorizing via signed-in user (dobosh.o@gmail.com)

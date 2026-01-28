@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>aChordim | Notion Style</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="achordim-icon-app.svg">
+
+    <!-- Fonts: Inter (Notion-like) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- PDF.js & Helpers -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <!-- App Scripts (Preserved) -->
+    <script src="js/translations.js"></script>
+    <script src="js/localization.js"></script>
+
+    <!-- UI/UX Pro Max: Notion Style CSS -->
+    <style>
+        :root {
+            /* Palette: Notion Light */
+            --bg-body: #FFFFFF;
+            --bg-sidebar: #F7F7F5;
+            --bg-card: #FFFFFF;
+            --bg-hover: #EFEFED;
+            --border: #E3E3E3;
+            --text-primary: #37352F;
+            --text-secondary: #787774;
+            --text-selection: #CDE4FE;
+            --primary: #37352F;
+            /* Notion uses black mostly, or distinctive colors for tags */
+            --accent-blue: #2383E2;
+            --accent-red: #EB5757;
+            --accent-orange: #D9730D;
+
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 48px;
+
+            /* Typography */
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+
+            /* Elevation */
+            --shadow-card: 0px 1px 2px rgba(0, 0, 0, 0.05);
+            /* Very subtle */
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Notion Layout: Sidebar + Main Content */
+        .notion-layout {
+            display: flex;
+            width: 100%;
+        }
+
+        /* Sidebar */
+        .notion-sidebar {
+            width: 240px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            padding: var(--spacing-sm) 0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: width 0.3s ease;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+
+        .sidebar-header {
+            padding: var(--spacing-sm) var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .sidebar-header:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .sidebar-user {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .notion-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 14px;
+            min-height: 28px;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 1px 4px;
+            border-radius: 4px;
+            transition: background 0.1s;
+        }
+
+        .notion-menu-item:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .notion-menu-item.active {
+            background-color: #EFEFED;
+            font-weight: 500;
+        }
+
+        .notion-menu-icon {
+            font-size: 16px;
+            color: var(--text-secondary);
+            width: 18px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .notion-main {
+            flex: 1;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        /* Top Bar (Breadcrumbs / Tools) */
+        .notion-topbar {
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--spacing-md);
+            position: sticky;
+            top: 0;
+            background: var(--bg-body);
+            z-index: 100;
+        }
+
+        .breadcrumbs {
+            color: var(--text-primary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .breadcrumbs-separator {
+            color: var(--text-secondary);
+        }
+
+        /* Page Content */
+        .notion-page {
+            max-width: 900px;
+            /* Notion standard readable width */
+            margin: 0 auto;
+            padding: var(--spacing-xl) var(--spacing-xl) 100px var(--spacing-xl);
+            width: 100%;
+        }
+
+        /* Hero / Cover */
+        .notion-cover {
+            height: 180px;
+            background: linear-gradient(135deg, #FFEFD5 0%, #E6E6FA 100%);
+            /* Pastel gradient */
+            border-radius: 0;
+            margin: -48px -48px 48px -48px;
+            /* Breakout */
+            display: none;
+            /* Hidden strictly unless enabled */
+        }
+
+        .notion-icon {
+            font-size: 78px;
+            margin-top: -60px;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .notion-title {
+            font-size: 40px;
+            font-weight: 700;
+            margin: 0 0 var(--spacing-sm) 0;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .notion-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        /* Blocks */
+        .notion-block {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .notion-callout {
+            padding: 16px;
+            background: #F1F1EF;
+            /* Notion gray background */
+            border-radius: 4px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin: var(--spacing-md) 0;
+        }
+
+        .notion-callout-icon {
+            font-size: 24px;
+        }
+
+        .notion-callout-content {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        /* Buttons (Notion Style) */
+        .ghost-button,
+        .primary-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px;
+            padding: 0 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid rgba(15, 15, 15, 0.1);
+            background: transparent;
+            color: var(--text-primary);
+            transition: all 0.1s;
+        }
+
+        .ghost-button:hover {
+            background: rgba(55, 53, 47, 0.08);
+        }
+
+        .primary-action {
+            background: #2383E2;
+            /* Notion Blue */
+            color: white;
+            border-color: transparent;
+        }
+
+        .primary-action:hover {
+            background: #1B6EC2;
+        }
+
+        /* Step Cards as Gallery View */
+        .workflow-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: var(--spacing-md);
+        }
+
+        .step-card {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 16px;
+            background: var(--bg-card);
+            transition: box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            /* Minimal lift */
+        }
+
+        .step-number {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Preview Section */
+        .preview-section {
+            border-top: 1px solid var(--border);
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-xl);
+        }
+
+        /* Editor Area */
+        .editor-preview-wrapper {
+            display: flex;
+            gap: 24px;
+            margin-top: var(--spacing-md);
+        }
+
+        .editor {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0;
+            background: #FFFFFF;
+        }
+
+        .editor textarea {
+            width: 100%;
+            border: none;
+            padding: 16px;
+            font-family: 'SF Mono', 'Segoe UI Mono', 'Roboto Mono', Menlo, Courier, monospace;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 400px;
+        }
+
+        .editor textarea:focus {
+            outline: none;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .notion-layout {
+                flex-direction: column;
+            }
+
+            .notion-sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .notion-page {
+                padding: 24px;
+            }
+
+            .editor-preview-wrapper {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body class="notion-body">
+
+    <div class="notion-layout">
+        <!-- Sidebar -->
+        <aside class="notion-sidebar">
+            <div class="sidebar-header" onclick="window.location.reload()">
+                <img src="achordim-icon-app.svg" width="22" height="22" style="border-radius: 3px;">
+                <div style="display: flex; flex-direction: column; justify-content: center; line-height: 1.1;">
+                    <span style="font-weight: 600; font-size: 14px;">aChordim</span>
+                    <span style="font-size: 10px; color: #999;">www.thefaith<span
+                            style="color: #ff3b5c; opacity: 1;">sound</span>.com</span>
+                </div>
+            </div>
+
+            <nav>
+                <div class="notion-menu-item active">
+                    <span class="notion-menu-icon">📄</span>
+                    <span data-i18n="nav.menu.charts">Charts</span>
+                </div>
+                <div class="notion-menu-item">
+                    <span class="notion-menu-icon">🎵</span>
+                    <span data-i18n="nav.menu.sessions">My Sessions</span>
+                </div>
+                <div class="notion-menu-item">
+                    <span class="notion-menu-icon">📚</span>
+                    <span data-i18n="nav.menu.library">Library</span>
+                </div>
+                <div class="notion-menu-item">
+                    <span class="notion-menu-icon">⚙️</span>
+                    <span data-i18n="menu.title">Settings</span>
+                </div>
+            </nav>
+
+            <div class="sidebar-user">
+                <button id="signInButton" class="ghost-button"
+                    style="width:100%; justify-content: flex-start; border:none;">
+                    <span class="notion-menu-icon">👤</span>
+                    <span data-i18n="nav.signin">Sign In</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="notion-main">
+            <!-- Topbar -->
+            <header class="notion-topbar">
+                <div class="breadcrumbs">
+                    <span>aChordim</span>
+                    <span class="breadcrumbs-separator">/</span>
+                    <span>New Project</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button id="themeToggle" class="ghost-button" style="border:none;">🌙</button>
+                    <!-- Language Toggle Injection Point -->
+                    <!-- <button id="langToggle" ... -->
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="notion-page">
+
+                <!-- Hero -->
+                <div class="notion-icon">🎸</div>
+                <h1 class="notion-title" data-i18n="hero.title">Turn any chord sheet into a clean, printable chart.</h1>
+                <p class="notion-description" data-i18n="hero.subtitle">Upload a handwritten sheet or photo, extract the
+                    music, refine the result, transpose to any key, then print with confidence.</p>
+
+                <hr style="border:none; border-bottom:1px solid #E3E3E3; margin: 24px 0;">
+
+                <!-- Workflow (Steps) -->
+                <h2 data-i18n="workflow.title" style="font-size: 1.2rem; font-weight: 600; margin-bottom: 16px;">Quick
+                    Start</h2>
+
+                <div class="notion-callout">
+                    <div class="notion-callout-icon">💡</div>
+                    <div class="notion-callout-content" data-i18n="step2.status.hint">
+                        Analysis typically takes 15-60 seconds. Supports all languages tests.
+                    </div>
+                </div>
+
+                <div class="workflow-grid" id="workflow">
+                    <!-- Step 1: Upload -->
+                    <article class="step-card">
+                        <span class="step-number" data-i18n="step1.number">STEP 1</span>
+                        <h3 data-i18n="step1.title" style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">Upload
+                            Chart</h3>
+                        <p data-i18n="step1.desc"
+                            style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">Accepts images
+                            (JPG, PNG, HEIC) and PDFs.</p>
+
+                        <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf"
+                            style="display:none;">
+                        <label class="primary-action" for="chartFileInput" style="width: 100%; display: flex;"
+                            data-i18n="step1.btn">Upload</label>
+
+                        <div id="uploadPreview"
+                            style="margin-top: 12px; border: 1px dashed var(--border); border-radius: 4px; padding: 12px; text-align: center;">
+                            <img id="previewImage" alt="Preview" style="max-width: 100%; display: none;">
+                            <span class="preview-placeholder" style="font-size: 11px; color: var(--text-secondary);"
+                                data-i18n="step1.placeholder">No file selected</span>
+                        </div>
+                    </article>
+
+                    <!-- Step 2: Analyze -->
+                    <article class="step-card">
+                        <span class="step-number" data-i18n="step2.number">STEP 2</span>
+                        <h3 data-i18n="step2.title" style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
+                            Transcription</h3>
+
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                            <input type="checkbox" id="autoAnalyzeCheckbox" checked>
+                            <span style="font-size: 13px;" data-i18n="step2.auto_analyze">Auto-analyze</span>
+                        </div>
+
+                        <button id="analyzeButton" class="primary-action" disabled style="width: 100%;"
+                            data-i18n="step2.btn.analyze">Analyze</button>
+
+                        <!-- Status -->
+                        <div id="analysisStatus"
+                            style="margin-top: 12px; font-size: 12px; color: var(--text-secondary);">
+                            <span class="status-text" data-i18n="step2.status.waiting">Waiting...</span>
+                            <div class="progress-bar-container"
+                                style="height: 2px; background: #eee; margin-top: 4px; overflow: hidden; display:none;">
+                                <div class="progress-bar-fill" style="width: 0%; background: #2383E2; height: 100%;">
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- Step 3: Refine -->
+                    <article class="step-card">
+                        <span class="step-number" data-i18n="step3.number">STEP 3</span>
+                        <h3 data-i18n="step3.title" style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">Refine
+                            & Print</h3>
+                        <p data-i18n="step3.desc"
+                            style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Edit visually
+                            and transpose.</p>
+
+                        <button id="showAllFeaturesBtn" class="ghost-button" style="width: 100%;"
+                            data-i18n="step3.btn.features">Show Tools</button>
+                    </article>
+                </div>
+
+                <!-- Preview & Editor -->
+                <section class="preview-section" id="previewSection">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h2 data-i18n="preview.title" style="font-size: 18px; font-weight: 600; margin: 0;">Print
+                            Preview</h2>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="printButton" class="ghost-button" data-i18n="preview.btn.print">Print</button>
+                            <button id="headerSaveSong" class="ghost-button" data-i18n="preview.btn.save">Save</button>
+                        </div>
+                    </div>
+
+                    <!-- Editor Wrapper (LTR Force) -->
+                    <!-- This ID 'editor-preview-wrapper' is crucial for the CSS search we found earlier -->
+                    <div class="editor-preview-wrapper" dir="ltr">
+
+                        <!-- Preview (Left in LTR) -->
+                        <div class="preview-container"
+                            style="flex: 1; min-height: 800px; border: 1px solid var(--border); padding: 40px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <div id="livePreview">
+                                <!-- Chords Content -->
+                            </div>
+                        </div>
+
+                        <!-- Editor (Right in LTR) -->
+                        <div class="editor" id="editor">
+                            <textarea id="visualEditor" placeholder="Paste your chord sheet or edit here..."></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Hidden / Functional Elements (Preserved) -->
+                <div id="printPreview" class="print-only" style="display: none;"></div>
+                <input type="file" id="bulkImportInput" style="display: none;">
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Initialization -->
+    <script src="theme.js"></script>
+    <script src="auth.js"></script>
+    <script src="subscription.js"></script>
+    <script src="paypal-subscription.js"></script>
+    <script src="song-library.js"></script>
+    <script src="song-search-filter.js"></script>
+    <script src="session-manager.js"></script>
+    <script src="session-ui.js"></script>
+    <script src="live-mode.js"></script>
+    <script src="midi-controller.js"></script>
+    <script src="pad-player.js"></script>
+    <script src="metronome.js"></script>
+    <script src="chordpro-parser.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
