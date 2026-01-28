@@ -6022,7 +6022,142 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 ? 'Select display mode'
                 : 'Chords/Lyrics available • Nashville requires Pro';
         }
+
+        // Update current subscription info (for cancel option)
+        updateCurrentSubscriptionInfo(summary);
     }
+
+    /**
+     * Update current subscription info display (with cancel button)
+     */
+    function updateCurrentSubscriptionInfo(summary) {
+        const currentSubInfo = document.getElementById('currentSubscriptionInfo');
+        const currentPlanName = document.getElementById('currentPlanName');
+        const currentPlanStatus = document.getElementById('currentPlanStatus');
+        const cancelBtn = document.getElementById('cancelSubscriptionBtn');
+
+        if (!currentSubInfo) return;
+
+        const currentUser = firebase.auth().currentUser;
+        const subscription = window.subscriptionManager?.userSubscription;
+
+        // Show only for logged-in users with BASIC or PRO active subscriptions
+        if (currentUser && subscription && (summary.tier === 'BASIC' || summary.tier === 'PRO')) {
+            currentSubInfo.style.display = 'block';
+
+            // Update plan name
+            if (currentPlanName) {
+                currentPlanName.textContent = summary.tierName;
+            }
+
+            // Update status
+            if (currentPlanStatus) {
+                if (subscription.status === 'cancelled') {
+                    currentPlanStatus.textContent = 'Cancelled - Access until billing period ends';
+                    currentPlanStatus.style.color = '#dc2626';
+                    if (cancelBtn) cancelBtn.style.display = 'none';
+                } else {
+                    currentPlanStatus.textContent = 'Active subscription';
+                    currentPlanStatus.style.color = '#10b981';
+                    if (cancelBtn) cancelBtn.style.display = 'block';
+                }
+            }
+
+            // Style based on tier
+            if (summary.tier === 'PRO') {
+                currentSubInfo.style.background = 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)';
+                currentSubInfo.style.borderColor = '#fca5a5';
+                if (currentPlanName) currentPlanName.style.color = '#dc2626';
+            } else {
+                currentSubInfo.style.background = 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)';
+                currentSubInfo.style.borderColor = '#6ee7b7';
+                if (currentPlanName) currentPlanName.style.color = '#047857';
+            }
+        } else {
+            currentSubInfo.style.display = 'none';
+        }
+    }
+
+    /**
+     * Handle cancel subscription button click
+     */
+    window.handleCancelSubscription = async function() {
+        const subscription = window.subscriptionManager?.userSubscription;
+        const subscriptionId = subscription?.paypalSubscriptionId;
+
+        if (!subscriptionId) {
+            if (window.showAlert) {
+                showAlert('No active subscription found.');
+            }
+            return;
+        }
+
+        // Confirm cancellation
+        const confirmed = confirm(
+            'Are you sure you want to cancel your subscription?\n\n' +
+            'You will retain access to your current plan until the end of your billing period.'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            // Show loading state
+            const cancelBtn = document.getElementById('cancelSubscriptionBtn');
+            if (cancelBtn) {
+                cancelBtn.disabled = true;
+                cancelBtn.textContent = 'Cancelling...';
+            }
+
+            // Get Firebase ID token
+            const currentUser = firebase.auth().currentUser;
+            const idToken = await currentUser.getIdToken();
+
+            // Call cancel API
+            const isLocalDev = window.location.hostname === 'localhost' ||
+                               window.location.hostname.startsWith('192.168.') ||
+                               window.location.hostname.startsWith('10.');
+
+            const API_URL = isLocalDev
+                ? `http://${window.location.hostname}:3002/api/cancel-subscription`
+                : 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/cancelSubscription';
+
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${idToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ subscriptionId })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // Update local state
+                await window.subscriptionManager.loadUserSubscription();
+                updateUsageDisplay();
+
+                if (window.showAlert) {
+                    showAlert('Subscription cancelled successfully.\n\nYou will retain access until the end of your billing period.');
+                }
+            } else {
+                throw new Error(result.error || 'Failed to cancel subscription');
+            }
+
+        } catch (error) {
+            console.error('Cancel subscription error:', error);
+            if (window.showAlert) {
+                showAlert('Failed to cancel subscription.\n\nPlease try again or contact support.');
+            }
+        } finally {
+            // Reset button state
+            const cancelBtn = document.getElementById('cancelSubscriptionBtn');
+            if (cancelBtn) {
+                cancelBtn.disabled = false;
+                cancelBtn.textContent = 'Cancel Subscription';
+            }
+        }
+    };
 
     /**
      * Initialize subscription buttons and modals

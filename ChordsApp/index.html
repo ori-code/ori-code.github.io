@@ -1759,6 +1759,22 @@
                     <p id="usageText" style="margin: 0; color: #374151; font-size: 14px;"></p>
                 </div>
 
+                <!-- Current Subscription Info (for paid subscribers) -->
+                <div id="currentSubscriptionInfo"
+                    style="display: none; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 2px solid #6ee7b7; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <p style="margin: 0 0 4px 0; font-size: 13px; color: #059669; font-weight: 600;">CURRENT PLAN</p>
+                            <p id="currentPlanName" style="margin: 0; font-size: 20px; font-weight: 700; color: #047857;">Pro</p>
+                            <p id="currentPlanStatus" style="margin: 4px 0 0 0; font-size: 12px; color: #10b981;">Active subscription</p>
+                        </div>
+                        <button id="cancelSubscriptionBtn" onclick="handleCancelSubscription()"
+                            style="padding: 10px 20px; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                            Cancel Subscription
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Pricing Tiers - 4 columns on desktop, 2 on tablet, 1 on mobile -->
                 <div class="pricing-grid-responsive" style="margin-bottom: 20px;">
                     <!-- Free Tier -->

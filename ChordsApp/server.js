@@ -835,6 +835,84 @@ app.post('/api/admin/set-max-devices', async (req, res) => {
 });
 
 /**
+ * POST /api/cancel-subscription
+ * Cancel a user's PayPal subscription
+ */
+app.post('/api/cancel-subscription', async (req, res) => {
+    try {
+        const uid = await verifyUser(req, res);
+        if (!uid) return;
+
+        const { subscriptionId } = req.body;
+
+        if (!subscriptionId) {
+            return res.status(400).json({ error: 'Subscription ID is required' });
+        }
+
+        // Get PayPal access token
+        const clientId = process.env.PAYPAL_CLIENT_ID;
+        const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+        const isProduction = process.env.NODE_ENV === 'production';
+        const paypalBaseUrl = isProduction
+            ? 'https://api-m.paypal.com'
+            : 'https://api-m.sandbox.paypal.com';
+
+        // Get access token
+        const authResponse = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'grant_type=client_credentials'
+        });
+
+        if (!authResponse.ok) {
+            console.error('Failed to get PayPal access token');
+            return res.status(500).json({ error: 'Failed to authenticate with PayPal' });
+        }
+
+        const authData = await authResponse.json();
+        const accessToken = authData.access_token;
+
+        // Cancel subscription
+        const cancelResponse = await fetch(`${paypalBaseUrl}/v1/billing/subscriptions/${subscriptionId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reason: 'User requested cancellation'
+            })
+        });
+
+        if (!cancelResponse.ok && cancelResponse.status !== 204) {
+            const errorData = await cancelResponse.json().catch(() => ({}));
+            console.error('PayPal cancel error:', errorData);
+            return res.status(500).json({ error: 'Failed to cancel subscription with PayPal' });
+        }
+
+        // Update subscription status in Firebase
+        await db.ref(`users/${uid}/subscription`).update({
+            status: 'cancelled',
+            cancelledAt: new Date().toISOString()
+        });
+
+        console.log(`✅ Subscription ${subscriptionId} cancelled for user ${uid}`);
+
+        res.json({
+            success: true,
+            message: 'Subscription cancelled successfully'
+        });
+
+    } catch (error) {
+        console.error('Error cancelling subscription:', error);
+        res.status(500).json({ error: 'Failed to cancel subscription: ' + error.message });
+    }
+});
+
+/**
  * GET /api/admin/orphan-users
  * Find users that exist in Firebase Auth but not in the database (ADMIN ONLY)
  * These are "orphan" users that can't be managed through the normal admin panel
