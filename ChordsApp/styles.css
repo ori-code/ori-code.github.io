@@ -763,6 +763,34 @@ a {
         font-size: 10px;
         font-weight: 600;
     }
+
+    /* Extra compact header on small mobile */
+    .app-header {
+        padding: 8px 0;
+    }
+
+    .header-actions {
+        gap: 6px;
+    }
+
+    .header-actions .ghost-button {
+        font-size: 0.7rem;
+        padding: 5px 8px;
+    }
+
+    .header-actions #themeToggle {
+        padding: 5px;
+    }
+
+    .header-actions #themeToggle svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    #sideMenuToggle img {
+        width: 28px !important;
+        height: 28px !important;
+    }
 }
 
 /* Very small screens */
@@ -796,6 +824,38 @@ a {
     .header-btn-group.live-group .header-btn {
         padding: 9px 8px;
         font-size: 9px;
+    }
+
+    /* Tiny header on very small screens */
+    .app-header {
+        padding: 6px 0;
+    }
+
+    .header-container {
+        padding: 0 8px;
+    }
+
+    .header-actions {
+        gap: 4px;
+    }
+
+    .header-actions .ghost-button {
+        font-size: 0.65rem;
+        padding: 4px 6px;
+    }
+
+    .header-actions #themeToggle {
+        padding: 4px;
+    }
+
+    .header-actions #themeToggle svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    #sideMenuToggle img {
+        width: 24px !important;
+        height: 24px !important;
     }
 }
 
@@ -2458,7 +2518,36 @@ a {
 
 @media (max-width: 720px) {
     .header-container {
-        padding: 0 16px;
+        padding: 0 12px;
+    }
+
+    /* Smaller header on mobile */
+    .app-header {
+        padding: 10px 0;
+    }
+
+    .header-actions {
+        gap: 8px;
+    }
+
+    .header-actions .ghost-button {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+    }
+
+    .header-actions #themeToggle {
+        padding: 6px;
+    }
+
+    .header-actions #themeToggle svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Smaller logo on mobile */
+    #sideMenuToggle img {
+        width: 32px !important;
+        height: 32px !important;
     }
 
     .nav-logo {
