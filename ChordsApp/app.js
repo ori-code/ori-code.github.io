@@ -6076,9 +6076,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const subscription = window.subscriptionManager?.userSubscription;
         const subscriptionId = subscription?.paypalSubscriptionId;
 
+        // Debug logging
+        console.log('Cancel subscription - subscription data:', subscription);
+        if (typeof webLog !== 'undefined') {
+            webLog('Cancel clicked', { subscription, subscriptionId });
+        }
+
         if (!subscriptionId) {
             if (window.showAlert) {
-                showAlert('No active subscription found.');
+                showAlert('No PayPal subscription ID found.\n\nYour subscription may have been set up manually by admin. Please contact support to cancel.');
             }
             return;
         }
