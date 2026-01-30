@@ -61,10 +61,10 @@ class LocalizationManager {
         document.documentElement.lang = lang;
         document.documentElement.dir = 'ltr'; // User requested UI layout refers LTR even in Hebrew
 
-        // Apply RTL specifically to Hero and Workflow sections
-        const rtlSections = document.querySelectorAll('.hero, .workflow');
+        // Apply RTL specifically to Hero, Workflow, and Features Modal
+        const rtlSections = document.querySelectorAll('.hero, .workflow, #featuresModal');
         rtlSections.forEach(section => {
-            section.dir = lang === 'he' ? 'rtl' : 'ltr';
+            if (section) section.dir = lang === 'he' ? 'rtl' : 'ltr';
         });
 
         // Update Toggle Button Text
@@ -84,19 +84,21 @@ class LocalizationManager {
     updateUI() {
         const dictionary = this.translations[this.currentLang];
 
-        // Update all elements with data-i18n attribute
+        // Update elements with data-i18n-html (For HTML content)
+        document.querySelectorAll('[data-i18n-html]').forEach(el => {
+            const key = el.getAttribute('data-i18n-html');
+            if (dictionary[key]) {
+                el.innerHTML = dictionary[key];
+            }
+        });
+
+        // Update all elements with data-i18n attribute (For text content)
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             if (dictionary[key]) {
-                // If element has children (like icons), we need to be careful not to wipe them
-                // But for simple text elements, textContent is safest.
-                // Strategy: If it has specific markup structure, maybe store it in translation?
-                // For now, assume simple text replacement.
-
                 if (el.children.length === 0) {
                     el.textContent = dictionary[key];
                 } else {
-                    // Check if there's a specific span to target, or if we should replace pure text nodes
                     // Only replace text nodes, leave elements (like icons) alone
                     Array.from(el.childNodes).forEach(node => {
                         if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {

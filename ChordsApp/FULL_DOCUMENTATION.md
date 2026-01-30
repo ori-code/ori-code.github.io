@@ -250,7 +250,17 @@ Real-time collaboration for worship teams.
 2. Enter a session title
 3. Share the code or QR with band members
 4. Add songs to the playlist from your library
-5. Click songs in playlist to broadcast to all players
+
+#### Managing the Playlist
+- **Add Songs**:
+  - **Single Song**: Open a song and click "Add to Session" in the session panel.
+  - **Bulk Add**: Select multiple songs in the library and clicks "Add to Session".
+- **Reorder**: Use Up/Down arrows in the playlist view to change song order.
+- **Edit/Delete**: Rename or remove songs from the playlist using the edit (pencil) and delete (trash) icons.
+
+#### Broadcasting Songs
+- **From Playlist**: Click any song in the session playlist (in Live Mode sidebar or Session Manager) to instantly broadcast it to all connected players.
+- **From Editor**: Loading a new song in the editor while in a session automatically broadcasts it if you are the leader.
 
 #### Joining a Session
 1. Enter the 6-character code in "Join Session"

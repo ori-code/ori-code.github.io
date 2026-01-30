@@ -316,6 +316,16 @@ class ChordsAuthManager {
         console.log('Controls and Editor panels hidden on login');
     }
 
+    // Get initials from display name (e.g., "Ori Dobosh" -> "OD")
+    getInitials(name) {
+        if (!name) return '';
+        const parts = name.trim().split(' ');
+        if (parts.length === 1) {
+            return parts[0].substring(0, 2).toUpperCase();
+        }
+        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+
     // Update UI based on auth state
     updateUI() {
         const signInButton = document.getElementById('signInButton');
@@ -331,9 +341,13 @@ class ChordsAuthManager {
         if (this.currentUser) {
             // User is signed in
             const displayName = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+            const initials = this.getInitials(displayName);
 
             if (signInButton) {
-                signInButton.textContent = displayName;
+                // Show initials only to save space
+                signInButton.textContent = initials;
+                // Add tooltip for full name
+                signInButton.title = displayName;
                 signInButton.onclick = () => this.showProfileMenu();
             }
 
@@ -345,7 +359,7 @@ class ChordsAuthManager {
                 sideMenuUserName.textContent = displayName;
             }
             if (sideMenuUserAvatar) {
-                sideMenuUserAvatar.textContent = displayName.charAt(0).toUpperCase();
+                sideMenuUserAvatar.textContent = initials;
             }
             if (sideMenuSignOut) {
                 sideMenuSignOut.onclick = () => this.signOut();

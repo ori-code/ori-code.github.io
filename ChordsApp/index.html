@@ -72,6 +72,9 @@
                             Out</button>
                     </div>
                 </div>
+                <button class="ghost-button" id="monochromeToggle" type="button" title="Toggle Monochrome">
+                    <span style="font-size: 1.2rem; line-height: 1;">◐</span>
+                </button>
                 <button class="ghost-button" id="themeToggle" type="button" title="Toggle theme">
                     <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1182,7 +1185,7 @@
 
     <footer class="app-footer">
         <p>&copy; <span id="year"></span> The Faith Sound. Built with love for worship leaders and musicians. <span
-                style="opacity: 0.7;">| v3.1 - 28/01/2026</span></p>
+                style="opacity: 0.7;">| v3.2 - 30/01/2026</span></p>
         <p style="margin-top: 8px; font-size: 0.85rem;">
             <a href="privacy.html" style="color: var(--text-muted);">Privacy Policy</a> ·
             <a href="terms.html" style="color: var(--text-muted);">Terms of Service</a>
@@ -1898,12 +1901,15 @@
                 <!-- Cancel Subscription Section (for paid subscribers) -->
                 <div id="currentSubscriptionInfo"
                     style="display: none; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 1px solid #fca5a5; border-radius: 12px; padding: 16px; margin-top: 24px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                         <div>
-                            <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280; font-weight: 500;">MANAGE SUBSCRIPTION</p>
+                            <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b7280; font-weight: 500;">MANAGE
+                                SUBSCRIPTION</p>
                             <p style="margin: 0; font-size: 14px; color: #374151;">
                                 Current plan: <strong id="currentPlanName" style="color: #dc2626;">Pro</strong>
-                                <span id="currentPlanStatus" style="font-size: 12px; color: #10b981; margin-left: 8px;">(Active)</span>
+                                <span id="currentPlanStatus"
+                                    style="font-size: 12px; color: #10b981; margin-left: 8px;">(Active)</span>
                             </p>
                         </div>
                         <button id="cancelSubscriptionBtn" onclick="handleCancelSubscription()"
@@ -2044,12 +2050,13 @@
         <div class="modal-container" style="max-width: 750px; background: #ffffff;">
             <div class="modal-header"
                 style="background: linear-gradient(135deg, #ff6b6b 0%, #a855f7 100%); border-radius: 12px 12px 0 0;">
-                <h3>✨ Everything You Need to Lead Worship</h3>
+                <h3 data-i18n="features.modal.title">✨ Everything You Need to Lead Worship</h3>
                 <button class="modal-close" id="featuresModalClose">&times;</button>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding: 24px;">
                 <!-- Intro -->
-                <p style="text-align: center; font-size: 15px; color: #64748b; margin: 0 0 24px 0; line-height: 1.6;">
+                <p style="text-align: center; font-size: 15px; color: #64748b; margin: 0 0 24px 0; line-height: 1.6;"
+                    data-i18n-html="features.intro">
                     aChordim transforms any chord sheet image into a beautiful, editable, print-ready format in
                     seconds.<br>
                     <strong style="color: #334155;">No more manual typing. No more messy printouts.</strong>
@@ -2058,103 +2065,137 @@
                 <!-- Analysis -->
                 <div
                     style="margin-bottom: 20px; padding: 20px; background: #fff5f5; border-radius: 12px; border-left: 4px solid #f87171;">
-                    <h4 style="margin: 0 0 8px 0; color: #dc2626; font-size: 17px;">🎵 Instant Chord Recognition</h4>
-                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                    <h4 style="margin: 0 0 8px 0; color: #dc2626; font-size: 17px;" data-i18n="features.analysis.title">
+                        🎵 Instant Chord Recognition</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;"
+                        data-i18n="features.analysis.desc">
                         Simply snap a photo or upload any chord sheet image. We instantly recognize chords, lyrics, and
                         song structure - even from blurry photos or handwritten notes!
                     </p>
                     <ul
                         style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
-                        <li>✓ <strong>Works with any image</strong> - photos, screenshots, PDFs, scanned sheets</li>
-                        <li>✓ <strong>Multi-language support</strong> - Hebrew, English, Spanish, Portuguese & more</li>
-                        <li>✓ <strong>Smart detection</strong> - automatically finds key, BPM, and time signature</li>
-                        <li>✓ <strong>Handles complex chords</strong> - slash chords, extensions, alterations</li>
+                        <li data-i18n-html="features.analysis.list1">✓ <strong>Works with any image</strong> - photos,
+                            screenshots, PDFs, scanned sheets</li>
+                        <li data-i18n-html="features.analysis.list2">✓ <strong>Multi-language support</strong> - Hebrew,
+                            English, Spanish, Portuguese & more</li>
+                        <li data-i18n-html="features.analysis.list3">✓ <strong>Smart detection</strong> - automatically
+                            finds key, BPM, and time signature</li>
+                        <li data-i18n-html="features.analysis.list4">✓ <strong>Handles complex chords</strong> - slash
+                            chords, extensions, alterations</li>
                     </ul>
                 </div>
 
                 <!-- Editing & Customization -->
                 <div
                     style="margin-bottom: 20px; padding: 20px; background: #faf5ff; border-radius: 12px; border-left: 4px solid #c084fc;">
-                    <h4 style="margin: 0 0 8px 0; color: #9333ea; font-size: 17px;">✏️ Powerful Visual Editor</h4>
-                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                    <h4 style="margin: 0 0 8px 0; color: #9333ea; font-size: 17px;" data-i18n="features.editor.title">✏️
+                        Powerful Visual Editor</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;"
+                        data-i18n="features.editor.desc">
                         Perfect your charts with our intuitive click-to-edit interface. No more struggling with text
                         formatting - just click any chord and change it instantly.
                     </p>
                     <ul
                         style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
-                        <li>✓ <strong>One-click transpose</strong> - change keys instantly for any vocalist</li>
-                        <li>✓ <strong>Nashville Numbers</strong> - switch between chord names and numbers (Pro)</li>
-                        <li>✓ <strong>Full customization</strong> - fonts, sizes, spacing, columns, margins</li>
-                        <li>✓ <strong>Auto-fit to page</strong> - perfect formatting for any paper size</li>
+                        <li data-i18n-html="features.editor.list1">✓ <strong>One-click transpose</strong> - change keys
+                            instantly for any vocalist</li>
+                        <li data-i18n-html="features.editor.list2">✓ <strong>Nashville Numbers</strong> - switch between
+                            chord names and numbers (Pro)</li>
+                        <li data-i18n-html="features.editor.list3">✓ <strong>Full customization</strong> - fonts, sizes,
+                            spacing, columns, margins</li>
+                        <li data-i18n-html="features.editor.list4">✓ <strong>Auto-fit to page</strong> - perfect
+                            formatting for any paper size</li>
                     </ul>
                 </div>
 
                 <!-- Export & Live -->
                 <div
                     style="margin-bottom: 20px; padding: 20px; background: #fef2f8; border-radius: 12px; border-left: 4px solid #f472b6;">
-                    <h4 style="margin: 0 0 8px 0; color: #db2777; font-size: 17px;">📺 Share, Print & Present Live</h4>
-                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                    <h4 style="margin: 0 0 8px 0; color: #db2777; font-size: 17px;" data-i18n="features.live.title">📺
+                        Share, Print & Present Live</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;"
+                        data-i18n="features.live.desc">
                         From practice to performance - share your charts however you need them. Print beautiful copies,
                         project on screen, or share with your whole band in real-time.
                     </p>
                     <ul
                         style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
-                        <li>✓ <strong>Print-ready output</strong> - professional quality every time</li>
-                        <li>✓ <strong>Save as image</strong> - high-resolution PNG for sharing</li>
-                        <li>✓ <strong>Live Preview mode</strong> - full-screen display for projectors & screens</li>
-                        <li>✓ <strong>Real-time sessions</strong> - band members see changes instantly</li>
+                        <li data-i18n-html="features.live.list1">✓ <strong>Print-ready output</strong> - professional
+                            quality every time</li>
+                        <li data-i18n-html="features.live.list2">✓ <strong>Save as image</strong> - high-resolution PNG
+                            for sharing</li>
+                        <li data-i18n-html="features.live.list3">✓ <strong>Live Preview mode</strong> - full-screen
+                            display for projectors & screens</li>
+                        <li data-i18n-html="features.live.list4">✓ <strong>Real-time sessions</strong> - band members
+                            see changes instantly</li>
                     </ul>
                 </div>
 
                 <!-- Song Library -->
                 <div
                     style="margin-bottom: 20px; padding: 20px; background: #fdf4ff; border-radius: 12px; border-left: 4px solid #e879f9;">
-                    <h4 style="margin: 0 0 8px 0; color: #c026d3; font-size: 17px;">📚 Your Personal Song Library</h4>
-                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                    <h4 style="margin: 0 0 8px 0; color: #c026d3; font-size: 17px;" data-i18n="features.library.title">
+                        📚 Your Personal Song Library</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;"
+                        data-i18n="features.library.desc">
                         Build your ultimate worship collection. Save every song, organize by service or event, and
                         access your library from anywhere. Never lose a chart again!
                     </p>
                     <ul
                         style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
-                        <li>✓ <strong>Unlimited songs</strong> - save your entire repertoire</li>
-                        <li>✓ <strong>Custom songbooks</strong> - organize by service, event, or theme</li>
-                        <li>✓ <strong>Smart search</strong> - find songs by title, lyrics, or key</li>
-                        <li>✓ <strong>Cloud sync</strong> - access from any device, anytime</li>
+                        <li data-i18n-html="features.library.list1">✓ <strong>Unlimited songs</strong> - save your
+                            entire repertoire</li>
+                        <li data-i18n-html="features.library.list2">✓ <strong>Custom songbooks</strong> - organize by
+                            service, event, or theme</li>
+                        <li data-i18n-html="features.library.list3">✓ <strong>Smart search</strong> - find songs by
+                            title, lyrics, or key</li>
+                        <li data-i18n-html="features.library.list4">✓ <strong>Cloud sync</strong> - access from any
+                            device, anytime</li>
                     </ul>
-                    <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8; font-style: italic;">Available with
+                    <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8; font-style: italic;"
+                        data-i18n="features.library.note">Available with
                         Basic & Pro plans</p>
                 </div>
 
                 <!-- Worship Tools -->
                 <div
                     style="margin-bottom: 20px; padding: 20px; background: #fff1f3; border-radius: 12px; border-left: 4px solid #fb7185;">
-                    <h4 style="margin: 0 0 8px 0; color: #e11d48; font-size: 17px;">🎹 Ambient Worship Pads</h4>
-                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                    <h4 style="margin: 0 0 8px 0; color: #e11d48; font-size: 17px;" data-i18n="features.pads.title">🎹
+                        Ambient Worship Pads</h4>
+                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;"
+                        data-i18n="features.pads.desc">
                         Create the perfect atmosphere for worship. Our built-in ambient pads provide beautiful,
                         continuous background music that matches your song's key automatically.
                     </p>
                     <ul
                         style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.9; color: #475569;">
-                        <li>✓ <strong>Key-matched pads</strong> - automatically syncs to your song</li>
-                        <li>✓ <strong>Multiple sounds</strong> - warm, bright, atmospheric options</li>
-                        <li>✓ <strong>Perfect for transitions</strong> - smooth flow between songs</li>
+                        <li data-i18n-html="features.pads.list1">✓ <strong>Key-matched pads</strong> - automatically
+                            syncs to your song</li>
+                        <li data-i18n-html="features.pads.list2">✓ <strong>Multiple sounds</strong> - warm, bright,
+                            atmospheric options</li>
+                        <li data-i18n-html="features.pads.list3">✓ <strong>Perfect for transitions</strong> - smooth
+                            flow between songs</li>
                     </ul>
                 </div>
 
                 <!-- Get Started CTA -->
                 <div
                     style="text-align: center; padding: 24px; background: linear-gradient(135deg, #fff5f5 0%, #fdf4ff 100%); border-radius: 12px; margin-top: 8px;">
-                    <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: #1e293b;">Ready to transform
+                    <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: #1e293b;"
+                        data-i18n="features.cta.title">Ready to transform
                         your worship experience?</p>
-                    <p style="margin: 0 0 16px 0; font-size: 14px; color: #64748b;">Start free with 3 scans. Upgrade
+                    <p style="margin: 0 0 16px 0; font-size: 14px; color: #64748b;" data-i18n="features.cta.desc">Start
+                        free with 3 scans. Upgrade
                         anytime for more features.</p>
                     <button id="featuresModalUpgrade"
                         style="padding: 14px 40px; background: linear-gradient(135deg, #ef4444 0%, #a855f7 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); transition: transform 0.2s, box-shadow 0.2s;"
                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(239, 68, 68, 0.4)';"
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(239, 68, 68, 0.3)';">
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(239, 68, 68, 0.3)';"
+                        data-i18n="features.cta.btn">
                         View Plans & Pricing
                     </button>
-                    <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;">Plans start at just $0.99/month</p>
+                    <p style="margin: 12px 0 0 0; font-size: 12px; color: #94a3b8;" data-i18n="features.cta.note">Plans
+                        start at just $0.99/month</p>
                 </div>
             </div>
         </div>

@@ -1672,7 +1672,8 @@ a {
 .music-iframe-wrapper {
     position: relative;
     width: 100%;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    padding-bottom: 56.25%;
+    /* 16:9 aspect ratio */
 }
 
 .music-iframe-wrapper iframe {
@@ -3871,4 +3872,224 @@ a {
     /* If we align-items: flex-end, they align at bottom. */
     /* So chords stick up. This is correct. */
     /* But .lyric-only needs to sit on the same baseline. */
+}
+
+/* Features Modal Styles */
+.features-modal-intro {
+    text-align: center;
+    font-size: 15px;
+    color: #64748b;
+    margin: 0 0 24px 0;
+    line-height: 1.6;
+}
+
+.feature-card {
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    background: #f8fafc;
+    /* Default fallback */
+}
+
+/* Card Variants */
+.feature-card.variant-red {
+    background: #fff5f5;
+    border-left: 4px solid #f87171;
+}
+
+.feature-card.variant-purple {
+    background: #faf5ff;
+    border-left: 4px solid #c084fc;
+}
+
+.feature-card.variant-pink {
+    background: #fef2f8;
+    border-left: 4px solid #f472b6;
+}
+
+.feature-card.variant-magenta {
+    background: #fdf4ff;
+    border-left: 4px solid #e879f9;
+}
+
+.feature-card.variant-rose {
+    background: #fff1f3;
+    border-left: 4px solid #fb7185;
+}
+
+.feature-card h4 {
+    margin: 0 0 8px 0;
+    font-size: 17px;
+}
+
+/* Variant Text Colors */
+.feature-card.variant-red h4 {
+    color: #dc2626;
+}
+
+.feature-card.variant-purple h4 {
+    color: #9333ea;
+}
+
+.feature-card.variant-pink h4 {
+    color: #db2777;
+}
+
+.feature-card.variant-magenta h4 {
+    color: #c026d3;
+}
+
+.feature-card.variant-rose h4 {
+    color: #e11d48;
+}
+
+.feature-card p {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.feature-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.9;
+    color: #475569;
+}
+
+/* CTA Section */
+.features-cta {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #fff5f5 0%, #fdf4ff 100%);
+    border-radius: 12px;
+    margin-top: 8px;
+}
+
+.features-cta-title {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.features-cta-desc {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.features-cta-btn {
+    padding: 14px 40px;
+    background: linear-gradient(135deg, #ef4444 0%, #a855f7 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.features-cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.features-cta-note {
+    margin: 12px 0 0 0;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* RTL Overrides */
+#featuresModal[dir="rtl"] .modal-header {
+    flex-direction: row-reverse;
+    /* Flip header content */
+}
+
+#featuresModal[dir="rtl"] .modal-header h3 {
+    text-align: right;
+    width: 100%;
+}
+
+#featuresModal[dir="rtl"] .modal-close {
+    margin-right: auto;
+    margin-left: initial;
+}
+
+#featuresModal[dir="rtl"] .feature-card {
+    text-align: right;
+    border-left: none;
+    border-right: 4px solid;
+    /* Flip border to right */
+}
+
+/* Variant Border Colors for RTL */
+#featuresModal[dir="rtl"] .feature-card.variant-red {
+    border-right-color: #f87171;
+}
+
+#featuresModal[dir="rtl"] .feature-card.variant-purple {
+    border-right-color: #c084fc;
+}
+
+#featuresModal[dir="rtl"] .feature-card.variant-pink {
+    border-right-color: #f472b6;
+}
+
+#featuresModal[dir="rtl"] .feature-card.variant-magenta {
+    border-right-color: #e879f9;
+}
+
+#featuresModal[dir="rtl"] .feature-card.variant-rose {
+    border-right-color: #fb7185;
+}
+/* Monochrome Theme */
+html.theme-monochrome {
+    filter: grayscale(100%);
+}
+
+/* Monochrome Buttons Override */
+html.theme-monochrome .primary-action,
+html.theme-monochrome .secondary-action,
+html.theme-monochrome .ghost-button,
+html.theme-monochrome button {
+    background: transparent !important;
+    border: 1px solid var(--text) !important;
+    color: var(--text) !important;
+    border-radius: 9999px !important;
+    box-shadow: none !important;
+}
+
+html.theme-monochrome .primary-action:hover,
+html.theme-monochrome .secondary-action:hover,
+html.theme-monochrome .ghost-button:hover,
+html.theme-monochrome button:hover {
+    background: rgba(128, 128, 128, 0.1) !important;
+    transform: none !important;
+}
+
+/* Monochrome Layout Options Override */
+html.theme-monochrome .layout-controls-row > div,
+html.theme-monochrome .layout-controls-row select,
+html.theme-monochrome .layout-controls-row input,
+html.theme-monochrome .layout-controls-row label,
+html.theme-monochrome .key-btn,
+html.theme-monochrome .side-menu-select {
+    background: transparent !important;
+    border: 1px solid var(--text) !important;
+    color: var(--text) !important;
+    border-radius: 9999px !important;
+    box-shadow: none !important;
+}
+
+/* Specific fix for inputs inside rounded divs to avoid double borders being ugly */
+html.theme-monochrome .layout-controls-row > div input,
+html.theme-monochrome .layout-controls-row > div select {
+    border: none !important;
+    border-radius: 0 !important;
 }

@@ -4,10 +4,44 @@ document.addEventListener('gesturestart', function (e) {
     e.preventDefault();
 }, { passive: false });
 
-document.addEventListener('gesturechange', function (e) {
-    if (e.target.closest('.preview-container') || e.target.closest('.preview-scale-wrapper')) return;
-    e.preventDefault();
-}, { passive: false });
+// ============= APP NAVIGATION LOGIC =============
+window.app = {
+    showStep: function(target) {
+        // Handle tab visuals
+        document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+        
+        // Find active tab based on target
+        let targetTab;
+        if (target === 1) targetTab = document.querySelector('.nav-tab:nth-child(1)'); // Scanner
+        else if (target === 'library') targetTab = document.querySelector('.nav-tab:nth-child(2)'); // Songs
+        else if (target === 'chords') targetTab = document.querySelector('.nav-tab:nth-child(3)'); // Chords
+        else if (target === 3) targetTab = document.querySelector('.nav-tab:nth-child(4)'); // Tools
+        
+        if (targetTab) targetTab.classList.add('active');
+
+        // Logic to switch views
+        // We assume 'chords' means step 3 (Refine) or step 2 (Editor), but let's map:
+        // Scanner -> Step 1
+        // Songs -> Open library modal
+        // Chords -> Scroll to editor/preview (Step 3)
+        // Tools -> Step 3 setup
+        
+        if (target === 1) {
+            // Scanner View
+            document.getElementById('workflow').scrollIntoView({ behavior: 'smooth' });
+            // Ideally toggle visibility of sections if we were doing SPA, but for now scrolling
+        } else if (target === 'library') {
+             if (window.songLibrary) songLibrary.openLibraryModal();
+        } else if (target === 'chords' || target === 3) {
+             // Scroll to editor area
+             const previewSection = document.getElementById('previewSection');
+             if (previewSection) {
+                 previewSection.style.display = 'block'; // Ensure visible
+                 previewSection.scrollIntoView({ behavior: 'smooth' });
+             }
+        }
+    }
+};
 
 document.addEventListener('gestureend', function (e) {
     if (e.target.closest('.preview-container') || e.target.closest('.preview-scale-wrapper')) return;
@@ -8146,3 +8180,18 @@ window.removeYoutubeLink = () => removeMusicLink('youtube');
 window.checkForYoutubeLink = checkForMusicLinks;
 
 // ============= END MUSIC LINKS FUNCTIONALITY =============
+
+    // Monochrome Toggle Logic
+    const monochromeToggle = document.getElementById('monochromeToggle');
+    if (monochromeToggle) {
+        // Load saved state
+        const isMonochrome = localStorage.getItem('achordim_monochrome') === 'true';
+        if (isMonochrome) {
+            document.documentElement.classList.add('theme-monochrome');
+        }
+
+        monochromeToggle.addEventListener('click', () => {
+            const isMono = document.documentElement.classList.toggle('theme-monochrome');
+            localStorage.setItem('achordim_monochrome', isMono);
+        });
+    }

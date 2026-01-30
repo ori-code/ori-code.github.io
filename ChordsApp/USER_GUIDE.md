@@ -11,8 +11,9 @@ Welcome to ChordsApp - your AI-powered chord sheet digitizer. Transform any chor
 3. [Editor Features](#editor-features)
 4. [Preview & Formatting](#preview--formatting)
 5. [Song Library](#song-library)
-6. [Account Features](#account-features)
-7. [Tips & Best Practices](#tips--best-practices)
+6. [Live Sessions](#live-sessions)
+7. [Account Features](#account-features)
+8. [Tips & Best Practices](#tips--best-practices)
 
 ---
 
@@ -215,6 +216,30 @@ The song opens exactly as you saved it.
 - Key (alphabetical)
 
 **Delete**: Click the delete button on any song to remove it (confirmation required)
+
+---
+
+## Live Sessions
+
+Experience real-time collaboration with your band or worship team.
+
+### Roles
+- **Leader** (Pro): Create sessions, control the "Now Playing" song, and manage the playlist.
+- **Player** (Basic+): Join sessions and automatically follow the leader's screen.
+- **Singer**: Join via a dedicated link for a simplified, lyrics-only view.
+
+### Getting Started
+1. **Create**: Open the "Sessions" panel and click "Create Session".
+2. **Invite**: Share the generated 6-digit code or QR code with your team.
+3. **Join**: enters the code in the "Join Session" box.
+
+### The Playlist
+- **Add Songs**: Click "Add to Session" on any song, or select multiple songs in your library for bulk adding.
+- **Broadcast**: Click any song title in the active playlist (sidebar) to instantly push it to all connected devices.
+- **Organize**: In the session manager, you can drag/reorder, rename, or remove songs to plan your set.
+
+### Live Mode Integration
+When a session is active, the Live Mode screen includes a playlist sidebar. This allows leaders to switch songs seamlessly during a performance without navigating away from the current chart.
 
 ---
 
