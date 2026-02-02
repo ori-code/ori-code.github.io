@@ -17,7 +17,7 @@ const translations = {
         "nav.menu.library": "Library",
 
         // Hero
-        "hero.title": "Turn any chord sheet into a clean, printable chart.",
+        "hero.title": "Turn any chord sheet into a clean, printable chart!",
         "hero.subtitle": "Upload a handwritten sheet or photo, extract the music, refine the result, transpose to any key, then print with confidence.",
 
         // Workflow Steps
@@ -344,7 +344,7 @@ const translations = {
         "nav.menu.library": "ספרייה",
 
         // Hero
-        "hero.title": "הפוך כל דף אקורדים לתרשים נקי, מקצועי ומוכן להדפסה.",
+        "hero.title": "הפוך כל דף אקורדים לתרשים נקי, מקצועי ומוכן להדפסה!",
         "hero.subtitle": "העלה צילום או קובץ, חלץ את המוזיקה אוטומטית, ערוך בקלות, שנה סולם, והדפס בביטחון.",
 
         // Workflow Steps
