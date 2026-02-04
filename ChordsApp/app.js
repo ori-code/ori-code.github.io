@@ -6,17 +6,17 @@ document.addEventListener('gesturestart', function (e) {
 
 // ============= APP NAVIGATION LOGIC =============
 window.app = {
-    showStep: function(target) {
+    showStep: function (target) {
         // Handle tab visuals
         document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-        
+
         // Find active tab based on target
         let targetTab;
         if (target === 1) targetTab = document.querySelector('.nav-tab:nth-child(1)'); // Scanner
         else if (target === 'library') targetTab = document.querySelector('.nav-tab:nth-child(2)'); // Songs
         else if (target === 'chords') targetTab = document.querySelector('.nav-tab:nth-child(3)'); // Chords
         else if (target === 3) targetTab = document.querySelector('.nav-tab:nth-child(4)'); // Tools
-        
+
         if (targetTab) targetTab.classList.add('active');
 
         // Logic to switch views
@@ -25,20 +25,20 @@ window.app = {
         // Songs -> Open library modal
         // Chords -> Scroll to editor/preview (Step 3)
         // Tools -> Step 3 setup
-        
+
         if (target === 1) {
             // Scanner View
             document.getElementById('workflow').scrollIntoView({ behavior: 'smooth' });
             // Ideally toggle visibility of sections if we were doing SPA, but for now scrolling
         } else if (target === 'library') {
-             if (window.songLibrary) songLibrary.openLibraryModal();
+            if (window.songLibrary) songLibrary.openLibraryModal();
         } else if (target === 'chords' || target === 3) {
-             // Scroll to editor area
-             const previewSection = document.getElementById('previewSection');
-             if (previewSection) {
-                 previewSection.style.display = 'block'; // Ensure visible
-                 previewSection.scrollIntoView({ behavior: 'smooth' });
-             }
+            // Scroll to editor area
+            const previewSection = document.getElementById('previewSection');
+            if (previewSection) {
+                previewSection.style.display = 'block'; // Ensure visible
+                previewSection.scrollIntoView({ behavior: 'smooth' });
+            }
         }
     }
 };
@@ -414,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let initialDistance = 0;
             let initialFontSize = 10;
 
-            el.addEventListener('touchstart', function(e) {
+            el.addEventListener('touchstart', function (e) {
                 if (e.touches.length === 2) {
                     e.preventDefault();
                     const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -425,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, { passive: false });
 
-            el.addEventListener('touchmove', function(e) {
+            el.addEventListener('touchmove', function (e) {
                 if (e.touches.length === 2) {
                     e.preventDefault();
                     const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, { passive: false });
 
-            el.addEventListener('touchend', function(e) {
+            el.addEventListener('touchend', function (e) {
                 if (e.touches.length < 2) {
                     initialDistance = 0;
                     const controls = getFontControls();
@@ -4366,10 +4366,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
         pageCounter.textContent = `Page 1 of ${pagesNeeded} (A4)`;
 
         // If multiple pages needed, adjust layout
+        // If multiple pages needed, adjust layout
         if (pagesNeeded > 1) {
             // Calculate height per page to distribute content evenly
             const heightPerPage = Math.ceil(contentHeight / pagesNeeded);
-            livePreview.style.minHeight = `${contentHeight}px`;
+            // FIXED: Do NOT expand height. Keep it fixed to A4 so columns wrap properly.
+            // livePreview.style.minHeight = `${contentHeight}px`;
 
             // Remove any existing page break indicators (no longer showing them)
             const existingBreaks = livePreview.querySelectorAll('.page-break-indicator');
@@ -4378,7 +4380,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Single page - remove indicators
             const existingBreaks = livePreview.querySelectorAll('.page-break-indicator');
             existingBreaks.forEach(br => br.remove());
-            livePreview.style.minHeight = '1123px';
+            // FIXED: Let CSS control the height (100% of parent 297mm)
+            // livePreview.style.minHeight = '1123px';
         }
     }
 
@@ -6184,7 +6187,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     /**
      * Handle cancel subscription button click
      */
-    window.handleCancelSubscription = async function() {
+    window.handleCancelSubscription = async function () {
         const subscription = window.subscriptionManager?.userSubscription;
         const subscriptionId = subscription?.paypalSubscriptionId;
 
@@ -6223,8 +6226,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Call cancel API
             const isLocalDev = window.location.hostname === 'localhost' ||
-                               window.location.hostname.startsWith('192.168.') ||
-                               window.location.hostname.startsWith('10.');
+                window.location.hostname.startsWith('192.168.') ||
+                window.location.hostname.startsWith('10.');
 
             const API_URL = isLocalDev
                 ? `http://${window.location.hostname}:3002/api/cancel-subscription`
@@ -8181,17 +8184,17 @@ window.checkForYoutubeLink = checkForMusicLinks;
 
 // ============= END MUSIC LINKS FUNCTIONALITY =============
 
-    // Monochrome Toggle Logic
-    const monochromeToggle = document.getElementById('monochromeToggle');
-    if (monochromeToggle) {
-        // Load saved state
-        const isMonochrome = localStorage.getItem('achordim_monochrome') === 'true';
-        if (isMonochrome) {
-            document.documentElement.classList.add('theme-monochrome');
-        }
-
-        monochromeToggle.addEventListener('click', () => {
-            const isMono = document.documentElement.classList.toggle('theme-monochrome');
-            localStorage.setItem('achordim_monochrome', isMono);
-        });
+// Monochrome Toggle Logic
+const monochromeToggle = document.getElementById('monochromeToggle');
+if (monochromeToggle) {
+    // Load saved state
+    const isMonochrome = localStorage.getItem('achordim_monochrome') === 'true';
+    if (isMonochrome) {
+        document.documentElement.classList.add('theme-monochrome');
     }
+
+    monochromeToggle.addEventListener('click', () => {
+        const isMono = document.documentElement.classList.toggle('theme-monochrome');
+        localStorage.setItem('achordim_monochrome', isMono);
+    });
+}

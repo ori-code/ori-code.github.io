@@ -1,0 +1,43 @@
+{
+    "nav": {
+        "brand": {
+            "subtitle": "www.thefaithsound.com"
+        },
+        "signin": "Sign In",
+        "signout": "Sign Out",
+        "sync": "SYNC",
+        "logout": "LOGOUT"
+    },
+    "hero": {
+        "title": "CLEAN.\nTRANSPOSE.\nPRINT.",
+        "subtitle": "Turn messy chord sheets into pristine, transpose-ready charts.\nStrictly formatted. No distractions.",
+        "cta": "UPLOAD CHART",
+        "how": "How it works"
+    },
+    "workflow": {
+        "step1": {
+            "title": "UPLOAD",
+            "desc": "Accepts images (JPG, PNG, HEIC) and PDFs. High contrast photos deliver the best recognition results."
+        },
+        "step2": {
+            "title": "EDIT",
+            "desc": "Refine the extraction in the high-contrast editor. Correct chords and lyrics with ease."
+        },
+        "step3": {
+            "title": "EXPORT",
+            "desc": "Transpose to any key instantly. Print crisp, clean charts for your team."
+        }
+    },
+    "library": {
+        "title": "LIBRARY",
+        "signin_prompt": "SIGN IN TO ACCESS LIBRARY",
+        "empty": "NO SONGS FOUND.",
+        "untitled": "UNTITLED",
+        "unknown_artist": "UNKNOWN ARTIST"
+    },
+    "viewer": {
+        "back": "← BACK",
+        "print": "PRINT",
+        "key": "KEY:"
+    }
+}

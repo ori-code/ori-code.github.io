@@ -1,0 +1,198 @@
+:root {
+    /* =========================================
+     STRICT BLACK & WHITE THEME
+     ========================================= */
+
+    /* Light Mode (Default) */
+    --bg-primary: #FFFFFF;
+    --bg-connected: #000000;
+    /* For inverted elements */
+
+    --text-primary: #000000;
+    --text-inverse: #FFFFFF;
+
+    --border-main: #000000;
+
+    /* Layout */
+    --max-width: 900px;
+    --header-height: 60px;
+
+    /* Typography */
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+[data-theme='dark'] {
+    --bg-primary: #000000;
+    --bg-connected: #FFFFFF;
+
+    --text-primary: #FFFFFF;
+    --text-inverse: #000000;
+
+    --border-main: #FFFFFF;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Links & Buttons */
+a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+}
+
+a:hover {
+    background: var(--bg-connected);
+    color: var(--text-inverse);
+    text-decoration: none;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid var(--border-main);
+    color: var(--text-primary);
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 0;
+    /* Strict square corners */
+    transition: all 0.1s;
+}
+
+/* Invert on hover for interactivity */
+button:hover {
+    background: var(--bg-connected);
+    color: var(--text-inverse);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-style: dashed;
+}
+
+button:disabled:hover {
+    background: transparent;
+    color: var(--text-primary);
+}
+
+/* =========================================
+   UTILITIES
+   ========================================= */
+
+.container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Minimal "Ghost" Button - Just text, underline on hover */
+.ghost-button {
+    border: none;
+    padding: 8px;
+    text-decoration: none;
+}
+
+.ghost-button:hover {
+    background: transparent;
+    text-decoration: underline;
+    color: var(--text-primary);
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-top: 2em;
+    margin-bottom: 0.75em;
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: 3rem;
+}
+
+h2 {
+    font-size: 2rem;
+    border-bottom: 2px solid var(--border-main);
+    padding-bottom: 0.25em;
+}
+
+h3 {
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 3em;
+}
+
+p {
+    margin-bottom: 1.5em;
+}
+
+/* Card / Section Styles - strict borders */
+.card-strict {
+    border: 2px solid var(--border-main);
+    padding: 24px;
+    margin-bottom: 16px;
+}
+
+.card-strict:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 4px 4px 0 var(--border-main);
+}
+
+/* Input Fields */
+input,
+textarea,
+select {
+    width: 100%;
+    background: transparent;
+    border: 2px solid var(--border-main);
+    color: var(--text-primary);
+    padding: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    border-radius: 0;
+    margin-bottom: 16px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    background: var(--bg-connected);
+    color: var(--text-inverse);
+}
+
+/* Toggle Switch (simplified) */
+.theme-toggle-btn {
+    border: 1px solid var(--border-main);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    /* Circle for contrast */
+    padding: 0;
+}

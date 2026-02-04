@@ -2211,10 +2211,15 @@ a {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     width: 210mm;
     /* A4 width */
+    height: 297mm;
+    /* FIXED A4 height */
     min-height: 297mm;
-    /* A4 height */
-    max-width: 100%;
+    max-height: 297mm;
+    /* Prevent growing */
+    overflow: hidden;
+    /* Cut off anything outside A4 */
     margin: 0 auto;
+    position: relative;
 }
 
 .live-preview {
@@ -2230,8 +2235,9 @@ a {
     column-fill: auto;
     margin: 0 auto;
     position: relative;
-    min-height: 297mm;
-    /* A4 height */
+    /* FIX: Force height to match parent A4 container so columns wrap */
+    height: 100%;
+    box-sizing: border-box;
     /* Direction will be set dynamically by JavaScript based on content */
 }
 
@@ -4048,6 +4054,7 @@ a {
 #featuresModal[dir="rtl"] .feature-card.variant-rose {
     border-right-color: #fb7185;
 }
+
 /* Monochrome Theme */
 html.theme-monochrome {
     filter: grayscale(100%);
@@ -4074,7 +4081,7 @@ html.theme-monochrome button:hover {
 }
 
 /* Monochrome Layout Options Override */
-html.theme-monochrome .layout-controls-row > div,
+html.theme-monochrome .layout-controls-row>div,
 html.theme-monochrome .layout-controls-row select,
 html.theme-monochrome .layout-controls-row input,
 html.theme-monochrome .layout-controls-row label,
@@ -4088,8 +4095,8 @@ html.theme-monochrome .side-menu-select {
 }
 
 /* Specific fix for inputs inside rounded divs to avoid double borders being ugly */
-html.theme-monochrome .layout-controls-row > div input,
-html.theme-monochrome .layout-controls-row > div select {
+html.theme-monochrome .layout-controls-row>div input,
+html.theme-monochrome .layout-controls-row>div select {
     border: none !important;
     border-radius: 0 !important;
 }
