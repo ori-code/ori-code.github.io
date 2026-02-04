@@ -342,7 +342,7 @@ app.post('/api/analyze-chart', async (req, res) => {
         }
 
         // Build prompt with context
-        let fullPrompt = BASE_PROMPT;
+        let fullPrompt = req.body.customPrompt || BASE_PROMPT;
 
         if (previousTranscription) {
             fullPrompt = `Previous transcription (for reference):\n${previousTranscription}\n\n` + fullPrompt;
