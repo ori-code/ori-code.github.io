@@ -13,7 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=10">
+    <link rel="stylesheet" href="styles.css?v=10" id="mainStyles">
+    <!-- Notion-style theme (loaded dynamically) -->
     <!-- PayPal SDK is loaded dynamically in paypal-subscription.js based on environment -->
 
     <!-- PDF.js for PDF preview -->
@@ -74,6 +75,9 @@
                 </div>
                 <button class="ghost-button" id="monochromeToggle" type="button" title="Toggle Monochrome">
                     <span style="font-size: 1.2rem; line-height: 1;">◐</span>
+                </button>
+                <button class="ghost-button" id="notionThemeToggle" type="button" title="Toggle Notion Style">
+                    <span style="font-size: 1rem; line-height: 1;">N</span>
                 </button>
                 <button class="ghost-button" id="themeToggle" type="button" title="Toggle theme">
                     <svg id="themeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -4716,6 +4720,41 @@
             // Connect toggle buttons to side menu checkboxes
             syncToggleButtons('toggleControlsBtn', 'toggleControlsBtn2', sideMenuShowControls);
             syncToggleButtons('toggleEditorBtn', 'toggleEditorBtn2', sideMenuShowEditor);
+
+            // ============================================
+            // NOTION THEME TOGGLE
+            // ============================================
+            const notionThemeToggle = document.getElementById('notionThemeToggle');
+            const mainStylesheet = document.getElementById('mainStylesheet');
+            
+            if (notionThemeToggle && mainStylesheet) {
+                // Load saved preference
+                const savedNotionTheme = localStorage.getItem('chordsapp-notion-theme') === 'true';
+                
+                function applyNotionTheme(useNotion) {
+                    if (useNotion) {
+                        mainStylesheet.href = 'styles-notion.css?v=1';
+                        notionThemeToggle.style.background = 'var(--primary)';
+                        notionThemeToggle.style.color = '#fff';
+                        notionThemeToggle.title = 'Switch to Default Style';
+                    } else {
+                        mainStylesheet.href = 'styles.css?v=10';
+                        notionThemeToggle.style.background = '';
+                        notionThemeToggle.style.color = '';
+                        notionThemeToggle.title = 'Switch to Notion Style';
+                    }
+                }
+                
+                // Apply saved preference on load
+                applyNotionTheme(savedNotionTheme);
+                
+                notionThemeToggle.addEventListener('click', () => {
+                    const currentlyNotion = mainStylesheet.href.includes('styles-notion.css');
+                    const useNotion = !currentlyNotion;
+                    applyNotionTheme(useNotion);
+                    localStorage.setItem('chordsapp-notion-theme', useNotion);
+                });
+            }
         })();
 
     </script>
