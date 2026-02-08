@@ -1,6 +1,7 @@
 import { auth } from './firebase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002'; // Proxy or Direct
+// Firebase Cloud Function URL
+const ANALYZE_URL = import.meta.env.VITE_ANALYZE_URL || 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/analyzeChartGemini';
 
 export const analyzeChart = async (file, customPrompt = null) => {
     try {
@@ -24,7 +25,7 @@ export const analyzeChart = async (file, customPrompt = null) => {
             body.customPrompt = customPrompt;
         }
 
-        const response = await fetch(`${API_URL}/api/analyze-chart`, {
+        const response = await fetch(ANALYZE_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -652,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add "View Only" banner
         const banner = document.createElement('div');
         banner.id = 'viewOnlyBanner';
-        banner.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(90deg, #3b82f6, #8b5cf6); color: white; text-align: center; padding: 8px; font-weight: 500; z-index: 1000;';
+        banner.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: var(--text); color: var(--bg); text-align: center; padding: 8px; font-weight: 500; z-index: 1000;';
         banner.innerHTML = '👁️ View Only Mode - <a href="' + window.location.pathname + '" style="color: white; text-decoration: underline;">Create your own charts</a>';
         document.body.prepend(banner);
 
@@ -5181,10 +5181,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Show success feedback
             const originalText = saveLayoutButton.textContent;
             saveLayoutButton.textContent = '✓ Saved!';
-            saveLayoutButton.style.background = '#10b981';
+            saveLayoutButton.style.background = 'var(--text)';
+            saveLayoutButton.style.color = 'var(--bg)';
             setTimeout(() => {
                 saveLayoutButton.textContent = originalText;
-                saveLayoutButton.style.background = 'var(--primary)';
+                saveLayoutButton.style.background = '';
+                saveLayoutButton.style.color = '';
             }, 2000);
         } catch (error) {
             console.error('❌ Error saving layout preferences:', error);
@@ -5331,7 +5333,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (isLivePreviewMode) {
                 // Enter Live Preview Mode
                 livePreviewToggle.innerHTML = '✏️ Back to Editor';
-                livePreviewToggle.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                livePreviewToggle.style.background = 'var(--text)';
+                livePreviewToggle.style.color = 'var(--bg)';
 
                 // Hide editing controls
                 if (previewControlsRow) previewControlsRow.style.display = 'none';
@@ -5354,7 +5357,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             } else {
                 // Exit Live Preview Mode - Back to Editor
                 livePreviewToggle.innerHTML = '📺 Live Preview';
-                livePreviewToggle.style.background = 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)';
+                livePreviewToggle.style.background = '';
+                livePreviewToggle.style.color = '';
 
                 // Show editing controls
                 if (previewControlsRow) previewControlsRow.style.display = 'flex';
@@ -5408,13 +5412,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 } else {
                     headerText.textContent = `${remaining}/${summary.analysesLimit}`;
 
-                    // Change color if running low
+                    // Change style if running low
                     if (remaining <= 1) {
-                        headerIndicator.style.background = 'rgba(255, 59, 92, 0.15)';
-                        headerText.style.color = 'var(--primary)';
+                        headerIndicator.style.background = 'var(--text)';
+                        headerText.style.color = 'var(--bg)';
                     } else {
-                        headerIndicator.style.background = 'rgba(59, 130, 246, 0.15)';
-                        headerText.style.color = '#3b82f6';
+                        headerIndicator.style.background = 'transparent';
+                        headerText.style.color = 'var(--text)';
                     }
                 }
             } else {
@@ -5427,21 +5431,24 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const sideMenuTierBadge = document.getElementById('sideMenuTierBadge');
         if (sideMenuTierBadge) {
             if (summary.tier === 'PRO') {
-                sideMenuTierBadge.textContent = '✨ Pro';
-                sideMenuTierBadge.style.background = 'linear-gradient(135deg, var(--primary) 0%, #ff8fab 100%)';
-                sideMenuTierBadge.style.color = 'white';
+                sideMenuTierBadge.textContent = 'Pro';
+                sideMenuTierBadge.style.background = 'var(--text)';
+                sideMenuTierBadge.style.color = 'var(--bg)';
             } else if (summary.tier === 'BASIC') {
-                sideMenuTierBadge.textContent = '⭐ Basic';
-                sideMenuTierBadge.style.background = 'rgba(245, 158, 11, 0.15)';
-                sideMenuTierBadge.style.color = '#f59e0b';
+                sideMenuTierBadge.textContent = 'Basic';
+                sideMenuTierBadge.style.background = 'transparent';
+                sideMenuTierBadge.style.color = 'var(--text)';
+                sideMenuTierBadge.style.border = '1px solid var(--border)';
             } else if (summary.tier === 'BOOK') {
-                sideMenuTierBadge.textContent = '📖 Book';
-                sideMenuTierBadge.style.background = 'rgba(139, 92, 246, 0.15)';
-                sideMenuTierBadge.style.color = '#8b5cf6';
+                sideMenuTierBadge.textContent = 'Book';
+                sideMenuTierBadge.style.background = 'transparent';
+                sideMenuTierBadge.style.color = 'var(--text)';
+                sideMenuTierBadge.style.border = '1px solid var(--border)';
             } else {
                 sideMenuTierBadge.textContent = 'Free';
-                sideMenuTierBadge.style.background = 'rgba(59, 130, 246, 0.15)';
-                sideMenuTierBadge.style.color = '#3b82f6';
+                sideMenuTierBadge.style.background = 'transparent';
+                sideMenuTierBadge.style.color = 'var(--text)';
+                sideMenuTierBadge.style.border = '1px solid var(--border)';
             }
         }
 
@@ -5491,20 +5498,20 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Change to red when limit reached (not for unlimited Pro users)
                 const atLimit = summary.analysesLimit !== -1 && summary.analysesUsed >= summary.analysesLimit;
                 if (atLimit) {
-                    usageIndicator.style.background = 'rgba(239, 68, 68, 0.1)';
-                    usageIndicator.style.borderColor = 'rgba(239, 68, 68, 0.5)';
-                    usageText.style.color = '#dc2626';
+                    usageIndicator.style.background = 'var(--text)';
+                    usageIndicator.style.borderColor = 'var(--text)';
+                    usageText.style.color = 'var(--bg)';
                 } else {
-                    usageIndicator.style.background = 'rgba(59, 130, 246, 0.1)';
-                    usageIndicator.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                    usageIndicator.style.background = 'transparent';
+                    usageIndicator.style.borderColor = 'var(--border)';
                     usageText.style.color = '';
                 }
             } else {
                 // Non-logged-in user: show welcome message
                 usageText.textContent = 'Sign up to start your free plan with 3 scans/month';
-                usageIndicator.style.background = 'rgba(16, 185, 129, 0.1)';
-                usageIndicator.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-                usageText.style.color = '#059669';
+                usageIndicator.style.background = 'transparent';
+                usageIndicator.style.borderColor = 'var(--border)';
+                usageText.style.color = '';
             }
         }
 
@@ -5617,7 +5624,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const isVisible = aiReferencePreview.style.display !== 'none';
                 aiReferencePreview.style.display = isVisible ? 'none' : 'block';
                 showRawOutputBtn.textContent = isVisible ? '👁️ Raw' : '👁️ Hide';
-                showRawOutputBtn.style.background = isVisible ? '#6366f1' : '#10b981';
+                showRawOutputBtn.style.background = 'var(--text)';
+                showRawOutputBtn.style.color = 'var(--bg)';
             });
         }
 
@@ -5707,44 +5715,25 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 // Highlight current plan card
                 if (isCurrentPlan) {
-                    card.style.border = '2px solid #10b981';
-                    card.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.3)';
+                    card.style.border = '2px solid var(--text)';
+                    card.style.boxShadow = 'none';
                 } else {
-                    // Reset to default styles
-                    if (tier === 'free') {
-                        // Green border for Free tier when not logged in (recommended option)
-                        if (!isLoggedIn) {
-                            card.style.border = '2px solid #10b981';
-                            card.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.2)';
-                        } else {
-                            card.style.border = '2px solid rgba(255, 255, 255, 0.1)';
-                            card.style.boxShadow = 'none';
-                        }
-                    } else if (tier === 'basic') {
-                        card.style.border = '2px solid rgba(59, 130, 246, 0.5)';
-                        card.style.boxShadow = 'none';
-                    } else if (tier === 'pro') {
-                        card.style.border = '2px solid var(--primary)';
-                        card.style.boxShadow = 'none';
-                    } else if (tier === 'book') {
-                        card.style.border = '2px solid #8b5cf6';
-                        card.style.boxShadow = 'none';
-                    }
+                    card.style.border = '1px solid var(--border)';
+                    card.style.boxShadow = 'none';
                 }
 
                 if (!isLoggedIn) {
                     // Non-logged-in user: show signup buttons
                     if (tier === 'free') {
-                        actionDiv.innerHTML = '<button class="signup-free-btn" style="width: 100%; padding: 12px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">Register Now for Free</button>';
+                        actionDiv.innerHTML = '<button class="signup-free-btn" style="width: 100%; padding: 12px 16px; background: transparent; color: var(--text); border: 1px solid var(--border); font-size: 14px; font-weight: 600; cursor: pointer;">Register Now for Free</button>';
                     } else if (tier === 'book') {
-                        actionDiv.innerHTML = '<button class="signup-book-btn" style="width: 100%; padding: 12px 16px; background: #8b5cf6; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">Sign Up to Get Book</button>';
+                        actionDiv.innerHTML = '<button class="signup-book-btn" style="width: 100%; padding: 12px 16px; background: transparent; color: var(--text); border: 1px solid var(--border); font-size: 14px; font-weight: 600; cursor: pointer;">Sign Up to Get Book</button>';
                     } else {
-                        const btnColor = tier === 'basic' ? '#3b82f6' : 'var(--primary)';
-                        actionDiv.innerHTML = `<button class="signup-${tier}-btn" style="width: 100%; padding: 12px 16px; background: ${btnColor}; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">Sign Up to Start</button>`;
+                        actionDiv.innerHTML = `<button class="signup-${tier}-btn" style="width: 100%; padding: 12px 16px; background: transparent; color: var(--text); border: 1px solid var(--border); font-size: 14px; font-weight: 600; cursor: pointer;">Sign Up to Start</button>`;
                     }
                 } else if (isCurrentPlan) {
                     // Show "Current Plan" button
-                    actionDiv.innerHTML = '<button class="ghost-button" style="width: 100%; background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981;" disabled>✓ Current Plan</button>';
+                    actionDiv.innerHTML = '<button class="ghost-button" style="width: 100%; background: var(--text); border-color: var(--text); color: var(--bg);" disabled>✓ Current Plan</button>';
                 } else if (tier === 'free') {
                     // Free tier - no action needed if user is on paid plan
                     actionDiv.innerHTML = '';
@@ -6507,11 +6496,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
     sectionEditorOverlay.style.cssText = `
         position: absolute;
         display: none;
-        background: var(--bg-secondary, #1a1a2e);
-        border: 2px solid var(--primary);
-        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 0;
         padding: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        box-shadow: none;
         z-index: 10000;
         min-width: 200px;
     `;
@@ -6522,9 +6511,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
         width: 100%;
         padding: 8px;
         font-size: 14px;
-        border: 1px solid rgba(139, 92, 246, 0.3);
-        border-radius: 6px;
-        background: var(--bg, #0f0f23);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        background: var(--bg);
         color: var(--text);
         cursor: pointer;
         margin-bottom: 8px;
@@ -6545,10 +6534,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     applyButton.style.cssText = `
         flex: 1;
         padding: 6px 12px;
-        background: var(--primary);
-        color: white;
+        background: var(--text);
+        color: var(--bg);
         border: none;
-        border-radius: 6px;
+        border-radius: 0;
         cursor: pointer;
         font-size: 13px;
         font-weight: 600;
@@ -6559,10 +6548,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     cancelButton.style.cssText = `
         flex: 1;
         padding: 6px 12px;
-        background: #6b7280;
-        color: white;
-        border: none;
-        border-radius: 6px;
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 0;
         cursor: pointer;
         font-size: 13px;
     `;
@@ -6573,10 +6562,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
         width: 100%;
         margin-top: 8px;
         padding: 6px 12px;
-        background: #dc3545;
-        color: white;
+        background: var(--text);
+        color: var(--bg);
         border: none;
-        border-radius: 6px;
+        border-radius: 0;
         cursor: pointer;
         font-size: 13px;
         font-weight: 600;
@@ -6737,12 +6726,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
     arrangementEditorOverlay.style.cssText = `
         position: absolute;
         display: none;
-        background: var(--bg-secondary, #1a1a2e);
-        border: 2px solid var(--primary);
-        border-radius: 8px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 0;
         padding: 12px;
         z-index: 10000;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        box-shadow: none;
         min-width: 200px;
     `;
 
@@ -6751,9 +6740,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
         width: 100%;
         padding: 8px;
         font-size: 14px;
-        border: 1px solid rgba(139, 92, 246, 0.3);
-        border-radius: 6px;
-        background: var(--bg, #0f0f23);
+        border: 1px solid var(--border);
+        border-radius: 0;
+        background: var(--bg);
         color: var(--text);
         cursor: pointer;
         margin-bottom: 8px;
@@ -6774,10 +6763,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     arrangementApplyButton.style.cssText = `
         flex: 1;
         padding: 6px 12px;
-        background: var(--primary);
-        color: white;
+        background: var(--text);
+        color: var(--bg);
         border: none;
-        border-radius: 6px;
+        border-radius: 0;
         cursor: pointer;
         font-size: 13px;
         font-weight: 600;
@@ -6788,10 +6777,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     arrangementCancelButton.style.cssText = `
         flex: 1;
         padding: 6px 12px;
-        background: #6b7280;
-        color: white;
-        border: none;
-        border-radius: 6px;
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 0;
         cursor: pointer;
         font-size: 13px;
     `;
@@ -6802,10 +6791,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
         width: 100%;
         margin-top: 8px;
         padding: 6px 12px;
-        background: #dc3545;
-        color: white;
+        background: var(--text);
+        color: var(--bg);
         border: none;
-        border-radius: 6px;
+        border-radius: 0;
         cursor: pointer;
         font-size: 13px;
         font-weight: 600;

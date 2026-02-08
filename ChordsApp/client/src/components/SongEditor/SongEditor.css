@@ -1,0 +1,527 @@
+/* SongEditor - Professional Chord Sheet Styles */
+
+/* ============ OVERLAY & LAYOUT ============ */
+.song-editor-overlay {
+    position: fixed;
+    inset: 0;
+    background: #f5f5f5;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.song-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* ============ TOOLBAR ============ */
+.editor-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    background: #fff;
+    border-bottom: 2px solid #000;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.toolbar-center {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.toolbar-right {
+    display: flex;
+    gap: 10px;
+}
+
+.tool-group {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.tool-label {
+    padding: 8px 12px;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-right: 1px solid #000;
+    color: #000;
+    background: #fff;
+}
+
+.tool-value {
+    padding: 8px 12px;
+    font-weight: 700;
+    font-family: monospace;
+    min-width: 40px;
+    text-align: center;
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    color: #000;
+    background: #fff;
+}
+
+.columns-info {
+    font-size: 13px;
+    color: #000;
+    font-weight: 700;
+}
+
+/* Toolbar standalone buttons */
+.editor-toolbar > button,
+.toolbar-right > button {
+    padding: 8px 16px;
+    border: 2px solid #000;
+    background: #fff;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #000;
+}
+
+.editor-toolbar > button:hover,
+.toolbar-right > button:hover {
+    background: #000;
+    color: #fff;
+}
+
+.toolbar-right > button.active {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+.toolbar-right > button.primary-btn {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+.editor-toolbar > button.ghost-btn {
+    border: 2px solid #000;
+    background: transparent;
+}
+
+/* Tool group buttons (transpose, font size, columns) */
+.tool-group button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #000;
+    line-height: 1;
+    min-width: 40px;
+}
+
+.tool-group button:hover {
+    background: #000;
+    color: #fff;
+}
+
+/* ============ MAIN CONTENT AREA ============ */
+.editor-main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    background: #fff;
+}
+
+.editor-main.with-panel .a4-preview-container {
+    flex: 0 0 60%;
+}
+
+/* ============ A4 PREVIEW ============ */
+.a4-preview-container {
+    flex: 1;
+    overflow: auto;
+    padding: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.a4-page {
+    width: 794px;
+    min-height: 1123px;
+    background: #fff;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    padding: 40px 50px;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #000;
+}
+
+.a4-page.rtl-page {
+    text-align: right;
+}
+
+/* ============ PAGE HEADER ============ */
+.page-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #000;
+}
+
+.song-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 2px 0;
+    line-height: 1.1;
+    text-transform: uppercase;
+}
+
+.song-artist {
+    font-size: 14px;
+    color: #000;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.song-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    margin-top: 6px;
+}
+
+.song-meta span {
+    white-space: nowrap;
+}
+
+.song-meta strong {
+    color: #000;
+    font-weight: 700;
+}
+
+/* ============ ARRANGEMENT BADGES ROW ============ */
+.arrangement-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #000;
+}
+
+.arr-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    border: 2px solid;
+}
+
+/* Badge Colors - All Black */
+.badge-intro,
+.badge-verse,
+.badge-prechorus,
+.badge-chorus,
+.badge-bridge,
+.badge-outro,
+.badge-tag,
+.badge-interlude,
+.badge-other {
+    border-color: #000;
+    color: #000;
+}
+
+/* ============ SHEET BODY ============ */
+.sheet-body {
+    column-gap: 30px;
+    column-rule: 2px solid #000;
+}
+
+/* ============ SECTION BOX ============ */
+.section-box {
+    break-inside: avoid;
+    margin-bottom: 10px;
+    border: 2px solid #000;
+    border-radius: 0;
+    overflow: hidden;
+    background: #fff;
+}
+
+.section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    background: #fff;
+    border-bottom: 1px solid #000;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    border: 2px solid;
+    flex-shrink: 0;
+}
+
+.section-name {
+    font-weight: 700;
+    font-size: 0.95em;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.section-notes {
+    font-size: 0.85em;
+    color: #000;
+    font-style: italic;
+}
+
+.section-content {
+    padding: 8px 12px;
+    line-height: 1.6;
+}
+
+/* ============ CHORD GRID ============ */
+.chord-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
+    padding: 4px 0;
+}
+
+.chord-grid .chord {
+    font-weight: 700;
+}
+
+/* ============ LYRIC LINE ============ */
+.lyric-line {
+    display: block;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.chord-lyric-pair {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    vertical-align: bottom;
+}
+
+.chord-above {
+    display: block;
+    min-height: 1.4em;
+    color: #000;
+    font-weight: 700;
+    font-size: 0.95em;
+}
+
+.lyric-below {
+    display: block;
+    white-space: pre;
+}
+
+.chord {
+    color: #000;
+    font-weight: 700;
+    font-size: 1em;
+    white-space: nowrap;
+}
+
+.chord-bass {
+    font-weight: 700;
+    font-size: 0.85em;
+}
+
+.chord sup {
+    font-size: 0.65em;
+    vertical-align: super;
+}
+
+.lyric-slot {
+    display: inline;
+}
+
+/* ============ RTL SUPPORT ============ */
+.a4-page.rtl-page .song-title {
+    text-align: right;
+}
+
+.a4-page.rtl-page .song-artist {
+    text-align: right;
+}
+
+.a4-page.rtl-page .song-meta {
+    /* flex-start in RTL context = right side (under the title) */
+}
+
+/* arrangement-row inherits RTL from dir="rtl" on parent - no override needed */
+
+/* RTL inherits from dir="rtl" on parent - minimal overrides */
+.a4-page.rtl-page .section-header-row {
+    flex-direction: row-reverse;
+}
+
+.a4-page.rtl-page .lyric-line {
+    text-align: right;
+}
+
+/* RTL stacked layout - chords row above, lyrics row below (like standard chord sheets) */
+.lyric-line-rtl-stacked {
+    direction: rtl;
+    text-align: right;
+    width: 100%;
+    margin-bottom: 0.25em;
+}
+
+.lyric-line-rtl-stacked .rtl-chords-row {
+    direction: ltr;
+    text-align: right;
+    display: inline-flex;
+    gap: 2em;
+    float: right;
+    clear: both;
+}
+
+.lyric-line-rtl-stacked .rtl-chord {
+    font-weight: 700;
+    font-size: 0.95em;
+    color: #000;
+}
+
+.lyric-line-rtl-stacked .rtl-lyrics-row {
+    direction: rtl;
+    text-align: right;
+    clear: both;
+}
+
+.a4-page.rtl-page .chord-grid {
+    justify-content: flex-end;
+    direction: ltr;
+    /* Chords flow LTR (left-to-right progression) - aligned to right edge */
+}
+
+/* ============ CHORDPRO EDITOR PANEL ============ */
+.chordpro-editor {
+    flex: 0 0 40%;
+    display: flex;
+    flex-direction: column;
+    background: #1e1e1e;
+}
+
+.chordpro-editor .editor-header {
+    padding: 12px 16px;
+    background: #2d2d2d;
+    color: #888;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.chordpro-editor textarea {
+    flex: 1;
+    padding: 16px;
+    background: transparent;
+    border: none;
+    color: #d4d4d4;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+}
+
+/* ============ PRINT STYLES ============ */
+@media print {
+    .song-editor-overlay {
+        position: static;
+        background: transparent;
+    }
+
+    .editor-toolbar,
+    .chordpro-editor {
+        display: none !important;
+    }
+
+    .a4-preview-container {
+        padding: 0;
+        overflow: visible;
+    }
+
+    .a4-page {
+        box-shadow: none;
+        width: 100% !important;
+        min-height: auto !important;
+        padding: 20px !important;
+    }
+
+    .section-box {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 1200px) {
+    .editor-main.with-panel .a4-preview-container {
+        flex: 0 0 55%;
+    }
+
+    .chordpro-editor {
+        flex: 0 0 45%;
+    }
+}
+
+@media (max-width: 900px) {
+    .editor-main.with-panel {
+        flex-direction: column;
+    }
+
+    .editor-main.with-panel .a4-preview-container {
+        flex: 1;
+    }
+
+    .chordpro-editor {
+        flex: 0 0 40vh;
+    }
+
+    .a4-preview-container {
+        padding: 20px;
+    }
+
+    .a4-page {
+        transform: scale(0.75);
+        transform-origin: top center;
+    }
+
+    .toolbar-center {
+        display: none;
+    }
+}

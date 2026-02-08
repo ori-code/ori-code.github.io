@@ -14,6 +14,19 @@
         "cta": "UPLOAD CHART",
         "how": "How it works"
     },
+    "scanner": {
+        "title": "SCANNER LAB",
+        "upload": "UPLOAD CHART",
+        "analyzing": "ANALYZING...",
+        "prompt_label": "SYSTEM PROMPT",
+        "raw_output": "RAW OUTPUT",
+        "preview": "PREVIEW RESULT",
+        "waiting": "Waiting for analysis...",
+        "no_preview": "No preview available",
+        "open_editor": "OPEN IN EDITOR",
+        "error_analyze": "Failed to analyze image.",
+        "error_connect": "Error connecting to server."
+    },
     "workflow": {
         "step1": {
             "title": "UPLOAD",
@@ -39,5 +52,14 @@
         "back": "← BACK",
         "print": "PRINT",
         "key": "KEY:"
+    },
+    "editor": {
+        "back": "Back",
+        "code": "Code",
+        "print": "Print",
+        "save": "Save"
+    },
+    "common": {
+        "back": "Back"
     }
 }

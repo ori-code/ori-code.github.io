@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { analyzeChart } from '../../services/api';
-import SongViewer from '../SongViewer/SongViewer';
+import SongEditor from '../SongEditor';
 import chordsAppParser from '../../utils/chordProParser';
 
 const DEFAULT_PROMPT = `You are an expert OCR assistant specialized in transcribing Hebrew worship/music chord sheets. Your task is to accurately read chord charts and output them in a standardized inline format.
@@ -61,6 +61,7 @@ const ScannerLab = () => {
     const [parsedSong, setParsedSong] = useState(null);
     const [activeTab, setActiveTab] = useState('raw'); // 'raw' | 'preview'
     const [error, setError] = useState(null);
+    const [showEditor, setShowEditor] = useState(false);
 
     const handleFileUpload = async (event) => {
         const file = event.target.files[0];
@@ -85,10 +86,10 @@ const ScannerLab = () => {
                 };
                 setParsedSong(songData);
             } else {
-                setError('Failed to analyze image.');
+                setError(t('scanner.error_analyze'));
             }
         } catch (err) {
-            setError(err.message || 'Error connecting to server.');
+            setError(err.message || t('scanner.error_connect'));
         } finally {
             setIsAnalyzing(false);
         }
@@ -101,7 +102,7 @@ const ScannerLab = () => {
             borderTop: '4px solid var(--border-main)',
             paddingTop: '40px'
         }}>
-            <h2 style={{ fontSize: '2rem', marginBottom: '20px' }}>SCANNER LAB 🔬</h2>
+            <h2 style={{ fontSize: '2rem', marginBottom: '20px' }}>{t('scanner.title')} 🔬</h2>
 
             <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
                 {/* Left Column: Input */}
@@ -109,7 +110,7 @@ const ScannerLab = () => {
                     <div style={{ border: '2px dashed var(--border-main)', padding: '20px', textAlign: 'center' }}>
                         {isAnalyzing ? (
                             <div style={{ fontSize: '1.2rem', fontWeight: 600, animation: 'pulse 1.5s infinite' }}>
-                                ANALYZING...
+                                {t('scanner.analyzing')}
                             </div>
                         ) : (
                             <div style={{ position: 'relative', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -125,14 +126,14 @@ const ScannerLab = () => {
                                         cursor: 'pointer'
                                     }}
                                 />
-                                <button style={{ pointerEvents: 'none' }}>UPLOAD CHART</button>
+                                <button style={{ pointerEvents: 'none' }}>{t('scanner.upload')}</button>
                             </div>
                         )}
                         {error && <div style={{ color: 'red', marginTop: '10px' }}>{error}</div>}
                     </div>
 
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>SYSTEM PROMPT</label>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>{t('scanner.prompt_label')}</label>
                         <textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
@@ -155,14 +156,14 @@ const ScannerLab = () => {
                             className={activeTab === 'raw' ? '' : 'ghost-button'}
                             onClick={() => setActiveTab('raw')}
                         >
-                            RAW OUTPUT
+                            {t('scanner.raw_output')}
                         </button>
                         <button
                             className={activeTab === 'preview' ? '' : 'ghost-button'}
                             onClick={() => setActiveTab('preview')}
                             disabled={!parsedSong}
                         >
-                            PREVIEW RESULT
+                            {t('scanner.preview')}
                         </button>
                     </div>
 
@@ -183,7 +184,7 @@ const ScannerLab = () => {
                                 fontSize: '0.9rem',
                                 color: 'var(--text-primary)'
                             }}>
-                                {rawOutput || 'Waiting for analysis...'}
+                                {rawOutput || t('scanner.waiting')}
                             </pre>
                         ) : (
                             parsedSong ? (
@@ -198,12 +199,45 @@ const ScannerLab = () => {
                                     </pre>
                                 </div>
                             ) : (
-                                <div style={{ padding: '20px' }}>No preview available</div>
+                                <div style={{ padding: '20px' }}>{t('scanner.no_preview')}</div>
                             )
                         )}
                     </div>
+
+                    {/* Open Editor Button */}
+                    {parsedSong && (
+                        <button
+                            onClick={() => setShowEditor(true)}
+                            style={{
+                                marginTop: '20px',
+                                width: '100%',
+                                padding: '16px',
+                                fontSize: '1.1rem',
+                                fontWeight: 700,
+                                background: '#000',
+                                color: '#fff',
+                                border: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {t('scanner.open_editor')}
+                        </button>
+                    )}
                 </div>
             </div>
+
+            {/* Song Editor Modal */}
+            {showEditor && parsedSong && (
+                <SongEditor
+                    song={parsedSong}
+                    onClose={() => setShowEditor(false)}
+                    onSave={(updatedSong) => {
+                        setParsedSong(updatedSong);
+                        setRawOutput(updatedSong.content);
+                        setShowEditor(false);
+                    }}
+                />
+            )}
         </section>
     );
 };

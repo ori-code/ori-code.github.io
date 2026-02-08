@@ -178,7 +178,7 @@ a {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 90px 24px 60px;
+    padding: 100px 32px 80px;
 }
 
 /* --- Hero --- */
@@ -192,6 +192,7 @@ a {
 
 .hero-text h1 {
     font-size: clamp(1.8rem, 3vw, 2.4rem);
+    font-weight: 600;
     margin-bottom: 12px;
     line-height: 1.2;
 }
@@ -201,6 +202,7 @@ a {
     max-width: 520px;
     margin-bottom: 18px;
     font-size: 0.95rem;
+    opacity: 0.6;
 }
 
 .hero-actions {
@@ -214,7 +216,7 @@ a {
 .secondary-action,
 .ghost-button {
     font-family: inherit;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 0.85rem;
     padding: 10px 18px;
     border-radius: 0;
@@ -236,9 +238,9 @@ a {
 
 .primary-action,
 .primary-button {
-    background: var(--text);
-    color: var(--bg);
-    border: 1px solid var(--text);
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
 }
 
 .primary-action:disabled {
@@ -248,7 +250,17 @@ a {
 
 .primary-action:not(:disabled):hover,
 .primary-action:not(:disabled):focus-visible {
-    opacity: 0.8;
+    background: var(--text);
+    color: var(--bg);
+}
+
+/* Filled state: for active/toggled-on buttons */
+.primary-action.active,
+.primary-action.on,
+.primary-button.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
 }
 
 .secondary-action {
@@ -275,6 +287,94 @@ a {
     color: var(--bg);
 }
 
+/* Ghost button active/toggled state */
+.ghost-button.active,
+.ghost-button.on {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+}
+
+/* Signup / CTA buttons - outline by default, fill on hover */
+[class*="signup-"][class*="-btn"]:hover {
+    background: var(--text) !important;
+    color: var(--bg) !important;
+    border-color: var(--text) !important;
+}
+
+/* --- Range Sliders (B&W) --- */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    height: 20px;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    background: var(--border);
+    height: 2px;
+    border: none;
+    border-radius: 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--text);
+    border: none;
+    border-radius: 50%;
+    margin-top: -6px;
+}
+
+input[type="range"]::-moz-range-track {
+    background: var(--border);
+    height: 2px;
+    border: none;
+    border-radius: 0;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: var(--text);
+    border: none;
+    border-radius: 50%;
+}
+
+/* --- Checkboxes (B&W) --- */
+input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    border: 2px solid var(--text);
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    border-radius: 0;
+    vertical-align: middle;
+}
+
+input[type="checkbox"]:checked {
+    background: var(--text);
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--bg);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+}
+
 /* --- Theme Toggle --- */
 #themeToggle {
     display: inline-flex;
@@ -293,10 +393,26 @@ a {
     height: auto;
 }
 
-#themeToggle:hover {
+#themeToggle:hover,
+#langToggle:hover {
     background: var(--text);
     color: var(--bg);
     transform: none;
+}
+
+#langToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
 /* --- Display Toggle Buttons --- */
@@ -452,7 +568,7 @@ a {
 
 .workflow-grid {
     display: grid;
-    gap: 12px;
+    gap: 20px;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
@@ -460,10 +576,10 @@ a {
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 0;
-    padding: 14px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
 
 .step-card h3 {
@@ -476,6 +592,7 @@ a {
     margin: 0;
     line-height: 1.4;
     color: var(--text);
+    opacity: 0.6;
 }
 
 .step-number {
@@ -488,8 +605,9 @@ a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 0.85rem;
+    opacity: 0.6;
 }
 
 /* --- Upload --- */
@@ -1098,7 +1216,7 @@ a {
 
 /* --- Preview Section --- */
 .preview-section {
-    margin: 48px 0;
+    margin: 64px 0;
 }
 
 .preview-section-content {
@@ -1296,6 +1414,35 @@ a {
 
 .footer-highlight {
     font-weight: 600;
+}
+
+/* User Branding in Footer */
+#userBrandingFooter.active {
+    display: flex;
+}
+
+/* Side Menu Logo Upload */
+#sideMenuAvatarContainer:hover {
+    opacity: 0.7;
+}
+
+#sideMenuUserLogo {
+    background: var(--bg);
+}
+
+#brandingTextInput {
+    border-radius: 0;
+}
+
+#brandingTextInput:focus {
+    outline: none;
+    border-color: var(--text);
+}
+
+#clearLogoBtn:hover,
+#toggleAchordimBrandingBtn:hover {
+    background: var(--text);
+    color: var(--bg);
 }
 
 /* --- Modal Styles --- */
@@ -1984,6 +2131,16 @@ a {
     [dir="rtl"] .preview-logo {
         right: auto;
         left: 20px;
+    }
+
+    .preview-page-footer {
+        display: flex !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    #userBrandingFooter.active {
+        display: flex !important;
     }
 }
 
@@ -2965,7 +3122,36 @@ a {
 [style*="background: rgba(168, 85"],
 [style*="background: rgba(236, 72"],
 [style*="background: rgba(99, 102"],
-[style*="background: rgba(239, 68"] {
+[style*="background: rgba(239, 68"],
+[style*="background: rgba(52, 199"],
+[style*="background: rgba(255, 59, 48"],
+[style*="background: rgba(0, 122, 255"],
+[style*="background: rgba(107, 114"],
+[style*="background: rgba(245, 158"],
+[style*="background: rgba(249, 115"],
+[style*="background: rgba(76, 175"],
+[style*="background: rgba(56, 142"],
+[style*="background: rgba(255, 152"],
+[style*="background: rgba(251, 140"],
+[style*="background: #10b981"],
+[style*="background: #3b82f6"],
+[style*="background: #ef4444"],
+[style*="background: #8b5cf6"],
+[style*="background: #f59e0b"],
+[style*="background: #22c55e"],
+[style*="background: #ff3b5c"],
+[style*="background: #a855f7"],
+[style*="background: #2383E2"],
+[style*="background-color: #10b981"],
+[style*="background-color: #3b82f6"],
+[style*="background-color: #ef4444"],
+[style*="background-color: #22c55e"],
+[style*="background-color: #ff3b5c"],
+[style*="background-color: #f59e0b"],
+[style*="background: #1e1e2e"],
+[style*="background: #10b981"],
+[style*="background: rgba(255,255,255,0.08"],
+[style*="background: rgba(255,255,255,0.1"] {
     background: transparent !important;
 }
 
@@ -2993,7 +3179,45 @@ a {
 [style*="color: #c084fc"],
 [style*="color: #f472b6"],
 [style*="color: #ff3b5c"],
-[style*="color: #ff6b8a"] {
+[style*="color: #ff6b8a"],
+[style*="color: #34c759"],
+[style*="color: #ff3b30"],
+[style*="color: #007aff"],
+[style*="color: #dc2626"],
+[style*="color: #d97706"],
+[style*="color: #22c55e"],
+[style*="color: #16a34a"],
+[style*="color: #2563eb"],
+[style*="color: #7c3aed"],
+[style*="color: #b91c1c"],
+[style*="color: #047857"],
+[style*="color: #1d4ed8"],
+[style*="color: #6d28d9"],
+[style*="color: #f97316"],
+[style*="color: #e879f9"],
+[style*="color: #f0abfc"],
+[style*="color: #fda4af"],
+[style*="color: #fecaca"],
+[style*="color: #999"],
+[style*="color: #666"],
+[style*="color: #444"],
+[style*="color: #ccc"],
+[style*="color: #ddd"],
+[style*="color: white"],
+[style*="color: red"],
+[style*="color: green"],
+[style*="color: blue"],
+[style*="color: orange"],
+[style*="color: purple"],
+[style*="color: #60a5fa"],
+[style*="color: #4ade80"],
+[style*="color: #e5e5e5"],
+[style*="color: #9ca3af"],
+[style*="color: #34d399"],
+[style*="color: #f87171"],
+[style*="color: #818cf8"],
+[style*="color: #fb923c"],
+[style*="color: #1e1e2e"] {
     color: var(--text) !important;
 }
 
@@ -3010,7 +3234,17 @@ a {
 [style*="border-color: rgba(6, 182"],
 [style*="border-color: rgba(34, 211"],
 [style*="border-color: rgba(249, 115"],
-[style*="border-color: rgba(251, 191"] {
+[style*="border-color: rgba(251, 191"],
+[style*="border-color: #10b981"],
+[style*="border-color: #3b82f6"],
+[style*="border-color: #ef4444"],
+[style*="border-color: #8b5cf6"],
+[style*="border-color: #f59e0b"],
+[style*="border-color: #ff3b5c"],
+[style*="border-color: #22c55e"],
+[style*="border-color: #a855f7"],
+[style*="border: 1px solid #"],
+[style*="border: 2px solid #"] {
     border-color: var(--border) !important;
 }
 

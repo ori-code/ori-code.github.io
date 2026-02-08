@@ -306,6 +306,12 @@
                             <span data-i18n="menu.check.darkmode">Dark Mode</span>
                         </label>
                     </div>
+                    <div class="side-menu-row">
+                        <label class="side-menu-checkbox">
+                            <input type="checkbox" id="hideEmojisToggle">
+                            <span data-i18n="menu.check.hide_emojis">Hide Emojis</span>
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Layout -->
@@ -532,10 +538,14 @@
                     style="display: none; border-top: 1px solid var(--border); margin-top: auto; padding-top: 16px;">
                     <div
                         style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface);">
-                        <div
-                            style="width: 40px; height: 40px; background: var(--text); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--bg); font-weight: 600;">
+                        <!-- Avatar / Logo Upload -->
+                        <div id="sideMenuAvatarContainer"
+                            style="width: 40px; height: 40px; min-width: 40px; background: var(--text); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--bg); font-weight: 600; cursor: pointer; position: relative; overflow: hidden;"
+                            title="Click to upload logo">
                             <span id="sideMenuUserAvatar">?</span>
+                            <img id="sideMenuUserLogo" style="display: none; width: 40px; height: 40px; object-fit: contain; position: absolute; top: 0; left: 0;" alt="Logo">
                         </div>
+                        <input type="file" id="logoUploadInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display: none;">
                         <div style="flex: 1; min-width: 0;">
                             <div id="sideMenuUserName"
                                 style="font-weight: 600; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -543,6 +553,19 @@
                             <div id="sideMenuTierBadge"
                                 style="display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600; margin-top: 4px; background: var(--surface); color: var(--text);">
                                 Free</div>
+                            <input type="text" id="brandingTextInput"
+                                placeholder="Band / Church name..."
+                                data-i18n-placeholder="branding.placeholder"
+                                maxlength="40"
+                                style="display: none; width: 100%; margin-top: 6px; padding: 4px 8px; font-size: 11px; background: transparent; border: 1px solid var(--border); color: var(--text); font-family: inherit;">
+                            <button id="clearLogoBtn" data-i18n="branding.remove_logo"
+                                style="display: none; font-size: 10px; padding: 2px 6px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; margin-top: 4px;">
+                                ✕ Remove Logo
+                            </button>
+                            <button id="toggleAchordimBrandingBtn" data-i18n="branding.hide_footer"
+                                style="display: none; font-size: 10px; padding: 2px 6px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; margin-top: 4px;">
+                                Hide aChordim footer
+                            </button>
                         </div>
                     </div>
                     <!-- Usage Indicator -->
@@ -865,12 +888,20 @@
                             <div id="livePreview" class="live-preview"
                                 style="height: 1123px; max-height: 1123px; overflow: hidden; border: none; padding: 20px 20px 40px 20px; width: 100%; max-width: 210mm; column-count: 2; column-gap: 40px; column-fill: auto;">
                             </div>
-                            <!-- Page Footer with TheFaithSound branding -->
+                            <!-- Page Footer with User Branding + TheFaithSound branding -->
                             <div class="preview-page-footer">
-                                <img src="achordim-icon-app.svg" alt="" class="footer-icon">
-                                <span class="footer-brand">א/aChordim</span>
-                                <span class="footer-url">www.thefaith<span
-                                        class="footer-highlight">sound</span>.com</span>
+                                <!-- User Branding (left, hidden by default) -->
+                                <div id="userBrandingFooter" style="display: none; align-items: center; gap: 6px; margin-right: auto;">
+                                    <img id="footerUserLogo" style="width: 16px; height: 16px; object-fit: contain; display: none;" alt="">
+                                    <span id="footerBrandingText" style="font-weight: 600; font-size: 11px;"></span>
+                                </div>
+                                <!-- aChordim branding (right, toggleable) -->
+                                <span id="achordimBranding" style="display: flex; align-items: center; gap: 6px;">
+                                    <img src="achordim-icon-app.svg" alt="" class="footer-icon">
+                                    <span class="footer-brand">א/aChordim</span>
+                                    <span class="footer-url">www.thefaith<span
+                                            class="footer-highlight">sound</span>.com</span>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -1203,7 +1234,7 @@
                 style="color: var(--text-muted); font-size: 14px; line-height: 1.6; text-align: center; margin: 0 0 20px 0; white-space: pre-line;">
             </p>
             <button id="customAlertOk"
-                style="width: 100%; padding: 12px 24px; background: var(--text); border: none; color: var(--bg); cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s ease;">OK</button>
+                style="width: 100%; padding: 12px 24px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s ease;">OK</button>
         </div>
     </div>
     <style>
@@ -1220,8 +1251,9 @@
         }
 
         #customAlertOk:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+            background: var(--text) !important;
+            color: var(--bg) !important;
+            border-color: var(--text) !important;
         }
 
         #customAlertOk:active {
@@ -1245,18 +1277,21 @@
                 <button id="customConfirmCancel"
                     style="flex: 1; padding: 12px 24px; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s ease;">Cancel</button>
                 <button id="customConfirmOk"
-                    style="flex: 1; padding: 12px 24px; background: var(--text); border: none; color: var(--bg); cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s ease;">Remove</button>
+                    style="flex: 1; padding: 12px 24px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.2s ease;">Remove</button>
             </div>
         </div>
     </div>
     <style>
         #customConfirmCancel:hover {
-            background: var(--hover-bg);
+            background: var(--text) !important;
+            color: var(--bg) !important;
+            border-color: var(--text) !important;
         }
 
         #customConfirmOk:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+            background: var(--text) !important;
+            color: var(--bg) !important;
+            border-color: var(--text) !important;
         }
 
         #customConfirmOk:active,
@@ -2339,7 +2374,7 @@
                 </div>
 
                 <!-- Audio Controls -->
-                <div style="margin-top: 12px; padding: 10px; background: rgba(255,255,255,0.03);">
+                <div style="margin-top: 12px; padding: 10px; background: transparent;">
                     <div
                         style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">
                         Pads</div>
@@ -3097,7 +3132,7 @@
                         <label id="liveModePlaylistLock"
                             style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text); user-select: none; padding: 2px 6px; background: var(--button-bg);">
                             <input type="checkbox" id="liveModePlaylistLockToggle"
-                                onchange="liveMode.setPlaylistLocked(this.checked); document.getElementById('lockToggleLabel').textContent = this.checked ? 'Locked' : 'Unlocked'; this.parentElement.style.background = this.checked ? 'rgba(239, 68, 68, 0.3)' : 'rgba(107, 114, 128, 0.2)'"
+                                onchange="liveMode.setPlaylistLocked(this.checked); document.getElementById('lockToggleLabel').textContent = this.checked ? 'Locked' : 'Unlocked'; this.parentElement.style.background = this.checked ? 'var(--text)' : 'transparent'; this.parentElement.style.color = this.checked ? 'var(--bg)' : ''"
                                 style="cursor: pointer; width: 14px; height: 14px;">
                             <span id="lockToggleLabel">Unlocked</span>
                         </label>
@@ -3244,31 +3279,22 @@
             if (msgLower.includes('error') || msgLower.includes('failed') || msgLower.includes('❌')) {
                 alertIcon = '❌';
                 alertTitle = options.title || 'Error';
-                okBtn.style.background = 'linear-gradient(135deg, #dc2626, #ef4444)';
             } else if (msgLower.includes('success') || msgLower.includes('welcome') || msgLower.includes('🎉') || msgLower.includes('complete')) {
                 alertIcon = '🎉';
                 alertTitle = options.title || 'Success';
-                okBtn.style.background = 'linear-gradient(135deg, #059669, #10b981)';
             } else if (msgLower.includes('warning') || msgLower.includes('⚠️')) {
                 alertIcon = '⚠️';
                 alertTitle = options.title || 'Warning';
-                okBtn.style.background = 'linear-gradient(135deg, #d97706, #f59e0b)';
             } else if (msgLower.includes('pro') || msgLower.includes('upgrade') || msgLower.includes('subscription')) {
                 alertIcon = '⭐';
                 alertTitle = options.title || 'Upgrade Required';
-                okBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #a855f7)';
             } else if (msgLower.includes('login') || msgLower.includes('log in') || msgLower.includes('sign in')) {
                 alertIcon = '🔐';
                 alertTitle = options.title || 'Authentication Required';
-                okBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #a855f7)';
             } else if (msgLower.includes('cancel')) {
                 alertIcon = '👋';
                 alertTitle = options.title || 'Cancelled';
-                okBtn.style.background = 'linear-gradient(135deg, #6b7280, #9ca3af)';
-            } else {
-                okBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #a855f7)';
             }
-
             // Clean up message (remove emoji prefixes that we're now showing as icons)
             let cleanMessage = message.replace(/^[🎉❌⚠️🔢⭐🔐👋ℹ️]\s*/g, '').trim();
 
@@ -3314,15 +3340,6 @@
             msgEl.textContent = message;
             okBtn.textContent = options.confirmText || 'Remove';
             cancelBtn.textContent = options.cancelText || 'Cancel';
-
-            // Set button style based on type
-            if (options.type === 'danger' || !options.type) {
-                okBtn.style.background = 'linear-gradient(135deg, #dc2626, #ef4444)';
-            } else if (options.type === 'warning') {
-                okBtn.style.background = 'linear-gradient(135deg, #d97706, #f59e0b)';
-            } else {
-                okBtn.style.background = 'linear-gradient(135deg, #8b5cf6, #a855f7)';
-            }
 
             modal.style.display = 'flex';
             cancelBtn.focus();
@@ -3410,23 +3427,23 @@
     <script src="app.js?v=43"></script>
 
     <style>
-        /* Auth message states */
+        /* Auth message states - B&W */
         #authMessage.success {
-            background: rgba(52, 199, 89, 0.1);
-            color: #34c759;
-            border: 1px solid rgba(52, 199, 89, 0.2);
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
         }
 
         #authMessage.error {
-            background: rgba(255, 59, 48, 0.1);
-            color: #ff3b30;
-            border: 1px solid rgba(255, 59, 48, 0.2);
+            background: var(--text);
+            color: var(--bg);
+            border: 1px solid var(--text);
         }
 
         #authMessage.info {
-            background: rgba(0, 122, 255, 0.1);
-            color: #007aff;
-            border: 1px solid rgba(0, 122, 255, 0.2);
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
         }
 
         #profileMenu button:hover {
@@ -3595,9 +3612,8 @@
                         const titleEl = livePreview.querySelector('.song-title');
                         const songTitle = titleEl ? titleEl.textContent.trim().replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_') : 'chord_sheet';
 
-                        // Create a clone of the preview for capturing
-                        // FIX: Capture only the content (livePreview) instead of container to remove extra padding/grey background
-                        const captureTarget = document.getElementById('livePreview');
+                        // Capture the full preview page (content + footer with user branding)
+                        const captureTarget = document.querySelector('.preview-page[data-page="1"]');
 
                         // Capture the preview
                         const canvas = await html2canvas(captureTarget, {
@@ -3627,9 +3643,9 @@
                                         <title>${songTitle}</title>
                                         <meta name="viewport" content="width=device-width, initial-scale=1">
                                         <style>
-                                            body { margin: 0; padding: 20px; background: #f0f0f0; text-align: center; font-family: -apple-system, sans-serif; }
-                                            img { max-width: 100%; height: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-                                            p { color: #666; margin-top: 20px; font-size: 14px; }
+                                            body { margin: 0; padding: 20px; background: #fff; text-align: center; font-family: -apple-system, sans-serif; }
+                                            img { max-width: 100%; height: auto; border: 1px solid #000; }
+                                            p { color: #000; margin-top: 20px; font-size: 14px; }
                                         </style>
                                     </head>
                                     <body>
@@ -3751,6 +3767,287 @@
                 link.click();
                 document.body.removeChild(link);
             }
+        })();
+
+        // ============= USER BRANDING (Logo + Custom Text) =============
+        (function () {
+            const LOGO_STORAGE_KEY = 'chordsapp-user-logo';
+            const BRANDING_TEXT_KEY = 'chordsapp-branding-text';
+            const HIDE_ACHORDIM_KEY = 'chordsapp-hide-achordim';
+            const MAX_LOGO_SIZE = 200 * 1024; // 200KB
+
+            const avatarContainer = document.getElementById('sideMenuAvatarContainer');
+            const logoInput = document.getElementById('logoUploadInput');
+            const avatarSpan = document.getElementById('sideMenuUserAvatar');
+            const logoImg = document.getElementById('sideMenuUserLogo');
+            const clearLogoBtn = document.getElementById('clearLogoBtn');
+            const brandingInput = document.getElementById('brandingTextInput');
+            const footerLogo = document.getElementById('footerUserLogo');
+            const footerText = document.getElementById('footerBrandingText');
+            const footerContainer = document.getElementById('userBrandingFooter');
+
+            // --- Logo Upload ---
+            if (avatarContainer && logoInput) {
+                avatarContainer.addEventListener('click', () => logoInput.click());
+
+                logoInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    if (file.size > MAX_LOGO_SIZE) {
+                        showAlert('Logo image must be under 200KB. Please use a smaller image.');
+                        logoInput.value = '';
+                        return;
+                    }
+
+                    try {
+                        const reader = new FileReader();
+                        const base64 = await new Promise((resolve, reject) => {
+                            reader.onload = () => resolve(reader.result);
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        });
+
+                        localStorage.setItem(LOGO_STORAGE_KEY, base64);
+                        applyLogo(base64);
+                        syncBrandingToFirebase();
+                    } catch (err) {
+                        console.error('Logo upload error:', err);
+                        showAlert('Failed to upload logo. Please try again.');
+                    }
+
+                    logoInput.value = '';
+                });
+            }
+
+            // --- Clear Logo ---
+            if (clearLogoBtn) {
+                clearLogoBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    localStorage.removeItem(LOGO_STORAGE_KEY);
+                    removeLogo();
+                    syncBrandingToFirebase();
+                });
+            }
+
+            // --- Branding Text ---
+            if (brandingInput) {
+                let debounceTimer;
+                brandingInput.addEventListener('input', () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        const text = brandingInput.value.trim();
+                        localStorage.setItem(BRANDING_TEXT_KEY, text);
+                        applyBrandingText(text);
+                        syncBrandingToFirebase();
+                    }, 500);
+                });
+            }
+
+            // --- Apply Functions ---
+            function applyLogo(base64) {
+                if (logoImg) {
+                    logoImg.src = base64;
+                    logoImg.style.display = 'block';
+                }
+                if (avatarSpan) avatarSpan.style.display = 'none';
+                if (avatarContainer) avatarContainer.style.background = 'var(--bg)';
+                if (clearLogoBtn) clearLogoBtn.style.display = 'inline-block';
+                if (footerLogo) {
+                    footerLogo.src = base64;
+                    footerLogo.style.display = 'block';
+                }
+                updateFooterVisibility();
+            }
+
+            function removeLogo() {
+                if (logoImg) {
+                    logoImg.src = '';
+                    logoImg.style.display = 'none';
+                }
+                if (avatarSpan) avatarSpan.style.display = '';
+                if (avatarContainer) avatarContainer.style.background = 'var(--text)';
+                if (clearLogoBtn) clearLogoBtn.style.display = 'none';
+                if (footerLogo) {
+                    footerLogo.src = '';
+                    footerLogo.style.display = 'none';
+                }
+                updateFooterVisibility();
+            }
+
+            function applyBrandingText(text) {
+                if (footerText) footerText.textContent = text;
+                updateFooterVisibility();
+            }
+
+            function updateFooterVisibility() {
+                if (!footerContainer) return;
+                const hasLogo = footerLogo && footerLogo.src && footerLogo.src !== '' && footerLogo.style.display !== 'none';
+                const hasText = footerText && footerText.textContent.trim();
+                if (hasLogo || hasText) {
+                    footerContainer.style.display = 'flex';
+                    footerContainer.classList.add('active');
+                } else {
+                    footerContainer.style.display = 'none';
+                    footerContainer.classList.remove('active');
+                }
+            }
+
+            // --- Firebase Sync ---
+            async function syncBrandingToFirebase() {
+                try {
+                    const user = firebase.auth().currentUser;
+                    if (!user) return;
+
+                    const branding = {
+                        logoBase64: localStorage.getItem(LOGO_STORAGE_KEY) || null,
+                        brandingText: localStorage.getItem(BRANDING_TEXT_KEY) || '',
+                        updatedAt: Date.now()
+                    };
+                    await firebase.database().ref('users/' + user.uid + '/branding').set(branding);
+                } catch (err) {
+                    console.error('Branding sync error:', err);
+                }
+            }
+
+            async function loadBrandingFromFirebase() {
+                try {
+                    const user = firebase.auth().currentUser;
+                    if (!user) return;
+
+                    const snapshot = await firebase.database()
+                        .ref('users/' + user.uid + '/branding').once('value');
+                    const branding = snapshot.val();
+
+                    if (branding) {
+                        if (branding.logoBase64) {
+                            localStorage.setItem(LOGO_STORAGE_KEY, branding.logoBase64);
+                            applyLogo(branding.logoBase64);
+                        }
+                        if (branding.brandingText) {
+                            localStorage.setItem(BRANDING_TEXT_KEY, branding.brandingText);
+                            if (brandingInput) brandingInput.value = branding.brandingText;
+                            applyBrandingText(branding.brandingText);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Branding load error:', err);
+                }
+            }
+
+            // --- aChordim Branding Toggle ---
+            const achordimBranding = document.getElementById('achordimBranding');
+            const toggleBrandingBtn = document.getElementById('toggleAchordimBrandingBtn');
+
+            function applyAchordimVisibility(hidden) {
+                if (achordimBranding) {
+                    achordimBranding.style.display = hidden ? 'none' : 'flex';
+                }
+                if (toggleBrandingBtn) {
+                    const showKey = 'branding.show_footer';
+                    const hideKey = 'branding.hide_footer';
+                    toggleBrandingBtn.textContent = window.t ? window.t(hidden ? showKey : hideKey) : (hidden ? 'Show aChordim footer' : 'Hide aChordim footer');
+                    toggleBrandingBtn.setAttribute('data-i18n', hidden ? showKey : hideKey);
+                    toggleBrandingBtn.style.background = hidden ? 'var(--text)' : 'transparent';
+                    toggleBrandingBtn.style.color = hidden ? 'var(--bg)' : 'var(--text)';
+                }
+            }
+
+            if (toggleBrandingBtn) {
+                toggleBrandingBtn.addEventListener('click', () => {
+                    const isHidden = localStorage.getItem(HIDE_ACHORDIM_KEY) === 'true';
+                    const newState = !isHidden;
+                    localStorage.setItem(HIDE_ACHORDIM_KEY, String(newState));
+                    applyAchordimVisibility(newState);
+                });
+            }
+
+            // --- Initialize from localStorage (instant, offline) ---
+            function initBranding() {
+                const savedLogo = localStorage.getItem(LOGO_STORAGE_KEY);
+                const savedText = localStorage.getItem(BRANDING_TEXT_KEY);
+                const hideAchordim = localStorage.getItem(HIDE_ACHORDIM_KEY) === 'true';
+
+                if (savedLogo) applyLogo(savedLogo);
+                if (savedText) {
+                    if (brandingInput) brandingInput.value = savedText;
+                    applyBrandingText(savedText);
+                }
+                applyAchordimVisibility(hideAchordim);
+            }
+
+            initBranding();
+
+            // Expose for auth.js
+            window.loadBrandingFromFirebase = loadBrandingFromFirebase;
+            window.initBranding = initBranding;
+        })();
+
+        // ============= EMOJI TOGGLE =============
+        (function () {
+            const EMOJI_KEY = 'chordsapp-hide-emojis';
+            const emojiRegex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{27BF}\u{2B50}\u{2702}-\u{27B0}\u{FE0F}\u{200D}\u{23CF}\u{23E9}-\u{23F3}\u{231A}\u{231B}\u{2328}\u{23F0}\u{23F8}-\u{23FA}\u{25AA}\u{25AB}\u{25B6}\u{25C0}\u{25FB}-\u{25FE}\u{2934}\u{2935}\u{2B05}-\u{2B07}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu;
+            const toggle = document.getElementById('hideEmojisToggle');
+            let originalTexts = new Map();
+
+            function stripEmojis() {
+                document.querySelectorAll('[data-i18n], .header-btn, .side-menu-btn, .ghost-button, .primary-action, button, label, span, h2, h3, h4, p, div').forEach(el => {
+                    el.childNodes.forEach(node => {
+                        if (node.nodeType === Node.TEXT_NODE && emojiRegex.test(node.textContent)) {
+                            if (!originalTexts.has(node)) {
+                                originalTexts.set(node, node.textContent);
+                            }
+                            node.textContent = node.textContent.replace(emojiRegex, '').replace(/^\s+/, '');
+                        }
+                    });
+                });
+            }
+
+            function restoreEmojis() {
+                originalTexts.forEach((original, node) => {
+                    if (node.parentNode) {
+                        node.textContent = original;
+                    }
+                });
+                originalTexts.clear();
+                // Re-apply translations to get emoji versions back
+                if (window.localization) {
+                    window.localization.updateUI();
+                }
+            }
+
+            function applyEmojiState(hidden) {
+                if (hidden) {
+                    stripEmojis();
+                    document.documentElement.classList.add('hide-emojis');
+                } else {
+                    restoreEmojis();
+                    document.documentElement.classList.remove('hide-emojis');
+                }
+            }
+
+            if (toggle) {
+                const saved = localStorage.getItem(EMOJI_KEY) === 'true';
+                toggle.checked = saved;
+
+                toggle.addEventListener('change', () => {
+                    const hidden = toggle.checked;
+                    localStorage.setItem(EMOJI_KEY, String(hidden));
+                    applyEmojiState(hidden);
+                });
+
+                // Apply on load (after small delay to let translations render)
+                if (saved) {
+                    setTimeout(() => applyEmojiState(true), 200);
+                }
+            }
+
+            // Re-strip after language change
+            window.addEventListener('languageChanged', () => {
+                if (localStorage.getItem(EMOJI_KEY) === 'true') {
+                    setTimeout(() => stripEmojis(), 100);
+                }
+            });
         })();
 
         // Hide header on scroll

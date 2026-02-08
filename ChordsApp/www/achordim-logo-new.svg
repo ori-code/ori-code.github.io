@@ -1,47 +1,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 260" width="240" height="260">
   <defs>
     <style>
-      .chord-text { font-family: 'Poppins', system-ui, sans-serif; font-weight: 500; }
+      .chord-text { font-family: system-ui, -apple-system, sans-serif; font-weight: 500; }
     </style>
   </defs>
 
   <!-- Camera viewfinder corners -->
-  <!-- Top-left corner -->
-  <path d="M 30 15 L 15 15 L 15 55" stroke="#2d3142" stroke-width="4" fill="none" stroke-linecap="square"/>
-  <!-- Top-right corner -->
-  <path d="M 210 15 L 225 15 L 225 55" stroke="#2d3142" stroke-width="4" fill="none" stroke-linecap="square"/>
-  <!-- Bottom-left corner -->
-  <path d="M 15 205 L 15 245 L 30 245" stroke="#2d3142" stroke-width="4" fill="none" stroke-linecap="square"/>
-  <!-- Bottom-right corner -->
-  <path d="M 225 205 L 225 245 L 210 245" stroke="#2d3142" stroke-width="4" fill="none" stroke-linecap="square"/>
+  <path d="M 30 15 L 15 15 L 15 55" stroke="#000" stroke-width="4" fill="none" stroke-linecap="square"/>
+  <path d="M 210 15 L 225 15 L 225 55" stroke="#000" stroke-width="4" fill="none" stroke-linecap="square"/>
+  <path d="M 15 205 L 15 245 L 30 245" stroke="#000" stroke-width="4" fill="none" stroke-linecap="square"/>
+  <path d="M 225 205 L 225 245 L 210 245" stroke="#000" stroke-width="4" fill="none" stroke-linecap="square"/>
 
   <!-- Line 1 with chords - lightest -->
-  <text x="70" y="48" class="chord-text" font-size="14" fill="#b8b8b8">C</text>
-  <text x="100" y="48" class="chord-text" font-size="14" fill="#c8c8c8">G</text>
-  <text x="130" y="48" class="chord-text" font-size="14" fill="#d0d0d0">D</text>
-  <rect x="60" y="58" width="110" height="5" rx="2.5" fill="#d4d4d4"/>
+  <text x="70" y="48" class="chord-text" font-size="14" fill="#000" opacity="0.3">C</text>
+  <text x="100" y="48" class="chord-text" font-size="14" fill="#000" opacity="0.25">G</text>
+  <text x="130" y="48" class="chord-text" font-size="14" fill="#000" opacity="0.2">D</text>
+  <rect x="60" y="58" width="110" height="5" rx="0" fill="#000" opacity="0.2"/>
 
   <!-- Line 2 with chords - light -->
-  <text x="60" y="88" class="chord-text" font-size="14" fill="#a0a0a0">Am</text>
-  <text x="95" y="88" class="chord-text" font-size="14" fill="#a8a8a8">Em</text>
-  <text x="130" y="88" class="chord-text" font-size="14" fill="#b0b0b0">C</text>
-  <rect x="55" y="100" width="120" height="5" rx="2.5" fill="#b8b8b8"/>
+  <text x="60" y="88" class="chord-text" font-size="14" fill="#000" opacity="0.4">Am</text>
+  <text x="95" y="88" class="chord-text" font-size="14" fill="#000" opacity="0.35">Em</text>
+  <text x="130" y="88" class="chord-text" font-size="14" fill="#000" opacity="0.3">C</text>
+  <rect x="55" y="100" width="120" height="5" rx="0" fill="#000" opacity="0.35"/>
 
-  <!-- Line 3 with chords - FOCUS LINE (dark/bold) - more padding -->
-  <text x="60" y="132" class="chord-text" font-size="16" font-weight="700" fill="#1a1d27">C</text>
-  <text x="90" y="132" class="chord-text" font-size="16" font-weight="700" fill="#1a1d27">G</text>
-  <text x="120" y="132" class="chord-text" font-size="16" font-weight="700" fill="#1a1d27">D</text>
-  <text x="150" y="132" class="chord-text" font-size="16" font-weight="700" fill="#1a1d27">Em</text>
-  <rect x="55" y="146" width="130" height="7" rx="3.5" fill="#1a1d27"/>
+  <!-- Line 3 with chords - FOCUS LINE (dark/bold) -->
+  <text x="60" y="132" class="chord-text" font-size="16" font-weight="700" fill="#000">C</text>
+  <text x="90" y="132" class="chord-text" font-size="16" font-weight="700" fill="#000">G</text>
+  <text x="120" y="132" class="chord-text" font-size="16" font-weight="700" fill="#000">D</text>
+  <text x="150" y="132" class="chord-text" font-size="16" font-weight="700" fill="#000">Em</text>
+  <rect x="55" y="146" width="130" height="7" rx="0" fill="#000"/>
 
   <!-- Line 4 with chords - light -->
-  <text x="65" y="180" class="chord-text" font-size="14" fill="#a8a8a8">F</text>
-  <text x="95" y="180" class="chord-text" font-size="14" fill="#b0b0b0">C</text>
-  <text x="125" y="180" class="chord-text" font-size="14" fill="#b8b8b8">G</text>
-  <rect x="60" y="192" width="105" height="5" rx="2.5" fill="#c0c0c0"/>
+  <text x="65" y="180" class="chord-text" font-size="14" fill="#000" opacity="0.35">F</text>
+  <text x="95" y="180" class="chord-text" font-size="14" fill="#000" opacity="0.3">C</text>
+  <text x="125" y="180" class="chord-text" font-size="14" fill="#000" opacity="0.25">G</text>
+  <rect x="60" y="192" width="105" height="5" rx="0" fill="#000" opacity="0.25"/>
 
   <!-- Line 5 with chords - lightest -->
-  <text x="60" y="218" class="chord-text" font-size="14" fill="#c0c0c0">Am</text>
-  <text x="100" y="218" class="chord-text" font-size="14" fill="#c8c8c8">F</text>
-  <rect x="55" y="230" width="95" height="5" rx="2.5" fill="#d8d8d8"/>
+  <text x="60" y="218" class="chord-text" font-size="14" fill="#000" opacity="0.25">Am</text>
+  <text x="100" y="218" class="chord-text" font-size="14" fill="#000" opacity="0.2">F</text>
+  <rect x="55" y="230" width="95" height="5" rx="0" fill="#000" opacity="0.15"/>
 </svg>

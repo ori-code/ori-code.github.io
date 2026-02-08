@@ -28,6 +28,11 @@ class ChordsAuthManager {
                 }
                 // Start listening for session changes
                 this.startSessionListener(user.uid);
+
+                // Load user branding (logo + custom text) from Firebase
+                if (window.loadBrandingFromFirebase) {
+                    window.loadBrandingFromFirebase();
+                }
             } else {
                 // Stop listening when logged out
                 this.stopSessionListener();
@@ -350,6 +355,11 @@ class ChordsAuthManager {
             if (sideMenuUserAvatar) {
                 sideMenuUserAvatar.textContent = displayName.charAt(0).toUpperCase();
             }
+            // Show branding controls when logged in
+            const brandingInput = document.getElementById('brandingTextInput');
+            if (brandingInput) brandingInput.style.display = 'block';
+            const toggleBrandingBtn = document.getElementById('toggleAchordimBrandingBtn');
+            if (toggleBrandingBtn) toggleBrandingBtn.style.display = 'inline-block';
             if (sideMenuSignOut) {
                 sideMenuSignOut.onclick = () => this.signOut();
             }
@@ -375,6 +385,11 @@ class ChordsAuthManager {
             if (sideMenuUserProfile) {
                 sideMenuUserProfile.style.display = 'none';
             }
+            // Hide branding controls when logged out
+            const brandingInput = document.getElementById('brandingTextInput');
+            if (brandingInput) brandingInput.style.display = 'none';
+            const toggleBrandingBtn = document.getElementById('toggleAchordimBrandingBtn');
+            if (toggleBrandingBtn) toggleBrandingBtn.style.display = 'none';
         }
     }
 

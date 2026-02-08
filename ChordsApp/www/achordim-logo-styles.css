@@ -1,27 +1,27 @@
 /**
  * aChordim Logo CSS Components
- * Version 4: Rounded + Badge style
+ * Version 5: Pure B&W Monochrome
  */
 
 /* ============================================
-   Logo Color Palette
+   Logo Color Palette — B&W only
    ============================================ */
 :root {
-    --logo-a: #a855f7;      /* Purple */
-    --logo-C: #e879f9;      /* Pink */
-    --logo-h: #f0abfc;      /* Light pink */
-    --logo-o: #fda4af;      /* Peach */
-    --logo-r: #fca5a5;      /* Light coral */
-    --logo-d: #fecaca;      /* Light peach */
-    --logo-im: #ffffff;     /* White */
-    --logo-dark-bg: #1a1d27;
+    --logo-a: var(--text, #fff);
+    --logo-C: var(--text, #fff);
+    --logo-h: var(--text, #fff);
+    --logo-o: var(--text, #fff);
+    --logo-r: var(--text, #fff);
+    --logo-d: var(--text, #fff);
+    --logo-im: var(--text, #fff);
+    --logo-dark-bg: #000;
 }
 
 /* ============================================
    Main Logo Text
    ============================================ */
 .achordim-logo-text {
-    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     font-size: 48px;
     font-weight: 800;
     display: flex;
@@ -47,25 +47,27 @@
 .achordim-logo-text .i,
 .achordim-logo-text .m { color: var(--logo-im); }
 
-/* Dark mode: i and m are dark */
+/* Light mode: all letters black */
 .achordim-logo-text.light-bg .i,
-.achordim-logo-text.light-bg .m { color: var(--logo-dark-bg); }
+.achordim-logo-text.light-bg .m { color: #000; }
 
 /* Hebrew text */
 .achordim-hebrew {
-    font-family: 'Rubik', system-ui, sans-serif;
+    font-family: system-ui, sans-serif;
     font-size: 20px;
-    color: rgba(255,255,255,0.5);
+    color: var(--text, #fff);
+    opacity: 0.5;
     letter-spacing: 6px;
     text-align: center;
 }
 
 .achordim-hebrew.light-bg {
-    color: rgba(0,0,0,0.4);
+    color: #000;
+    opacity: 0.4;
 }
 
 /* ============================================
-   Icon: Rounded + Badge (Version 4)
+   Icon: B&W Monochrome
    ============================================ */
 .achordim-icon {
     width: 46px;
@@ -83,17 +85,14 @@
 .achordim-icon .rounded-frame {
     position: absolute;
     inset: 0;
-    border: 3px solid transparent;
-    border-radius: 10px;
-    background:
-        linear-gradient(var(--logo-dark-bg), var(--logo-dark-bg)) padding-box,
-        linear-gradient(135deg, #a855f7, #e879f9) border-box;
+    border: 3px solid var(--text, #fff);
+    border-radius: 0;
+    background: var(--bg, #000);
 }
 
 .achordim-icon.light-bg .rounded-frame {
-    background:
-        linear-gradient(#fff, #fff) padding-box,
-        linear-gradient(135deg, #a855f7, #e879f9) border-box;
+    border-color: #000;
+    background: #fff;
 }
 
 .achordim-icon .center-content {
@@ -114,8 +113,8 @@
 
 .achordim-icon .grad-line {
     height: 3px;
-    border-radius: 2px;
-    background: linear-gradient(90deg, #a855f7, #e879f9, #fda4af);
+    border-radius: 0;
+    background: var(--text, #fff);
 }
 
 .achordim-icon.large .grad-line {
@@ -131,13 +130,13 @@
     right: -6px;
     width: 18px;
     height: 18px;
-    background: linear-gradient(135deg, #a855f7, #e879f9);
+    background: var(--text, #fff);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 11px;
-    color: #fff;
+    color: var(--bg, #000);
     font-family: system-ui, sans-serif;
 }
 
