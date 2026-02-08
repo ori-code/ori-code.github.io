@@ -2114,13 +2114,14 @@ const liveMode = {
             bpmDisplay.textContent = window.metronome.bpm || 120;
         }
 
-        // Sync metronome play button
+        // Sync metronome play button (B&W styling)
         const metroPlayBtn = document.getElementById('liveMetroPlay');
         if (metroPlayBtn && window.metronome) {
-            metroPlayBtn.textContent = window.metronome.isPlaying ? '⏸' : '▶';
-            metroPlayBtn.style.background = window.metronome.isPlaying
-                ? 'linear-gradient(135deg, #16a34a, #22c55e)'
-                : 'linear-gradient(135deg, #d97706, #f59e0b)';
+            metroPlayBtn.textContent = window.metronome.isPlaying ? 'STOP' : 'PLAY';
+            // Invert colors when playing
+            metroPlayBtn.style.background = window.metronome.isPlaying ? 'var(--bg)' : 'var(--text)';
+            metroPlayBtn.style.color = window.metronome.isPlaying ? 'var(--text)' : 'var(--bg)';
+            metroPlayBtn.style.border = window.metronome.isPlaying ? '2px solid var(--border)' : 'none';
         }
 
         // Sync pad key display
@@ -2130,13 +2131,14 @@ const liveMode = {
             padKeyDisplay.textContent = playingKeys.length > 0 ? playingKeys[0].replace('sharp', '#') : '--';
         }
 
-        // Update pad stop button style
+        // Update pad stop button style (B&W styling)
         const padStopBtn = document.getElementById('livePadStop');
         if (padStopBtn && window.padPlayer) {
             const isPlaying = window.padPlayer.getPlayingKeys && window.padPlayer.getPlayingKeys().length > 0;
-            padStopBtn.style.background = isPlaying
-                ? 'linear-gradient(135deg, #dc2626, #ef4444)'
-                : 'linear-gradient(135deg, #7c3aed, #a855f7)';
+            // Invert colors when playing
+            padStopBtn.style.background = isPlaying ? 'var(--bg)' : 'var(--text)';
+            padStopBtn.style.color = isPlaying ? 'var(--text)' : 'var(--bg)';
+            padStopBtn.style.border = isPlaying ? '2px solid var(--border)' : 'none';
         }
     },
 
@@ -3466,13 +3468,18 @@ const liveMode = {
 
         if (playBtn) {
             if (this.autoScrollEnabled && !this.autoScrollPaused) {
-                playBtn.textContent = '⏸';
+                playBtn.textContent = 'PAUSE';
                 playBtn.title = 'Pause auto-scroll';
-                playBtn.style.background = 'linear-gradient(135deg, #16a34a, #22c55e)';
+                // B&W inverted when active
+                playBtn.style.background = 'var(--bg)';
+                playBtn.style.color = 'var(--text)';
+                playBtn.style.border = '2px solid var(--border)';
             } else {
-                playBtn.textContent = '▶';
+                playBtn.textContent = 'SCROLL';
                 playBtn.title = 'Start auto-scroll';
-                playBtn.style.background = 'linear-gradient(135deg, #0ea5e9, #06b6d4)';
+                playBtn.style.background = 'var(--text)';
+                playBtn.style.color = 'var(--bg)';
+                playBtn.style.border = 'none';
             }
         }
 

@@ -102,52 +102,52 @@ class SessionUI {
                 const role = session.isOwner ? '👑 Leader' : '🎵 Player';
 
                 return `
-                    <div class="session-item" style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 12px;">
+                    <div class="session-item" style="padding: 16px; background: transparent; border: 1px solid var(--border); margin-bottom: 12px;">
                         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
                             <div style="flex: 1;">
-                                <h4 style="margin: 0 0 4px 0; color: var(--text); font-size: 16px;">${session.title}</h4>
-                                <p style="margin: 0; font-size: 13px; color: var(--text-muted);">${role} • Created ${date}</p>
-                                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--primary); font-family: monospace;">Code: ${session.sessionCode}</p>
+                                <h4 style="margin: 0 0 4px 0; color: var(--text); font-size: 16px; font-weight: 700;">${session.title}</h4>
+                                <p style="margin: 0; font-size: 13px; color: var(--text); opacity: 0.7;">${role} • Created ${date}</p>
+                                <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text); font-family: monospace;">Code: ${session.sessionCode}</p>
                             </div>
                             <div style="display: flex; gap: 8px; flex-direction: column;">
                                 ${session.isOwner ? `
                                     <button onclick="sessionUI.addCurrentSongToSession('${session.id}')"
-                                            style="padding: 6px 12px; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                                            style="padding: 6px 12px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 12px; white-space: nowrap; font-weight: 600;">
                                         ${window.pendingSongsToAdd && window.pendingSongsToAdd.length > 0
-                                            ? `➕ Add ${window.pendingSongsToAdd.length} Song${window.pendingSongsToAdd.length > 1 ? 's' : ''}`
-                                            : (window.pendingSongToAdd ? '➕ Add Selected Song' : '➕ Add Current Song')}
+                                            ? `+ Add ${window.pendingSongsToAdd.length} Song${window.pendingSongsToAdd.length > 1 ? 's' : ''}`
+                                            : (window.pendingSongToAdd ? '+ Add Selected Song' : '+ Add Current Song')}
                                     </button>
                                     <button onclick="sessionUI.reactivateSession('${session.id}')"
-                                            style="padding: 6px 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                                        🔄 Reactivate
+                                            style="padding: 6px 12px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 12px; font-weight: 600;">
+                                        ↻ Reactivate
                                     </button>
                                     <button onclick="sessionUI.manageSession('${session.id}')"
-                                            style="padding: 6px 12px; background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; cursor: pointer; font-size: 12px;">
-                                        ⚙️ Manage
+                                            style="padding: 6px 12px; background: transparent; color: var(--text); border: 1px solid var(--border); cursor: pointer; font-size: 12px;">
+                                        ⚙ Manage
                                     </button>
                                     <div style="display: flex; gap: 4px;">
                                         <button onclick="sessionUI.editSession('${session.id}', '${session.title.replace(/'/g, "\\'")}')"
-                                                style="flex: 1; padding: 6px 8px; background: rgba(59, 130, 246, 0.2); border: none; border-radius: 4px; color: #3b82f6; cursor: pointer; font-size: 11px;"
-                                                title="Rename">✏️</button>
+                                                style="flex: 1; padding: 6px 8px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px;"
+                                                title="Rename">✎</button>
                                         <button onclick="sessionUI.deleteSession('${session.id}', '${session.title.replace(/'/g, "\\'")}')"
-                                                style="flex: 1; padding: 6px 8px; background: rgba(239, 68, 68, 0.2); border: none; border-radius: 4px; color: #ef4444; cursor: pointer; font-size: 11px;"
-                                                title="Delete">🗑️</button>
+                                                style="flex: 1; padding: 6px 8px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px;"
+                                                title="Delete">✕</button>
                                     </div>
                                 ` : `
                                     <button onclick="sessionUI.joinSessionById('${session.id}')"
-                                            style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                                            style="padding: 8px 16px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 13px; font-weight: 600;">
                                         Rejoin
                                     </button>
                                     <button onclick="sessionUI.removeFromMyList('${session.id}', '${session.title.replace(/'/g, "\\'")}')"
-                                            style="padding: 6px 12px; background: rgba(239, 68, 68, 0.2); border: none; border-radius: 6px; color: #ef4444; cursor: pointer; font-size: 12px; margin-top: 4px;">
-                                        🗑️ Remove
+                                            style="padding: 6px 12px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; margin-top: 4px;">
+                                        ✕ Remove
                                     </button>
                                 `}
                             </div>
                         </div>
-                        <div style="margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+                        <div style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px;">
                             <button onclick="sessionUI.toggleSessionPlaylist('${session.id}', this, ${session.isOwner})"
-                                    style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 4px 0; width: 100%; text-align: left;">
+                                    style="background: transparent; border: none; color: var(--text); opacity: 0.7; cursor: pointer; font-size: 13px; padding: 4px 0; width: 100%; text-align: left;">
                                 ▶ Show Playlist
                             </button>
                             <div id="playlist-${session.id}" style="display: none; margin-top: 8px; max-height: 300px; overflow-y: auto;">
@@ -264,16 +264,16 @@ class SessionUI {
             }
 
             playlistEl.innerHTML = playlist.map((song, index) => `
-                <div style="display: flex; align-items: center; gap: 6px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; margin-bottom: 4px; font-size: 12px;">
-                    <span style="color: var(--text-muted); min-width: 20px;">${index + 1}.</span>
+                <div style="display: flex; align-items: center; gap: 6px; padding: 8px; background: transparent; border: 1px solid var(--border); margin-bottom: 4px; font-size: 12px;">
+                    <span style="color: var(--text); opacity: 0.6; min-width: 20px;">${index + 1}.</span>
                     <span style="flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${song.name}</span>
-                    <span style="color: var(--text-muted); font-size: 10px;">${song.originalKey || ''}</span>
+                    <span style="color: var(--text); opacity: 0.6; font-size: 10px;">${song.originalKey || ''}</span>
                     ${isOwner ? `
                         <div style="display: flex; gap: 2px;">
-                            ${index > 0 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', -1)" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: var(--text-muted); cursor: pointer; font-size: 10px;" title="Move up">↑</button>` : ''}
-                            ${index < playlist.length - 1 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', 1)" style="padding: 2px 4px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: var(--text-muted); cursor: pointer; font-size: 10px;" title="Move down">↓</button>` : ''}
-                            <button onclick="sessionUI.editSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: rgba(59, 130, 246, 0.2); border: none; border-radius: 2px; color: #3b82f6; cursor: pointer; font-size: 10px;" title="Edit">✏️</button>
-                            <button onclick="sessionUI.deleteSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: rgba(239, 68, 68, 0.2); border: none; border-radius: 2px; color: #ef4444; cursor: pointer; font-size: 10px;" title="Delete">🗑️</button>
+                            ${index > 0 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', -1)" style="padding: 2px 4px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;" title="Move up">↑</button>` : ''}
+                            ${index < playlist.length - 1 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', 1)" style="padding: 2px 4px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;" title="Move down">↓</button>` : ''}
+                            <button onclick="sessionUI.editSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;" title="Edit">✎</button>
+                            <button onclick="sessionUI.deleteSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;" title="Delete">✕</button>
                         </div>
                     ` : ''}
                 </div>
@@ -281,7 +281,7 @@ class SessionUI {
 
         } catch (error) {
             console.error('Error loading session playlist:', error);
-            playlistEl.innerHTML = '<p style="text-align: center; color: #ef4444; font-size: 12px;">Error loading playlist</p>';
+            playlistEl.innerHTML = '<p style="text-align: center; color: var(--text); font-size: 12px;">Error loading playlist</p>';
         }
     }
 

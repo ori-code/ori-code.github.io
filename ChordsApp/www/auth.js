@@ -331,9 +331,12 @@ class ChordsAuthManager {
         if (this.currentUser) {
             // User is signed in
             const displayName = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+            // Get initials (e.g., "Ori Dobosh" -> "OD")
+            const initials = displayName.split(' ').map(n => n.charAt(0).toUpperCase()).join('');
 
             if (signInButton) {
-                signInButton.textContent = displayName;
+                signInButton.textContent = initials || displayName.charAt(0).toUpperCase();
+                signInButton.title = displayName; // Show full name on hover
                 signInButton.onclick = () => this.showProfileMenu();
             }
 

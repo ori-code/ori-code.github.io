@@ -362,12 +362,19 @@ const metronome = {
             miniMultBtn.classList.toggle('pending', this.pendingMultiplier !== null);
         }
 
-        // Live mode multiplier button
+        // Live mode multiplier button (B&W styling)
         const liveMultBtn = document.getElementById('liveMetroMult');
         if (liveMultBtn) {
             const displayMult = this.pendingMultiplier !== null ? this.pendingMultiplier : this.multiplier;
             liveMultBtn.textContent = displayMult === 0.5 ? '÷2' : `x${displayMult}`;
-            liveMultBtn.style.color = this.multiplier !== 1 ? '#22c55e' : '#f59e0b';
+            // Invert colors when active (not x1)
+            if (this.multiplier !== 1) {
+                liveMultBtn.style.background = 'var(--text)';
+                liveMultBtn.style.color = 'var(--bg)';
+            } else {
+                liveMultBtn.style.background = 'var(--surface)';
+                liveMultBtn.style.color = 'var(--text)';
+            }
         }
     },
 
@@ -378,22 +385,25 @@ const metronome = {
         // Modal play button
         const playBtn = document.getElementById('metronome-play-btn');
         if (playBtn) {
-            playBtn.innerHTML = this.isPlaying ? '⏹️ Stop' : '▶️ Play';
+            playBtn.textContent = this.isPlaying ? 'STOP' : 'PLAY';
             playBtn.classList.toggle('playing', this.isPlaying);
         }
 
         // Mini player play button
         const miniPlayBtn = document.getElementById('miniMetronomePlay');
         if (miniPlayBtn) {
-            miniPlayBtn.innerHTML = this.isPlaying ? '⏹' : '▶';
+            miniPlayBtn.textContent = this.isPlaying ? '■' : '▶';
             miniPlayBtn.classList.toggle('playing', this.isPlaying);
         }
 
-        // Live mode play button
+        // Live mode play button (B&W styling)
         const livePlayBtn = document.getElementById('liveMetroPlay');
         if (livePlayBtn) {
-            livePlayBtn.innerHTML = this.isPlaying ? '⏹' : '▶';
-            livePlayBtn.style.background = this.isPlaying ? 'linear-gradient(135deg, #dc2626, #ef4444)' : 'linear-gradient(135deg, #d97706, #f59e0b)';
+            livePlayBtn.textContent = this.isPlaying ? 'STOP' : 'PLAY';
+            // Keep B&W - inverted when playing
+            livePlayBtn.style.background = this.isPlaying ? 'var(--bg)' : 'var(--text)';
+            livePlayBtn.style.color = this.isPlaying ? 'var(--text)' : 'var(--bg)';
+            livePlayBtn.style.border = this.isPlaying ? '2px solid var(--border)' : 'none';
         }
     },
 
