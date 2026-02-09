@@ -1120,6 +1120,9 @@ class SessionUI {
             toast.textContent = message;
             toast.className = 'info';
             toast.style.display = 'block';
+            toast.style.background = 'var(--text)';
+            toast.style.color = 'var(--bg)';
+            toast.style.border = '1px solid var(--border)';
 
             setTimeout(() => {
                 toast.style.display = 'none';

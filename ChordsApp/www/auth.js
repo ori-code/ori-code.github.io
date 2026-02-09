@@ -444,6 +444,9 @@ class ChordsAuthManager {
             messageDiv.textContent = message;
             messageDiv.className = `auth-message ${type}`;
             messageDiv.style.display = 'block';
+            messageDiv.style.background = 'var(--text)';
+            messageDiv.style.color = 'var(--bg)';
+            messageDiv.style.border = '1px solid var(--border)';
 
             setTimeout(() => {
                 messageDiv.style.display = 'none';

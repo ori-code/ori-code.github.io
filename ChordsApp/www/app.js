@@ -225,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             previewContainer.classList.remove('mobile-scaled');
             previewContainer.style.transform = '';
             previewContainer.style.width = '';
+            previewContainer.style.marginLeft = '';
         }
 
         function applyScaling() {
@@ -253,17 +254,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const availableWidth = parentEl ? parentEl.clientWidth : (viewportWidth - (PADDING * 2));
             const scale = Math.min(1, availableWidth / A4_WIDTH_PX);
 
-            // Apply scaling
+            // Apply scaling with transform-origin: top center (CSS handles this)
             previewContainer.classList.add('mobile-scaled');
             previewContainer.style.width = A4_WIDTH_PX + 'px';
             previewContainer.style.transform = `scale(${scale})`;
 
-            // Update wrapper height to match scaled content
-            // Get the actual height of the preview container
+            // Update wrapper dimensions to match scaled content
             const contentHeight = previewContainer.offsetHeight;
             const scaledHeight = contentHeight * scale;
+            const scaledWidth = A4_WIDTH_PX * scale;
             scaleWrapper.style.height = scaledHeight + 'px';
-            scaleWrapper.style.width = (A4_WIDTH_PX * scale) + 'px';
+            scaleWrapper.style.width = scaledWidth + 'px';
+
+            // Center the 793px element within the wrapper so transform-origin: top center works
+            // The element's center is at 793/2 = 396.5px, scaled center should be at scaledWidth/2
+            const offset = (scaledWidth - A4_WIDTH_PX) / 2;
+            previewContainer.style.marginLeft = offset + 'px';
 
             isScalingActive = true;
             console.log(`Mobile scaling applied: ${(scale * 100).toFixed(0)}%`);

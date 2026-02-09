@@ -423,8 +423,9 @@
             if (authMessage) {
                 authMessage.textContent = message;
                 authMessage.style.display = 'block';
-                authMessage.style.background = type === 'error' ? 'rgba(255, 59, 92, 0.9)' : 'rgba(79, 209, 139, 0.9)';
-                authMessage.style.color = '#fff';
+                authMessage.style.background = 'var(--text)';
+                authMessage.style.color = 'var(--bg)';
+                authMessage.style.border = '1px solid var(--border)';
                 setTimeout(() => {
                     authMessage.style.display = 'none';
                 }, 3000);

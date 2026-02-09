@@ -1940,24 +1940,25 @@ input[type="checkbox"]:checked::after {
 /* --- Notifications --- */
 .overflow-notification {
     position: fixed;
-    top: 80px;
-    right: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
     background: var(--text);
     color: var(--bg);
     border: 1px solid var(--border);
     border-radius: 0;
-    padding: 16px 20px;
+    padding: 20px 24px;
     z-index: 10000;
     max-width: 400px;
+    width: 90%;
     opacity: 0;
-    transform: translateX(450px);
-    transition: all 0.4s ease;
+    transition: all 0.3s ease;
     pointer-events: none;
 }
 
 .overflow-notification.show {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate(-50%, -50%) scale(1);
     pointer-events: all;
 }
 
@@ -2000,24 +2001,26 @@ input[type="checkbox"]:checked::after {
 /* Success Toast */
 .success-toast {
     position: fixed;
-    top: 80px;
-    right: 20px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
     background: var(--text);
     color: var(--bg);
     border: 1px solid var(--border);
     border-radius: 0;
-    padding: 16px 20px;
+    padding: 20px 24px;
     z-index: 10000;
     max-width: 400px;
+    width: 90%;
+    text-align: center;
     opacity: 0;
-    transform: translateX(450px);
-    transition: all 0.4s ease;
+    transition: all 0.3s ease;
     pointer-events: none;
 }
 
 .success-toast.show {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate(-50%, -50%) scale(1);
     pointer-events: all;
 }
 
@@ -2515,9 +2518,9 @@ input[type="checkbox"]:checked::after {
 
     .success-toast,
     .overflow-notification {
-        right: 10px;
-        left: 10px;
-        max-width: calc(100% - 20px);
+        left: 50%;
+        max-width: 90%;
+        width: 90%;
     }
 
     .section-badges-row {
@@ -2772,6 +2775,8 @@ input[type="checkbox"]:checked::after {
 
     .container {
         padding-top: 136px;
+        padding-left: 12px;
+        padding-right: 12px;
     }
 
     .hero {
@@ -3012,7 +3017,7 @@ input[type="checkbox"]:checked::after {
 }
 
 .preview-container.mobile-scaled {
-    transform-origin: top left;
+    transform-origin: top center;
     width: 793px !important;
     max-width: none !important;
     min-width: 793px !important;
@@ -3022,10 +3027,6 @@ input[type="checkbox"]:checked::after {
     .preview-scale-wrapper {
         background: var(--bg);
         border-radius: 0;
-    }
-
-    .preview-container.mobile-scaled {
-        margin: 0;
     }
 }
 
@@ -3111,6 +3112,7 @@ input[type="checkbox"]:checked::after {
 @media (max-width: 1024px) {
     .editor-preview-wrapper {
         flex-direction: column;
+        align-items: center;
     }
 
     .editor-preview-wrapper > .preview-container,
