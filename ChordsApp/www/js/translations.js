@@ -337,6 +337,11 @@ const translations = {
         "branding.remove_logo": "✕ Remove Logo",
         "branding.hide_footer": "Hide aChordim footer",
         "branding.show_footer": "Show aChordim footer",
+
+        // Footer
+        "footer.tagline": "Built with love for worship leaders and musicians.",
+        "footer.privacy": "Privacy Policy",
+        "footer.terms": "Terms of Service",
     },
     he: {
         // Navbar
@@ -674,6 +679,11 @@ const translations = {
         "branding.remove_logo": "✕ הסר לוגו",
         "branding.hide_footer": "הסתר aChordim",
         "branding.show_footer": "הצג aChordim",
+
+        // Footer
+        "footer.tagline": "נבנה באהבה עבור מנהלי סגידה ומוזיקאים.",
+        "footer.privacy": "מדיניות פרטיות",
+        "footer.terms": "תנאי שימוש",
     }
 };
 
