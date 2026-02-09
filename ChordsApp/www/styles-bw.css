@@ -3111,6 +3111,12 @@ input[type="checkbox"]:checked::after {
 @media (max-width: 1024px) {
     .editor-preview-wrapper {
         flex-direction: column;
+        align-items: center;
+    }
+
+    .editor-preview-wrapper > * {
+        width: 100%;
+        max-width: 100%;
     }
 }
 
