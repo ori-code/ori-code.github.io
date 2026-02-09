@@ -7,7 +7,12 @@
     <title>aChordim | The Faith Sound</title>
 
     <link rel="icon" type="image/svg+xml" href="achordim-icon-app.svg">
-    <link rel="apple-touch-icon" href="achordim-icon-app.svg">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="aChordim">
 
     <link rel="stylesheet" href="styles-bw.css?v=1">
     <!-- PayPal SDK is loaded dynamically in paypal-subscription.js based on environment -->
@@ -4867,6 +4872,17 @@
             syncToggleButtons('toggleEditorBtn', 'toggleEditorBtn2', sideMenuShowEditor);
         })();
 
+    </script>
+
+    <!-- PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
     </script>
 
 </body>
