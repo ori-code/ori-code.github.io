@@ -53,7 +53,7 @@
                     <span style="width: 22px; height: 2px; background: var(--text);"></span>
                     <span style="width: 22px; height: 2px; background: var(--text);"></span>
                 </button>
-                <a href="../index.html" class="header-brand"
+                <a href="https://www.thefaithsound.com/ChordsApp/www/" class="header-brand"
                     style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
                     <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim</span>
                     <span class="header-brand-url" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
@@ -5048,6 +5048,21 @@
                 metronomeSavedChildren.forEach(function(child) {
                     metroPanel.appendChild(child);
                 });
+
+                // Add Play/Stop button for metronome
+                if (!document.getElementById('toolsMetronomePlayBtn')) {
+                    var playBtn = document.createElement('button');
+                    playBtn.id = 'toolsMetronomePlayBtn';
+                    playBtn.textContent = 'Play';
+                    playBtn.style.cssText = 'width: 100%; padding: 12px; margin-top: 12px; background: var(--text); color: var(--bg); border: 1px solid var(--border); cursor: pointer; font-size: 14px; font-weight: 600; font-family: inherit;';
+                    playBtn.addEventListener('click', function() {
+                        if (window.metronome) {
+                            metronome.toggle();
+                            playBtn.textContent = metronome.isPlaying ? 'Stop' : 'Play';
+                        }
+                    });
+                    metroPanel.appendChild(playBtn);
+                }
             }
 
             // Move pads content
@@ -5064,6 +5079,18 @@
                 // Load pad sounds if needed
                 if (window.padPlayer && Object.keys(padPlayer.buffers).length === 0) {
                     padPlayer.loadSounds();
+                }
+
+                // Add Stop All button for pads
+                if (!document.getElementById('toolsPadsStopBtn')) {
+                    var stopBtn = document.createElement('button');
+                    stopBtn.id = 'toolsPadsStopBtn';
+                    stopBtn.textContent = 'Stop All';
+                    stopBtn.style.cssText = 'width: 100%; padding: 12px; margin-top: 12px; background: var(--text); color: var(--bg); border: 1px solid var(--border); cursor: pointer; font-size: 14px; font-weight: 600; font-family: inherit;';
+                    stopBtn.addEventListener('click', function() {
+                        if (window.padPlayer) padPlayer.stopAll();
+                    });
+                    padsPanel.appendChild(stopBtn);
                 }
             }
 
