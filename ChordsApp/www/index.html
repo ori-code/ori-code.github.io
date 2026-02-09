@@ -79,6 +79,38 @@
         </div>
     </header>
 
+    <!-- Navigation Tab Bar -->
+    <nav id="appNavBar" class="app-nav-bar">
+        <div class="nav-bar-container">
+            <button class="nav-tab active" data-tab="scanner">
+                <span class="nav-tab-label" data-i18n="nav.tab.scanner">Scanner</span>
+            </button>
+            <button class="nav-tab" data-tab="songbook">
+                <span class="nav-tab-label" data-i18n="nav.tab.songbook">Song Book</span>
+            </button>
+            <button class="nav-tab" data-tab="livesession">
+                <span class="nav-tab-label" data-i18n="nav.tab.livesession">Live</span>
+            </button>
+            <button class="nav-tab" data-tab="tools">
+                <span class="nav-tab-label" data-i18n="nav.tab.tools">Tools</span>
+            </button>
+        </div>
+        <!-- Live Session sub-menu (hidden by default) -->
+        <div id="liveSessionSubmenu" class="nav-submenu" style="display: none;">
+            <button class="nav-submenu-btn" id="navCreateSession" data-i18n="nav.sub.create">Create</button>
+            <button class="nav-submenu-btn" id="navJoinSession" data-i18n="nav.sub.join">Join</button>
+            <button class="nav-submenu-btn" id="navMySessions" data-i18n="nav.sub.mysessions">My Sessions</button>
+        </div>
+    </nav>
+
+    <!-- Tools Combined View (hidden by default) -->
+    <section id="toolsCombinedView" class="tools-combined-view" style="display: none;">
+        <div class="tools-combined-container">
+            <div class="tools-panel" id="toolsMetronomePanel"></div>
+            <div class="tools-panel" id="toolsPadsPanel"></div>
+        </div>
+    </section>
+
     <main class="container">
         <section class="hero" id="top">
             <div class="hero-text">
@@ -4872,6 +4904,190 @@
             syncToggleButtons('toggleEditorBtn', 'toggleEditorBtn2', sideMenuShowEditor);
         })();
 
+    </script>
+
+    <!-- Navigation Tab Bar Logic -->
+    <script>
+    (function() {
+        'use strict';
+
+        const navTabs = document.querySelectorAll('.nav-tab');
+        const mainContainer = document.querySelector('main.container');
+        const liveSessionSubmenu = document.getElementById('liveSessionSubmenu');
+        const toolsCombinedView = document.getElementById('toolsCombinedView');
+        let currentTab = 'scanner';
+        let toolsInitialized = false;
+
+        // Saved references for DOM move approach
+        let metronomeModalBody = null;
+        let padsModalBody = null;
+        let metronomeSavedChildren = null;
+        let padsSavedChildren = null;
+
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                if (targetTab === currentTab && targetTab === 'livesession') {
+                    liveSessionSubmenu.style.display =
+                        liveSessionSubmenu.style.display === 'none' ? 'flex' : 'none';
+                    return;
+                }
+                switchTab(targetTab);
+            });
+        });
+
+        function switchTab(targetTab) {
+            // Move tools content back to modals before switching away
+            if (currentTab === 'tools' && targetTab !== 'tools') {
+                moveToolsBackToModals();
+            }
+
+            navTabs.forEach(t => t.classList.remove('active'));
+            const activeTab = document.querySelector('.nav-tab[data-tab="' + targetTab + '"]');
+            if (activeTab) activeTab.classList.add('active');
+
+            liveSessionSubmenu.style.display = 'none';
+            toolsCombinedView.style.display = 'none';
+            mainContainer.style.display = '';
+
+            switch (targetTab) {
+                case 'scanner':
+                    break;
+
+                case 'songbook':
+                    openSongBook();
+                    break;
+
+                case 'livesession':
+                    liveSessionSubmenu.style.display = 'flex';
+                    break;
+
+                case 'tools':
+                    mainContainer.style.display = 'none';
+                    toolsCombinedView.style.display = 'block';
+                    if (!toolsInitialized) {
+                        initToolsPanelHeaders();
+                        toolsInitialized = true;
+                    }
+                    moveToolsFromModals();
+                    break;
+            }
+
+            currentTab = targetTab;
+        }
+
+        // --- Song Book ---
+        function openSongBook() {
+            const loadSongBtn = document.getElementById('loadSongButton');
+            if (loadSongBtn) {
+                loadSongBtn.click();
+            } else {
+                const modal = document.getElementById('loadSongModal');
+                if (modal) modal.style.display = 'flex';
+            }
+
+            const modal = document.getElementById('loadSongModal');
+            if (modal) {
+                const observer = new MutationObserver(function(mutations) {
+                    for (const m of mutations) {
+                        if (m.attributeName === 'style' && modal.style.display === 'none') {
+                            if (currentTab === 'songbook') {
+                                switchTab('scanner');
+                            }
+                            observer.disconnect();
+                            return;
+                        }
+                    }
+                });
+                observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
+            }
+        }
+
+        // --- Live Session sub-menu ---
+        document.getElementById('navCreateSession').addEventListener('click', function() {
+            if (window.sessionUI) sessionUI.showCreateSessionModal();
+        });
+        document.getElementById('navJoinSession').addEventListener('click', function() {
+            if (window.sessionUI) sessionUI.showJoinSessionModal();
+        });
+        document.getElementById('navMySessions').addEventListener('click', function() {
+            if (window.sessionUI) sessionUI.showMySessionsModal();
+        });
+
+        // --- Tools: DOM move approach ---
+        function initToolsPanelHeaders() {
+            var metroPanel = document.getElementById('toolsMetronomePanel');
+            var padsPanel = document.getElementById('toolsPadsPanel');
+            if (metroPanel) {
+                var h = document.createElement('h3');
+                h.className = 'tools-panel-header';
+                h.setAttribute('data-i18n', 'nav.tools.metronome');
+                h.textContent = 'Metronome';
+                metroPanel.appendChild(h);
+            }
+            if (padsPanel) {
+                var h = document.createElement('h3');
+                h.className = 'tools-panel-header';
+                h.setAttribute('data-i18n', 'nav.tools.pads');
+                h.textContent = 'Worship Pads';
+                padsPanel.appendChild(h);
+            }
+        }
+
+        function moveToolsFromModals() {
+            var metroPanel = document.getElementById('toolsMetronomePanel');
+            var padsPanel = document.getElementById('toolsPadsPanel');
+
+            // Move metronome content
+            if (!metronomeModalBody) {
+                var metroModal = document.getElementById('metronomeModal');
+                if (metroModal) metronomeModalBody = metroModal.querySelector('.modal-body');
+            }
+            if (metronomeModalBody && metroPanel) {
+                metronomeSavedChildren = Array.from(metronomeModalBody.children);
+                metronomeSavedChildren.forEach(function(child) {
+                    metroPanel.appendChild(child);
+                });
+            }
+
+            // Move pads content
+            if (!padsModalBody) {
+                var padsModal = document.getElementById('padsModal');
+                if (padsModal) padsModalBody = padsModal.querySelector('.modal-body');
+            }
+            if (padsModalBody && padsPanel) {
+                padsSavedChildren = Array.from(padsModalBody.children);
+                padsSavedChildren.forEach(function(child) {
+                    padsPanel.appendChild(child);
+                });
+
+                // Load pad sounds if needed
+                if (window.padPlayer && Object.keys(padPlayer.buffers).length === 0) {
+                    padPlayer.loadSounds();
+                }
+            }
+
+            // Update translations for moved content
+            if (window.localization) localization.updateUI();
+        }
+
+        function moveToolsBackToModals() {
+            if (metronomeSavedChildren && metronomeModalBody) {
+                metronomeSavedChildren.forEach(function(child) {
+                    metronomeModalBody.appendChild(child);
+                });
+                metronomeSavedChildren = null;
+            }
+            if (padsSavedChildren && padsModalBody) {
+                padsSavedChildren.forEach(function(child) {
+                    padsModalBody.appendChild(child);
+                });
+                padsSavedChildren = null;
+            }
+        }
+
+        window.navBar = { switchTab: switchTab };
+    })();
     </script>
 
     <!-- PWA Service Worker -->

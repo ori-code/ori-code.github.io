@@ -11,6 +11,17 @@ const translations = {
         "nav.profile.subscription": "My Subscription",
         "nav.signout": "Sign Out",
 
+        // Navigation Tab Bar
+        "nav.tab.scanner": "Scanner",
+        "nav.tab.songbook": "Song Book",
+        "nav.tab.livesession": "Live",
+        "nav.tab.tools": "Tools",
+        "nav.sub.create": "Create",
+        "nav.sub.join": "Join",
+        "nav.sub.mysessions": "My Sessions",
+        "nav.tools.metronome": "Metronome",
+        "nav.tools.pads": "Worship Pads",
+
         // Sidebar Menu
         "nav.menu.charts": "Charts",
         "nav.menu.sessions": "My Sessions",
@@ -350,6 +361,17 @@ const translations = {
         "nav.profile.subscription": "המנוי שלי",
         "nav.signout": "התנתק",
 
+        // Navigation Tab Bar
+        "nav.tab.scanner": "סורק",
+        "nav.tab.songbook": "ספר שירים",
+        "nav.tab.livesession": "שידור חי",
+        "nav.tab.tools": "כלים",
+        "nav.sub.create": "צור סשן",
+        "nav.sub.join": "הצטרף",
+        "nav.sub.mysessions": "הסשנים שלי",
+        "nav.tools.metronome": "מטרונום",
+        "nav.tools.pads": "פדים",
+
         // Sidebar Menu
         "nav.menu.charts": "דפי אקורדים",
         "nav.menu.sessions": "סשנים שלי",
@@ -681,7 +703,7 @@ const translations = {
         "branding.show_footer": "הצג aChordim",
 
         // Footer
-        "footer.tagline": "נבנה באהבה עבור מנהלי סגידה ומוזיקאים.",
+        "footer.tagline": "נבנה באהבה עבור מהללים ומוזיקאים.",
         "footer.privacy": "מדיניות פרטיות",
         "footer.terms": "תנאי שימוש",
     }
