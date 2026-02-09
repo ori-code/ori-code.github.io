@@ -248,8 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 createWrapper();
             }
 
-            // Calculate scale factor
-            const availableWidth = viewportWidth - (PADDING * 2);
+            // Use actual parent width instead of viewport to account for container padding
+            const parentEl = scaleWrapper ? scaleWrapper.parentElement : previewContainer.parentElement;
+            const availableWidth = parentEl ? parentEl.clientWidth : (viewportWidth - (PADDING * 2));
             const scale = Math.min(1, availableWidth / A4_WIDTH_PX);
 
             // Apply scaling
