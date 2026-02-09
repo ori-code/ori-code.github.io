@@ -3527,9 +3527,6 @@ input[type="checkbox"]:checked::after {
 
 /* === Navigation Tab Bar === */
 .app-nav-bar {
-    position: sticky;
-    top: 57px;
-    z-index: 19;
     background: var(--bg);
     border-bottom: 1px solid var(--border);
     width: 100%;
@@ -3669,8 +3666,3 @@ input[type="checkbox"]:checked::after {
     }
 }
 
-@media (max-width: 720px) {
-    .app-nav-bar {
-        top: 49px;
-    }
-}
