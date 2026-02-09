@@ -2724,7 +2724,28 @@ input[type="checkbox"]:checked::after {
 /* --- General Mobile Responsive --- */
 @media (max-width: 720px) {
     .header-container {
-        padding: 0 16px;
+        padding: 0 10px;
+    }
+
+    .header-actions {
+        gap: 6px;
+    }
+
+    .header-actions .ghost-button,
+    .header-actions #themeToggle,
+    .header-actions #langToggle {
+        padding: 0 8px;
+        height: 28px;
+        font-size: 12px;
+        min-width: 0;
+    }
+
+    .header-brand-name {
+        font-size: 1rem !important;
+    }
+
+    .header-brand-url {
+        display: none !important;
     }
 
     .nav-logo {
