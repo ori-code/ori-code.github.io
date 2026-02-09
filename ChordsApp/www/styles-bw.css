@@ -3111,12 +3111,11 @@ input[type="checkbox"]:checked::after {
 @media (max-width: 1024px) {
     .editor-preview-wrapper {
         flex-direction: column;
-        align-items: center;
     }
 
-    .editor-preview-wrapper > * {
-        width: 100%;
-        max-width: 100%;
+    .editor-preview-wrapper > .preview-container,
+    .editor-preview-wrapper > .preview-scale-wrapper {
+        margin: 0 auto;
     }
 }
 
