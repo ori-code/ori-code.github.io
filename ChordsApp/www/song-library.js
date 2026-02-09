@@ -119,7 +119,7 @@
         const publicOption = document.createElement('option');
         publicOption.value = '__PUBLIC__';
         publicOption.textContent = '🌐 Public Songs';
-        publicOption.style.cssText = 'font-weight: bold; color: #22c55e;';
+        publicOption.style.cssText = 'font-weight: bold;';
         if (savedSelection === '__PUBLIC__') {
             publicOption.selected = true;
         }
@@ -282,7 +282,7 @@
 
         userBooks.forEach(book => {
             const bookItem = document.createElement('div');
-            bookItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px;';
+            bookItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-bottom: 8px; background: var(--bg); border: 1px solid var(--border);';
 
             const bookInfo = document.createElement('div');
             bookInfo.innerHTML = `
@@ -292,7 +292,7 @@
 
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = '🗑️';
-            deleteBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease;';
+            deleteBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: background 0.2s ease;';
             deleteBtn.title = 'Delete book';
 
             deleteBtn.addEventListener('click', async () => {
@@ -307,11 +307,13 @@
             });
 
             deleteBtn.addEventListener('mouseenter', () => {
-                deleteBtn.style.background = 'rgba(255, 59, 92, 0.2)';
+                deleteBtn.style.background = 'var(--text)';
+                deleteBtn.style.color = 'var(--bg)';
             });
 
             deleteBtn.addEventListener('mouseleave', () => {
                 deleteBtn.style.background = 'transparent';
+                deleteBtn.style.color = '';
             });
 
             bookItem.appendChild(bookInfo);
@@ -342,7 +344,7 @@
 
         userBooks.forEach(book => {
             const bookOption = document.createElement('div');
-            bookOption.style.cssText = 'padding: 14px; margin-bottom: 8px; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.2s ease;';
+            bookOption.style.cssText = 'padding: 14px; margin-bottom: 8px; background: var(--bg); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease;';
 
             bookOption.innerHTML = `
                 <div style="font-weight: 600; color: var(--text);">📖 ${book.name}</div>
@@ -917,7 +919,7 @@
         function createSongItem(song, user, database) {
             const songItem = document.createElement('div');
             const isSelected = selectedSongIds.has(song.id);
-            songItem.style.cssText = `padding: 16px; margin-bottom: 12px; background: ${isSelected ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-soft)'}; border: 1px solid ${isSelected ? '#3b82f6' : 'var(--border)'}; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center;`;
+            songItem.style.cssText = `padding: 16px; margin-bottom: 12px; background: ${isSelected ? 'var(--text)' : 'var(--bg)'}; color: ${isSelected ? 'var(--bg)' : 'var(--text)'}; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center;`;
             songItem.dataset.songId = song.id;
 
             // Add checkbox for bulk selection mode
@@ -925,7 +927,7 @@
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.checked = isSelected;
-                checkbox.style.cssText = 'width: 20px; height: 20px; margin-right: 12px; cursor: pointer; accent-color: #3b82f6;';
+                checkbox.style.cssText = 'width: 20px; height: 20px; margin-right: 12px; cursor: pointer; accent-color: var(--text);';
                 checkbox.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (checkbox.checked) {
@@ -934,8 +936,9 @@
                         selectedSongIds.delete(song.id);
                     }
                     // Update the item's visual style
-                    songItem.style.background = checkbox.checked ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-soft)';
-                    songItem.style.borderColor = checkbox.checked ? '#3b82f6' : 'var(--border)';
+                    songItem.style.background = checkbox.checked ? 'var(--text)' : 'var(--bg)';
+                    songItem.style.color = checkbox.checked ? 'var(--bg)' : 'var(--text)';
+                    songItem.style.borderColor = 'var(--border)';
                     updateBulkActionBar();
                 });
                 songItem.appendChild(checkbox);
@@ -970,21 +973,21 @@
                 if (song.transposeSteps && song.transposeSteps !== 0) {
                     keyBadge.textContent += ` (${song.transposeSteps > 0 ? '+' : ''}${song.transposeSteps})`;
                 }
-                keyBadge.style.cssText = 'background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;';
+                keyBadge.style.cssText = 'background: transparent; color: var(--text); padding: 4px 10px; border: 1px solid var(--border); font-size: 0.8rem; font-weight: 500;';
                 metadataRow.appendChild(keyBadge);
             }
 
             if (song.bpm) {
                 const bpmBadge = document.createElement('span');
                 bpmBadge.textContent = `${song.bpm} BPM`;
-                bpmBadge.style.cssText = 'background: rgba(34, 197, 94, 0.15); color: #22c55e; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;';
+                bpmBadge.style.cssText = 'background: transparent; color: var(--text); padding: 4px 10px; border: 1px solid var(--border); font-size: 0.8rem; font-weight: 500;';
                 metadataRow.appendChild(bpmBadge);
             }
 
             if (song.timeSignature) {
                 const timeBadge = document.createElement('span');
                 timeBadge.textContent = song.timeSignature;
-                timeBadge.style.cssText = 'background: rgba(168, 85, 247, 0.15); color: #a855f7; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;';
+                timeBadge.style.cssText = 'background: transparent; color: var(--text); padding: 4px 10px; border: 1px solid var(--border); font-size: 0.8rem; font-weight: 500;';
                 metadataRow.appendChild(timeBadge);
             }
 
@@ -1002,7 +1005,7 @@
             // Add to Session button
             const addToSessionBtn = document.createElement('button');
             addToSessionBtn.textContent = '➕';
-            addToSessionBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease; margin-right: 4px;';
+            addToSessionBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: background 0.2s ease; margin-right: 4px;';
             addToSessionBtn.title = 'Add to session playlist';
 
             addToSessionBtn.addEventListener('click', async (e) => {
@@ -1073,16 +1076,18 @@
             });
 
             addToSessionBtn.addEventListener('mouseenter', () => {
-                addToSessionBtn.style.background = 'rgba(79, 209, 139, 0.2)';
+                addToSessionBtn.style.background = 'var(--text)';
+                addToSessionBtn.style.color = 'var(--bg)';
             });
 
             addToSessionBtn.addEventListener('mouseleave', () => {
                 addToSessionBtn.style.background = 'transparent';
+                addToSessionBtn.style.color = '';
             });
 
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = '🗑️';
-            deleteBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease;';
+            deleteBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: background 0.2s ease;';
             deleteBtn.title = 'Delete song';
 
             deleteBtn.addEventListener('click', async (e) => {
@@ -1107,18 +1112,20 @@
             });
 
             deleteBtn.addEventListener('mouseenter', () => {
-                deleteBtn.style.background = 'rgba(255, 59, 92, 0.2)';
+                deleteBtn.style.background = 'var(--text)';
+                deleteBtn.style.color = 'var(--bg)';
             });
 
             deleteBtn.addEventListener('mouseleave', () => {
                 deleteBtn.style.background = 'transparent';
+                deleteBtn.style.color = '';
             });
 
             // Public toggle button (globe icon)
             const publicBtn = document.createElement('button');
             const isPublic = song.isPublic === true;
             publicBtn.textContent = '🌐';
-            publicBtn.style.cssText = `background: ${isPublic ? 'rgba(34, 197, 94, 0.2)' : 'transparent'}; border: ${isPublic ? '1px solid #22c55e' : 'none'}; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease; margin-right: 4px;`;
+            publicBtn.style.cssText = `background: ${isPublic ? 'var(--text)' : 'transparent'}; color: ${isPublic ? 'var(--bg)' : ''}; border: ${isPublic ? '1px solid var(--border)' : 'none'}; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: background 0.2s ease; margin-right: 4px;`;
             publicBtn.title = isPublic ? 'Make private (click to unpublish)' : 'Make public (share with everyone)';
 
             publicBtn.addEventListener('click', async (e) => {
@@ -1127,17 +1134,19 @@
             });
 
             publicBtn.addEventListener('mouseenter', () => {
-                publicBtn.style.background = isPublic ? 'rgba(34, 197, 94, 0.3)' : 'rgba(34, 197, 94, 0.2)';
+                publicBtn.style.background = 'var(--text)';
+                publicBtn.style.color = 'var(--bg)';
             });
 
             publicBtn.addEventListener('mouseleave', () => {
-                publicBtn.style.background = isPublic ? 'rgba(34, 197, 94, 0.2)' : 'transparent';
+                publicBtn.style.background = isPublic ? 'var(--text)' : 'transparent';
+                publicBtn.style.color = isPublic ? 'var(--bg)' : '';
             });
 
             // Share button
             const shareBtn = document.createElement('button');
             shareBtn.textContent = '🔗';
-            shareBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 6px; transition: background 0.2s ease; margin-right: 4px;';
+            shareBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: background 0.2s ease; margin-right: 4px;';
             shareBtn.title = 'Share song link';
 
             shareBtn.addEventListener('click', async (e) => {
@@ -1146,11 +1155,13 @@
             });
 
             shareBtn.addEventListener('mouseenter', () => {
-                shareBtn.style.background = 'rgba(59, 130, 246, 0.2)';
+                shareBtn.style.background = 'var(--text)';
+                shareBtn.style.color = 'var(--bg)';
             });
 
             shareBtn.addEventListener('mouseleave', () => {
                 shareBtn.style.background = 'transparent';
+                shareBtn.style.color = '';
             });
 
             songItem.appendChild(songInfo);
@@ -1160,7 +1171,7 @@
                 // Public songs: show only "Open in Live Mode" button
                 const openBtn = document.createElement('button');
                 openBtn.textContent = '▶️ Open';
-                openBtn.style.cssText = 'background: rgba(34, 197, 94, 0.2); border: 1px solid #22c55e; color: #22c55e; font-size: 0.9rem; cursor: pointer; padding: 8px 16px; border-radius: 6px; transition: background 0.2s ease; font-weight: 500;';
+                openBtn.style.cssText = 'background: var(--text); border: 1px solid var(--border); color: var(--bg); font-size: 0.9rem; cursor: pointer; padding: 8px 16px; transition: background 0.2s ease; font-weight: 500;';
                 openBtn.title = 'Open in Live Mode';
 
                 openBtn.addEventListener('click', async (e) => {
@@ -1175,11 +1186,11 @@
                 });
 
                 openBtn.addEventListener('mouseenter', () => {
-                    openBtn.style.background = 'rgba(34, 197, 94, 0.3)';
+                    openBtn.style.opacity = '0.7';
                 });
 
                 openBtn.addEventListener('mouseleave', () => {
-                    openBtn.style.background = 'rgba(34, 197, 94, 0.2)';
+                    openBtn.style.opacity = '1';
                 });
 
                 songItem.appendChild(openBtn);
@@ -1203,8 +1214,9 @@
                         } else {
                             selectedSongIds.delete(song.id);
                         }
-                        songItem.style.background = checkbox.checked ? 'rgba(59, 130, 246, 0.15)' : 'var(--bg-soft)';
-                        songItem.style.borderColor = checkbox.checked ? '#3b82f6' : 'var(--border)';
+                        songItem.style.background = checkbox.checked ? 'var(--text)' : 'var(--bg)';
+                        songItem.style.color = checkbox.checked ? 'var(--bg)' : 'var(--text)';
+                        songItem.style.borderColor = 'var(--border)';
                         updateBulkActionBar();
                     }
                     return;

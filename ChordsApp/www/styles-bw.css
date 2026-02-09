@@ -2868,6 +2868,8 @@ input[type="checkbox"]:checked::after {
 
     .container {
         padding-top: 20px;
+        padding-left: 10px;
+        padding-right: 10px;
     }
 
     .hero {
@@ -3273,6 +3275,8 @@ input[type="checkbox"]:checked::after {
 [style*="background-color: #f59e0b"],
 [style*="background: #1e1e2e"],
 [style*="background: #10b981"],
+[style*="background: rgba(34, 197"],
+[style*="background: rgba(79, 209"],
 [style*="background: rgba(255,255,255,0.08"],
 [style*="background: rgba(255,255,255,0.1"] {
     background: transparent !important;
@@ -3340,7 +3344,27 @@ input[type="checkbox"]:checked::after {
 [style*="color: #f87171"],
 [style*="color: #818cf8"],
 [style*="color: #fb923c"],
-[style*="color: #1e1e2e"] {
+[style*="color: #1e1e2e"],
+[style*="color: rgb(59, 130, 246)"],
+[style*="color: rgb(34, 197, 94)"],
+[style*="color: rgb(168, 85, 247)"],
+[style*="color: rgb(139, 92, 246)"],
+[style*="color: rgb(239, 68, 68)"],
+[style*="color: rgb(245, 158, 11)"],
+[style*="color: rgb(16, 185, 129)"],
+[style*="color: rgb(99, 102, 241)"],
+[style*="color: rgb(236, 72, 153)"],
+[style*="color: rgb(249, 115, 22)"],
+[style*="color: rgb(220, 38, 38)"],
+[style*="color: rgb(22, 163, 74)"],
+[style*="color: rgb(37, 99, 235)"],
+[style*="color: rgb(124, 58, 237)"],
+[style*="color: rgb(52, 211, 153)"],
+[style*="color: rgb(96, 165, 250)"],
+[style*="color: rgb(74, 222, 128)"],
+[style*="color: rgb(248, 113, 113)"],
+[style*="color: rgb(129, 140, 248)"],
+[style*="color: rgb(251, 146, 60)"] {
     color: var(--text) !important;
 }
 
@@ -3367,8 +3391,72 @@ input[type="checkbox"]:checked::after {
 [style*="border-color: #22c55e"],
 [style*="border-color: #a855f7"],
 [style*="border: 1px solid #"],
-[style*="border: 2px solid #"] {
+[style*="border: 2px solid #"],
+[style*="border: 1px solid rgb(59, 130"],
+[style*="border: 1px solid rgb(34, 197"],
+[style*="border: 1px solid rgb(168, 85"],
+[style*="border-color: rgb(59, 130"],
+[style*="border-color: rgb(34, 197"],
+[style*="border-color: rgb(168, 85"] {
     border-color: var(--border) !important;
+}
+
+/* Override colored accent-color */
+[style*="accent-color: #3b82f6"],
+[style*="accent-color: rgb(59, 130, 246)"],
+[style*="accent-color: #22c55e"],
+[style*="accent-color: rgb(34, 197, 94)"] {
+    accent-color: var(--text) !important;
+}
+
+/* Force B&W on Song Library modal badges (padding: 4px 10px targets metadata badges) */
+#loadSongModal [style*="padding: 4px 10px"] {
+    color: var(--text) !important;
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Force B&W on all colored inline text in Song Library modal */
+#loadSongModal [style*="color:"] {
+    color: var(--text) !important;
+}
+
+/* Force B&W on colored inline backgrounds in Song Library modal */
+#loadSongModal [style*="background: rgba"] {
+    background: transparent !important;
+}
+
+/* Song Library modal: prevent overflow, ensure full-screen on mobile */
+/* All modals: full-screen on mobile with 10px side padding */
+.modal-overlay .modal-container {
+    max-width: 100% !important;
+    max-height: 100vh;
+    height: 100%;
+    margin: 0;
+    border: none;
+    overflow-y: auto;
+}
+
+.modal-overlay .modal-body {
+    padding: 16px 10px;
+    overflow-x: hidden;
+}
+
+/* All modal items with flex space-between: stack vertically on mobile */
+.modal-overlay [style*="display: flex"][style*="justify-content: space-between"] {
+    flex-wrap: wrap !important;
+}
+
+/* Session cards: stack info and buttons vertically */
+.session-item > [style*="display: flex"][style*="justify-content: space-between"] {
+    flex-direction: column !important;
+    gap: 12px;
+}
+
+.session-item > [style*="display: flex"] > [style*="flex-direction: column"] {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 /* Override box-shadow inline styles */
@@ -3665,4 +3753,3 @@ input[type="checkbox"]:checked::after {
         grid-template-columns: 1fr;
     }
 }
-
