@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     (function initMobilePreviewScaling() {
         const A4_WIDTH_PX = 793; // 210mm in pixels at 96dpi
         const MOBILE_BREAKPOINT = 800; // Scale when viewport is smaller than this
-        const PADDING = 16; // Side padding on mobile
+        const PADDING = 32; // Side padding on mobile (matches .container padding)
 
         let previewContainer = null;
         let scaleWrapper = null;
