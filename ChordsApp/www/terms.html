@@ -3,69 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms of Service - Chords App | The Faith Sound</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Terms of Service - aChordim | The Faith Sound</title>
+    <link rel="icon" type="image/svg+xml" href="achordim-icon-app.svg">
     <style>
-        .legal-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 100px 24px 60px;
+        :root {
+            --bg: #fff;
+            --text: #000;
+            --border: #000;
+            --text-muted: #000;
         }
-        .legal-container h1 {
-            font-size: 2rem;
-            margin-bottom: 8px;
+        [data-theme="dark"] {
+            --bg: #000;
+            --text: #fff;
+            --border: #fff;
+            --text-muted: #fff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
             color: var(--text);
+            line-height: 1.6;
         }
-        .legal-container .last-updated {
-            color: var(--text-muted);
+        .legal-header {
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+        .legal-header a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
             font-size: 0.9rem;
+        }
+        .legal-header a:hover { opacity: 0.6; }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .header-actions button {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .header-actions button:hover {
+            background: var(--text);
+            color: var(--bg);
+        }
+        .legal-container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .last-updated {
+            opacity: 0.5;
+            font-size: 0.85rem;
             margin-bottom: 32px;
         }
-        .legal-container h2 {
-            font-size: 1.3rem;
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
             margin-top: 32px;
-            margin-bottom: 12px;
-            color: var(--primary);
+            margin-bottom: 10px;
         }
-        .legal-container p, .legal-container li {
-            color: var(--text-muted);
+        p, li {
+            opacity: 0.8;
             line-height: 1.7;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
-        .legal-container ul {
-            padding-left: 24px;
+        ul { padding-left: 24px; }
+        li { margin-bottom: 8px; }
+        a { color: var(--text); }
+        strong { opacity: 1; }
+        .legal-footer {
+            border-top: 1px solid var(--border);
+            text-align: center;
+            padding: 24px;
+            font-size: 0.8rem;
+            opacity: 0.5;
         }
-        .legal-container a {
-            color: var(--primary);
-        }
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--primary);
+        .legal-footer a {
+            color: var(--text);
             text-decoration: none;
-            margin-bottom: 24px;
-            font-weight: 500;
         }
-        .back-link:hover {
-            text-decoration: underline;
-        }
+        .legal-footer a:hover { text-decoration: underline; }
+        [dir="rtl"] { text-align: right; }
+        [dir="rtl"] ul { padding-left: 0; padding-right: 24px; }
     </style>
 </head>
 <body>
-    <div class="legal-container">
-        <a href="index.html" class="back-link">← Back to Chords App</a>
+    <header class="legal-header">
+        <a href="index.html">← aChordim</a>
+        <div class="header-actions">
+            <button id="langToggle" onclick="toggleLang()">HE</button>
+            <button id="themeToggle" onclick="toggleTheme()">Dark</button>
+        </div>
+    </header>
 
+    <!-- English -->
+    <div class="legal-container" id="content-en">
         <h1>Terms of Service</h1>
-        <p class="last-updated">Last updated: December 23, 2025</p>
+        <p class="last-updated">Last updated: January 28, 2026</p>
 
-        <p>Welcome to Chords App by The Faith Sound. By using our service, you agree to these terms. Please read them carefully.</p>
+        <p>Welcome to aChordim by The Faith Sound. By using our service, you agree to these terms. Please read them carefully.</p>
 
         <h2>1. Acceptance of Terms</h2>
-        <p>By accessing or using Chords App, you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to these terms, please do not use our service.</p>
+        <p>By accessing or using aChordim, you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to these terms, please do not use our service.</p>
 
         <h2>2. Description of Service</h2>
-        <p>Chords App is a web-based tool for creating, editing, transposing, and sharing chord charts and lyrics for worship and music purposes. Features include:</p>
+        <p>aChordim is a web-based tool for creating, editing, transposing, and sharing chord charts and lyrics for worship and music purposes. Features include:</p>
         <ul>
             <li>Chord chart creation and editing</li>
             <li>Automatic chord transposition</li>
@@ -89,7 +151,7 @@
         <p>Subscriptions can be cancelled at any time. Refunds are handled on a case-by-case basis.</p>
 
         <h2>5. User Content</h2>
-        <p>You retain ownership of the content you create using Chords App. By using our service, you grant us a limited license to store and display your content as necessary to provide the service.</p>
+        <p>You retain ownership of the content you create using aChordim. By using our service, you grant us a limited license to store and display your content as necessary to provide the service.</p>
         <p>You are responsible for ensuring you have the right to use and share any lyrics or content you upload.</p>
 
         <h2>6. Acceptable Use</h2>
@@ -104,7 +166,7 @@
         </ul>
 
         <h2>7. Intellectual Property</h2>
-        <p>The Chords App service, including its design, features, and code, is owned by The Faith Sound. You may not copy, modify, or distribute our service without permission.</p>
+        <p>The aChordim service, including its design, features, and code, is owned by The Faith Sound. You may not copy, modify, or distribute our service without permission.</p>
 
         <h2>8. Live Sessions</h2>
         <p>When using live session features:</p>
@@ -115,7 +177,7 @@
         </ul>
 
         <h2>9. Disclaimer of Warranties</h2>
-        <p>Chords App is provided "as is" without warranties of any kind. We do not guarantee that the service will be uninterrupted, error-free, or meet your specific requirements.</p>
+        <p>aChordim is provided "as is" without warranties of any kind. We do not guarantee that the service will be uninterrupted, error-free, or meet your specific requirements.</p>
 
         <h2>10. Limitation of Liability</h2>
         <p>To the maximum extent permitted by law, The Faith Sound shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the service.</p>
@@ -135,12 +197,121 @@
         <p><strong>Website:</strong> <a href="https://www.thefaithsound.com">www.thefaithsound.com</a></p>
     </div>
 
-    <footer class="app-footer">
-        <p>&copy; 2025 The Faith Sound. All rights reserved.</p>
-        <p style="margin-top: 8px;">
-            <a href="privacy.html">Privacy Policy</a> ·
+    <!-- Hebrew -->
+    <div class="legal-container" id="content-he" dir="rtl" style="display: none;">
+        <h1>תנאי שימוש</h1>
+        <p class="last-updated">עדכון אחרון: 28 בינואר 2026</p>
+
+        <p>ברוכים הבאים ל-aChordim מבית The Faith Sound. בשימוש בשירות שלנו, אתם מסכימים לתנאים אלה. אנא קראו אותם בעיון.</p>
+
+        <h2>1. קבלת התנאים</h2>
+        <p>בגישה או בשימוש ב-aChordim, אתם מסכימים להיות מחויבים לתנאי שימוש אלה ולמדיניות הפרטיות שלנו. אם אינכם מסכימים לתנאים אלה, אנא אל תשתמשו בשירות שלנו.</p>
+
+        <h2>2. תיאור השירות</h2>
+        <p>aChordim הוא כלי מבוסס אינטרנט ליצירה, עריכה, טרנספוזיציה ושיתוף דפי אקורדים ומילים למטרות סגידה ומוזיקה. התכונות כוללות:</p>
+        <ul>
+            <li>יצירה ועריכה של דפי אקורדים</li>
+            <li>טרנספוזיציית אקורדים אוטומטית</li>
+            <li>חילוץ אקורדים מתמונות באמצעות AI</li>
+            <li>שידור הפעלות חיות לצוותים</li>
+            <li>ניהול ספריית שירים</li>
+            <li>הדפסה וייצוא</li>
+        </ul>
+
+        <h2>3. חשבונות משתמש</h2>
+        <p>כדי לגשת לתכונות מסוימות, עליכם ליצור חשבון באמצעות Google Sign-In. אתם אחראים על:</p>
+        <ul>
+            <li>שמירה על אבטחת החשבון שלכם</li>
+            <li>כל הפעילויות המתבצעות תחת החשבון שלכם</li>
+            <li>הודעה לנו על כל שימוש בלתי מורשה</li>
+        </ul>
+
+        <h2>4. תוכניות מנוי</h2>
+        <p><strong>תוכנית חינמית:</strong> תכונות מוגבלות עם הגבלות שימוש כפי שמוצגות באפליקציה.</p>
+        <p><strong>תוכנית Pro:</strong> גישה מלאה לכל התכונות כולל חילוץ AI ללא הגבלה, הפעלות חיות ואחסון שירים. דמי מנוי מחויבים בהתאם לתוכנית שנבחרה בעת התשלום.</p>
+        <p>ניתן לבטל מנויים בכל עת. החזרים מטופלים על בסיס פרטני.</p>
+
+        <h2>5. תוכן משתמש</h2>
+        <p>אתם שומרים על הבעלות על התוכן שאתם יוצרים באמצעות aChordim. בשימוש בשירות שלנו, אתם מעניקים לנו רישיון מוגבל לאחסן ולהציג את התוכן שלכם כנדרש לספק את השירות.</p>
+        <p>אתם אחראים לוודא שיש לכם את הזכות להשתמש ולשתף כל מילים או תוכן שאתם מעלים.</p>
+
+        <h2>6. שימוש מקובל</h2>
+        <p>אתם מסכימים שלא:</p>
+        <ul>
+            <li>להשתמש בשירות למטרה בלתי חוקית</li>
+            <li>להעלות קוד זדוני או לנסות לפרוץ לשירות</li>
+            <li>להפר זכויות קניין רוחני של אחרים</li>
+            <li>לשתף את פרטי החשבון שלכם עם אחרים</li>
+            <li>לנסות לעקוף מגבלות שימוש או הגבלות</li>
+            <li>להשתמש בשירות לספאם או להטריד אחרים</li>
+        </ul>
+
+        <h2>7. קניין רוחני</h2>
+        <p>שירות aChordim, כולל העיצוב, התכונות והקוד, הוא בבעלות The Faith Sound. אינכם רשאים להעתיק, לשנות או להפיץ את השירות שלנו ללא אישור.</p>
+
+        <h2>8. הפעלות חיות</h2>
+        <p>בעת שימוש בתכונות הפעלה חיה:</p>
+        <ul>
+            <li>מנהלי הפעלה אחראים על התוכן המשותף בהפעלות שלהם</li>
+            <li>קודי הפעלה צריכים להיות משותפים רק עם משתתפים מיועדים</li>
+            <li>אנו לא אחראים על אופן השימוש של המשתתפים בתוכן משותף</li>
+        </ul>
+
+        <h2>9. הסרת אחריות מאחריות</h2>
+        <p>aChordim מסופק "כמות שהוא" ללא אחריות מכל סוג. אנו לא מבטיחים שהשירות יהיה רציף, נקי משגיאות או יעמוד בדרישות הספציפיות שלכם.</p>
+
+        <h2>10. הגבלת אחריות</h2>
+        <p>במידה המרבית המותרת בחוק, The Faith Sound לא תהיה אחראית לנזקים עקיפים, מקריים, מיוחדים או תוצאתיים הנובעים משימושכם בשירות.</p>
+
+        <h2>11. שינויים בתנאים</h2>
+        <p>אנו עשויים לשנות תנאים אלה בכל עת. המשך השימוש בשירות לאחר שינויים מהווה קבלת התנאים החדשים. נודיע למשתמשים על שינויים משמעותיים.</p>
+
+        <h2>12. סיום</h2>
+        <p>אנו שומרים על הזכות להשעות או לסיים חשבונות המפרים תנאים אלה. אתם יכולים למחוק את חשבונכם בכל עת דרך הגדרות האפליקציה.</p>
+
+        <h2>13. חוק חל</h2>
+        <p>תנאים אלה כפופים לחוקי תחום השיפוט שבו The Faith Sound פועלת, ללא התחשבות בעקרונות ברירת דין.</p>
+
+        <h2>14. צרו קשר</h2>
+        <p>לשאלות על תנאים אלה, אנא צרו איתנו קשר:</p>
+        <p><strong>אימייל:</strong> <a href="mailto:thefaithsound@gmail.com">thefaithsound@gmail.com</a></p>
+        <p><strong>אתר:</strong> <a href="https://www.thefaithsound.com">www.thefaithsound.com</a></p>
+    </div>
+
+    <footer class="legal-footer">
+        <p>&copy; 2026 The Faith Sound.</p>
+        <p style="margin-top: 6px;">
+            <a href="privacy.html">Privacy Policy</a> &middot;
             <a href="terms.html">Terms of Service</a>
         </p>
     </footer>
+
+    <script>
+        // Theme
+        const saved = localStorage.getItem('achordim_theme') || 'dark';
+        if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            document.getElementById('themeToggle').textContent = isDark ? 'Dark' : 'Light';
+            localStorage.setItem('achordim_theme', isDark ? 'light' : 'dark');
+        }
+        if (saved === 'dark') document.getElementById('themeToggle').textContent = 'Light';
+
+        // Language
+        let lang = localStorage.getItem('achordim_lang') || 'en';
+        function applyLang() {
+            document.getElementById('content-en').style.display = lang === 'en' ? 'block' : 'none';
+            document.getElementById('content-he').style.display = lang === 'he' ? 'block' : 'none';
+            document.getElementById('langToggle').textContent = lang === 'en' ? 'HE' : 'EN';
+            document.documentElement.lang = lang;
+        }
+        function toggleLang() {
+            lang = lang === 'en' ? 'he' : 'en';
+            localStorage.setItem('achordim_lang', lang);
+            applyLang();
+        }
+        applyLang();
+    </script>
 </body>
 </html>

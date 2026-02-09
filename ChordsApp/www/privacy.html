@@ -3,66 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - Chords App | The Faith Sound</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Privacy Policy - aChordim | The Faith Sound</title>
+    <link rel="icon" type="image/svg+xml" href="achordim-icon-app.svg">
     <style>
-        .legal-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 100px 24px 60px;
+        :root {
+            --bg: #fff;
+            --text: #000;
+            --border: #000;
+            --text-muted: #000;
         }
-        .legal-container h1 {
-            font-size: 2rem;
-            margin-bottom: 8px;
+        [data-theme="dark"] {
+            --bg: #000;
+            --text: #fff;
+            --border: #fff;
+            --text-muted: #fff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
             color: var(--text);
+            line-height: 1.6;
         }
-        .legal-container .last-updated {
-            color: var(--text-muted);
+        .legal-header {
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+        .legal-header a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
             font-size: 0.9rem;
+        }
+        .legal-header a:hover { opacity: 0.6; }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .header-actions button {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .header-actions button:hover {
+            background: var(--text);
+            color: var(--bg);
+        }
+        .legal-container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .last-updated {
+            opacity: 0.5;
+            font-size: 0.85rem;
             margin-bottom: 32px;
         }
-        .legal-container h2 {
-            font-size: 1.3rem;
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
             margin-top: 32px;
-            margin-bottom: 12px;
-            color: var(--primary);
+            margin-bottom: 10px;
         }
-        .legal-container p, .legal-container li {
-            color: var(--text-muted);
+        p, li {
+            opacity: 0.8;
             line-height: 1.7;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
-        .legal-container ul {
-            padding-left: 24px;
+        ul { padding-left: 24px; }
+        li { margin-bottom: 8px; }
+        a { color: var(--text); }
+        strong { opacity: 1; }
+        .legal-footer {
+            border-top: 1px solid var(--border);
+            text-align: center;
+            padding: 24px;
+            font-size: 0.8rem;
+            opacity: 0.5;
         }
-        .legal-container a {
-            color: var(--primary);
-        }
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--primary);
+        .legal-footer a {
+            color: var(--text);
             text-decoration: none;
-            margin-bottom: 24px;
-            font-weight: 500;
         }
-        .back-link:hover {
-            text-decoration: underline;
-        }
+        .legal-footer a:hover { text-decoration: underline; }
+        [dir="rtl"] { text-align: right; }
+        [dir="rtl"] ul { padding-left: 0; padding-right: 24px; }
     </style>
 </head>
 <body>
-    <div class="legal-container">
-        <a href="index.html" class="back-link">← Back to Chords App</a>
+    <header class="legal-header">
+        <a href="index.html">← aChordim</a>
+        <div class="header-actions">
+            <button id="langToggle" onclick="toggleLang()">HE</button>
+            <button id="themeToggle" onclick="toggleTheme()">Dark</button>
+        </div>
+    </header>
 
+    <!-- English -->
+    <div class="legal-container" id="content-en">
         <h1>Privacy Policy</h1>
-        <p class="last-updated">Last updated: December 23, 2025</p>
+        <p class="last-updated">Last updated: January 28, 2026</p>
 
-        <p>Welcome to Chords App by The Faith Sound. We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information.</p>
+        <p>Welcome to aChordim by The Faith Sound. We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information.</p>
 
         <h2>1. Information We Collect</h2>
-        <p>When you use Chords App, we may collect:</p>
+        <p>When you use aChordim, we may collect:</p>
         <ul>
             <li><strong>Account Information:</strong> When you sign in with Google, we receive your name, email address, and profile picture from your Google account.</li>
             <li><strong>User Content:</strong> Songs you create, save, or upload to our service.</li>
@@ -73,7 +135,7 @@
         <h2>2. How We Use Your Information</h2>
         <p>We use your information to:</p>
         <ul>
-            <li>Provide and maintain the Chords App service</li>
+            <li>Provide and maintain the aChordim service</li>
             <li>Save and sync your songs across devices</li>
             <li>Enable live session features for worship teams</li>
             <li>Manage your subscription and account</li>
@@ -90,7 +152,7 @@
             <li>With your consent</li>
             <li>To comply with legal obligations</li>
             <li>To protect our rights and safety</li>
-            <li>With service providers who assist in operating our app (e.g., Firebase, Stripe for payments)</li>
+            <li>With service providers who assist in operating our app (e.g., Firebase, PayPal for payments)</li>
         </ul>
 
         <h2>5. Live Sessions</h2>
@@ -110,7 +172,7 @@
         <p>We use local storage to save your preferences (like theme settings) and maintain your session. This data stays on your device and is not transmitted to our servers unless necessary for functionality.</p>
 
         <h2>8. Children's Privacy</h2>
-        <p>Chords App is not intended for children under 13. We do not knowingly collect personal information from children under 13.</p>
+        <p>aChordim is not intended for children under 13. We do not knowingly collect personal information from children under 13.</p>
 
         <h2>9. Changes to This Policy</h2>
         <p>We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.</p>
@@ -121,12 +183,107 @@
         <p><strong>Website:</strong> <a href="https://www.thefaithsound.com">www.thefaithsound.com</a></p>
     </div>
 
-    <footer class="app-footer">
-        <p>&copy; 2025 The Faith Sound. All rights reserved.</p>
-        <p style="margin-top: 8px;">
-            <a href="privacy.html">Privacy Policy</a> ·
+    <!-- Hebrew -->
+    <div class="legal-container" id="content-he" dir="rtl" style="display: none;">
+        <h1>מדיניות פרטיות</h1>
+        <p class="last-updated">עדכון אחרון: 28 בינואר 2026</p>
+
+        <p>ברוכים הבאים ל-aChordim מבית The Faith Sound. אנו מכבדים את פרטיותכם ומחויבים להגן על המידע האישי שלכם. מדיניות פרטיות זו מסבירה כיצד אנו אוספים, משתמשים ושומרים על המידע שלכם.</p>
+
+        <h2>1. מידע שאנו אוספים</h2>
+        <p>בעת השימוש ב-aChordim, אנו עשויים לאסוף:</p>
+        <ul>
+            <li><strong>פרטי חשבון:</strong> כאשר אתם נכנסים באמצעות Google, אנו מקבלים את שמכם, כתובת האימייל ותמונת הפרופיל מחשבון Google שלכם.</li>
+            <li><strong>תוכן משתמש:</strong> שירים שאתם יוצרים, שומרים או מעלים לשירות שלנו.</li>
+            <li><strong>נתוני שימוש:</strong> מידע על אופן השימוש באפליקציה, כולל תכונות שנגישות ונתוני הפעלה.</li>
+            <li><strong>מידע על המכשיר:</strong> סוג הדפדפן, סוג המכשיר ומערכת ההפעלה.</li>
+        </ul>
+
+        <h2>2. כיצד אנו משתמשים במידע שלכם</h2>
+        <p>אנו משתמשים במידע שלכם כדי:</p>
+        <ul>
+            <li>לספק ולתחזק את שירות aChordim</li>
+            <li>לשמור ולסנכרן את השירים שלכם בין מכשירים</li>
+            <li>לאפשר תכונות הפעלה חיה לצוותי סגידה</li>
+            <li>לנהל את המנוי והחשבון שלכם</li>
+            <li>לשפר את השירותים וחוויית המשתמש שלנו</li>
+            <li>לתקשר עדכונים חשובים על השירות</li>
+        </ul>
+
+        <h2>3. אחסון נתונים</h2>
+        <p>הנתונים שלכם מאוחסנים בצורה מאובטחת באמצעות Firebase (Google Cloud Platform). אנו מיישמים אמצעי אבטחה מתאימים כדי להגן על המידע האישי שלכם מפני גישה, שינוי או השמדה בלתי מורשים.</p>
+
+        <h2>4. שיתוף נתונים</h2>
+        <p>אנו לא מוכרים, סוחרים או משכירים את המידע האישי שלכם לצדדים שלישיים. אנו עשויים לשתף נתונים רק בנסיבות הבאות:</p>
+        <ul>
+            <li>בהסכמתכם</li>
+            <li>לעמידה בדרישות חוקיות</li>
+            <li>להגנה על זכויותינו ובטיחותנו</li>
+            <li>עם ספקי שירות המסייעים בהפעלת האפליקציה שלנו (כגון Firebase, PayPal לתשלומים)</li>
+        </ul>
+
+        <h2>5. הפעלות חיות</h2>
+        <p>כאשר אתם יוצרים או מצטרפים להפעלה חיה, משתתפים אחרים בהפעלה יכולים לראות את תוכן השיר המשותף. קודי הפעלה הם זמניים וניתן לסיים הפעלות בכל עת על ידי המנהל.</p>
+
+        <h2>6. הזכויות שלכם</h2>
+        <p>יש לכם את הזכות:</p>
+        <ul>
+            <li>לגשת למידע האישי שלכם</li>
+            <li>לתקן מידע לא מדויק</li>
+            <li>למחוק את החשבון והנתונים המשויכים</li>
+            <li>לייצא את השירים שלכם</li>
+            <li>לבטל הסכמה לתקשורת לא חיונית</li>
+        </ul>
+
+        <h2>7. עוגיות ואחסון מקומי</h2>
+        <p>אנו משתמשים באחסון מקומי כדי לשמור את ההעדפות שלכם (כמו הגדרות ערכת נושא) ולשמור על ההפעלה שלכם. נתונים אלה נשארים במכשיר שלכם ואינם מועברים לשרתים שלנו אלא אם כן נדרש לפונקציונליות.</p>
+
+        <h2>8. פרטיות ילדים</h2>
+        <p>aChordim אינו מיועד לילדים מתחת לגיל 13. אנו לא אוספים ביודעין מידע אישי מילדים מתחת לגיל 13.</p>
+
+        <h2>9. שינויים במדיניות זו</h2>
+        <p>אנו עשויים לעדכן מדיניות פרטיות זו מעת לעת. נודיע לכם על שינויים על ידי פרסום המדיניות החדשה בדף זה ועדכון תאריך "עדכון אחרון".</p>
+
+        <h2>10. צרו קשר</h2>
+        <p>אם יש לכם שאלות על מדיניות פרטיות זו או על המידע האישי שלכם, אנא צרו איתנו קשר:</p>
+        <p><strong>אימייל:</strong> <a href="mailto:thefaithsound@gmail.com">thefaithsound@gmail.com</a></p>
+        <p><strong>אתר:</strong> <a href="https://www.thefaithsound.com">www.thefaithsound.com</a></p>
+    </div>
+
+    <footer class="legal-footer">
+        <p>&copy; 2026 The Faith Sound.</p>
+        <p style="margin-top: 6px;">
+            <a href="privacy.html">Privacy Policy</a> &middot;
             <a href="terms.html">Terms of Service</a>
         </p>
     </footer>
+
+    <script>
+        // Theme
+        const saved = localStorage.getItem('achordim_theme') || 'dark';
+        if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            document.getElementById('themeToggle').textContent = isDark ? 'Dark' : 'Light';
+            localStorage.setItem('achordim_theme', isDark ? 'light' : 'dark');
+        }
+        if (saved === 'dark') document.getElementById('themeToggle').textContent = 'Light';
+
+        // Language
+        let lang = localStorage.getItem('achordim_lang') || 'en';
+        function applyLang() {
+            document.getElementById('content-en').style.display = lang === 'en' ? 'block' : 'none';
+            document.getElementById('content-he').style.display = lang === 'he' ? 'block' : 'none';
+            document.getElementById('langToggle').textContent = lang === 'en' ? 'HE' : 'EN';
+            document.documentElement.lang = lang;
+        }
+        function toggleLang() {
+            lang = lang === 'en' ? 'he' : 'en';
+            localStorage.setItem('achordim_lang', lang);
+            applyLang();
+        }
+        applyLang();
+    </script>
 </body>
 </html>
