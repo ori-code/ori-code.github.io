@@ -1004,7 +1004,7 @@
             // Add to Session button
             const addToSessionBtn = document.createElement('button');
             addToSessionBtn.textContent = '➕';
-            addToSessionBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: background 0.2s ease; margin-right: 4px;';
+            addToSessionBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: opacity 0.2s ease; margin-right: 4px; opacity: 0.5;';
             addToSessionBtn.title = 'Add to session playlist';
 
             addToSessionBtn.addEventListener('click', async (e) => {
@@ -1075,18 +1075,16 @@
             });
 
             addToSessionBtn.addEventListener('mouseenter', () => {
-                addToSessionBtn.style.background = 'var(--text)';
-                addToSessionBtn.style.color = 'var(--bg)';
+                addToSessionBtn.style.opacity = '1';
             });
 
             addToSessionBtn.addEventListener('mouseleave', () => {
-                addToSessionBtn.style.background = 'transparent';
-                addToSessionBtn.style.color = '';
+                addToSessionBtn.style.opacity = '0.5';
             });
 
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = '🗑️';
-            deleteBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: background 0.2s ease;';
+            deleteBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: opacity 0.2s ease; opacity: 0.5;';
             deleteBtn.title = 'Delete song';
 
             deleteBtn.addEventListener('click', async (e) => {
@@ -1111,13 +1109,11 @@
             });
 
             deleteBtn.addEventListener('mouseenter', () => {
-                deleteBtn.style.background = 'var(--text)';
-                deleteBtn.style.color = 'var(--bg)';
+                deleteBtn.style.opacity = '1';
             });
 
             deleteBtn.addEventListener('mouseleave', () => {
-                deleteBtn.style.background = 'transparent';
-                deleteBtn.style.color = '';
+                deleteBtn.style.opacity = '0.5';
             });
 
             // Public toggle button (globe icon)
@@ -1143,7 +1139,7 @@
             // Share button
             const shareBtn = document.createElement('button');
             shareBtn.textContent = '🔗';
-            shareBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: background 0.2s ease; margin-right: 4px;';
+            shareBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: opacity 0.2s ease; margin-right: 4px; opacity: 0.5;';
             shareBtn.title = 'Share song link';
 
             shareBtn.addEventListener('click', async (e) => {
@@ -1152,13 +1148,11 @@
             });
 
             shareBtn.addEventListener('mouseenter', () => {
-                shareBtn.style.background = 'var(--text)';
-                shareBtn.style.color = 'var(--bg)';
+                shareBtn.style.opacity = '1';
             });
 
             shareBtn.addEventListener('mouseleave', () => {
-                shareBtn.style.background = 'transparent';
-                shareBtn.style.color = '';
+                shareBtn.style.opacity = '0.5';
             });
 
             songItem.appendChild(songInfo);
