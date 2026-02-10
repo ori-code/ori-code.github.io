@@ -1620,12 +1620,12 @@ const liveMode = {
                             const isFourth = (typeof keysMatch === 'function') && keysMatch(nextKey, relatives.fourth);
                             const isFifth = (typeof keysMatch === 'function') && keysMatch(nextKey, relatives.fifth);
                             if (isFourth || isFifth) {
-                                keyHintHtml = `<div style="padding: 2px 8px 2px 32px; font-size: 10px; opacity: 0.6; color: var(--text);">\u2192 \u2713 smooth (${isFourth ? 'IV' : 'V'})</div>`;
+                                keyHintHtml = `<div style="padding: 2px 8px 2px 32px; margin-bottom: 2px; font-size: 10px; opacity: 0.6; color: var(--text);">\u2192 \u2713 smooth (${isFourth ? 'IV' : 'V'})</div>`;
                             } else {
-                                keyHintHtml = `<div style="padding: 2px 8px 2px 32px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                                keyHintHtml = `<div style="padding: 2px 8px 2px 32px; margin-bottom: 2px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
                             }
                         } else {
-                            keyHintHtml = `<div style="padding: 2px 8px 2px 32px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                            keyHintHtml = `<div style="padding: 2px 8px 2px 32px; margin-bottom: 2px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
                         }
                     }
 
