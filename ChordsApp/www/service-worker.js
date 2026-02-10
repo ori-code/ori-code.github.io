@@ -1,4 +1,4 @@
-const CACHE_NAME = 'achordim-v20';
+const CACHE_NAME = 'achordim-v21';
 
 const PRECACHE_URLS = [
   './',
