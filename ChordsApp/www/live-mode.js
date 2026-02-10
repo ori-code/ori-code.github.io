@@ -314,9 +314,8 @@ const liveMode = {
             this.isActive = true;
             this.sidebarVisible = false;
 
-            // Show controls and start auto-hide timer
-            this.showControls();
-            this.startAutoHideTimer();
+            // Hide controls by default (use floating buttons to toggle)
+            this.hideControls();
 
             // Show floating quick-access buttons
             this._setFloatButtonsVisible(true);
@@ -3821,20 +3820,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // If auto-scroll is running, pause/resume it
                 if (liveMode.autoScrollEnabled) {
                     liveMode.toggleAutoScroll();
-                    // Show controls briefly to show pause/resume state
-                    liveMode.showControls();
-                    liveMode.startAutoHideTimer();
-                    return; // Don't toggle playlist when controlling auto-scroll
+                    return;
                 }
-
-                // Always show controls on tap
-                liveMode.showControls();
-                liveMode.startAutoHideTimer();
-
-                // If in session and controls were already visible, toggle playlist
-                if (window.sessionManager && window.sessionManager.activeSession) {
-                    liveMode.togglePlaylist();
-                }
+                // Controls and playlist are toggled via floating buttons only
             }
         });
 
