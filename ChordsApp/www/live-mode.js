@@ -839,50 +839,24 @@ const liveMode = {
      * Show controls
      */
     showControls() {
-        const topBar = document.getElementById('liveModeTopBar');
         const bottomBar = document.getElementById('liveModeBottomBar');
-
-        if (topBar) {
-            topBar.style.opacity = '1';
-            topBar.style.pointerEvents = 'auto';
-        }
         if (bottomBar) {
-            bottomBar.style.opacity = '1';
-            bottomBar.style.pointerEvents = 'auto';
+            bottomBar.style.left = '0';
         }
-
         this.controlsVisible = true;
         this._updateFloatButtons();
-
-        // Show playlist if preference is enabled
-        if (this.showPlaylistWithControls && !this.sidebarVisible) {
-            this.showPlaylist();
-        }
     },
 
     /**
      * Hide controls
      */
     hideControls() {
-        const topBar = document.getElementById('liveModeTopBar');
         const bottomBar = document.getElementById('liveModeBottomBar');
-
-        if (topBar) {
-            topBar.style.opacity = '0';
-            topBar.style.pointerEvents = 'none';
-        }
         if (bottomBar) {
-            bottomBar.style.opacity = '0';
-            bottomBar.style.pointerEvents = 'none';
+            bottomBar.style.left = '-300px';
         }
-
         this.controlsVisible = false;
         this._updateFloatButtons();
-
-        // Hide playlist when controls hide
-        if (this.sidebarVisible) {
-            this.hidePlaylist();
-        }
     },
 
     /**
