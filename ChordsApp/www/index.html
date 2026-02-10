@@ -55,7 +55,7 @@
                 </button>
                 <a href="https://www.thefaithsound.com/ChordsApp/www/" class="header-brand"
                     style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
-                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.55rem; font-weight: 400; opacity: 0.4;">v31</span></span>
+                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.55rem; font-weight: 400; opacity: 0.4;">v32</span></span>
                     <span class="header-brand-url" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
                 </a>
@@ -5119,8 +5119,21 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(reg => console.log('SW registered:', reg.scope))
+                navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'none' })
+                    .then(reg => {
+                        console.log('SW registered:', reg.scope);
+                        // Check for updates immediately
+                        reg.update();
+                        // Auto-reload when new SW activates
+                        reg.addEventListener('updatefound', () => {
+                            const newWorker = reg.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'activated') {
+                                    window.location.reload();
+                                }
+                            });
+                        });
+                    })
                     .catch(err => console.log('SW registration failed:', err));
             });
         }
