@@ -318,6 +318,9 @@ const liveMode = {
             this.showControls();
             this.startAutoHideTimer();
 
+            // Show floating quick-access buttons
+            this._setFloatButtonsVisible(true);
+
             // Lock body scroll
             document.body.style.overflow = 'hidden';
         }
@@ -375,6 +378,9 @@ const liveMode = {
         if (overlay) {
             overlay.style.display = 'none';
             this.isActive = false;
+
+            // Hide floating quick-access buttons
+            this._setFloatButtonsVisible(false);
 
             // Restore body scroll
             document.body.style.overflow = '';
@@ -469,6 +475,9 @@ const liveMode = {
             this.isActive = true;
             this.sidebarVisible = false;
 
+            // Show floating quick-access buttons
+            this._setFloatButtonsVisible(true);
+
             // Lock body scroll
             document.body.style.overflow = 'hidden';
         }
@@ -543,6 +552,9 @@ const liveMode = {
             this.sidebarVisible = false;
             document.body.style.overflow = 'hidden';
         }
+
+        // Show floating quick-access buttons
+        this._setFloatButtonsVisible(true);
 
         // Hide ONLY playlist button (single song view, no session)
         const playlistBtn = document.getElementById('liveModePlaylistBtn');
@@ -776,6 +788,55 @@ const liveMode = {
     },
 
     /**
+     * Floating button: toggle playlist sidebar
+     */
+    togglePlaylistFloat() {
+        if (this.sidebarVisible) {
+            this.hidePlaylist();
+        } else {
+            this.showPlaylist();
+        }
+        this._updateFloatButtons();
+    },
+
+    /**
+     * Floating button: toggle bottom controls bar
+     */
+    toggleControlsFloat() {
+        if (this.controlsVisible) {
+            this.hideControls();
+        } else {
+            this.showControls();
+        }
+        // Cancel auto-hide so user keeps controls open
+        if (this.hideControlsTimeout) {
+            clearTimeout(this.hideControlsTimeout);
+        }
+        this._updateFloatButtons();
+    },
+
+    /**
+     * Update floating button visual state (active/inactive)
+     */
+    _updateFloatButtons() {
+        const playlistBtn = document.getElementById('liveFloatPlaylist');
+        const controlsBtn = document.getElementById('liveFloatControls');
+        if (playlistBtn) playlistBtn.style.opacity = this.sidebarVisible ? '1' : '0.5';
+        if (controlsBtn) controlsBtn.style.opacity = this.controlsVisible ? '1' : '0.5';
+    },
+
+    /**
+     * Show/hide floating buttons when entering/exiting live mode
+     */
+    _setFloatButtonsVisible(visible) {
+        const playlistBtn = document.getElementById('liveFloatPlaylist');
+        const controlsBtn = document.getElementById('liveFloatControls');
+        if (playlistBtn) playlistBtn.style.display = visible ? 'block' : 'none';
+        if (controlsBtn) controlsBtn.style.display = visible ? 'block' : 'none';
+        if (visible) this._updateFloatButtons();
+    },
+
+    /**
      * Show controls
      */
     showControls() {
@@ -792,6 +853,7 @@ const liveMode = {
         }
 
         this.controlsVisible = true;
+        this._updateFloatButtons();
 
         // Show playlist if preference is enabled
         if (this.showPlaylistWithControls && !this.sidebarVisible) {
@@ -816,6 +878,7 @@ const liveMode = {
         }
 
         this.controlsVisible = false;
+        this._updateFloatButtons();
 
         // Hide playlist when controls hide
         if (this.sidebarVisible) {
@@ -1430,6 +1493,7 @@ const liveMode = {
         // Slide sidebar in
         playlistSidebar.style.right = '0';
         this.sidebarVisible = true;
+        this._updateFloatButtons();
 
         // Show session ID if in an active session
         if (sessionIdDiv && sessionCodeSpan && window.sessionManager?.activeSessionCode) {
@@ -2170,6 +2234,7 @@ const liveMode = {
         if (playlistSidebar) {
             playlistSidebar.style.right = '-300px';
             this.sidebarVisible = false;
+            this._updateFloatButtons();
         }
     },
 
