@@ -324,7 +324,7 @@ class SessionUI {
                 }
 
                 return `
-                <div style="display: flex; align-items: center; gap: 6px; padding: 8px; background: transparent; border: 1px solid var(--border); margin-bottom: 4px; font-size: 12px;">
+                <div class="playlist-drag-item" data-index="${index}" data-session="${sessionId}" ${isOwner ? 'draggable="true"' : ''} style="display: flex; align-items: center; gap: 6px; padding: 8px; background: transparent; border: 1px solid var(--border); margin-bottom: 4px; font-size: 12px; ${isOwner ? 'cursor: grab;' : ''}">
                     <span style="color: var(--text); opacity: 0.6; min-width: 20px;">${index + 1}.</span>
                     <span style="flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${song.name}</span>
                     <span style="color: var(--text); opacity: 0.6; font-size: 10px;">${currentKey || ''}</span>
@@ -339,6 +339,11 @@ class SessionUI {
                 </div>
                 ${hintHtml}`;
             }).join('');
+
+            // Set up drag-and-drop for owner
+            if (isOwner) {
+                this._setupPlaylistDragDrop(playlistEl, sessionId);
+            }
 
         } catch (error) {
             console.error('Error loading session playlist:', error);
@@ -411,6 +416,86 @@ class SessionUI {
             console.error('Error moving song:', error);
             this.showToast('❌ Failed to move song');
         }
+    }
+
+    /**
+     * Reorder song in session playlist (drag-drop: move from one index to another)
+     */
+    async reorderSessionSong(sessionId, fromIndex, toIndex) {
+        if (fromIndex === toIndex) return;
+        try {
+            const snapshot = await firebase.database().ref(`sessions/${sessionId}/playlist`).once('value');
+            const playlistData = snapshot.val() || {};
+
+            const playlist = Object.entries(playlistData)
+                .map(([id, data]) => ({ id, ...data }))
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            // Remove item from old position and insert at new position
+            const [moved] = playlist.splice(fromIndex, 1);
+            playlist.splice(toIndex, 0, moved);
+
+            // Update all order values in Firebase
+            const updates = {};
+            playlist.forEach((song, idx) => {
+                updates[`${song.id}/order`] = idx;
+            });
+            await firebase.database().ref(`sessions/${sessionId}/playlist`).update(updates);
+
+            await this.loadSessionPlaylistInline(sessionId, true);
+        } catch (error) {
+            console.error('Error reordering song:', error);
+            this.showToast('\u274c Failed to reorder');
+        }
+    }
+
+    /**
+     * Set up drag-and-drop event listeners on playlist items
+     */
+    _setupPlaylistDragDrop(container, sessionId) {
+        let dragIndex = null;
+
+        container.querySelectorAll('.playlist-drag-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                dragIndex = parseInt(item.dataset.index);
+                item.style.opacity = '0.4';
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', dragIndex);
+            });
+
+            item.addEventListener('dragend', () => {
+                item.style.opacity = '1';
+                container.querySelectorAll('.playlist-drag-item').forEach(el => {
+                    el.style.borderTop = '';
+                    el.style.borderBottom = '';
+                });
+            });
+
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const targetIndex = parseInt(item.dataset.index);
+                // Show drop indicator
+                container.querySelectorAll('.playlist-drag-item').forEach(el => {
+                    el.style.borderTop = '';
+                    el.style.borderBottom = '';
+                });
+                if (targetIndex < dragIndex) {
+                    item.style.borderTop = '2px solid var(--text)';
+                } else if (targetIndex > dragIndex) {
+                    item.style.borderBottom = '2px solid var(--text)';
+                }
+            });
+
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                const toIndex = parseInt(item.dataset.index);
+                if (fromIndex !== toIndex) {
+                    sessionUI.reorderSessionSong(sessionId, fromIndex, toIndex);
+                }
+            });
+        });
     }
 
     /**
@@ -1042,7 +1127,7 @@ class SessionUI {
                 }
 
                 return `
-                    <div class="playlist-song-item" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 8px;">
+                    <div class="playlist-song-item playlist-drag-item" data-index="${index}" ${isLeader ? 'draggable="true"' : ''} style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 8px; ${isLeader ? 'cursor: grab;' : ''}">
                         <div style="min-width: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">
                             ${index + 1}
                         </div>
@@ -1062,6 +1147,11 @@ class SessionUI {
                     ${hintHtml}
                 `;
             }).join('');
+
+            // Set up drag-and-drop for leader
+            if (isLeader && window.sessionManager && window.sessionManager.activeSession) {
+                this._setupPlaylistDragDrop(playlistEl, window.sessionManager.activeSession.id);
+            }
 
         } catch (error) {
             console.error('Error loading playlist:', error);
