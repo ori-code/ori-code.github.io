@@ -3426,37 +3426,59 @@ input[type="checkbox"]:checked::after {
     background: transparent !important;
 }
 
-/* Song Library modal: prevent overflow, ensure full-screen on mobile */
-/* All modals: full-screen on mobile with 10px side padding */
-.modal-overlay .modal-container {
-    max-width: 100% !important;
-    max-height: 100vh;
-    height: 100%;
-    margin: 0;
-    border: none;
-    overflow-y: auto;
+/* Selected song items in bulk mode — must appear AFTER safety-net rules to win cascade */
+#loadSongModal .song-item-selected {
+    background: var(--text) !important;
+    color: var(--bg) !important;
+    border-color: var(--border) !important;
+}
+#loadSongModal .song-item-selected * {
+    color: var(--bg) !important;
+}
+#loadSongModal .song-item-selected span[style*="border"] {
+    border-color: var(--bg) !important;
+    background: transparent !important;
+}
+#loadSongModal .song-item-selected input[type="checkbox"] {
+    accent-color: var(--bg) !important;
 }
 
+/* All modals: overflow protection */
 .modal-overlay .modal-body {
-    padding: 16px 10px;
     overflow-x: hidden;
 }
 
-/* All modal items with flex space-between: stack vertically on mobile */
-.modal-overlay [style*="display: flex"][style*="justify-content: space-between"] {
-    flex-wrap: wrap !important;
-}
+/* Mobile: full-screen modals with 10px side padding */
+@media (max-width: 720px) {
+    .modal-overlay .modal-container {
+        max-width: 100% !important;
+        max-height: 100vh;
+        height: 100%;
+        margin: 0;
+        border: none;
+        overflow-y: auto;
+    }
 
-/* Session cards: stack info and buttons vertically */
-.session-item > [style*="display: flex"][style*="justify-content: space-between"] {
-    flex-direction: column !important;
-    gap: 12px;
-}
+    .modal-overlay .modal-body {
+        padding: 16px 10px;
+    }
 
-.session-item > [style*="display: flex"] > [style*="flex-direction: column"] {
-    flex-direction: row !important;
-    flex-wrap: wrap;
-    gap: 8px;
+    /* Stack flex items vertically on mobile */
+    .modal-overlay [style*="display: flex"][style*="justify-content: space-between"] {
+        flex-wrap: wrap !important;
+    }
+
+    /* Session cards: stack info and buttons vertically */
+    .session-item > [style*="display: flex"][style*="justify-content: space-between"] {
+        flex-direction: column !important;
+        gap: 12px;
+    }
+
+    .session-item > [style*="display: flex"] > [style*="flex-direction: column"] {
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 }
 
 /* Override box-shadow inline styles */

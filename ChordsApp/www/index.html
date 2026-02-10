@@ -1542,25 +1542,25 @@
                 <button class="modal-close" id="loadSongClose">&times;</button>
             </div>
             <div class="modal-body">
-                <p>Select a song from your library:</p>
+                <p style="margin-bottom: 8px;">Select a song from your library:</p>
 
-                <!-- Book Selector -->
-                <div style="display: flex; gap: 8px; margin: 12px 0; align-items: center;">
-                    <select id="bookFilter" class="modal-input" style="flex: 1; font-size: 1rem; padding: 10px 12px;">
+                <!-- Row 1: Book selector + Search -->
+                <div style="display: flex; gap: 6px; margin-bottom: 6px; align-items: center;">
+                    <select id="bookFilter" class="modal-input" style="flex: 0 0 auto; width: 140px; font-size: 0.85rem; padding: 8px 6px;">
                         <option value="all">All Songs</option>
                         <!-- Books populated dynamically -->
                     </select>
-                    <button id="manageBooksBtn" class="ghost-button" style="padding: 10px 14px; font-size: 1rem;"
+                    <button id="manageBooksBtn" class="ghost-button" style="padding: 8px 10px; font-size: 0.85rem;"
                         title="Manage Books">Books</button>
+                    <input type="text" id="songSearchInput" class="modal-input" placeholder="Search..."
+                        style="flex: 1; min-width: 100px; font-size: 0.85rem; padding: 8px 10px;">
+                    <button id="bulkSelectToggle" class="ghost-button" style="padding: 8px 10px; font-size: 0.85rem;"
+                        title="Select multiple songs">Select</button>
                 </div>
 
-                <!-- Search and Filters -->
-                <div style="display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; align-items: center;">
-                    <input type="text" id="songSearchInput" class="modal-input" placeholder="Search songs..."
-                        style="flex: 1; min-width: 200px;">
-                    <button id="bulkSelectToggle" class="ghost-button" style="padding: 8px 14px; font-size: 0.9rem;"
-                        title="Select multiple songs">Select</button>
-                    <select id="songKeyFilter" class="modal-input" style="flex: 0 0 auto; min-width: 120px;">
+                <!-- Row 2: Key filter + Sort -->
+                <div style="display: flex; gap: 6px; margin-bottom: 12px; align-items: center;">
+                    <select id="songKeyFilter" class="modal-input" style="flex: 1; font-size: 0.85rem; padding: 8px 6px;">
                         <option value="">All Keys</option>
                         <option value="C">C Major</option>
                         <option value="C#">C# Major</option>
@@ -1584,7 +1584,7 @@
                         <option value="Fm">F Minor</option>
                         <option value="Gm">G Minor</option>
                     </select>
-                    <select id="songSortBy" class="modal-input" style="flex: 0 0 auto; min-width: 120px;">
+                    <select id="songSortBy" class="modal-input" style="flex: 1; font-size: 0.85rem; padding: 8px 6px;">
                         <option value="date">Latest First</option>
                         <option value="name">A-Z</option>
                         <option value="bpm">BPM</option>
@@ -1592,7 +1592,7 @@
                     </select>
                 </div>
 
-                <div id="songList" style="max-height: 400px; overflow-y: auto; margin-top: 16px;">
+                <div id="songList" style="max-height: 400px; overflow-y: auto;">
                     <!-- Songs will be loaded here -->
                 </div>
 

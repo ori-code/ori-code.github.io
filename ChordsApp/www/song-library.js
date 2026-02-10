@@ -919,7 +919,8 @@
         function createSongItem(song, user, database) {
             const songItem = document.createElement('div');
             const isSelected = selectedSongIds.has(song.id);
-            songItem.style.cssText = `padding: 16px; margin-bottom: 12px; background: ${isSelected ? 'var(--text)' : 'var(--bg)'}; color: ${isSelected ? 'var(--bg)' : 'var(--text)'}; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center;`;
+            songItem.style.cssText = 'padding: 16px; margin-bottom: 12px; background: var(--bg); color: var(--text); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center;';
+            if (isSelected) songItem.classList.add('song-item-selected');
             songItem.dataset.songId = song.id;
 
             // Add checkbox for bulk selection mode
@@ -936,9 +937,7 @@
                         selectedSongIds.delete(song.id);
                     }
                     // Update the item's visual style
-                    songItem.style.background = checkbox.checked ? 'var(--text)' : 'var(--bg)';
-                    songItem.style.color = checkbox.checked ? 'var(--bg)' : 'var(--text)';
-                    songItem.style.borderColor = 'var(--border)';
+                    songItem.classList.toggle('song-item-selected', checkbox.checked);
                     updateBulkActionBar();
                 });
                 songItem.appendChild(checkbox);
@@ -1214,9 +1213,7 @@
                         } else {
                             selectedSongIds.delete(song.id);
                         }
-                        songItem.style.background = checkbox.checked ? 'var(--text)' : 'var(--bg)';
-                        songItem.style.color = checkbox.checked ? 'var(--bg)' : 'var(--text)';
-                        songItem.style.borderColor = 'var(--border)';
+                        songItem.classList.toggle('song-item-selected', checkbox.checked);
                         updateBulkActionBar();
                     }
                     return;
