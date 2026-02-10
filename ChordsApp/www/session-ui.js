@@ -1,6 +1,45 @@
 // aChordim Session UI Manager
 // Handles rendering and interaction for live sessions
 
+// --- Relative Key Utilities (Circle of Fifths) ---
+function getRelativeKeys(key) {
+    if (!key || key === 'Unknown') return null;
+
+    const normalized = key.trim();
+    const isMinor = /minor$/i.test(normalized) || (/m$/.test(normalized) && !/Major$/i.test(normalized));
+    const root = normalized.replace(/\s*(Major|Minor|m)$/i, '').trim();
+
+    const circle = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    const toSharp = { 'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B' };
+    // Preferred display: use flats where conventional (Bb not A#, Eb not D#, Ab not G#)
+    const keyDisplay = { 'A#':'Bb','D#':'Eb','G#':'Ab' };
+
+    const rootNorm = toSharp[root] || root;
+    const idx = circle.indexOf(rootNorm);
+    if (idx === -1) return null;
+
+    const fourthRaw = circle[(idx + 5) % 12];
+    const fifthRaw = circle[(idx + 7) % 12];
+
+    const suffix = isMinor ? 'm' : '';
+    const fourthDisplay = keyDisplay[fourthRaw] || fourthRaw;
+    const fifthDisplay = keyDisplay[fifthRaw] || fifthRaw;
+
+    return { fourth: fourthDisplay + suffix, fifth: fifthDisplay + suffix };
+}
+
+function keysMatch(key1, key2) {
+    if (!key1 || !key2) return false;
+    const normalize = (k) => {
+        let s = k.trim().replace(/\s*Major$/i, '').trim();
+        const isMinor = /minor$/i.test(s) || (/m$/.test(s) && !/M$/.test(s));
+        const root = s.replace(/\s*(Minor|m)$/i, '').trim();
+        const toSharp = { 'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B' };
+        return (toSharp[root] || root) + (isMinor ? 'm' : '');
+    };
+    return normalize(key1) === normalize(key2);
+}
+
 class SessionUI {
     constructor() {
         this.currentSessionCode = null;
@@ -263,11 +302,32 @@ class SessionUI {
                 return;
             }
 
-            playlistEl.innerHTML = playlist.map((song, index) => `
+            playlistEl.innerHTML = playlist.map((song, index) => {
+                const currentKey = song.originalKey || song.key;
+                const nextSong = playlist[index + 1];
+                const nextKey = nextSong ? (nextSong.originalKey || nextSong.key) : null;
+                const relatives = getRelativeKeys(currentKey);
+
+                let hintHtml = '';
+                if (index < playlist.length - 1 && relatives) {
+                    if (nextKey) {
+                        const isFourth = keysMatch(nextKey, relatives.fourth);
+                        const isFifth = keysMatch(nextKey, relatives.fifth);
+                        if (isFourth || isFifth) {
+                            hintHtml = `<div style="padding: 2px 8px 2px 28px; font-size: 10px; opacity: 0.6; color: var(--text);">\u2192 \u2713 smooth (${isFourth ? 'IV' : 'V'})</div>`;
+                        } else {
+                            hintHtml = `<div style="padding: 2px 8px 2px 28px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                        }
+                    } else {
+                        hintHtml = `<div style="padding: 2px 8px 2px 28px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                    }
+                }
+
+                return `
                 <div style="display: flex; align-items: center; gap: 6px; padding: 8px; background: transparent; border: 1px solid var(--border); margin-bottom: 4px; font-size: 12px;">
                     <span style="color: var(--text); opacity: 0.6; min-width: 20px;">${index + 1}.</span>
                     <span style="flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${song.name}</span>
-                    <span style="color: var(--text); opacity: 0.6; font-size: 10px;">${song.originalKey || ''}</span>
+                    <span style="color: var(--text); opacity: 0.6; font-size: 10px;">${currentKey || ''}</span>
                     ${isOwner ? `
                         <div style="display: flex; gap: 2px;">
                             ${index > 0 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', -1)" style="padding: 2px 4px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;" title="Move up">↑</button>` : ''}
@@ -277,7 +337,8 @@ class SessionUI {
                         </div>
                     ` : ''}
                 </div>
-            `).join('');
+                ${hintHtml}`;
+            }).join('');
 
         } catch (error) {
             console.error('Error loading session playlist:', error);
@@ -960,6 +1021,26 @@ class SessionUI {
             const isLeader = window.sessionManager && window.sessionManager.isLeader;
 
             playlistEl.innerHTML = playlist.map((song, index) => {
+                const currentKey = song.originalKey || song.key;
+                const nextSong = playlist[index + 1];
+                const nextKey = nextSong ? (nextSong.originalKey || nextSong.key) : null;
+                const relatives = getRelativeKeys(currentKey);
+
+                let hintHtml = '';
+                if (index < playlist.length - 1 && relatives) {
+                    if (nextKey) {
+                        const isFourth = keysMatch(nextKey, relatives.fourth);
+                        const isFifth = keysMatch(nextKey, relatives.fifth);
+                        if (isFourth || isFifth) {
+                            hintHtml = `<div style="padding: 2px 8px 2px 32px; font-size: 11px; opacity: 0.6; color: var(--text);">\u2192 \u2713 smooth (${isFourth ? 'IV' : 'V'})</div>`;
+                        } else {
+                            hintHtml = `<div style="padding: 2px 8px 2px 32px; font-size: 11px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                        }
+                    } else {
+                        hintHtml = `<div style="padding: 2px 8px 2px 32px; font-size: 11px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                    }
+                }
+
                 return `
                     <div class="playlist-song-item" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 8px;">
                         <div style="min-width: 24px; text-align: center; color: var(--text-muted); font-size: 13px; font-weight: 600;">
@@ -967,7 +1048,7 @@ class SessionUI {
                         </div>
                         <div style="flex: 1; cursor: pointer;" onclick="sessionUI.loadSongFromPlaylist('${song.id}')">
                             <div style="color: var(--text); font-size: 14px; font-weight: 500;">${song.name}</div>
-                            <div style="color: var(--text-muted); font-size: 12px;">${song.originalKey}${song.bpm ? ` • ${song.bpm} BPM` : ''}</div>
+                            <div style="color: var(--text-muted); font-size: 12px;">${currentKey || ''}${song.bpm ? ` \u2022 ${song.bpm} BPM` : ''}</div>
                         </div>
                         ${isLeader ? `
                             <button onclick="event.stopPropagation(); sessionUI.editPlaylistSong('${song.id}', '${song.name.replace(/'/g, "\\'")}');"
@@ -978,6 +1059,7 @@ class SessionUI {
                                     title="Delete">🗑️</button>
                         ` : ''}
                     </div>
+                    ${hintHtml}
                 `;
             }).join('');
 
