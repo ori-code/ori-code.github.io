@@ -314,12 +314,12 @@ class SessionUI {
                         const isFourth = keysMatch(nextKey, relatives.fourth);
                         const isFifth = keysMatch(nextKey, relatives.fifth);
                         if (isFourth || isFifth) {
-                            hintHtml = `<div style="padding: 2px 8px 2px 28px; font-size: 10px; opacity: 0.6; color: var(--text);">\u2192 \u2713 smooth (${isFourth ? 'IV' : 'V'})</div>`;
+                            hintHtml = `<div style="padding: 6px 8px 6px 28px; font-size: 10px; opacity: 0.6; color: var(--text);">\u2192 \u2713 smooth (${isFourth ? 'IV' : 'V'})</div>`;
                         } else {
-                            hintHtml = `<div style="padding: 2px 8px 2px 28px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                            hintHtml = `<div style="padding: 6px 8px 6px 28px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
                         }
                     } else {
-                        hintHtml = `<div style="padding: 2px 8px 2px 28px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                        hintHtml = `<div style="padding: 6px 8px 6px 28px; font-size: 10px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
                     }
                 }
 
@@ -1032,12 +1032,12 @@ class SessionUI {
                         const isFourth = keysMatch(nextKey, relatives.fourth);
                         const isFifth = keysMatch(nextKey, relatives.fifth);
                         if (isFourth || isFifth) {
-                            hintHtml = `<div style="padding: 2px 8px 2px 32px; font-size: 11px; opacity: 0.6; color: var(--text);">\u2192 \u2713 smooth (${isFourth ? 'IV' : 'V'})</div>`;
+                            hintHtml = `<div style="padding: 6px 8px 6px 32px; font-size: 11px; opacity: 0.6; color: var(--text);">\u2192 \u2713 smooth (${isFourth ? 'IV' : 'V'})</div>`;
                         } else {
-                            hintHtml = `<div style="padding: 2px 8px 2px 32px; font-size: 11px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                            hintHtml = `<div style="padding: 6px 8px 6px 32px; font-size: 11px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
                         }
                     } else {
-                        hintHtml = `<div style="padding: 2px 8px 2px 32px; font-size: 11px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
+                        hintHtml = `<div style="padding: 6px 8px 6px 32px; font-size: 11px; opacity: 0.4; color: var(--text);">\u2192 suggest: ${relatives.fourth}, ${relatives.fifth}</div>`;
                     }
                 }
 
