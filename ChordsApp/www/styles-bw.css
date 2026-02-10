@@ -3443,6 +3443,12 @@ input[type="checkbox"]:checked::after {
     accent-color: var(--bg) !important;
 }
 
+/* Inverted buttons (bg=text, color=bg) inside Song Library — override safety-net */
+#loadSongModal .primary-button {
+    background: var(--text) !important;
+    color: var(--bg) !important;
+}
+
 /* All modals: overflow protection */
 .modal-overlay .modal-body {
     overflow-x: hidden;
