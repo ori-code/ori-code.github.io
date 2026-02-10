@@ -1124,7 +1124,7 @@
             const publicBtn = document.createElement('button');
             const isPublic = song.isPublic === true;
             publicBtn.textContent = '🌐';
-            publicBtn.style.cssText = `background: ${isPublic ? 'var(--text)' : 'transparent'}; color: ${isPublic ? 'var(--bg)' : ''}; border: ${isPublic ? '1px solid var(--border)' : 'none'}; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: background 0.2s ease; margin-right: 4px;`;
+            publicBtn.style.cssText = `background: transparent; border: none; border-bottom: ${isPublic ? '2px solid var(--text)' : '2px solid transparent'}; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: opacity 0.2s ease; margin-right: 4px; opacity: ${isPublic ? '1' : '0.5'};`;
             publicBtn.title = isPublic ? 'Make private (click to unpublish)' : 'Make public (share with everyone)';
 
             publicBtn.addEventListener('click', async (e) => {
@@ -1133,13 +1133,11 @@
             });
 
             publicBtn.addEventListener('mouseenter', () => {
-                publicBtn.style.background = 'var(--text)';
-                publicBtn.style.color = 'var(--bg)';
+                publicBtn.style.opacity = '1';
             });
 
             publicBtn.addEventListener('mouseleave', () => {
-                publicBtn.style.background = isPublic ? 'var(--text)' : 'transparent';
-                publicBtn.style.color = isPublic ? 'var(--bg)' : '';
+                publicBtn.style.opacity = isPublic ? '1' : '0.5';
             });
 
             // Share button
