@@ -453,48 +453,77 @@ class SessionUI {
      * Set up drag-and-drop event listeners on playlist items
      */
     _setupPlaylistDragDrop(container, sessionId) {
-        let dragIndex = null;
+        let dragFromIndex = null;
 
+        // Find closest drag item from any element (handles drops on hint rows too)
+        const getClosestItem = (el) => {
+            while (el && el !== container) {
+                if (el.classList && el.classList.contains('playlist-drag-item')) return el;
+                el = el.parentElement;
+            }
+            return null;
+        };
+
+        const clearIndicators = () => {
+            container.querySelectorAll('.playlist-drag-item').forEach(el => {
+                el.style.borderTop = '';
+                el.style.borderBottom = '';
+            });
+        };
+
+        // Dragstart on each item
         container.querySelectorAll('.playlist-drag-item').forEach(item => {
             item.addEventListener('dragstart', (e) => {
-                dragIndex = parseInt(item.dataset.index);
-                item.style.opacity = '0.4';
+                dragFromIndex = parseInt(item.dataset.index);
+                setTimeout(() => { item.style.opacity = '0.4'; }, 0);
                 e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', dragIndex);
+                e.dataTransfer.setData('text/plain', String(dragFromIndex));
             });
 
             item.addEventListener('dragend', () => {
                 item.style.opacity = '1';
-                container.querySelectorAll('.playlist-drag-item').forEach(el => {
-                    el.style.borderTop = '';
-                    el.style.borderBottom = '';
-                });
+                dragFromIndex = null;
+                clearIndicators();
             });
+        });
 
-            item.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                const targetIndex = parseInt(item.dataset.index);
-                // Show drop indicator
-                container.querySelectorAll('.playlist-drag-item').forEach(el => {
-                    el.style.borderTop = '';
-                    el.style.borderBottom = '';
-                });
-                if (targetIndex < dragIndex) {
-                    item.style.borderTop = '2px solid var(--text)';
-                } else if (targetIndex > dragIndex) {
-                    item.style.borderBottom = '2px solid var(--text)';
-                }
-            });
+        // Dragover and drop on container (catches drops on hint rows too)
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (dragFromIndex === null) return;
 
-            item.addEventListener('drop', (e) => {
-                e.preventDefault();
-                const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                const toIndex = parseInt(item.dataset.index);
-                if (fromIndex !== toIndex) {
-                    sessionUI.reorderSessionSong(sessionId, fromIndex, toIndex);
-                }
-            });
+            clearIndicators();
+            const target = getClosestItem(e.target);
+            if (!target) return;
+
+            const targetIndex = parseInt(target.dataset.index);
+            if (targetIndex < dragFromIndex) {
+                target.style.borderTop = '2px solid var(--text)';
+            } else if (targetIndex > dragFromIndex) {
+                target.style.borderBottom = '2px solid var(--text)';
+            }
+        });
+
+        container.addEventListener('dragleave', (e) => {
+            if (!container.contains(e.relatedTarget)) {
+                clearIndicators();
+            }
+        });
+
+        container.addEventListener('drop', (e) => {
+            e.preventDefault();
+            clearIndicators();
+            if (dragFromIndex === null) return;
+
+            const target = getClosestItem(e.target);
+            if (!target) return;
+
+            const toIndex = parseInt(target.dataset.index);
+            if (dragFromIndex !== toIndex) {
+                sessionUI.reorderSessionSong(sessionId, dragFromIndex, toIndex);
+            }
+            dragFromIndex = null;
         });
     }
 
