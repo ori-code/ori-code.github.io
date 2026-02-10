@@ -451,15 +451,24 @@ class SessionUI {
 
     /**
      * Set up drag-and-drop event listeners on playlist items
+     * Supports both desktop (HTML5 drag) and mobile (touch events)
      */
     _setupPlaylistDragDrop(container, sessionId) {
         let dragFromIndex = null;
 
-        // Find closest drag item from any element (handles drops on hint rows too)
         const getClosestItem = (el) => {
             while (el && el !== container) {
                 if (el.classList && el.classList.contains('playlist-drag-item')) return el;
                 el = el.parentElement;
+            }
+            return null;
+        };
+
+        const getItemAtPoint = (_x, y) => {
+            const items = container.querySelectorAll('.playlist-drag-item');
+            for (const item of items) {
+                const rect = item.getBoundingClientRect();
+                if (y >= rect.top && y <= rect.bottom) return item;
             }
             return null;
         };
@@ -471,7 +480,7 @@ class SessionUI {
             });
         };
 
-        // Dragstart on each item
+        // --- Desktop HTML5 Drag & Drop ---
         container.querySelectorAll('.playlist-drag-item').forEach(item => {
             item.addEventListener('dragstart', (e) => {
                 dragFromIndex = parseInt(item.dataset.index);
@@ -479,7 +488,6 @@ class SessionUI {
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/plain', String(dragFromIndex));
             });
-
             item.addEventListener('dragend', () => {
                 item.style.opacity = '1';
                 dragFromIndex = null;
@@ -487,43 +495,130 @@ class SessionUI {
             });
         });
 
-        // Dragover and drop on container (catches drops on hint rows too)
         container.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
             if (dragFromIndex === null) return;
-
             clearIndicators();
             const target = getClosestItem(e.target);
             if (!target) return;
-
             const targetIndex = parseInt(target.dataset.index);
-            if (targetIndex < dragFromIndex) {
-                target.style.borderTop = '2px solid var(--text)';
-            } else if (targetIndex > dragFromIndex) {
-                target.style.borderBottom = '2px solid var(--text)';
-            }
-        });
-
-        container.addEventListener('dragleave', (e) => {
-            if (!container.contains(e.relatedTarget)) {
-                clearIndicators();
-            }
+            if (targetIndex < dragFromIndex) target.style.borderTop = '2px solid var(--text)';
+            else if (targetIndex > dragFromIndex) target.style.borderBottom = '2px solid var(--text)';
         });
 
         container.addEventListener('drop', (e) => {
             e.preventDefault();
             clearIndicators();
             if (dragFromIndex === null) return;
-
             const target = getClosestItem(e.target);
             if (!target) return;
-
             const toIndex = parseInt(target.dataset.index);
-            if (dragFromIndex !== toIndex) {
-                sessionUI.reorderSessionSong(sessionId, dragFromIndex, toIndex);
-            }
+            if (dragFromIndex !== toIndex) sessionUI.reorderSessionSong(sessionId, dragFromIndex, toIndex);
             dragFromIndex = null;
+        });
+
+        // --- Mobile Touch Drag & Drop ---
+        let touchDragItem = null;
+        let touchClone = null;
+        let longPressTimer = null;
+        let touchActive = false;
+
+        container.querySelectorAll('.playlist-drag-item').forEach(item => {
+            item.addEventListener('touchstart', (e) => {
+                // Long press to start drag (prevents conflict with scroll)
+                const touch = e.touches[0];
+                touchDragItem = item;
+                longPressTimer = setTimeout(() => {
+                    touchActive = true;
+                    dragFromIndex = parseInt(item.dataset.index);
+                    item.style.opacity = '0.4';
+
+                    // Create a floating clone
+                    touchClone = item.cloneNode(true);
+                    touchClone.style.position = 'fixed';
+                    touchClone.style.left = '16px';
+                    touchClone.style.right = '16px';
+                    touchClone.style.width = item.offsetWidth + 'px';
+                    touchClone.style.top = (touch.clientY - 20) + 'px';
+                    touchClone.style.opacity = '0.8';
+                    touchClone.style.zIndex = '9999';
+                    touchClone.style.pointerEvents = 'none';
+                    touchClone.style.border = '2px solid var(--text)';
+                    touchClone.style.background = 'var(--bg)';
+                    document.body.appendChild(touchClone);
+                }, 300);
+            }, { passive: true });
+
+            item.addEventListener('touchmove', (e) => {
+                if (!touchActive) {
+                    // If moved before long press, cancel (user is scrolling)
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                    return;
+                }
+                e.preventDefault();
+                const touch = e.touches[0];
+
+                // Move the clone
+                if (touchClone) {
+                    touchClone.style.top = (touch.clientY - 20) + 'px';
+                }
+
+                // Highlight drop target
+                clearIndicators();
+                const target = getItemAtPoint(touch.clientX, touch.clientY);
+                if (target && parseInt(target.dataset.index) !== dragFromIndex) {
+                    const targetIndex = parseInt(target.dataset.index);
+                    if (targetIndex < dragFromIndex) target.style.borderTop = '2px solid var(--text)';
+                    else target.style.borderBottom = '2px solid var(--text)';
+                }
+            }, { passive: false });
+
+            item.addEventListener('touchend', (e) => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+
+                if (!touchActive) return;
+
+                const touch = e.changedTouches[0];
+                const target = getItemAtPoint(touch.clientX, touch.clientY);
+
+                // Clean up
+                if (touchClone) {
+                    touchClone.remove();
+                    touchClone = null;
+                }
+                if (touchDragItem) {
+                    touchDragItem.style.opacity = '1';
+                }
+                clearIndicators();
+
+                if (target && dragFromIndex !== null) {
+                    const toIndex = parseInt(target.dataset.index);
+                    if (dragFromIndex !== toIndex) {
+                        sessionUI.reorderSessionSong(sessionId, dragFromIndex, toIndex);
+                    }
+                }
+
+                dragFromIndex = null;
+                touchDragItem = null;
+                touchActive = false;
+            }, { passive: true });
+
+            item.addEventListener('touchcancel', () => {
+                if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                if (touchClone) { touchClone.remove(); touchClone = null; }
+                if (touchDragItem) { touchDragItem.style.opacity = '1'; }
+                clearIndicators();
+                dragFromIndex = null;
+                touchDragItem = null;
+                touchActive = false;
+            }, { passive: true });
         });
     }
 
