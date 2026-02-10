@@ -793,18 +793,22 @@ const liveMode = {
         if (this.sidebarVisible) {
             this.hidePlaylist();
         } else {
+            // Close controls sidebar first
+            if (this.controlsVisible) this.hideControls();
             this.showPlaylist();
         }
         this._updateFloatButtons();
     },
 
     /**
-     * Floating button: toggle bottom controls bar
+     * Floating button: toggle controls sidebar
      */
     toggleControlsFloat() {
         if (this.controlsVisible) {
             this.hideControls();
         } else {
+            // Close playlist sidebar first
+            if (this.sidebarVisible) this.hidePlaylist();
             this.showControls();
         }
         // Cancel auto-hide so user keeps controls open
