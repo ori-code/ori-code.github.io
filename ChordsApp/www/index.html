@@ -3042,6 +3042,12 @@
                     <button onclick="window.metronome && window.metronome.tap()"
                         style="padding: 3px 7px; background: var(--text); border: none; color: var(--bg); cursor: pointer; font-size: 10px; font-weight: 600;">TAP</button>
                 </div>
+                <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+                    <span style="font-size: 9px; color: var(--text); opacity: 0.5; min-width: 22px;">Vol</span>
+                    <input type="range" id="liveClickVolume" min="0" max="100" value="70"
+                        oninput="window.metronome && window.metronome.setVolume(this.value / 100)"
+                        style="flex: 1; height: 4px; accent-color: var(--text); cursor: pointer;">
+                </div>
             </div>
 
             <!-- PADS -->
@@ -3057,6 +3063,12 @@
                     <button onclick="window.padPlayer && window.padPlayer.play('G')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">G</button>
                     <button onclick="window.padPlayer && window.padPlayer.play('A')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">A</button>
                     <button onclick="window.padPlayer && window.padPlayer.play('B')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">B</button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+                    <span style="font-size: 9px; color: var(--text); opacity: 0.5; min-width: 22px;">Vol</span>
+                    <input type="range" id="livePadVolume" min="0" max="100" value="70"
+                        oninput="window.padPlayer && window.padPlayer.setVolume(this.value / 100)"
+                        style="flex: 1; height: 4px; accent-color: var(--text); cursor: pointer;">
                 </div>
             </div>
 
@@ -3138,8 +3150,6 @@
             <!-- ACTIONS -->
             <div style="margin-bottom: 10px;">
                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                    <button id="liveModeFullOverview" onclick="liveMode.toggleFullOverview()"
-                        style="flex: 1; padding: 8px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; font-weight: 500;">Overview</button>
                     <button id="liveModeMidiBtn" onclick="openMidiSettings()"
                         style="flex: 1; padding: 8px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; font-weight: 500;">MIDI<span id="midiStatus" style="display: none; color: var(--text); font-size: 10px;"> ●</span></button>
                 </div>
