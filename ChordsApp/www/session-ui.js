@@ -189,7 +189,7 @@ class SessionUI {
                                     style="background: transparent; border: none; color: var(--text); opacity: 0.7; cursor: pointer; font-size: 13px; padding: 4px 0; width: 100%; text-align: left;">
                                 ▶ Show Playlist
                             </button>
-                            <div id="playlist-${session.id}" style="display: none; margin-top: 8px; max-height: 300px; overflow-y: auto;">
+                            <div id="playlist-${session.id}" style="display: none; margin-top: 8px; max-height: 60vh; overflow-y: auto;">
                             </div>
                         </div>
                     </div>
