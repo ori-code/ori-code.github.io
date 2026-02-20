@@ -97,9 +97,26 @@
             const books = snapshot.val();
 
             userBooks = books ? Object.entries(books).map(([id, data]) => ({id, ...data})) : [];
+
+            // Cache books to IndexedDB
+            if (window.offlineStore && books) {
+                window.offlineStore.putBooks(user.uid, books).catch(err => console.warn('IndexedDB books cache failed:', err));
+            }
+
             return userBooks;
         } catch (error) {
             console.error('Error loading books:', error);
+            // Try loading from IndexedDB cache
+            if (window.offlineStore) {
+                try {
+                    const cached = await window.offlineStore.getAllBooks(user.uid);
+                    if (cached && cached.length > 0) {
+                        userBooks = cached;
+                        console.log('[Books] Loaded', cached.length, 'from IndexedDB cache');
+                        return userBooks;
+                    }
+                } catch (e) { /* ignore */ }
+            }
             return [];
         }
     }
@@ -686,6 +703,20 @@
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
 
+                // Cache in IndexedDB
+                if (window.offlineStore) {
+                    await window.offlineStore.putSong(user.uid, songRef.key, {
+                        name: songName, title, author: author || '', key: originalKey,
+                        bpm, timeSignature: timeSignature || '', duration: duration || '',
+                        content, baselineChart, printPreview: printPreviewText,
+                        transposeSteps: actualTransposeSteps, originalKey,
+                        fontSize: layoutSettings.fontSize, lineHeight: layoutSettings.lineHeight,
+                        charSpacing: layoutSettings.charSpacing, columnCount: layoutSettings.columnCount,
+                        pageCount: layoutSettings.pageCount,
+                        createdAt: Date.now(), updatedAt: Date.now()
+                    });
+                }
+
                 // If a book is selected, automatically add the song to that book
                 const bookFilter = document.getElementById('bookFilter');
                 const selectedBookId = bookFilter ? bookFilter.value : 'all';
@@ -884,6 +915,19 @@
                     // Timestamp
                     updatedAt: firebase.database.ServerValue.TIMESTAMP
                 });
+
+                // Cache update in IndexedDB
+                if (window.offlineStore) {
+                    await window.offlineStore.putSong(user.uid, songToUpdate.id, {
+                        ...songToUpdate, title, author: author || '', key: originalKey,
+                        bpm: bpmValue, timeSignature: timeSignature || '', duration: duration || '',
+                        content, baselineChart, printPreview: printPreviewText,
+                        transposeSteps: actualTransposeSteps, originalKey,
+                        fontSize: layoutSettings.fontSize, lineHeight: layoutSettings.lineHeight,
+                        charSpacing: layoutSettings.charSpacing, columnCount: layoutSettings.columnCount,
+                        pageCount: layoutSettings.pageCount, updatedAt: Date.now()
+                    });
+                }
 
                 // Sync to active session playlist if song is there
                 if (window.sessionManager && window.sessionManager.activeSession) {
@@ -1092,6 +1136,10 @@
                 if (confirm(`Are you sure you want to delete "${song.name}"?`)) {
                     try {
                         await database.ref('users/' + user.uid + '/songs/' + song.id).remove();
+                        // Remove from IndexedDB cache
+                        if (window.offlineStore) {
+                            window.offlineStore.deleteSong(user.uid, song.id).catch(err => console.warn('IndexedDB delete failed:', err));
+                        }
                         showMessage('Success', `"${song.name}" deleted`, 'success');
 
                         // Remove from global array
@@ -1392,45 +1440,131 @@
                 return;
             }
 
-            // Load songs from Firebase
+            // Offline-first: show cached songs instantly, then sync delta from Firebase
+            const uid = user.uid;
+            let hasCachedData = false;
+
+            // STEP 1: Show cached songs immediately from IndexedDB
+            try {
+                if (window.offlineStore) {
+                    const cachedSongs = await window.offlineStore.getAllSongs(uid);
+                    if (cachedSongs.length > 0) {
+                        window.allLoadedSongs = cachedSongs;
+                        hasCachedData = true;
+                        console.log('⚡ Showing', cachedSongs.length, 'cached songs from IndexedDB');
+                        if (window.resetSongFilters) window.resetSongFilters();
+                        window.triggerSongListRerender();
+                    }
+                    const cachedBooks = await window.offlineStore.getAllBooks(uid);
+                    if (cachedBooks.length > 0) {
+                        userBooks = cachedBooks;
+                        populateBookFilter();
+                    }
+                }
+            } catch (cacheErr) {
+                console.warn('IndexedDB read failed, continuing with network:', cacheErr);
+            }
+
+            // Show modal immediately (with cached data or empty)
+            loadSongModal.style.display = 'flex';
+            songList.innerHTML = '';
+            if (hasCachedData) {
+                window.triggerSongListRerender();
+            }
+
+            // STEP 2: Sync from Firebase in background
             try {
                 const database = firebase.database();
-                const songsRef = database.ref('users/' + user.uid + '/songs');
-                const snapshot = await songsRef.once('value');
+                let lastSync = 0;
+                let syncCount = 0;
+
+                if (window.offlineStore) {
+                    lastSync = await window.offlineStore.getLastSyncTime(uid);
+                    syncCount = await window.offlineStore.getSyncCount(uid);
+                }
+
+                // Decide: incremental or full sync
+                const doFullSync = lastSync === 0 || syncCount % 10 === 0;
+                let query;
+
+                if (doFullSync) {
+                    // Full sync: fetch all songs
+                    query = database.ref('users/' + uid + '/songs');
+                    console.log('🔄 Full sync from Firebase...');
+                } else {
+                    // Incremental: only fetch songs updated after last sync
+                    query = database.ref('users/' + uid + '/songs')
+                        .orderByChild('updatedAt')
+                        .startAt(lastSync + 1);
+                    console.log('🔄 Incremental sync (since', new Date(lastSync).toLocaleString(), ')...');
+                }
+
+                const snapshot = await query.once('value');
                 const songs = snapshot.val();
 
-                // Clear song list
-                songList.innerHTML = '';
+                if (doFullSync) {
+                    // Full sync: replace everything
+                    if (!songs || Object.keys(songs).length === 0) {
+                        window.allLoadedSongs = [];
+                        if (window.offlineStore) await window.offlineStore.deleteAllSongs(uid);
+                    } else {
+                        window.allLoadedSongs = Object.entries(songs).map(([id, data]) => ({ id, ...data }));
+                        if (window.offlineStore) await window.offlineStore.putSongs(uid, songs);
+                    }
+                } else if (songs && Object.keys(songs).length > 0) {
+                    // Incremental: merge new/updated songs
+                    const newEntries = Object.entries(songs).map(([id, data]) => ({ id, ...data }));
+                    if (!window.allLoadedSongs) window.allLoadedSongs = [];
 
-                if (!songs || Object.keys(songs).length === 0) {
-                    window.allLoadedSongs = [];
+                    for (const newSong of newEntries) {
+                        const idx = window.allLoadedSongs.findIndex(s => s.id === newSong.id);
+                        if (idx >= 0) {
+                            window.allLoadedSongs[idx] = newSong;
+                        } else {
+                            window.allLoadedSongs.push(newSong);
+                        }
+                    }
+                    if (window.offlineStore) await window.offlineStore.putSongs(uid, songs);
+                    console.log('✅ Synced', Object.keys(songs).length, 'new/updated songs');
+                }
+
+                // Update sync metadata
+                if (window.offlineStore) {
+                    const maxUpdatedAt = window.allLoadedSongs.length > 0
+                        ? Math.max(...window.allLoadedSongs.map(s => s.updatedAt || s.createdAt || 0))
+                        : 0;
+                    if (maxUpdatedAt > 0) await window.offlineStore.setLastSyncTime(uid, maxUpdatedAt);
+                    await window.offlineStore.incrementSyncCount(uid);
+                }
+
+                console.log('✅ Total:', window.allLoadedSongs.length, 'songs in library');
+
+                // Re-render with fresh data
+                songList.innerHTML = '';
+                if (!window.allLoadedSongs || window.allLoadedSongs.length === 0) {
                     songList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px 20px;">No songs saved yet. Save your first song to start building your library!</p>';
                 } else {
-                    // Convert songs object to array and store globally
-                    window.allLoadedSongs = Object.entries(songs).map(([id, data]) => ({
-                        id,
-                        ...data
-                    }));
-
-                    console.log('✅ Loaded', window.allLoadedSongs.length, 'songs into memory');
-
-                    // Reset filters
-                    if (window.resetSongFilters) {
-                        window.resetSongFilters();
-                    }
-
-                    // Render with filters applied
+                    if (window.resetSongFilters) window.resetSongFilters();
                     window.triggerSongListRerender();
                 }
 
-                // Load and populate books
+                // Sync books
                 await loadUserBooks();
+                if (window.offlineStore) {
+                    const booksSnapshot = await database.ref('users/' + uid + '/books').once('value');
+                    const booksData = booksSnapshot.val();
+                    if (booksData) await window.offlineStore.putBooks(uid, booksData);
+                }
                 populateBookFilter();
 
-                loadSongModal.style.display = 'flex';
             } catch (error) {
-                console.error('Error loading songs:', error);
-                showMessage('Error', 'Failed to load songs: ' + error.message, 'error');
+                console.error('Firebase sync error:', error);
+                if (hasCachedData) {
+                    console.log('📴 Offline: showing cached songs');
+                } else {
+                    songList.innerHTML = '';
+                    showMessage('Error', 'No internet connection and no cached songs available.', 'error');
+                }
             }
         });
 
@@ -1504,6 +1638,10 @@
                 for (const songId of selectedSongIds) {
                     try {
                         await database.ref('users/' + user.uid + '/songs/' + songId).remove();
+                        // Remove from IndexedDB cache
+                        if (window.offlineStore) {
+                            window.offlineStore.deleteSong(user.uid, songId).catch(err => console.warn('IndexedDB bulk delete failed:', err));
+                        }
                         successCount++;
                         // Remove from global array
                         window.allLoadedSongs = window.allLoadedSongs.filter(s => s.id !== songId);

@@ -60,21 +60,20 @@ const padPlayer = {
         'B': 'B'
     },
 
-    // Cloudinary CDN URLs for each pad sound
-    // Using individual URLs because Cloudinary adds unique suffixes
+    // Local pad sound files (served from same host)
     soundUrls: {
-        'C': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327507/C_llwtg0.mp3',
-        'Csharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327505/Csharp_oyqnko.mp3',
-        'D': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327503/D_j0a54j.mp3',
-        'Dsharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327508/Dsharp_jjmy9l.mp3',
-        'E': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327508/E_a3iyi5.mp3',
-        'F': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327508/F_jumjlo.mp3',
-        'Fsharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327501/Fsharp_lk9kc4.mp3',
-        'G': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327500/G_sw9bgt.mp3',
-        'Gsharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327504/Gsharp_nz4mag.mp3',
-        'A': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327500/A_hvrjts.mp3',
-        'Asharp': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327497/Asharp_uniszd.mp3',
-        'B': 'https://res.cloudinary.com/dzyedia4j/video/upload/v1768327502/B_clzz3u.mp3'
+        'C': './pads/C.mp3',
+        'Csharp': './pads/Csharp.mp3',
+        'D': './pads/D.mp3',
+        'Dsharp': './pads/Dsharp.mp3',
+        'E': './pads/E.mp3',
+        'F': './pads/F.mp3',
+        'Fsharp': './pads/Fsharp.mp3',
+        'G': './pads/G.mp3',
+        'Gsharp': './pads/Gsharp.mp3',
+        'A': './pads/A.mp3',
+        'Asharp': './pads/Asharp.mp3',
+        'B': './pads/B.mp3'
     },
 
     // Loading state

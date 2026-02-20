@@ -1336,9 +1336,9 @@ input[type="checkbox"]:checked::after {
     pointer-events: none !important;
 }
 
-/* --- Preview Container (Print Preview - always white for paper simulation) --- */
+/* --- Preview Container (Print Preview - respects theme) --- */
 .preview-container {
-    background: #fff;
+    background: var(--bg);
     border-radius: 0;
     padding: 0;
     border: 1px solid var(--border);
@@ -1352,7 +1352,7 @@ input[type="checkbox"]:checked::after {
     font-family: 'Courier New', monospace;
     font-size: 8.5pt;
     line-height: 1.5;
-    color: #000;
+    color: var(--text);
     white-space: pre-wrap;
     word-wrap: break-word;
     padding: 8px 20px 20px 20px;
@@ -1439,9 +1439,9 @@ input[type="checkbox"]:checked::after {
     justify-content: center;
     gap: 6px;
     padding: 8px 20px;
-    border-top: 1px solid #000;
+    border-top: 1px solid var(--text);
     font-size: 11px;
-    color: #000;
+    color: var(--text);
 }
 
 .footer-icon {
@@ -1696,9 +1696,19 @@ input[type="checkbox"]:checked::after {
 }
 
 #livePreview b {
-    color: #000;
+    color: var(--text);
     font-weight: 600;
     font-size: 1em;
+}
+
+/* Chord boxes - more specific to override above */
+#livePreview .inline-chord b {
+    background: var(--text);
+    color: var(--bg);
+    padding: 1px 4px;
+    border-radius: 0;
+    font-size: 0.9em;
+    border: 1px solid var(--text);
 }
 
 /* Song structure */
@@ -1735,7 +1745,7 @@ input[type="checkbox"]:checked::after {
     text-align: start;
     font-size: 12px;
     margin: 0 0 2px 0;
-    color: #000;
+    color: var(--text);
     column-span: all;
     -webkit-column-span: all;
     display: block;
@@ -1775,16 +1785,8 @@ input[type="checkbox"]:checked::after {
     page-break-inside: avoid;
 }
 
-.section-badges-row[dir="rtl"] {
-    flex-direction: row-reverse !important;
-    justify-content: flex-end !important;
-}
-
-[dir="rtl"] .section-badges-row,
-.live-preview[dir="rtl"] .section-badges-row {
-    flex-direction: row-reverse !important;
-    justify-content: flex-end !important;
-}
+/* dir="rtl" on a flex container already reverses layout direction natively.
+   No flex-direction: row-reverse needed — that would cancel out the RTL effect. */
 
 .section-badges-row+* {
     margin-top: 0 !important;
@@ -1818,18 +1820,19 @@ input[type="checkbox"]:checked::after {
 /* Inline chord */
 .inline-chord {
     display: inline;
-    color: #000;
+    color: var(--text);
     font-weight: 700;
     margin: 0 2px;
     vertical-align: baseline;
 }
 
 .inline-chord b {
-    background: transparent;
+    background: var(--text);
+    color: var(--bg);
     padding: 1px 4px;
     border-radius: 0;
     font-size: 0.9em;
-    border: 1px solid #000;
+    border: 1px solid var(--text);
 }
 
 [dir="rtl"] .inline-chord {
@@ -1869,8 +1872,8 @@ input[type="checkbox"]:checked::after {
     line-height: normal !important;
     letter-spacing: normal !important;
     background: transparent;
-    color: #000;
-    border: 1px solid #000;
+    color: var(--text);
+    border: 1px solid var(--text);
     cursor: pointer;
     transition: all 0.2s ease;
     flex-shrink: 0;
@@ -1878,15 +1881,15 @@ input[type="checkbox"]:checked::after {
 }
 
 .section-badge:hover {
-    background: #000;
-    color: #fff;
+    background: var(--text);
+    color: var(--bg);
 }
 
 .section-badge.active,
 .section-badge.badge-active {
-    background: #000;
-    color: #fff;
-    border-color: #000;
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
 }
 
 .section-badge+.section-badge::before {
@@ -1895,7 +1898,7 @@ input[type="checkbox"]:checked::after {
     left: -9px;
     top: 50%;
     transform: translateY(-50%);
-    color: #000;
+    color: var(--text);
     font-size: 12px;
     font-weight: 400;
 }
@@ -1917,8 +1920,8 @@ input[type="checkbox"]:checked::after {
 .badge-break,
 .badge-other {
     background: transparent;
-    border: 1px solid #000;
-    color: #000;
+    border: 1px solid var(--text);
+    color: var(--text);
 }
 
 /* Repeat count */
@@ -1934,7 +1937,7 @@ input[type="checkbox"]:checked::after {
 /* Flow arrows */
 .flow-arrow {
     font-size: 18px;
-    color: #000;
+    color: var(--text);
     margin: 0 4px;
     vertical-align: middle;
     display: inline-block;
@@ -2183,6 +2186,7 @@ input[type="checkbox"]:checked::after {
         padding: 0 !important;
         border: none !important;
         border-radius: 0 !important;
+        background: #fff !important;
     }
 
     #livePreview {
@@ -2192,6 +2196,7 @@ input[type="checkbox"]:checked::after {
         width: 100% !important;
         padding: 0 !important;
         margin: 0 !important;
+        color: #000 !important;
     }
 
     .preview-container>div[style*="position: absolute"] {
@@ -3199,11 +3204,26 @@ input[type="checkbox"]:checked::after {
     }
 }
 
-/* --- Editor Preview Wrapper --- */
+/* --- Editor Preview Wrapper (side-by-side) --- */
 .editor-preview-wrapper {
     display: flex;
-    gap: 20px;
+    gap: 12px;
     align-items: flex-start;
+}
+
+/* Both children share space equally via flex: 1.
+   When editor is hidden (display:none), preview takes full width.
+   When both visible, they split 50/50 and JS scales the A4 preview to fit. */
+.editor-preview-wrapper>.preview-scale-wrapper {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.editor-preview-wrapper>.editor {
+    flex: 1 1 0%;
+    min-width: 0;
+    margin-top: 0;
 }
 
 @media (max-width: 1024px) {
@@ -3211,7 +3231,12 @@ input[type="checkbox"]:checked::after {
         flex-direction: column;
     }
 
-    .editor-preview-wrapper>.preview-container,
+    .editor-preview-wrapper>.preview-scale-wrapper,
+    .editor-preview-wrapper>.editor {
+        flex: 0 0 100%;
+        width: 100%;
+    }
+
     .editor-preview-wrapper>.preview-scale-wrapper {
         margin: 0 auto;
     }

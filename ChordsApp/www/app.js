@@ -180,96 +180,64 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ============= MOBILE A4 PREVIEW SCALING =============
-    // Scales the A4 preview to fit mobile screens while maintaining exact proportions
-    (function initMobilePreviewScaling() {
+    // ============= A4 PREVIEW SCALING =============
+    // Scales the A4 preview to fit available space (mobile or side-by-side layout)
+    (function initPreviewScaling() {
         const A4_WIDTH_PX = 793; // 210mm in pixels at 96dpi
-        const MOBILE_BREAKPOINT = 800; // Scale when viewport is smaller than this
-        const PADDING = 32; // Side padding on mobile (matches .container padding)
 
         let previewContainer = null;
         let scaleWrapper = null;
-        let isScalingActive = false;
 
         function setupScaling() {
             previewContainer = document.querySelector('.preview-container');
             if (!previewContainer) return;
 
-            // Check if wrapper already exists
+            // Check if wrapper already exists (added in HTML)
             if (previewContainer.parentElement?.classList.contains('preview-scale-wrapper')) {
                 scaleWrapper = previewContainer.parentElement;
+            } else {
+                // Fallback: create wrapper dynamically
+                scaleWrapper = document.createElement('div');
+                scaleWrapper.className = 'preview-scale-wrapper';
+                previewContainer.parentNode.insertBefore(scaleWrapper, previewContainer);
+                scaleWrapper.appendChild(previewContainer);
             }
-        }
-
-        function createWrapper() {
-            if (!previewContainer || scaleWrapper) return;
-
-            // Create wrapper div
-            scaleWrapper = document.createElement('div');
-            scaleWrapper.className = 'preview-scale-wrapper';
-
-            // Insert wrapper before preview container and move container inside
-            previewContainer.parentNode.insertBefore(scaleWrapper, previewContainer);
-            scaleWrapper.appendChild(previewContainer);
-        }
-
-        function removeWrapper() {
-            if (!scaleWrapper || !previewContainer) return;
-
-            // Move preview container back out and remove wrapper
-            scaleWrapper.parentNode.insertBefore(previewContainer, scaleWrapper);
-            scaleWrapper.remove();
-            scaleWrapper = null;
-
-            // Remove scaling class and inline styles
-            previewContainer.classList.remove('mobile-scaled');
-            previewContainer.style.transform = '';
-            previewContainer.style.width = '';
         }
 
         function applyScaling() {
-            const viewportWidth = window.innerWidth;
+            if (!previewContainer || !scaleWrapper) setupScaling();
+            if (!previewContainer || !scaleWrapper) return;
 
-            // Only scale on mobile/tablet
-            if (viewportWidth >= MOBILE_BREAKPOINT) {
-                if (isScalingActive) {
-                    removeWrapper();
-                    isScalingActive = false;
-                    console.log('Mobile scaling disabled (desktop view)');
-                }
-                return;
-            }
+            // Clear any previously set inline dimensions so CSS layout can compute naturally
+            scaleWrapper.style.width = '';
+            scaleWrapper.style.height = '';
+            previewContainer.style.transform = '';
+            previewContainer.style.width = '';
 
-            setupScaling();
-            if (!previewContainer) return;
+            // Force layout recalc
+            const availableWidth = scaleWrapper.clientWidth;
+            if (!availableWidth || availableWidth <= 0) return;
 
-            // Create wrapper if needed
-            if (!scaleWrapper) {
-                createWrapper();
-            }
-
-            // Use actual parent width instead of viewport to account for container padding
-            const parentEl = scaleWrapper ? scaleWrapper.parentElement : previewContainer.parentElement;
-            const availableWidth = parentEl ? parentEl.clientWidth : (viewportWidth - (PADDING * 2));
             const scale = Math.min(1, availableWidth / A4_WIDTH_PX);
 
-            // Apply scaling
-            previewContainer.classList.add('mobile-scaled');
-            previewContainer.style.width = A4_WIDTH_PX + 'px';
-            previewContainer.style.transform = `scale(${scale})`;
+            if (scale < 0.99) {
+                // Need to scale down — preview is wider than available space
+                previewContainer.classList.add('mobile-scaled');
+                previewContainer.style.width = A4_WIDTH_PX + 'px';
+                previewContainer.style.transform = `scale(${scale})`;
 
-            // Update wrapper height to match scaled content
-            const contentHeight = previewContainer.offsetHeight;
-            const scaledHeight = contentHeight * scale;
-            scaleWrapper.style.height = scaledHeight + 'px';
-            scaleWrapper.style.width = (A4_WIDTH_PX * scale) + 'px';
-
-            isScalingActive = true;
-            console.log(`Mobile scaling applied: ${(scale * 100).toFixed(0)}%`);
+                // Set wrapper height to match scaled content
+                const contentHeight = previewContainer.offsetHeight;
+                scaleWrapper.style.height = (contentHeight * scale) + 'px';
+            } else {
+                // No scaling needed — enough room for full A4
+                previewContainer.classList.remove('mobile-scaled');
+            }
         }
 
-        // Initial application
+        // Initial application (multiple attempts for robustness)
         setTimeout(applyScaling, 100);
+        setTimeout(applyScaling, 500);
 
         // Reapply on resize (debounced)
         let resizeTimeout;
@@ -280,9 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reapply when content changes (e.g., after analysis)
         const observer = new MutationObserver(() => {
-            if (isScalingActive) {
-                setTimeout(applyScaling, 50);
-            }
+            setTimeout(applyScaling, 50);
         });
 
         // Observe the live preview for content changes
@@ -294,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
 
         // Expose for manual refresh if needed
-        window.refreshMobileScaling = applyScaling;
+        window.refreshPreviewScaling = applyScaling;
     })();
 
     if (!fileInput || !analysisStatus || !visualEditor || !songbookOutput) {
@@ -558,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (timeSignature) timeSignature.value = song.time || '4/4';
 
             // Set the visualEditor (for transpose to work)
-            visualEditor.value = visualFormat;
+            visualEditor.value = reverseArrangementLineForRTL(visualFormat);
 
             // Apply saved layout settings if available
             if (livePreview) {
@@ -1632,7 +1598,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // ✅ Normalize spacing around pipes in metadata
                 visualFormat = normalizeMetadataSpacing(visualFormat);
 
-                visualEditor.value = visualFormat;
+                visualEditor.value = reverseArrangementLineForRTL(visualFormat);
 
                 // Display normalized content in songbook output
                 songbookOutput.value = normalizedChart;
@@ -1720,7 +1686,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // ✅ Normalize spacing around pipes in metadata
             visualFormat = normalizeMetadataSpacing(visualFormat);
 
-            visualEditor.value = visualFormat;
+            visualEditor.value = reverseArrangementLineForRTL(visualFormat);
 
             // Display normalized content in songbook output
             songbookOutput.value = normalizedChart;
@@ -2073,7 +2039,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 transposedVisual = autoInsertArrangementLine(transposedVisual);
                 transposedVisual = ensureMetadata(transposedVisual);
                 transposedVisual = normalizeMetadataSpacing(transposedVisual);
-                visualEditor.value = transposedVisual;
+                visualEditor.value = reverseArrangementLineForRTL(transposedVisual);
             } else {
                 // Legacy format: Convert transposed version to visual format
                 console.log('🔄 Converting to above-line format...');
@@ -2088,7 +2054,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 transposedVisual = ensureMetadata(transposedVisual);
                 transposedVisual = normalizeMetadataSpacing(transposedVisual);
 
-                visualEditor.value = transposedVisual;
+                visualEditor.value = reverseArrangementLineForRTL(transposedVisual);
             }
         } else {
             // For loaded songs without songbook format, transpose visual format directly
@@ -2103,7 +2069,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             transposedVisual = ensureMetadata(transposedVisual);
             transposedVisual = normalizeMetadataSpacing(transposedVisual);
 
-            visualEditor.value = transposedVisual;
+            visualEditor.value = reverseArrangementLineForRTL(transposedVisual);
         }
 
         // Transpose the key and update it everywhere
@@ -2339,7 +2305,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Re-insert arrangement line (preserve it during reset)
             visualFormat = autoInsertArrangementLine(visualFormat);
 
-            visualEditor.value = visualFormat;
+            visualEditor.value = reverseArrangementLineForRTL(visualFormat);
 
             // Reset key to original
             if (originalDetectedKey) {
@@ -2437,7 +2403,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                         // Default: Show chords above lyrics
                         const visualFormat = convertToAboveLineFormat(normalizedChart, true);
-                        visualEditor.value = visualFormat;
+                        visualEditor.value = reverseArrangementLineForRTL(visualFormat);
 
                         // Display normalized content in songbook output
                         songbookOutput.value = normalizedChart;
@@ -2800,31 +2766,70 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     const updateSongBookFromVisual = () => {
         // Convert visual editor (above-line) to SongBook format (inline brackets)
-        const songbookFormat = convertVisualToSongBook(visualEditor.value);
+        // Un-reverse arrangement line (textarea has reversed badges for RTL display)
+        const songbookFormat = convertVisualToSongBook(reverseArrangementLineForRTL(visualEditor.value));
         songbookOutput.value = songbookFormat;
         setDirectionalLayout(songbookOutput, songbookOutput.value);
     };
 
-    // Helper function to reverse arrangement line badges for RTL content
+    // Helper: reverse arrangement line badge order for RTL textarea display
+    // In a textarea, Latin text like (I) (V1) (PC) (C) always renders LTR.
+    // By reversing the text to (C) (PC) (V1) (I), the rightmost badge visually
+    // becomes (I) which is the correct RTL reading start.
     const reverseArrangementLineForRTL = (content) => {
         const isRTL = detectRTL(content);
         if (!isRTL) return content;
-
-        // Pattern to match arrangement lines like "(V1) (V2) (B) (C)" or "(I) (V1) (PC) (C)"
         const arrangementLinePattern = /^([\s]*)(\([A-Z]+\d*\)(?:\s*\([A-Z]+\d*\))+)([\s]*)$/gim;
-
         return content.replace(arrangementLinePattern, (match, prefix, badges, suffix) => {
-            // Extract individual badges and reverse them
             const badgePattern = /\([A-Z]+\d*\)/gi;
             const badgeMatches = badges.match(badgePattern);
             if (badgeMatches && badgeMatches.length > 1) {
-                const reversed = badgeMatches.reverse().join(' ');
-                console.log('🔄 RTL: Reversed arrangement line badges:', badgeMatches.length, 'badges');
-                return prefix + reversed + suffix;
+                return prefix + badgeMatches.reverse().join(' ') + suffix;
             }
             return match;
         });
     };
+
+    // Section label translation map (English → Hebrew)
+    const sectionTranslations = {
+        he: {
+            'Intro': 'הקדמה',
+            'Verse': 'בית',
+            'Pre-Chorus': 'קדם פזמון',
+            'Chorus': 'פזמון',
+            'Bridge': 'גשר',
+            'Outro': 'סיום',
+            'Interlude': 'אינטרלוד',
+            'Instrumental': 'נגינה',
+            'Tag': 'תג',
+            'Ending': 'סיום',
+            'Solo': 'סולו',
+            'Coda': 'קודה',
+            'Vamp': 'ואמפ',
+            'Break': 'הפסקה',
+            'Turnaround': 'מעבר',
+            'Turn': 'מעבר',
+            'Hook': 'הוק',
+            'Refrain': 'פזמון',
+        }
+    };
+
+    function translateSectionName(name) {
+        const lang = document.getElementById('sectionLanguage')?.value || 'en';
+        if (lang === 'en' || !sectionTranslations[lang]) return name;
+
+        const map = sectionTranslations[lang];
+        // Match "Verse 1", "Chorus 2", etc. — translate the keyword, keep the number
+        const match = name.match(/^(\S+(?:-\S+)?)\s*(.*)$/);
+        if (match) {
+            const keyword = match[1];
+            const rest = match[2]; // number, suffix, etc.
+            if (map[keyword]) {
+                return rest ? `${map[keyword]} ${rest}` : map[keyword];
+            }
+        }
+        return name;
+    }
 
     // Format Chords App Format v4 content for preview
     const formatV4ForPreview = (content, options = {}) => {
@@ -2833,8 +2838,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const formatted = [];
         let sectionCounter = 0;
 
-        // Reverse arrangement line badges for RTL content BEFORE processing
-        content = reverseArrangementLineForRTL(content);
+        // NOTE: No arrangement reversal needed here.
+        // The dir="rtl" attribute on badge containers handles RTL display natively.
 
         // Strip HTML tags before parsing (output may have bold tags)
         const cleanContent = content.replace(/<[^>]*>/g, '');
@@ -2952,17 +2957,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     const repeatSup = item.repeat > 1 ? `<sup class="repeat-count">${item.repeat}x</sup>` : '';
                     return `<span class="section-badge ${colorClass}">${item.label}${repeatSup}</span>`;
                 });
-            // Reverse badges array for RTL content so V1 appears on right
-            if (isRTLContent) {
-                badgeItems = badgeItems.reverse();
-            }
             const badges = badgeItems.join('');
-            const badgesDir = isRTLContent ? 'rtl' : 'ltr';
-            console.log('🏷️ formatV4ForPreview BADGES RTL DEBUG:');
-            console.log('  isRTLContent:', isRTLContent);
-            console.log('  badgesDir:', badgesDir);
-            console.log('  badges reversed:', isRTLContent);
-            formatted.push(`<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`);
+            const rtlStyle = isRTLContent ? ' style="flex-direction: row-reverse; direction: ltr;"' : '';
+            formatted.push(`<div class="section-badges-row"${rtlStyle}>${badges}</div>`);
         }
 
         formatted.push('</div>'); // Close song-header
@@ -2988,7 +2985,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Check if section has a repeat count from arrangement
                 const repeatCount = sectionRepeatMap[sectionName] || sectionRepeatMap[currentSection];
                 const repeatSuffix = repeatCount > 1 ? ` (${repeatCount}x)` : '';
-                const headerText = `${sectionName}${repeatSuffix}`;
+                const translatedName = translateSectionName(sectionName);
+                const headerText = `${translatedName}${repeatSuffix}`;
 
                 formatted.push(blockStart);
                 // Render comment INLINE as span inside header
@@ -3242,8 +3240,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
     const formatForPreview = (content, options = {}) => {
         const { enableSectionBlocks = false } = options;
 
-        // Reverse arrangement line badges for RTL content BEFORE processing
-        content = reverseArrangementLineForRTL(content);
+        // NOTE: No text-level arrangement reversal needed here.
+        // The dir="rtl" attribute on the badge container handles RTL display natively.
 
         const lines = content.split('\n');
         const formatted = [];
@@ -3324,13 +3322,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     'badge-other';
                 return `<span class="section-badge ${colorClass}">${label}</span>`;
             });
-            // Reverse badges array for RTL content so V1 appears on right
-            if (isRTLContent) {
-                badgeItems = badgeItems.reverse();
-            }
             const badges = badgeItems.join('');
-            const badgesDir = isRTLContent ? 'rtl' : 'ltr';
-            return `<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`;
+            const rtlStyle = isRTLContent ? ' style="flex-direction: row-reverse; direction: ltr;"' : '';
+            return `<div class="section-badges-row"${rtlStyle}>${badges}</div>`;
         };
 
         const finishSection = () => {
@@ -3349,7 +3343,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 formatted.push(blockStart);
                 // Render comment INLINE as span inside header
                 const commentSpan = sectionComment ? `<span class="section-comment">${sectionComment}</span>` : '';
-                formatted.push(`<div class="section-header">${sectionName}${commentSpan}</div>`);
+                const translatedName = translateSectionName(sectionName);
+                formatted.push(`<div class="section-header">${translatedName}${commentSpan}</div>`);
                 if (sectionContent.length > 0) {
                     formatted.push(...sectionContent);
                 }
@@ -3460,16 +3455,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                                     'badge-other';
                                 return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
                             });
-                            // Reverse badges array for RTL content so V1 appears on right
-                            if (isRTLContent) {
-                                badgeItems = badgeItems.reverse();
-                            }
                             const badges = badgeItems.join('');
-                            const badgesDir = isRTLContent ? 'rtl' : 'ltr';
-                            console.log('🏷️ formatForPreview BADGES RTL DEBUG:');
-                            console.log('  isRTLContent:', isRTLContent);
-                            console.log('  badges reversed:', isRTLContent);
-                            formatted.push(`<div class="section-badges-row" dir="${badgesDir}">${badges}</div>`);
+                            const rtlStyle = isRTLContent ? ' style="flex-direction: row-reverse; direction: ltr;"' : '';
+                            formatted.push(`<div class="section-badges-row"${rtlStyle}>${badges}</div>`);
                         }
 
                         formatted.push('</div>'); // Close song-header
@@ -3607,6 +3595,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }
 
         let visualContent = visualEditor.value;
+        // Un-reverse arrangement line (textarea has reversed badges for RTL display)
+        visualContent = reverseArrangementLineForRTL(visualContent);
         console.log('Updating live preview with content length:', visualContent.length);
 
         // Apply arrangement order if enabled
@@ -4812,16 +4802,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
         });
 
-        // ✅ Reverse badges array for RTL content so V1 appears on right
-        if (isRTLContent) {
-            badgeItems = badgeItems.reverse();
-        }
-
         const badges = badgeItems.join('');
         badgesRow.innerHTML = badges;
-
-        // ✅ Set RTL direction on badges row container
-        badgesRow.setAttribute('dir', isRTLContent ? 'rtl' : 'ltr');
+        if (isRTLContent) {
+            badgesRow.style.flexDirection = 'row-reverse';
+            badgesRow.style.direction = 'ltr';
+        } else {
+            badgesRow.style.flexDirection = '';
+            badgesRow.style.direction = '';
+        }
     }
 
     // ✅ Call once on page load if there's content
@@ -4838,11 +4827,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             if (proEditorToggle.checked) {
                 // Switch to Pro Mode: Show raw ChordPro format with {title:}, {comment:}, etc.
-                visualEditor.value = chordProFormat;
+                visualEditor.value = reverseArrangementLineForRTL(chordProFormat);
             } else {
                 // Switch to Regular Mode: Show chords above lyrics (clean display)
                 const visualFormat = convertToAboveLineFormat(chordProFormat, true);
-                visualEditor.value = visualFormat;
+                visualEditor.value = reverseArrangementLineForRTL(visualFormat);
             }
 
             // Update preview after toggle
@@ -4857,6 +4846,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
             updateSongBookFromVisual();
             updateLivePreview();
             updateEditorBadges(); // ✅ Update section badges in edit mode
+        });
+    }
+
+    // Re-render preview when section language changes (EN ↔ Hebrew)
+    const sectionLangDropdown = document.getElementById('sectionLanguage');
+    if (sectionLangDropdown) {
+        sectionLangDropdown.addEventListener('change', () => {
+            updateLivePreview();
         });
     }
 
@@ -6116,7 +6113,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const livePreview = document.getElementById('livePreview');
 
         if (visualEditor) {
-            visualEditor.value = songData.content;
+            visualEditor.value = reverseArrangementLineForRTL(songData.content);
             // Apply RTL/LTR direction based on new song content
             setDirectionalLayout(visualEditor, songData.content);
         }
@@ -6316,7 +6313,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const bpmInput = document.getElementById('bpmInput');
 
         if (visualEditor) {
-            visualEditor.value = song.content;
+            visualEditor.value = reverseArrangementLineForRTL(song.content);
         }
 
         const normalizedKey = normalizeKey(song.originalKey);
@@ -6388,7 +6385,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             baselineVisualContent = visualFormat;
 
             // Display in editor
-            visualEditor.value = visualFormat;
+            visualEditor.value = reverseArrangementLineForRTL(visualFormat);
             setDirectionalLayout(visualEditor, visualFormat);
 
             // Update songbook output (normalized)

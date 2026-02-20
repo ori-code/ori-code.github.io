@@ -55,7 +55,7 @@
                 </button>
                 <a href="https://www.thefaithsound.com/ChordsApp/www/" class="header-brand"
                     style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
-                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.55rem; font-weight: 400; opacity: 0.4;">v32</span></span>
+                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v47</span></span>
                     <span class="header-brand-url" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
                 </a>
@@ -914,7 +914,8 @@
             <!-- Force LTR for this section so chords/editor structure remains Left-to-Right even in Hebrew -->
             <div class="editor-preview-wrapper" dir="ltr">
 
-                <!-- Preview Container (LEFT) -->
+                <!-- Preview Container (LEFT) - wrapped for A4 scaling -->
+                <div class="preview-scale-wrapper">
                 <div class="preview-container" style="position: relative; padding: 0; overflow: hidden;">
                     <div id="pageCounter"
                         style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">
@@ -943,6 +944,7 @@
                         </div>
                     </div>
                 </div>
+                </div><!-- End preview-scale-wrapper -->
 
                 <!-- Edit Workspace (RIGHT) -->
                 <section id="editor" class="editor" style="display: block;">
@@ -3282,6 +3284,9 @@
     <!-- Subscription System -->
     <script src="subscription.js"></script>
     <script src="paypal-subscription.js"></script>
+
+    <!-- Offline Storage (IndexedDB) -->
+    <script src="offline-store.js"></script>
 
     <!-- Song Library -->
     <script src="song-library.js"></script>

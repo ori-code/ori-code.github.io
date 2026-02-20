@@ -255,6 +255,15 @@ class ChordsAuthManager {
     // Sign out
     async signOut() {
         try {
+            // Clear offline cache for this user before signing out
+            if (this.currentUser && window.offlineStore) {
+                const uid = this.currentUser.uid;
+                await Promise.all([
+                    window.offlineStore.deleteAllSongs(uid),
+                    window.offlineStore.deleteAllBooks(uid)
+                ]).catch(err => console.warn('IndexedDB cleanup on logout:', err));
+            }
+
             // Remove session from Firebase before signing out
             if (this.currentUser) {
                 await this.removeCurrentSession(this.currentUser.uid);
