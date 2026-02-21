@@ -55,7 +55,7 @@
                 </button>
                 <a href="https://www.thefaithsound.com/ChordsApp/www/" class="header-brand"
                     style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
-                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v49</span></span>
+                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v50</span></span>
                     <span class="header-brand-url" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
                 </a>
@@ -2455,94 +2455,6 @@
                     </div>
                 </div>
 
-                <!-- Extended Synth Engine -->
-                <div style="margin-top: 8px;">
-                    <button id="padsSynthToggle" style="width: 100%; background: transparent; border: 1px solid var(--border); color: var(--text); padding: 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; opacity: 0.6;">
-                        Synth Engine ▼
-                    </button>
-                    <div id="padsSynthPanel" style="display: none; padding: 10px 0;">
-
-                        <!-- Presets -->
-                        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Presets</div>
-                        <div id="padsSynthPresets" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px;">
-                            <button class="pad-preset-btn" data-preset="default" style="background: var(--text); color: var(--bg); border: 1px solid var(--border); padding: 4px 8px; font-size: 11px; cursor: pointer;">Default</button>
-                            <button class="pad-preset-btn" data-preset="warm" style="background: transparent; color: var(--text); border: 1px solid var(--border); padding: 4px 8px; font-size: 11px; cursor: pointer;">Warm</button>
-                            <button class="pad-preset-btn" data-preset="bright" style="background: transparent; color: var(--text); border: 1px solid var(--border); padding: 4px 8px; font-size: 11px; cursor: pointer;">Bright</button>
-                            <button class="pad-preset-btn" data-preset="deep" style="background: transparent; color: var(--text); border: 1px solid var(--border); padding: 4px 8px; font-size: 11px; cursor: pointer;">Deep</button>
-                            <button class="pad-preset-btn" data-preset="ethereal" style="background: transparent; color: var(--text); border: 1px solid var(--border); padding: 4px 8px; font-size: 11px; cursor: pointer;">Ethereal</button>
-                            <button class="pad-preset-btn" data-preset="organ" style="background: transparent; color: var(--text); border: 1px solid var(--border); padding: 4px 8px; font-size: 11px; cursor: pointer;">Organ</button>
-                        </div>
-
-                        <!-- Oscillators -->
-                        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Oscillators</div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Root Sine</span>
-                            <input type="range" id="padsSynthRootSine" min="0" max="100" value="35" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Root Tri</span>
-                            <input type="range" id="padsSynthRootTri" min="0" max="100" value="15" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Chorus</span>
-                            <input type="range" id="padsSynthChorus" min="0" max="100" value="12" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Octave Up</span>
-                            <input type="range" id="padsSynthOctave" min="0" max="100" value="8" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Sub</span>
-                            <input type="range" id="padsSynthSub" min="0" max="100" value="18" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Detune</span>
-                            <input type="range" id="padsSynthDetune" min="0" max="30" value="7" class="pad-slider">
-                        </div>
-
-                        <!-- LFO -->
-                        <div style="font-size: 10px; color: var(--text-muted); margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 1px;">LFO</div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Amp Rate</span>
-                            <input type="range" id="padsSynthAmpRate" min="0" max="200" value="15" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Amp Depth</span>
-                            <input type="range" id="padsSynthAmpDepth" min="0" max="300" value="50" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Filt Rate</span>
-                            <input type="range" id="padsSynthFiltRate" min="0" max="100" value="8" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Filt Depth</span>
-                            <input type="range" id="padsSynthFiltDepth" min="0" max="100" value="30" class="pad-slider">
-                        </div>
-
-                        <!-- Envelope -->
-                        <div style="font-size: 10px; color: var(--text-muted); margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 1px;">Envelope</div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Attack</span>
-                            <input type="range" id="padsSynthAttack" min="1" max="100" value="40" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Release</span>
-                            <input type="range" id="padsSynthRelease" min="1" max="100" value="40" class="pad-slider">
-                        </div>
-
-                        <!-- Reverb Engine -->
-                        <div style="font-size: 10px; color: var(--text-muted); margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 1px;">Reverb Engine</div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Size</span>
-                            <input type="range" id="padsSynthReverbSize" min="5" max="60" value="20" class="pad-slider">
-                        </div>
-                        <div class="pad-control-row">
-                            <span class="pad-control-label">Decay</span>
-                            <input type="range" id="padsSynthReverbDecay" min="5" max="50" value="20" class="pad-slider">
-                        </div>
-
-                    </div>
-                </div>
 
             </div>
             <div class="modal-footer" style="border-top: 1px solid var(--border); padding: 10px 16px;">
@@ -4845,54 +4757,6 @@
                 });
             }
 
-            // Synth Engine toggle
-            const synthToggle = document.getElementById('padsSynthToggle');
-            const synthPanel = document.getElementById('padsSynthPanel');
-            if (synthToggle && synthPanel) {
-                synthToggle.addEventListener('click', () => {
-                    const open = synthPanel.style.display !== 'none';
-                    synthPanel.style.display = open ? 'none' : 'block';
-                    synthToggle.textContent = open ? 'Synth Engine ▼' : 'Synth Engine ▲';
-                });
-            }
-
-            // Preset buttons
-            document.querySelectorAll('.pad-preset-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    padPlayer.loadPreset(btn.dataset.preset);
-                    // Update active preset button style
-                    document.querySelectorAll('.pad-preset-btn').forEach(b => {
-                        b.style.background = 'transparent';
-                        b.style.color = 'var(--text)';
-                    });
-                    btn.style.background = 'var(--text)';
-                    btn.style.color = 'var(--bg)';
-                });
-            });
-
-            // Extended synth controls
-            const synthSlider = (id, fn) => {
-                const el = document.getElementById(id);
-                if (el) el.addEventListener('input', () => fn(parseFloat(el.value)));
-            };
-
-            synthSlider('padsSynthRootSine', v => padPlayer.setOscLevel('rootSine', v / 100));
-            synthSlider('padsSynthRootTri', v => padPlayer.setOscLevel('rootTriangle', v / 100));
-            synthSlider('padsSynthChorus', v => {
-                padPlayer.setOscLevel('chorusL', v / 100);
-                padPlayer.setOscLevel('chorusR', v / 100);
-            });
-            synthSlider('padsSynthOctave', v => padPlayer.setOscLevel('octaveUp', v / 100));
-            synthSlider('padsSynthSub', v => padPlayer.setOscLevel('sub', v / 100));
-            synthSlider('padsSynthDetune', v => padPlayer.setChorusDetune(v));
-            synthSlider('padsSynthAmpRate', v => padPlayer.setAmpLfoRate(v / 100));
-            synthSlider('padsSynthAmpDepth', v => padPlayer.setAmpLfoDepth(v / 1000));
-            synthSlider('padsSynthFiltRate', v => padPlayer.setFilterLfoRate(v / 100));
-            synthSlider('padsSynthFiltDepth', v => padPlayer.setFilterLfoDepth(v * 10));
-            synthSlider('padsSynthAttack', v => padPlayer.setAttackTime(v / 10));
-            synthSlider('padsSynthRelease', v => padPlayer.setReleaseTime(v / 10));
-            synthSlider('padsSynthReverbSize', v => padPlayer.setReverbSize(v / 10, padPlayer.reverbDecay));
-            synthSlider('padsSynthReverbDecay', v => padPlayer.setReverbSize(padPlayer.reverbDuration, v / 10));
 
             // Initialize key grid based on current key
             if (mainKey) {

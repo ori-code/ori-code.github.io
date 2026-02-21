@@ -1,20 +1,19 @@
 /**
- * aChordim Pad Player — Synthesizer Edition
- * Generates ambient pad sounds using Web Audio API oscillators
- * No audio files needed — works instantly on all devices including iOS
+ * aChordim Pad Player
+ * Plays looping ambient pad sounds for each musical key
  */
 
 const padPlayer = {
     // Audio context
     audioContext: null,
 
-    // Buffers sentinel (checked by UI: Object.keys(padPlayer.buffers).length === 0)
+    // Loaded audio buffers for each key
     buffers: {},
 
-    // Currently playing sources (each key maps to an object with oscillators + nodes)
+    // Currently playing sources
     activeSources: {},
 
-    // Gain nodes for volume control (per-key)
+    // Gain nodes for volume control
     gainNodes: {},
 
     // Master gain node
@@ -23,58 +22,24 @@ const padPlayer = {
     // Effect nodes
     lowPassFilter: null,
     highPassFilter: null,
-    convolver: null,
-    reverbGain: null,
-    dryGain: null,
+    convolver: null,       // For reverb
+    reverbGain: null,      // Wet/dry mix for reverb
+    dryGain: null,         // Dry signal
     pannerNode: null,
-
-    // Filter LFO (global timbral movement)
-    filterLFO: null,
-    filterLFOGain: null,
 
     // Current settings
     volume: 0.7,
-    crossfade: 4,
-    lowPassFreq: 20000,
-    highPassFreq: 20,
-    reverbMix: 0.3,
-    pan: 0,
+    crossfade: 4,          // Fade duration in seconds (longer for smooth transitions)
+    lowPassFreq: 20000,    // Hz (20000 = no filtering)
+    highPassFreq: 20,      // Hz (20 = no filtering)
+    reverbMix: 0.3,        // 0-1 (0 = dry, 1 = full reverb) - default 30%
+    pan: 0,                // -1 to 1 (left to right)
 
-    // Fade duration in seconds
+    // Fade duration in seconds (same as crossfade)
     fadeDuration: 4,
 
-    // Stop All fade duration
+    // Stop All fade duration (longer for smooth ending)
     stopAllFadeDuration: 6,
-
-    // Extended synth parameters
-    oscLevels: {
-        rootSine: 0.35,
-        rootTriangle: 0.15,
-        chorusL: 0.12,
-        chorusR: 0.12,
-        octaveUp: 0.08,
-        sub: 0.18
-    },
-    chorusDetune: 7,         // cents
-    octaveShift: 0,          // -1, 0, +1 octave shift for base frequency
-    ampLfoRate: 0.15,        // Hz
-    ampLfoDepth: 0.05,       // 0-0.3
-    filterLfoRate: 0.08,     // Hz
-    filterLfoDepth: 300,     // Hz range
-    attackTime: 4,           // seconds (same as fadeDuration)
-    releaseTime: 4,          // seconds (same as fadeDuration for stop)
-    reverbDuration: 2,       // seconds
-    reverbDecay: 2,          // decay factor
-
-    // Presets
-    presets: {
-        default: { oscLevels: { rootSine: 0.35, rootTriangle: 0.15, chorusL: 0.12, chorusR: 0.12, octaveUp: 0.08, sub: 0.18 }, chorusDetune: 7, octaveShift: 0, ampLfoRate: 0.15, ampLfoDepth: 0.05, filterLfoRate: 0.08, filterLfoDepth: 300, attackTime: 4, releaseTime: 4, reverbDuration: 2, reverbDecay: 2, reverbMix: 0.3, lowPassFreq: 20000, highPassFreq: 20, volume: 0.7 },
-        warm: { oscLevels: { rootSine: 0.40, rootTriangle: 0.20, chorusL: 0.10, chorusR: 0.10, octaveUp: 0.02, sub: 0.25 }, chorusDetune: 5, octaveShift: -1, ampLfoRate: 0.10, ampLfoDepth: 0.06, filterLfoRate: 0.05, filterLfoDepth: 200, attackTime: 5, releaseTime: 6, reverbDuration: 3, reverbDecay: 2.5, reverbMix: 0.4, lowPassFreq: 8000, highPassFreq: 20, volume: 0.7 },
-        bright: { oscLevels: { rootSine: 0.25, rootTriangle: 0.20, chorusL: 0.15, chorusR: 0.15, octaveUp: 0.18, sub: 0.08 }, chorusDetune: 10, octaveShift: 1, ampLfoRate: 0.20, ampLfoDepth: 0.04, filterLfoRate: 0.10, filterLfoDepth: 500, attackTime: 3, releaseTime: 3, reverbDuration: 2, reverbDecay: 1.5, reverbMix: 0.25, lowPassFreq: 20000, highPassFreq: 80, volume: 0.65 },
-        deep: { oscLevels: { rootSine: 0.30, rootTriangle: 0.10, chorusL: 0.08, chorusR: 0.08, octaveUp: 0.0, sub: 0.35 }, chorusDetune: 4, octaveShift: -1, ampLfoRate: 0.08, ampLfoDepth: 0.07, filterLfoRate: 0.04, filterLfoDepth: 150, attackTime: 6, releaseTime: 8, reverbDuration: 4, reverbDecay: 3, reverbMix: 0.5, lowPassFreq: 4000, highPassFreq: 20, volume: 0.75 },
-        ethereal: { oscLevels: { rootSine: 0.20, rootTriangle: 0.10, chorusL: 0.18, chorusR: 0.18, octaveUp: 0.15, sub: 0.10 }, chorusDetune: 15, octaveShift: 1, ampLfoRate: 0.12, ampLfoDepth: 0.08, filterLfoRate: 0.06, filterLfoDepth: 600, attackTime: 5, releaseTime: 7, reverbDuration: 4, reverbDecay: 2, reverbMix: 0.6, lowPassFreq: 16000, highPassFreq: 60, volume: 0.6 },
-        organ: { oscLevels: { rootSine: 0.30, rootTriangle: 0.25, chorusL: 0.05, chorusR: 0.05, octaveUp: 0.20, sub: 0.20 }, chorusDetune: 3, octaveShift: 0, ampLfoRate: 0.0, ampLfoDepth: 0.0, filterLfoRate: 0.0, filterLfoDepth: 0, attackTime: 0.5, releaseTime: 1, reverbDuration: 3, reverbDecay: 2, reverbMix: 0.35, lowPassFreq: 12000, highPassFreq: 40, volume: 0.7 },
-    },
 
     // All 12 keys
     keys: ['C', 'Csharp', 'D', 'Dsharp', 'E', 'F', 'Fsharp', 'G', 'Gsharp', 'A', 'Asharp', 'B'],
@@ -95,40 +60,94 @@ const padPlayer = {
         'B': 'B'
     },
 
-    // Base frequencies for each key (octave 2-3 range for warm ambient sound)
-    keyFrequencies: {
-        'C': 130.81,
-        'Csharp': 138.59,
-        'D': 146.83,
-        'Dsharp': 155.56,
-        'E': 164.81,
-        'F': 174.61,
-        'Fsharp': 185.00,
-        'G': 196.00,
-        'Gsharp': 207.65,
-        'A': 110.00,
-        'Asharp': 116.54,
-        'B': 123.47
+    // Local pad sound files (served from same host)
+    soundUrls: {
+        'C': './pads/C.mp3',
+        'Csharp': './pads/Csharp.mp3',
+        'D': './pads/D.mp3',
+        'Dsharp': './pads/Dsharp.mp3',
+        'E': './pads/E.mp3',
+        'F': './pads/F.mp3',
+        'Fsharp': './pads/Fsharp.mp3',
+        'G': './pads/G.mp3',
+        'Gsharp': './pads/Gsharp.mp3',
+        'A': './pads/A.mp3',
+        'Asharp': './pads/Asharp.mp3',
+        'B': './pads/B.mp3'
     },
 
-    // Loading state (kept for UI compatibility)
+    // Loading state
     isLoading: false,
     loadedCount: 0,
 
+    // Preloaded raw audio data (before AudioContext is available)
+    rawAudioCache: {},
+    isPreloading: false,
+    preloadedCount: 0,
+
     /**
-     * Preload — no-op in synth mode (nothing to download)
+     * Preload audio files as raw data (can be called without user interaction)
+     * Files are fetched and cached, decoded later when AudioContext is available
      */
     async preloadFiles(onProgress = null) {
-        if (onProgress) onProgress(this.keys.length, this.keys.length);
-        return this.keys.length;
+        if (this.isPreloading || Object.keys(this.rawAudioCache).length === this.keys.length) return;
+
+        this.isPreloading = true;
+        this.preloadedCount = 0;
+
+        const loadPromises = this.keys.map(async (key) => {
+            try {
+                // Skip if already cached or already decoded
+                if (this.rawAudioCache[key] || this.buffers[key]) {
+                    this.preloadedCount++;
+                    if (onProgress) onProgress(this.preloadedCount, this.keys.length);
+                    return;
+                }
+
+                const url = this.soundUrls[key];
+                if (!url) {
+                    console.warn(`No URL configured for pad: ${key}`);
+                    return;
+                }
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    console.warn(`Pad sound not found: ${url}`);
+                    return;
+                }
+
+                // Store raw ArrayBuffer (no AudioContext needed)
+                this.rawAudioCache[key] = await response.arrayBuffer();
+                this.preloadedCount++;
+
+                if (onProgress) {
+                    onProgress(this.preloadedCount, this.keys.length);
+                }
+
+                console.log(`Preloaded pad: ${key}`);
+            } catch (error) {
+                console.error(`Error preloading pad ${key}:`, error);
+            }
+        });
+
+        await Promise.all(loadPromises);
+
+        this.isPreloading = false;
+        console.log(`Preloaded ${this.preloadedCount}/${this.keys.length} pad files`);
+
+        return this.preloadedCount;
     },
 
     /**
-     * Initialize the audio context and effect chain
+     * Initialize the pad player
      */
     async init() {
+        // Create audio context on user interaction (required by browsers)
         if (!this.audioContext) {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Create effect chain:
+            // Source -> LowPass -> HighPass -> (Dry + Reverb) -> Panner -> MasterGain -> Destination
 
             // Low Pass Filter
             this.lowPassFilter = this.audioContext.createBiquadFilter();
@@ -142,7 +161,7 @@ const padPlayer = {
             this.highPassFilter.frequency.value = this.highPassFreq;
             this.highPassFilter.Q.value = 0.7;
 
-            // Dry gain
+            // Dry gain (for reverb mix)
             this.dryGain = this.audioContext.createGain();
             this.dryGain.gain.value = 1;
 
@@ -162,8 +181,8 @@ const padPlayer = {
             this.masterGain = this.audioContext.createGain();
             this.masterGain.gain.value = this.volume;
 
-            // Connect the effect chain:
-            // Source -> per-key gain -> lowPass -> highPass -> dry/wet split -> panner -> master -> destination
+            // Connect the chain:
+            // Filters -> Dry/Wet split
             this.lowPassFilter.connect(this.highPassFilter);
 
             // Dry path
@@ -178,19 +197,9 @@ const padPlayer = {
             // Panner -> Master -> Output
             this.pannerNode.connect(this.masterGain);
             this.masterGain.connect(this.audioContext.destination);
-
-            // Filter LFO for subtle timbral movement
-            this.filterLFO = this.audioContext.createOscillator();
-            this.filterLFO.type = 'sine';
-            this.filterLFO.frequency.value = 0.08;
-            this.filterLFOGain = this.audioContext.createGain();
-            this.filterLFOGain.gain.value = 300;
-            this.filterLFO.connect(this.filterLFOGain);
-            this.filterLFOGain.connect(this.lowPassFilter.frequency);
-            this.filterLFO.start();
         }
 
-        // Resume context if suspended (required on iOS)
+        // Resume context if suspended
         if (this.audioContext.state === 'suspended') {
             await this.audioContext.resume();
         }
@@ -217,7 +226,7 @@ const padPlayer = {
     },
 
     /**
-     * Load sounds — instant in synth mode, just initializes and marks ready
+     * Load all pad sounds (decodes preloaded files or fetches if not preloaded)
      */
     async loadSounds(onProgress = null) {
         if (this.isLoading) return;
@@ -227,15 +236,59 @@ const padPlayer = {
 
         await this.init();
 
-        // Populate buffers sentinel so UI checks pass
-        this.keys.forEach(key => {
-            this.buffers[key] = true;
-            this.loadedCount++;
-            if (onProgress) onProgress(this.loadedCount, this.keys.length);
+        const loadPromises = this.keys.map(async (key) => {
+            try {
+                // Skip if already decoded
+                if (this.buffers[key]) {
+                    this.loadedCount++;
+                    if (onProgress) onProgress(this.loadedCount, this.keys.length);
+                    return;
+                }
+
+                let arrayBuffer;
+
+                // Use preloaded cache if available (much faster)
+                if (this.rawAudioCache[key]) {
+                    arrayBuffer = this.rawAudioCache[key];
+                    console.log(`Using preloaded cache for: ${key}`);
+                } else {
+                    // Fetch if not preloaded
+                    const url = this.soundUrls[key];
+                    if (!url) {
+                        console.warn(`No URL configured for pad: ${key}`);
+                        return;
+                    }
+                    const response = await fetch(url);
+
+                    if (!response.ok) {
+                        console.warn(`Pad sound not found: ${url}`);
+                        return;
+                    }
+
+                    arrayBuffer = await response.arrayBuffer();
+                }
+
+                // Decode audio (requires AudioContext)
+                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+
+                this.buffers[key] = audioBuffer;
+                delete this.rawAudioCache[key]; // Free memory
+                this.loadedCount++;
+
+                if (onProgress) {
+                    onProgress(this.loadedCount, this.keys.length);
+                }
+
+                console.log(`Decoded pad: ${key}`);
+            } catch (error) {
+                console.error(`Error loading pad ${key}:`, error);
+            }
         });
 
+        await Promise.all(loadPromises);
+
         this.isLoading = false;
-        console.log('Pad Player: synth ready (no files needed)');
+        console.log(`Loaded ${this.loadedCount}/${this.keys.length} pad sounds`);
 
         return this.loadedCount;
     },
@@ -250,32 +303,26 @@ const padPlayer = {
     /**
      * Toggle a pad on/off
      */
-    async toggle(key) {
+    toggle(key) {
         if (this.isPlaying(key)) {
             this.stop(key);
         } else {
-            await this.play(key);
+            this.play(key);
         }
     },
 
     /**
-     * Play a synth pad for the given key
+     * Play a pad sound (looped) - crossfades from any currently playing pad
      */
     async play(key) {
         await this.init();
 
-        // Mark as ready if not done yet
         if (!this.buffers[key]) {
-            this.buffers[key] = true;
-        }
-
-        const freq = this.keyFrequencies[key];
-        if (!freq) {
-            console.warn(`Unknown pad key: ${key}`);
+            console.warn(`Pad not loaded: ${key}`);
             return false;
         }
 
-        // Crossfade: stop other playing pads
+        // Crossfade: Stop all other playing pads (fade out)
         const currentlyPlaying = Object.keys(this.activeSources);
         currentlyPlaying.forEach(playingKey => {
             if (playingKey !== key) {
@@ -283,75 +330,38 @@ const padPlayer = {
             }
         });
 
-        // If already playing this key, just return
+        // If this key is already playing, just return (toggle will handle stopping it)
         if (this.activeSources[key]) {
             return true;
         }
 
-        // Per-key gain node (for fade in/out)
-        const keyGain = this.audioContext.createGain();
-        keyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
-        keyGain.connect(this.lowPassFilter);
+        // Create source node
+        const source = this.audioContext.createBufferSource();
+        source.buffer = this.buffers[key];
+        source.loop = true;
 
-        // Apply octave shift to base frequency
-        const shiftedFreq = freq * Math.pow(2, this.octaveShift);
-        const lv = this.oscLevels;
-        const dt = this.chorusDetune;
+        // Create gain node for this source (for fade in/out)
+        const gainNode = this.audioContext.createGain();
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
 
-        // Create 6 oscillators with configurable levels
-        const oscConfigs = [
-            { type: 'sine',     freq: shiftedFreq,       gain: lv.rootSine,     detune: 0 },
-            { type: 'triangle', freq: shiftedFreq,       gain: lv.rootTriangle, detune: 0 },
-            { type: 'sine',     freq: shiftedFreq,       gain: lv.chorusL,      detune: +dt },
-            { type: 'sine',     freq: shiftedFreq,       gain: lv.chorusR,      detune: -dt },
-            { type: 'sine',     freq: shiftedFreq * 2,   gain: lv.octaveUp,     detune: 0 },
-            { type: 'sine',     freq: shiftedFreq / 2,   gain: lv.sub,          detune: 0 },
-        ];
-
-        const oscillators = [];
-
-        oscConfigs.forEach(cfg => {
-            const osc = this.audioContext.createOscillator();
-            osc.type = cfg.type;
-            osc.frequency.value = cfg.freq;
-            osc.detune.value = cfg.detune;
-
-            const oscGain = this.audioContext.createGain();
-            oscGain.gain.value = cfg.gain;
-
-            osc.connect(oscGain);
-            oscGain.connect(keyGain);
-            osc.start();
-
-            oscillators.push({ osc, gain: oscGain });
-        });
-
-        // Amplitude LFO for slow breathing effect
-        const lfoOsc = this.audioContext.createOscillator();
-        lfoOsc.type = 'sine';
-        lfoOsc.frequency.value = this.ampLfoRate;
-        const lfoGain = this.audioContext.createGain();
-        lfoGain.gain.value = this.ampLfoDepth;
-        lfoOsc.connect(lfoGain);
-        lfoGain.connect(keyGain.gain);
-        lfoOsc.start();
+        // Connect: source -> gain -> effect chain (lowPass -> highPass -> reverb -> pan -> master)
+        source.connect(gainNode);
+        gainNode.connect(this.lowPassFilter);
 
         // Store references
-        this.activeSources[key] = {
-            oscillators,
-            keyGain,
-            lfoOsc,
-            lfoGain
-        };
-        this.gainNodes[key] = keyGain;
+        this.activeSources[key] = source;
+        this.gainNodes[key] = gainNode;
 
-        // Fade in using attack time
-        keyGain.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + this.attackTime);
+        // Start playing
+        source.start(0);
+
+        // Fade in
+        gainNode.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + this.fadeDuration);
 
         // Update UI
         this.updateKeyUI(key, true);
 
-        console.log(`Playing synth pad: ${key} (${freq} Hz)`);
+        console.log(`Playing pad: ${key}`);
         return true;
     },
 
@@ -362,22 +372,21 @@ const padPlayer = {
         if (!this.activeSources[key]) return;
 
         const source = this.activeSources[key];
-        const keyGain = this.gainNodes[key];
+        const gainNode = this.gainNodes[key];
 
-        // Fade out using release time
+        // Fade out smoothly - must set current value first for smooth ramp
         const currentTime = this.audioContext.currentTime;
-        keyGain.gain.setValueAtTime(keyGain.gain.value, currentTime);
-        keyGain.gain.linearRampToValueAtTime(0, currentTime + this.releaseTime);
+        gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
+        gainNode.gain.linearRampToValueAtTime(0, currentTime + this.fadeDuration);
 
-        // Stop all oscillators after fade out
+        // Stop after fade out
         setTimeout(() => {
             try {
-                source.oscillators.forEach(({ osc }) => osc.stop());
-                source.lfoOsc.stop();
+                source.stop();
             } catch (e) {
-                // May already be stopped
+                // Source may already be stopped
             }
-        }, this.releaseTime * 1000);
+        }, this.fadeDuration * 1000);
 
         // Remove references
         delete this.activeSources[key];
@@ -405,20 +414,19 @@ const padPlayer = {
         if (!this.activeSources[key]) return;
 
         const source = this.activeSources[key];
-        const keyGain = this.gainNodes[key];
+        const gainNode = this.gainNodes[key];
 
         // Fade out with specified duration
         const currentTime = this.audioContext.currentTime;
-        keyGain.gain.setValueAtTime(keyGain.gain.value, currentTime);
-        keyGain.gain.linearRampToValueAtTime(0, currentTime + fadeTime);
+        gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
+        gainNode.gain.linearRampToValueAtTime(0, currentTime + fadeTime);
 
         // Stop after fade out
         setTimeout(() => {
             try {
-                source.oscillators.forEach(({ osc }) => osc.stop());
-                source.lfoOsc.stop();
+                source.stop();
             } catch (e) {
-                // May already be stopped
+                // Source may already be stopped
             }
         }, fadeTime * 1000);
 
@@ -447,6 +455,7 @@ const padPlayer = {
 
     /**
      * Set crossfade duration (seconds)
+     * Minimum 2.5 seconds for smooth transitions
      */
     setCrossfade(value) {
         this.crossfade = Math.max(2.5, Math.min(8, value));
@@ -455,8 +464,10 @@ const padPlayer = {
 
     /**
      * Set low pass filter frequency
+     * value: 0-1 (0 = 200Hz, 1 = 20000Hz)
      */
     setLowPass(value) {
+        // Map 0-1 to logarithmic frequency scale (200Hz to 20000Hz)
         const minFreq = 200;
         const maxFreq = 20000;
         this.lowPassFreq = minFreq * Math.pow(maxFreq / minFreq, value);
@@ -471,8 +482,10 @@ const padPlayer = {
 
     /**
      * Set high pass filter frequency
+     * value: 0-1 (0 = 20Hz, 1 = 2000Hz)
      */
     setHighPass(value) {
+        // Map 0-1 to logarithmic frequency scale (20Hz to 2000Hz)
         const minFreq = 20;
         const maxFreq = 2000;
         this.highPassFreq = minFreq * Math.pow(maxFreq / minFreq, value);
@@ -492,10 +505,12 @@ const padPlayer = {
         this.reverbMix = Math.max(0, Math.min(1, value));
 
         if (this.reverbGain && this.dryGain) {
+            // Crossfade between dry and wet
             this.reverbGain.gain.linearRampToValueAtTime(
                 this.reverbMix,
                 this.audioContext.currentTime + 0.1
             );
+            // Keep dry signal but reduce slightly when reverb is high
             this.dryGain.gain.linearRampToValueAtTime(
                 1 - (this.reverbMix * 0.3),
                 this.audioContext.currentTime + 0.1
@@ -517,198 +532,11 @@ const padPlayer = {
         }
     },
 
-    // === Extended Synth Controls ===
-
-    /**
-     * Set individual oscillator level (0-1)
-     */
-    setOscLevel(oscName, value) {
-        this.oscLevels[oscName] = Math.max(0, Math.min(1, value));
-        // Update live oscillators
-        const oscIndex = { rootSine: 0, rootTriangle: 1, chorusL: 2, chorusR: 3, octaveUp: 4, sub: 5 };
-        const idx = oscIndex[oscName];
-        if (idx !== undefined) {
-            Object.values(this.activeSources).forEach(source => {
-                if (source.oscillators[idx]) {
-                    source.oscillators[idx].gain.gain.linearRampToValueAtTime(
-                        this.oscLevels[oscName],
-                        this.audioContext.currentTime + 0.1
-                    );
-                }
-            });
-        }
-    },
-
-    /**
-     * Set chorus detune width in cents (0-30)
-     */
-    setChorusDetune(cents) {
-        this.chorusDetune = Math.max(0, Math.min(30, cents));
-        // Update live chorus oscillators (index 2 = +detune, 3 = -detune)
-        Object.values(this.activeSources).forEach(source => {
-            if (source.oscillators[2]) source.oscillators[2].osc.detune.value = this.chorusDetune;
-            if (source.oscillators[3]) source.oscillators[3].osc.detune.value = -this.chorusDetune;
-        });
-    },
-
-    /**
-     * Set octave shift (-1, 0, +1)
-     */
-    setOctaveShift(shift) {
-        this.octaveShift = Math.max(-1, Math.min(1, Math.round(shift)));
-        // Requires restart of playing pads to take effect
-    },
-
-    /**
-     * Set amplitude LFO rate (0-2 Hz)
-     */
-    setAmpLfoRate(rate) {
-        this.ampLfoRate = Math.max(0, Math.min(2, rate));
-        Object.values(this.activeSources).forEach(source => {
-            if (source.lfoOsc) source.lfoOsc.frequency.value = this.ampLfoRate;
-        });
-    },
-
-    /**
-     * Set amplitude LFO depth (0-0.3)
-     */
-    setAmpLfoDepth(depth) {
-        this.ampLfoDepth = Math.max(0, Math.min(0.3, depth));
-        Object.values(this.activeSources).forEach(source => {
-            if (source.lfoGain) source.lfoGain.gain.value = this.ampLfoDepth;
-        });
-    },
-
-    /**
-     * Set filter LFO rate (0-1 Hz)
-     */
-    setFilterLfoRate(rate) {
-        this.filterLfoRate = Math.max(0, Math.min(1, rate));
-        if (this.filterLFO) this.filterLFO.frequency.value = this.filterLfoRate;
-    },
-
-    /**
-     * Set filter LFO depth (0-1000 Hz)
-     */
-    setFilterLfoDepth(depth) {
-        this.filterLfoDepth = Math.max(0, Math.min(1000, depth));
-        if (this.filterLFOGain) this.filterLFOGain.gain.value = this.filterLfoDepth;
-    },
-
-    /**
-     * Set attack time (0.1-10 seconds)
-     */
-    setAttackTime(seconds) {
-        this.attackTime = Math.max(0.1, Math.min(10, seconds));
-    },
-
-    /**
-     * Set release time (0.1-10 seconds)
-     */
-    setReleaseTime(seconds) {
-        this.releaseTime = Math.max(0.1, Math.min(10, seconds));
-    },
-
-    /**
-     * Set reverb size (duration + decay) and rebuild impulse
-     */
-    setReverbSize(duration, decay) {
-        this.reverbDuration = Math.max(0.5, Math.min(6, duration));
-        this.reverbDecay = Math.max(0.5, Math.min(5, decay));
-        if (this.audioContext && this.convolver) {
-            this.createReverbImpulse(this.reverbDuration, this.reverbDecay);
-        }
-    },
-
-    /**
-     * Load a preset by name
-     */
-    loadPreset(name) {
-        const preset = this.presets[name];
-        if (!preset) return;
-
-        // Apply all preset values
-        this.oscLevels = { ...preset.oscLevels };
-        this.chorusDetune = preset.chorusDetune;
-        this.octaveShift = preset.octaveShift;
-        this.ampLfoRate = preset.ampLfoRate;
-        this.ampLfoDepth = preset.ampLfoDepth;
-        this.filterLfoRate = preset.filterLfoRate;
-        this.filterLfoDepth = preset.filterLfoDepth;
-        this.attackTime = preset.attackTime;
-        this.releaseTime = preset.releaseTime;
-        this.reverbDuration = preset.reverbDuration;
-        this.reverbDecay = preset.reverbDecay;
-        this.reverbMix = preset.reverbMix;
-        this.volume = preset.volume;
-
-        // Apply to audio nodes
-        if (this.audioContext) {
-            // Filter LFO
-            if (this.filterLFO) this.filterLFO.frequency.value = this.filterLfoRate;
-            if (this.filterLFOGain) this.filterLFOGain.gain.value = this.filterLfoDepth;
-
-            // Reverb
-            this.createReverbImpulse(this.reverbDuration, this.reverbDecay);
-            if (this.reverbGain) this.reverbGain.gain.value = this.reverbMix;
-            if (this.dryGain) this.dryGain.gain.value = 1 - (this.reverbMix * 0.3);
-
-            // Filters
-            this.setLowPass(preset.lowPassFreq / 20000);
-            this.setHighPass((preset.highPassFreq - 20) / 1980);
-
-            // Volume
-            if (this.masterGain) this.masterGain.gain.value = this.volume;
-
-            // Update live oscillators
-            Object.values(this.activeSources).forEach(source => {
-                if (source.lfoOsc) source.lfoOsc.frequency.value = this.ampLfoRate;
-                if (source.lfoGain) source.lfoGain.gain.value = this.ampLfoDepth;
-                const levels = [this.oscLevels.rootSine, this.oscLevels.rootTriangle, this.oscLevels.chorusL, this.oscLevels.chorusR, this.oscLevels.octaveUp, this.oscLevels.sub];
-                source.oscillators.forEach(({ gain }, i) => {
-                    if (levels[i] !== undefined) gain.gain.value = levels[i];
-                });
-                if (source.oscillators[2]) source.oscillators[2].osc.detune.value = this.chorusDetune;
-                if (source.oscillators[3]) source.oscillators[3].osc.detune.value = -this.chorusDetune;
-            });
-        }
-
-        // Update UI sliders to match preset
-        this.syncUIToState();
-        console.log(`Loaded preset: ${name}`);
-    },
-
-    /**
-     * Sync all UI sliders to current state
-     */
-    syncUIToState() {
-        const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-        // Main controls
-        set('padsVolume', Math.round(this.volume * 100));
-        set('padsCrossfade', Math.round(this.crossfade * 100));
-        set('padsReverb', Math.round(this.reverbMix * 100));
-        set('padsPan', Math.round(this.pan * 100));
-        // Extended controls
-        set('padsSynthRootSine', Math.round(this.oscLevels.rootSine * 100));
-        set('padsSynthRootTri', Math.round(this.oscLevels.rootTriangle * 100));
-        set('padsSynthChorus', Math.round(this.oscLevels.chorusL * 100));
-        set('padsSynthOctave', Math.round(this.oscLevels.octaveUp * 100));
-        set('padsSynthSub', Math.round(this.oscLevels.sub * 100));
-        set('padsSynthDetune', this.chorusDetune);
-        set('padsSynthAmpRate', Math.round(this.ampLfoRate * 100));
-        set('padsSynthAmpDepth', Math.round(this.ampLfoDepth * 1000));
-        set('padsSynthFiltRate', Math.round(this.filterLfoRate * 100));
-        set('padsSynthFiltDepth', Math.round(this.filterLfoDepth / 10));
-        set('padsSynthAttack', Math.round(this.attackTime * 10));
-        set('padsSynthRelease', Math.round(this.releaseTime * 10));
-        set('padsSynthReverbSize', Math.round(this.reverbDuration * 10));
-        set('padsSynthReverbDecay', Math.round(this.reverbDecay * 10));
-    },
-
     /**
      * Update UI for a key (both modal and mini player)
      */
     updateKeyUI(key, isPlaying) {
+        // Update modal button
         const keyBtn = document.getElementById(`pad-key-${key}`);
         if (keyBtn) {
             if (isPlaying) {
@@ -718,6 +546,7 @@ const padPlayer = {
             }
         }
 
+        // Update mini player button in side menu
         const miniBtn = document.querySelector(`.mini-pad-key[data-key="${key}"]`);
         if (miniBtn) {
             if (isPlaying) {
@@ -727,17 +556,19 @@ const padPlayer = {
             }
         }
 
+        // Update "Now Playing" indicators
         this.updateNowPlaying();
     },
 
     /**
-     * Update the "Now Playing" display
+     * Update the "Now Playing" display (both modal and mini player)
      */
     updateNowPlaying() {
         const playingKeys = this.getPlayingKeys();
         const displayNames = playingKeys.map(k => this.keyDisplayNames[k] || k);
         const displayText = displayNames.join(', ');
 
+        // Modal "Now Playing"
         const nowPlayingDiv = document.getElementById('padsNowPlaying');
         const nowPlayingKey = document.getElementById('padsNowPlayingKey');
         if (nowPlayingDiv && nowPlayingKey) {
@@ -749,11 +580,13 @@ const padPlayer = {
             }
         }
 
+        // Mini player "Now Playing" in side menu
         const miniNowPlaying = document.getElementById('miniPadNowPlaying');
         if (miniNowPlaying) {
             miniNowPlaying.textContent = displayText;
         }
 
+        // Mini player stop button - show active when pads are playing
         const miniStopBtn = document.getElementById('miniPadStop');
         if (miniStopBtn) {
             miniStopBtn.classList.toggle('active', playingKeys.length > 0);
@@ -771,4 +604,4 @@ const padPlayer = {
 // Expose globally
 window.padPlayer = padPlayer;
 
-console.log('Pad Player module loaded (synth mode)');
+console.log('Pad Player module loaded');

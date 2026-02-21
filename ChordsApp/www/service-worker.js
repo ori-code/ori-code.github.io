@@ -1,4 +1,5 @@
-const CACHE_NAME = 'achordim-v49';
+const CACHE_NAME = 'achordim-v50';
+const PADS_CACHE = 'achordim-pads-v1';
 
 const PRECACHE_URLS = [
   './',
@@ -38,24 +39,43 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate: clean old caches (including old pads cache)
+// Activate: clean old caches (preserve pads cache)
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys.filter(key => key !== CACHE_NAME)
+        keys.filter(key => key !== CACHE_NAME && key !== PADS_CACHE)
             .map(key => caches.delete(key))
       )
     ).then(() => self.clients.claim())
   );
 });
 
-// Fetch: network-first for API/Firebase, cache-first for app shell
+// Fetch: network-first for API/Firebase, cache-first for app shell and pads
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
+
+  // Cache-first for pad audio (large MP3 files, never change)
+  // Uses separate cache so pads survive app version bumps
+  if (url.pathname.includes('/pads/') && url.pathname.endsWith('.mp3')) {
+    event.respondWith(
+      caches.open(PADS_CACHE).then(cache =>
+        cache.match(event.request).then(cached => {
+          if (cached) return cached;
+          return fetch(event.request).then(response => {
+            if (response.ok) {
+              cache.put(event.request, response.clone());
+            }
+            return response;
+          });
+        })
+      )
+    );
+    return;
+  }
 
   // Network-first for Firebase, CDN scripts, and API calls
   if (
