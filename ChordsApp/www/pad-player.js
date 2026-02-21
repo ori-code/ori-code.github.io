@@ -1,19 +1,20 @@
 /**
- * aChordim Pad Player
- * Plays looping ambient pad sounds for each musical key
+ * aChordim Pad Player — Synthesizer Edition
+ * Generates ambient pad sounds using Web Audio API oscillators
+ * No audio files needed — works instantly on all devices including iOS
  */
 
 const padPlayer = {
     // Audio context
     audioContext: null,
 
-    // Loaded audio buffers for each key
+    // Buffers sentinel (checked by UI: Object.keys(padPlayer.buffers).length === 0)
     buffers: {},
 
-    // Currently playing sources
+    // Currently playing sources (each key maps to an object with oscillators + nodes)
     activeSources: {},
 
-    // Gain nodes for volume control
+    // Gain nodes for volume control (per-key)
     gainNodes: {},
 
     // Master gain node
@@ -22,23 +23,27 @@ const padPlayer = {
     // Effect nodes
     lowPassFilter: null,
     highPassFilter: null,
-    convolver: null,       // For reverb
-    reverbGain: null,      // Wet/dry mix for reverb
-    dryGain: null,         // Dry signal
+    convolver: null,
+    reverbGain: null,
+    dryGain: null,
     pannerNode: null,
+
+    // Filter LFO (global timbral movement)
+    filterLFO: null,
+    filterLFOGain: null,
 
     // Current settings
     volume: 0.7,
-    crossfade: 4,          // Fade duration in seconds (longer for smooth transitions)
-    lowPassFreq: 20000,    // Hz (20000 = no filtering)
-    highPassFreq: 20,      // Hz (20 = no filtering)
-    reverbMix: 0.3,        // 0-1 (0 = dry, 1 = full reverb) - default 30%
-    pan: 0,                // -1 to 1 (left to right)
+    crossfade: 4,
+    lowPassFreq: 20000,
+    highPassFreq: 20,
+    reverbMix: 0.3,
+    pan: 0,
 
-    // Fade duration in seconds (same as crossfade)
+    // Fade duration in seconds
     fadeDuration: 4,
 
-    // Stop All fade duration (longer for smooth ending)
+    // Stop All fade duration
     stopAllFadeDuration: 6,
 
     // All 12 keys
@@ -60,94 +65,40 @@ const padPlayer = {
         'B': 'B'
     },
 
-    // Local pad sound files (served from same host)
-    soundUrls: {
-        'C': './pads/C.mp3',
-        'Csharp': './pads/Csharp.mp3',
-        'D': './pads/D.mp3',
-        'Dsharp': './pads/Dsharp.mp3',
-        'E': './pads/E.mp3',
-        'F': './pads/F.mp3',
-        'Fsharp': './pads/Fsharp.mp3',
-        'G': './pads/G.mp3',
-        'Gsharp': './pads/Gsharp.mp3',
-        'A': './pads/A.mp3',
-        'Asharp': './pads/Asharp.mp3',
-        'B': './pads/B.mp3'
+    // Base frequencies for each key (octave 2-3 range for warm ambient sound)
+    keyFrequencies: {
+        'C': 130.81,
+        'Csharp': 138.59,
+        'D': 146.83,
+        'Dsharp': 155.56,
+        'E': 164.81,
+        'F': 174.61,
+        'Fsharp': 185.00,
+        'G': 196.00,
+        'Gsharp': 207.65,
+        'A': 110.00,
+        'Asharp': 116.54,
+        'B': 123.47
     },
 
-    // Loading state
+    // Loading state (kept for UI compatibility)
     isLoading: false,
     loadedCount: 0,
 
-    // Preloaded raw audio data (before AudioContext is available)
-    rawAudioCache: {},
-    isPreloading: false,
-    preloadedCount: 0,
-
     /**
-     * Preload audio files as raw data (can be called without user interaction)
-     * Files are fetched and cached, decoded later when AudioContext is available
+     * Preload — no-op in synth mode (nothing to download)
      */
     async preloadFiles(onProgress = null) {
-        if (this.isPreloading || Object.keys(this.rawAudioCache).length === this.keys.length) return;
-
-        this.isPreloading = true;
-        this.preloadedCount = 0;
-
-        const loadPromises = this.keys.map(async (key) => {
-            try {
-                // Skip if already cached or already decoded
-                if (this.rawAudioCache[key] || this.buffers[key]) {
-                    this.preloadedCount++;
-                    if (onProgress) onProgress(this.preloadedCount, this.keys.length);
-                    return;
-                }
-
-                const url = this.soundUrls[key];
-                if (!url) {
-                    console.warn(`No URL configured for pad: ${key}`);
-                    return;
-                }
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    console.warn(`Pad sound not found: ${url}`);
-                    return;
-                }
-
-                // Store raw ArrayBuffer (no AudioContext needed)
-                this.rawAudioCache[key] = await response.arrayBuffer();
-                this.preloadedCount++;
-
-                if (onProgress) {
-                    onProgress(this.preloadedCount, this.keys.length);
-                }
-
-                console.log(`Preloaded pad: ${key}`);
-            } catch (error) {
-                console.error(`Error preloading pad ${key}:`, error);
-            }
-        });
-
-        await Promise.all(loadPromises);
-
-        this.isPreloading = false;
-        console.log(`Preloaded ${this.preloadedCount}/${this.keys.length} pad files from CDN`);
-
-        return this.preloadedCount;
+        if (onProgress) onProgress(this.keys.length, this.keys.length);
+        return this.keys.length;
     },
 
     /**
-     * Initialize the pad player
+     * Initialize the audio context and effect chain
      */
     async init() {
-        // Create audio context on user interaction (required by browsers)
         if (!this.audioContext) {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-            // Create effect chain:
-            // Source -> LowPass -> HighPass -> (Dry + Reverb) -> Panner -> MasterGain -> Destination
 
             // Low Pass Filter
             this.lowPassFilter = this.audioContext.createBiquadFilter();
@@ -161,7 +112,7 @@ const padPlayer = {
             this.highPassFilter.frequency.value = this.highPassFreq;
             this.highPassFilter.Q.value = 0.7;
 
-            // Dry gain (for reverb mix)
+            // Dry gain
             this.dryGain = this.audioContext.createGain();
             this.dryGain.gain.value = 1;
 
@@ -181,8 +132,8 @@ const padPlayer = {
             this.masterGain = this.audioContext.createGain();
             this.masterGain.gain.value = this.volume;
 
-            // Connect the chain:
-            // Filters -> Dry/Wet split
+            // Connect the effect chain:
+            // Source -> per-key gain -> lowPass -> highPass -> dry/wet split -> panner -> master -> destination
             this.lowPassFilter.connect(this.highPassFilter);
 
             // Dry path
@@ -197,9 +148,19 @@ const padPlayer = {
             // Panner -> Master -> Output
             this.pannerNode.connect(this.masterGain);
             this.masterGain.connect(this.audioContext.destination);
+
+            // Filter LFO for subtle timbral movement
+            this.filterLFO = this.audioContext.createOscillator();
+            this.filterLFO.type = 'sine';
+            this.filterLFO.frequency.value = 0.08;
+            this.filterLFOGain = this.audioContext.createGain();
+            this.filterLFOGain.gain.value = 300;
+            this.filterLFO.connect(this.filterLFOGain);
+            this.filterLFOGain.connect(this.lowPassFilter.frequency);
+            this.filterLFO.start();
         }
 
-        // Resume context if suspended
+        // Resume context if suspended (required on iOS)
         if (this.audioContext.state === 'suspended') {
             await this.audioContext.resume();
         }
@@ -226,7 +187,7 @@ const padPlayer = {
     },
 
     /**
-     * Load all pad sounds (decodes preloaded files or fetches if not preloaded)
+     * Load sounds — instant in synth mode, just initializes and marks ready
      */
     async loadSounds(onProgress = null) {
         if (this.isLoading) return;
@@ -236,59 +197,15 @@ const padPlayer = {
 
         await this.init();
 
-        const loadPromises = this.keys.map(async (key) => {
-            try {
-                // Skip if already decoded
-                if (this.buffers[key]) {
-                    this.loadedCount++;
-                    if (onProgress) onProgress(this.loadedCount, this.keys.length);
-                    return;
-                }
-
-                let arrayBuffer;
-
-                // Use preloaded cache if available (much faster)
-                if (this.rawAudioCache[key]) {
-                    arrayBuffer = this.rawAudioCache[key];
-                    console.log(`Using preloaded cache for: ${key}`);
-                } else {
-                    // Fetch if not preloaded
-                    const url = this.soundUrls[key];
-                    if (!url) {
-                        console.warn(`No URL configured for pad: ${key}`);
-                        return;
-                    }
-                    const response = await fetch(url);
-
-                    if (!response.ok) {
-                        console.warn(`Pad sound not found: ${url}`);
-                        return;
-                    }
-
-                    arrayBuffer = await response.arrayBuffer();
-                }
-
-                // Decode audio (requires AudioContext)
-                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-
-                this.buffers[key] = audioBuffer;
-                delete this.rawAudioCache[key]; // Free memory
-                this.loadedCount++;
-
-                if (onProgress) {
-                    onProgress(this.loadedCount, this.keys.length);
-                }
-
-                console.log(`Decoded pad: ${key}`);
-            } catch (error) {
-                console.error(`Error loading pad ${key}:`, error);
-            }
+        // Populate buffers sentinel so UI checks pass
+        this.keys.forEach(key => {
+            this.buffers[key] = true;
+            this.loadedCount++;
+            if (onProgress) onProgress(this.loadedCount, this.keys.length);
         });
 
-        await Promise.all(loadPromises);
-
         this.isLoading = false;
-        console.log(`Loaded ${this.loadedCount}/${this.keys.length} pad sounds`);
+        console.log('Pad Player: synth ready (no files needed)');
 
         return this.loadedCount;
     },
@@ -312,17 +229,23 @@ const padPlayer = {
     },
 
     /**
-     * Play a pad sound (looped) - crossfades from any currently playing pad
+     * Play a synth pad for the given key
      */
     async play(key) {
         await this.init();
 
+        // Mark as ready if not done yet
         if (!this.buffers[key]) {
-            console.warn(`Pad not loaded: ${key}`);
+            this.buffers[key] = true;
+        }
+
+        const freq = this.keyFrequencies[key];
+        if (!freq) {
+            console.warn(`Unknown pad key: ${key}`);
             return false;
         }
 
-        // Crossfade: Stop all other playing pads (fade out)
+        // Crossfade: stop other playing pads
         const currentlyPlaying = Object.keys(this.activeSources);
         currentlyPlaying.forEach(playingKey => {
             if (playingKey !== key) {
@@ -330,38 +253,70 @@ const padPlayer = {
             }
         });
 
-        // If this key is already playing, just return (toggle will handle stopping it)
+        // If already playing this key, just return
         if (this.activeSources[key]) {
             return true;
         }
 
-        // Create source node
-        const source = this.audioContext.createBufferSource();
-        source.buffer = this.buffers[key];
-        source.loop = true;
+        // Per-key gain node (for fade in/out)
+        const keyGain = this.audioContext.createGain();
+        keyGain.gain.value = 0;
+        keyGain.connect(this.lowPassFilter);
 
-        // Create gain node for this source (for fade in/out)
-        const gainNode = this.audioContext.createGain();
-        gainNode.gain.value = 0;
+        // Create 6 oscillators for a rich, warm pad sound
+        const oscConfigs = [
+            { type: 'sine',     freq: freq,       gain: 0.35, detune: 0 },    // Root fundamental
+            { type: 'triangle', freq: freq,       gain: 0.15, detune: 0 },    // Harmonic warmth
+            { type: 'sine',     freq: freq,       gain: 0.12, detune: +7 },   // Chorus L
+            { type: 'sine',     freq: freq,       gain: 0.12, detune: -7 },   // Chorus R
+            { type: 'sine',     freq: freq * 2,   gain: 0.08, detune: 0 },    // Octave brightness
+            { type: 'sine',     freq: freq / 2,   gain: 0.18, detune: 0 },    // Sub warmth
+        ];
 
-        // Connect: source -> gain -> effect chain (lowPass -> highPass -> reverb -> pan -> master)
-        source.connect(gainNode);
-        gainNode.connect(this.lowPassFilter);
+        const oscillators = [];
+
+        oscConfigs.forEach(cfg => {
+            const osc = this.audioContext.createOscillator();
+            osc.type = cfg.type;
+            osc.frequency.value = cfg.freq;
+            osc.detune.value = cfg.detune;
+
+            const oscGain = this.audioContext.createGain();
+            oscGain.gain.value = cfg.gain;
+
+            osc.connect(oscGain);
+            oscGain.connect(keyGain);
+            osc.start();
+
+            oscillators.push({ osc, gain: oscGain });
+        });
+
+        // Amplitude LFO for slow breathing effect
+        const lfoOsc = this.audioContext.createOscillator();
+        lfoOsc.type = 'sine';
+        lfoOsc.frequency.value = 0.15;
+        const lfoGain = this.audioContext.createGain();
+        lfoGain.gain.value = 0.05;
+        lfoOsc.connect(lfoGain);
+        lfoGain.connect(keyGain.gain);
+        lfoOsc.start();
 
         // Store references
-        this.activeSources[key] = source;
-        this.gainNodes[key] = gainNode;
-
-        // Start playing
-        source.start(0);
+        this.activeSources[key] = {
+            oscillators,
+            keyGain,
+            lfoOsc,
+            lfoGain
+        };
+        this.gainNodes[key] = keyGain;
 
         // Fade in
-        gainNode.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + this.fadeDuration);
+        keyGain.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + this.fadeDuration);
 
         // Update UI
         this.updateKeyUI(key, true);
 
-        console.log(`Playing pad: ${key}`);
+        console.log(`Playing synth pad: ${key} (${freq} Hz)`);
         return true;
     },
 
@@ -372,19 +327,20 @@ const padPlayer = {
         if (!this.activeSources[key]) return;
 
         const source = this.activeSources[key];
-        const gainNode = this.gainNodes[key];
+        const keyGain = this.gainNodes[key];
 
-        // Fade out smoothly - must set current value first for smooth ramp
+        // Fade out smoothly
         const currentTime = this.audioContext.currentTime;
-        gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
-        gainNode.gain.linearRampToValueAtTime(0, currentTime + this.fadeDuration);
+        keyGain.gain.setValueAtTime(keyGain.gain.value, currentTime);
+        keyGain.gain.linearRampToValueAtTime(0, currentTime + this.fadeDuration);
 
-        // Stop after fade out
+        // Stop all oscillators after fade out
         setTimeout(() => {
             try {
-                source.stop();
+                source.oscillators.forEach(({ osc }) => osc.stop());
+                source.lfoOsc.stop();
             } catch (e) {
-                // Source may already be stopped
+                // May already be stopped
             }
         }, this.fadeDuration * 1000);
 
@@ -414,19 +370,20 @@ const padPlayer = {
         if (!this.activeSources[key]) return;
 
         const source = this.activeSources[key];
-        const gainNode = this.gainNodes[key];
+        const keyGain = this.gainNodes[key];
 
         // Fade out with specified duration
         const currentTime = this.audioContext.currentTime;
-        gainNode.gain.setValueAtTime(gainNode.gain.value, currentTime);
-        gainNode.gain.linearRampToValueAtTime(0, currentTime + fadeTime);
+        keyGain.gain.setValueAtTime(keyGain.gain.value, currentTime);
+        keyGain.gain.linearRampToValueAtTime(0, currentTime + fadeTime);
 
         // Stop after fade out
         setTimeout(() => {
             try {
-                source.stop();
+                source.oscillators.forEach(({ osc }) => osc.stop());
+                source.lfoOsc.stop();
             } catch (e) {
-                // Source may already be stopped
+                // May already be stopped
             }
         }, fadeTime * 1000);
 
@@ -455,7 +412,6 @@ const padPlayer = {
 
     /**
      * Set crossfade duration (seconds)
-     * Minimum 2.5 seconds for smooth transitions
      */
     setCrossfade(value) {
         this.crossfade = Math.max(2.5, Math.min(8, value));
@@ -464,10 +420,8 @@ const padPlayer = {
 
     /**
      * Set low pass filter frequency
-     * value: 0-1 (0 = 200Hz, 1 = 20000Hz)
      */
     setLowPass(value) {
-        // Map 0-1 to logarithmic frequency scale (200Hz to 20000Hz)
         const minFreq = 200;
         const maxFreq = 20000;
         this.lowPassFreq = minFreq * Math.pow(maxFreq / minFreq, value);
@@ -482,10 +436,8 @@ const padPlayer = {
 
     /**
      * Set high pass filter frequency
-     * value: 0-1 (0 = 20Hz, 1 = 2000Hz)
      */
     setHighPass(value) {
-        // Map 0-1 to logarithmic frequency scale (20Hz to 2000Hz)
         const minFreq = 20;
         const maxFreq = 2000;
         this.highPassFreq = minFreq * Math.pow(maxFreq / minFreq, value);
@@ -505,12 +457,10 @@ const padPlayer = {
         this.reverbMix = Math.max(0, Math.min(1, value));
 
         if (this.reverbGain && this.dryGain) {
-            // Crossfade between dry and wet
             this.reverbGain.gain.linearRampToValueAtTime(
                 this.reverbMix,
                 this.audioContext.currentTime + 0.1
             );
-            // Keep dry signal but reduce slightly when reverb is high
             this.dryGain.gain.linearRampToValueAtTime(
                 1 - (this.reverbMix * 0.3),
                 this.audioContext.currentTime + 0.1
@@ -536,7 +486,6 @@ const padPlayer = {
      * Update UI for a key (both modal and mini player)
      */
     updateKeyUI(key, isPlaying) {
-        // Update modal button
         const keyBtn = document.getElementById(`pad-key-${key}`);
         if (keyBtn) {
             if (isPlaying) {
@@ -546,7 +495,6 @@ const padPlayer = {
             }
         }
 
-        // Update mini player button in side menu
         const miniBtn = document.querySelector(`.mini-pad-key[data-key="${key}"]`);
         if (miniBtn) {
             if (isPlaying) {
@@ -556,19 +504,17 @@ const padPlayer = {
             }
         }
 
-        // Update "Now Playing" indicators
         this.updateNowPlaying();
     },
 
     /**
-     * Update the "Now Playing" display (both modal and mini player)
+     * Update the "Now Playing" display
      */
     updateNowPlaying() {
         const playingKeys = this.getPlayingKeys();
         const displayNames = playingKeys.map(k => this.keyDisplayNames[k] || k);
         const displayText = displayNames.join(', ');
 
-        // Modal "Now Playing"
         const nowPlayingDiv = document.getElementById('padsNowPlaying');
         const nowPlayingKey = document.getElementById('padsNowPlayingKey');
         if (nowPlayingDiv && nowPlayingKey) {
@@ -580,13 +526,11 @@ const padPlayer = {
             }
         }
 
-        // Mini player "Now Playing" in side menu
         const miniNowPlaying = document.getElementById('miniPadNowPlaying');
         if (miniNowPlaying) {
             miniNowPlaying.textContent = displayText;
         }
 
-        // Mini player stop button - show active when pads are playing
         const miniStopBtn = document.getElementById('miniPadStop');
         if (miniStopBtn) {
             miniStopBtn.classList.toggle('active', playingKeys.length > 0);
@@ -604,4 +548,4 @@ const padPlayer = {
 // Expose globally
 window.padPlayer = padPlayer;
 
-console.log('Pad Player module loaded');
+console.log('Pad Player module loaded (synth mode)');
