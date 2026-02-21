@@ -46,6 +46,36 @@ const padPlayer = {
     // Stop All fade duration
     stopAllFadeDuration: 6,
 
+    // Extended synth parameters
+    oscLevels: {
+        rootSine: 0.35,
+        rootTriangle: 0.15,
+        chorusL: 0.12,
+        chorusR: 0.12,
+        octaveUp: 0.08,
+        sub: 0.18
+    },
+    chorusDetune: 7,         // cents
+    octaveShift: 0,          // -1, 0, +1 octave shift for base frequency
+    ampLfoRate: 0.15,        // Hz
+    ampLfoDepth: 0.05,       // 0-0.3
+    filterLfoRate: 0.08,     // Hz
+    filterLfoDepth: 300,     // Hz range
+    attackTime: 4,           // seconds (same as fadeDuration)
+    releaseTime: 4,          // seconds (same as fadeDuration for stop)
+    reverbDuration: 2,       // seconds
+    reverbDecay: 2,          // decay factor
+
+    // Presets
+    presets: {
+        default: { oscLevels: { rootSine: 0.35, rootTriangle: 0.15, chorusL: 0.12, chorusR: 0.12, octaveUp: 0.08, sub: 0.18 }, chorusDetune: 7, octaveShift: 0, ampLfoRate: 0.15, ampLfoDepth: 0.05, filterLfoRate: 0.08, filterLfoDepth: 300, attackTime: 4, releaseTime: 4, reverbDuration: 2, reverbDecay: 2, reverbMix: 0.3, lowPassFreq: 20000, highPassFreq: 20, volume: 0.7 },
+        warm: { oscLevels: { rootSine: 0.40, rootTriangle: 0.20, chorusL: 0.10, chorusR: 0.10, octaveUp: 0.02, sub: 0.25 }, chorusDetune: 5, octaveShift: -1, ampLfoRate: 0.10, ampLfoDepth: 0.06, filterLfoRate: 0.05, filterLfoDepth: 200, attackTime: 5, releaseTime: 6, reverbDuration: 3, reverbDecay: 2.5, reverbMix: 0.4, lowPassFreq: 8000, highPassFreq: 20, volume: 0.7 },
+        bright: { oscLevels: { rootSine: 0.25, rootTriangle: 0.20, chorusL: 0.15, chorusR: 0.15, octaveUp: 0.18, sub: 0.08 }, chorusDetune: 10, octaveShift: 1, ampLfoRate: 0.20, ampLfoDepth: 0.04, filterLfoRate: 0.10, filterLfoDepth: 500, attackTime: 3, releaseTime: 3, reverbDuration: 2, reverbDecay: 1.5, reverbMix: 0.25, lowPassFreq: 20000, highPassFreq: 80, volume: 0.65 },
+        deep: { oscLevels: { rootSine: 0.30, rootTriangle: 0.10, chorusL: 0.08, chorusR: 0.08, octaveUp: 0.0, sub: 0.35 }, chorusDetune: 4, octaveShift: -1, ampLfoRate: 0.08, ampLfoDepth: 0.07, filterLfoRate: 0.04, filterLfoDepth: 150, attackTime: 6, releaseTime: 8, reverbDuration: 4, reverbDecay: 3, reverbMix: 0.5, lowPassFreq: 4000, highPassFreq: 20, volume: 0.75 },
+        ethereal: { oscLevels: { rootSine: 0.20, rootTriangle: 0.10, chorusL: 0.18, chorusR: 0.18, octaveUp: 0.15, sub: 0.10 }, chorusDetune: 15, octaveShift: 1, ampLfoRate: 0.12, ampLfoDepth: 0.08, filterLfoRate: 0.06, filterLfoDepth: 600, attackTime: 5, releaseTime: 7, reverbDuration: 4, reverbDecay: 2, reverbMix: 0.6, lowPassFreq: 16000, highPassFreq: 60, volume: 0.6 },
+        organ: { oscLevels: { rootSine: 0.30, rootTriangle: 0.25, chorusL: 0.05, chorusR: 0.05, octaveUp: 0.20, sub: 0.20 }, chorusDetune: 3, octaveShift: 0, ampLfoRate: 0.0, ampLfoDepth: 0.0, filterLfoRate: 0.0, filterLfoDepth: 0, attackTime: 0.5, releaseTime: 1, reverbDuration: 3, reverbDecay: 2, reverbMix: 0.35, lowPassFreq: 12000, highPassFreq: 40, volume: 0.7 },
+    },
+
     // All 12 keys
     keys: ['C', 'Csharp', 'D', 'Dsharp', 'E', 'F', 'Fsharp', 'G', 'Gsharp', 'A', 'Asharp', 'B'],
 
@@ -220,11 +250,11 @@ const padPlayer = {
     /**
      * Toggle a pad on/off
      */
-    toggle(key) {
+    async toggle(key) {
         if (this.isPlaying(key)) {
             this.stop(key);
         } else {
-            this.play(key);
+            await this.play(key);
         }
     },
 
@@ -260,17 +290,22 @@ const padPlayer = {
 
         // Per-key gain node (for fade in/out)
         const keyGain = this.audioContext.createGain();
-        keyGain.gain.value = 0;
+        keyGain.gain.setValueAtTime(0, this.audioContext.currentTime);
         keyGain.connect(this.lowPassFilter);
 
-        // Create 6 oscillators for a rich, warm pad sound
+        // Apply octave shift to base frequency
+        const shiftedFreq = freq * Math.pow(2, this.octaveShift);
+        const lv = this.oscLevels;
+        const dt = this.chorusDetune;
+
+        // Create 6 oscillators with configurable levels
         const oscConfigs = [
-            { type: 'sine',     freq: freq,       gain: 0.35, detune: 0 },    // Root fundamental
-            { type: 'triangle', freq: freq,       gain: 0.15, detune: 0 },    // Harmonic warmth
-            { type: 'sine',     freq: freq,       gain: 0.12, detune: +7 },   // Chorus L
-            { type: 'sine',     freq: freq,       gain: 0.12, detune: -7 },   // Chorus R
-            { type: 'sine',     freq: freq * 2,   gain: 0.08, detune: 0 },    // Octave brightness
-            { type: 'sine',     freq: freq / 2,   gain: 0.18, detune: 0 },    // Sub warmth
+            { type: 'sine',     freq: shiftedFreq,       gain: lv.rootSine,     detune: 0 },
+            { type: 'triangle', freq: shiftedFreq,       gain: lv.rootTriangle, detune: 0 },
+            { type: 'sine',     freq: shiftedFreq,       gain: lv.chorusL,      detune: +dt },
+            { type: 'sine',     freq: shiftedFreq,       gain: lv.chorusR,      detune: -dt },
+            { type: 'sine',     freq: shiftedFreq * 2,   gain: lv.octaveUp,     detune: 0 },
+            { type: 'sine',     freq: shiftedFreq / 2,   gain: lv.sub,          detune: 0 },
         ];
 
         const oscillators = [];
@@ -294,9 +329,9 @@ const padPlayer = {
         // Amplitude LFO for slow breathing effect
         const lfoOsc = this.audioContext.createOscillator();
         lfoOsc.type = 'sine';
-        lfoOsc.frequency.value = 0.15;
+        lfoOsc.frequency.value = this.ampLfoRate;
         const lfoGain = this.audioContext.createGain();
-        lfoGain.gain.value = 0.05;
+        lfoGain.gain.value = this.ampLfoDepth;
         lfoOsc.connect(lfoGain);
         lfoGain.connect(keyGain.gain);
         lfoOsc.start();
@@ -310,8 +345,8 @@ const padPlayer = {
         };
         this.gainNodes[key] = keyGain;
 
-        // Fade in
-        keyGain.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + this.fadeDuration);
+        // Fade in using attack time
+        keyGain.gain.linearRampToValueAtTime(1, this.audioContext.currentTime + this.attackTime);
 
         // Update UI
         this.updateKeyUI(key, true);
@@ -329,10 +364,10 @@ const padPlayer = {
         const source = this.activeSources[key];
         const keyGain = this.gainNodes[key];
 
-        // Fade out smoothly
+        // Fade out using release time
         const currentTime = this.audioContext.currentTime;
         keyGain.gain.setValueAtTime(keyGain.gain.value, currentTime);
-        keyGain.gain.linearRampToValueAtTime(0, currentTime + this.fadeDuration);
+        keyGain.gain.linearRampToValueAtTime(0, currentTime + this.releaseTime);
 
         // Stop all oscillators after fade out
         setTimeout(() => {
@@ -342,7 +377,7 @@ const padPlayer = {
             } catch (e) {
                 // May already be stopped
             }
-        }, this.fadeDuration * 1000);
+        }, this.releaseTime * 1000);
 
         // Remove references
         delete this.activeSources[key];
@@ -480,6 +515,194 @@ const padPlayer = {
                 this.audioContext.currentTime + 0.1
             );
         }
+    },
+
+    // === Extended Synth Controls ===
+
+    /**
+     * Set individual oscillator level (0-1)
+     */
+    setOscLevel(oscName, value) {
+        this.oscLevels[oscName] = Math.max(0, Math.min(1, value));
+        // Update live oscillators
+        const oscIndex = { rootSine: 0, rootTriangle: 1, chorusL: 2, chorusR: 3, octaveUp: 4, sub: 5 };
+        const idx = oscIndex[oscName];
+        if (idx !== undefined) {
+            Object.values(this.activeSources).forEach(source => {
+                if (source.oscillators[idx]) {
+                    source.oscillators[idx].gain.gain.linearRampToValueAtTime(
+                        this.oscLevels[oscName],
+                        this.audioContext.currentTime + 0.1
+                    );
+                }
+            });
+        }
+    },
+
+    /**
+     * Set chorus detune width in cents (0-30)
+     */
+    setChorusDetune(cents) {
+        this.chorusDetune = Math.max(0, Math.min(30, cents));
+        // Update live chorus oscillators (index 2 = +detune, 3 = -detune)
+        Object.values(this.activeSources).forEach(source => {
+            if (source.oscillators[2]) source.oscillators[2].osc.detune.value = this.chorusDetune;
+            if (source.oscillators[3]) source.oscillators[3].osc.detune.value = -this.chorusDetune;
+        });
+    },
+
+    /**
+     * Set octave shift (-1, 0, +1)
+     */
+    setOctaveShift(shift) {
+        this.octaveShift = Math.max(-1, Math.min(1, Math.round(shift)));
+        // Requires restart of playing pads to take effect
+    },
+
+    /**
+     * Set amplitude LFO rate (0-2 Hz)
+     */
+    setAmpLfoRate(rate) {
+        this.ampLfoRate = Math.max(0, Math.min(2, rate));
+        Object.values(this.activeSources).forEach(source => {
+            if (source.lfoOsc) source.lfoOsc.frequency.value = this.ampLfoRate;
+        });
+    },
+
+    /**
+     * Set amplitude LFO depth (0-0.3)
+     */
+    setAmpLfoDepth(depth) {
+        this.ampLfoDepth = Math.max(0, Math.min(0.3, depth));
+        Object.values(this.activeSources).forEach(source => {
+            if (source.lfoGain) source.lfoGain.gain.value = this.ampLfoDepth;
+        });
+    },
+
+    /**
+     * Set filter LFO rate (0-1 Hz)
+     */
+    setFilterLfoRate(rate) {
+        this.filterLfoRate = Math.max(0, Math.min(1, rate));
+        if (this.filterLFO) this.filterLFO.frequency.value = this.filterLfoRate;
+    },
+
+    /**
+     * Set filter LFO depth (0-1000 Hz)
+     */
+    setFilterLfoDepth(depth) {
+        this.filterLfoDepth = Math.max(0, Math.min(1000, depth));
+        if (this.filterLFOGain) this.filterLFOGain.gain.value = this.filterLfoDepth;
+    },
+
+    /**
+     * Set attack time (0.1-10 seconds)
+     */
+    setAttackTime(seconds) {
+        this.attackTime = Math.max(0.1, Math.min(10, seconds));
+    },
+
+    /**
+     * Set release time (0.1-10 seconds)
+     */
+    setReleaseTime(seconds) {
+        this.releaseTime = Math.max(0.1, Math.min(10, seconds));
+    },
+
+    /**
+     * Set reverb size (duration + decay) and rebuild impulse
+     */
+    setReverbSize(duration, decay) {
+        this.reverbDuration = Math.max(0.5, Math.min(6, duration));
+        this.reverbDecay = Math.max(0.5, Math.min(5, decay));
+        if (this.audioContext && this.convolver) {
+            this.createReverbImpulse(this.reverbDuration, this.reverbDecay);
+        }
+    },
+
+    /**
+     * Load a preset by name
+     */
+    loadPreset(name) {
+        const preset = this.presets[name];
+        if (!preset) return;
+
+        // Apply all preset values
+        this.oscLevels = { ...preset.oscLevels };
+        this.chorusDetune = preset.chorusDetune;
+        this.octaveShift = preset.octaveShift;
+        this.ampLfoRate = preset.ampLfoRate;
+        this.ampLfoDepth = preset.ampLfoDepth;
+        this.filterLfoRate = preset.filterLfoRate;
+        this.filterLfoDepth = preset.filterLfoDepth;
+        this.attackTime = preset.attackTime;
+        this.releaseTime = preset.releaseTime;
+        this.reverbDuration = preset.reverbDuration;
+        this.reverbDecay = preset.reverbDecay;
+        this.reverbMix = preset.reverbMix;
+        this.volume = preset.volume;
+
+        // Apply to audio nodes
+        if (this.audioContext) {
+            // Filter LFO
+            if (this.filterLFO) this.filterLFO.frequency.value = this.filterLfoRate;
+            if (this.filterLFOGain) this.filterLFOGain.gain.value = this.filterLfoDepth;
+
+            // Reverb
+            this.createReverbImpulse(this.reverbDuration, this.reverbDecay);
+            if (this.reverbGain) this.reverbGain.gain.value = this.reverbMix;
+            if (this.dryGain) this.dryGain.gain.value = 1 - (this.reverbMix * 0.3);
+
+            // Filters
+            this.setLowPass(preset.lowPassFreq / 20000);
+            this.setHighPass((preset.highPassFreq - 20) / 1980);
+
+            // Volume
+            if (this.masterGain) this.masterGain.gain.value = this.volume;
+
+            // Update live oscillators
+            Object.values(this.activeSources).forEach(source => {
+                if (source.lfoOsc) source.lfoOsc.frequency.value = this.ampLfoRate;
+                if (source.lfoGain) source.lfoGain.gain.value = this.ampLfoDepth;
+                const levels = [this.oscLevels.rootSine, this.oscLevels.rootTriangle, this.oscLevels.chorusL, this.oscLevels.chorusR, this.oscLevels.octaveUp, this.oscLevels.sub];
+                source.oscillators.forEach(({ gain }, i) => {
+                    if (levels[i] !== undefined) gain.gain.value = levels[i];
+                });
+                if (source.oscillators[2]) source.oscillators[2].osc.detune.value = this.chorusDetune;
+                if (source.oscillators[3]) source.oscillators[3].osc.detune.value = -this.chorusDetune;
+            });
+        }
+
+        // Update UI sliders to match preset
+        this.syncUIToState();
+        console.log(`Loaded preset: ${name}`);
+    },
+
+    /**
+     * Sync all UI sliders to current state
+     */
+    syncUIToState() {
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        // Main controls
+        set('padsVolume', Math.round(this.volume * 100));
+        set('padsCrossfade', Math.round(this.crossfade * 100));
+        set('padsReverb', Math.round(this.reverbMix * 100));
+        set('padsPan', Math.round(this.pan * 100));
+        // Extended controls
+        set('padsSynthRootSine', Math.round(this.oscLevels.rootSine * 100));
+        set('padsSynthRootTri', Math.round(this.oscLevels.rootTriangle * 100));
+        set('padsSynthChorus', Math.round(this.oscLevels.chorusL * 100));
+        set('padsSynthOctave', Math.round(this.oscLevels.octaveUp * 100));
+        set('padsSynthSub', Math.round(this.oscLevels.sub * 100));
+        set('padsSynthDetune', this.chorusDetune);
+        set('padsSynthAmpRate', Math.round(this.ampLfoRate * 100));
+        set('padsSynthAmpDepth', Math.round(this.ampLfoDepth * 1000));
+        set('padsSynthFiltRate', Math.round(this.filterLfoRate * 100));
+        set('padsSynthFiltDepth', Math.round(this.filterLfoDepth / 10));
+        set('padsSynthAttack', Math.round(this.attackTime * 10));
+        set('padsSynthRelease', Math.round(this.releaseTime * 10));
+        set('padsSynthReverbSize', Math.round(this.reverbDuration * 10));
+        set('padsSynthReverbDecay', Math.round(this.reverbDecay * 10));
     },
 
     /**
