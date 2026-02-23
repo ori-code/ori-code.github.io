@@ -2659,12 +2659,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
         return formatted.join('\n');
     };
 
+    // @@@RTL DETECTOR — used everywhere to decide if content needs RTL layout
     function detectRTL(text) {
-        // Check if text contains Hebrew, Arabic, or other RTL characters
         const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
         return rtlChars.test(text);
     }
 
+    // @@@RTL LAYOUT SETTER — called on every content change for editor, songbookOutput, livePreview
+    // Two paths:
+    //   .live-preview → toggles CSS class "rtl-content" (no dir attr — avoids reversing multi-column flow)
+    //   all others    → sets dir attr + inline direction/textAlign/unicodeBidi
     function setDirectionalLayout(element, content) {
         if (!element) {
             return;
@@ -2672,17 +2676,30 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         const isRTL = detectRTL(content || '');
         const direction = isRTL ? 'rtl' : 'ltr';
+        const elId = element.id || element.className || element.tagName;
+        console.log(`@@@RTL setDirectionalLayout | element: "${elId}" | isRTL: ${isRTL} | direction: ${direction} | contentLen: ${(content || '').length}`);
 
-        element.setAttribute('dir', direction);
-        element.style.direction = direction;
-        element.style.textAlign = isRTL ? 'right' : 'left';
+        if (element.classList.contains('live-preview')) {
+            // @@@RTL livePreview: class toggle only — dir attr would break multi-column column order
+            console.log(`@@@RTL   → livePreview PATH: toggling class rtl-content=${isRTL}`);
+            if (isRTL) {
+                element.classList.add('rtl-content');
+            } else {
+                element.classList.remove('rtl-content');
+            }
+        } else {
+            // @@@RTL other elements: dir attr drives [dir="rtl"] CSS rules
+            console.log(`@@@RTL   → OTHER PATH: setting dir="${direction}", direction=${direction}, textAlign=${isRTL ? 'right' : 'left'}, unicodeBidi=plaintext`);
+            element.setAttribute('dir', direction);
+            element.style.direction = direction;
+            element.style.textAlign = isRTL ? 'right' : 'left';
+            element.style.unicodeBidi = 'plaintext';
+        }
 
-        // Ensure mixed-language content renders in natural order
-        element.style.unicodeBidi = 'plaintext';
-
-        // Also set direction on parent preview-page for logo positioning
+        // @@@RTL preview-page ancestor: dir attr drives logo-flip CSS (.preview-page[dir="rtl"])
         const previewPage = element.closest('.preview-page');
         if (previewPage) {
+            console.log(`@@@RTL   → preview-page: setting dir="${direction}"`);
             previewPage.setAttribute('dir', direction);
         }
     }
@@ -2772,10 +2789,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
         setDirectionalLayout(songbookOutput, songbookOutput.value);
     };
 
-    // Helper: reverse arrangement line badge order for RTL textarea display
-    // In a textarea, Latin text like (I) (V1) (PC) (C) always renders LTR.
-    // By reversing the text to (C) (PC) (V1) (I), the rightmost badge visually
-    // becomes (I) which is the correct RTL reading start.
+    // @@@RTL ARRANGEMENT REVERSAL — textarea-specific trick.
+    // Latin badge text like (I)(V1)(C) always renders LTR in a textarea even with dir="rtl".
+    // So we store them reversed: (C)(V1)(I). The user sees (I) on the right = correct RTL start.
+    // updateLivePreview() calls this again to UN-reverse before building HTML.
     const reverseArrangementLineForRTL = (content) => {
         const isRTL = detectRTL(content);
         if (!isRTL) return content;
@@ -2838,15 +2855,19 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const formatted = [];
         let sectionCounter = 0;
 
+        console.log(`@@@RTL formatV4ForPreview ENTERED | content length: ${content.length}`); // @@@RTL
+
         // NOTE: No arrangement reversal needed here.
         // The dir="rtl" attribute on badge containers handles RTL display natively.
 
         // Strip HTML tags before parsing (output may have bold tags)
         const cleanContent = content.replace(/<[^>]*>/g, '');
+        console.log(`@@@RTL   cleanContent first 300:\n${cleanContent.substring(0, 300)}`); // @@@RTL
 
         // Extract metadata using parser (from clean content)
         const metadata = parser.extractMetadata(cleanContent);
         const arrangement = parser.parseArrangementFull(cleanContent);
+        console.log(`@@@RTL   arrangement.length: ${arrangement.length} | items: [${arrangement.map(a => a.type + ':' + (a.label || a.symbol || '?')).join(', ')}]`); // @@@RTL
 
         // Build section repeat map and flow chains from arrangement
         const sectionRepeatMap = {}; // { 'Bridge': 2, 'Chorus': 2 }
@@ -2950,6 +2971,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Arrangement badges with repeat counts (flow arrows only shown in chart body)
         if (arrangement.length > 0) {
             const isRTLContent = detectRTL(cleanContent);
+            console.log(`@@@RTL BADGE ORDER (formatV4ForPreview) | isRTL: ${isRTLContent} | cleanContent first 80: "${cleanContent.substring(0, 80)}"`);
             let badgeItems = arrangement
                 .filter(item => item.type === 'badge') // Skip flow arrows in badge row
                 .map(item => {
@@ -2957,9 +2979,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     const repeatSup = item.repeat > 1 ? `<sup class="repeat-count">${item.repeat}x</sup>` : '';
                     return `<span class="section-badge ${colorClass}">${item.label}${repeatSup}</span>`;
                 });
+            console.log(`@@@RTL   → badges (no JS reverse, CSS direction:rtl handles RTL): [${badgeItems.map(b => b.match(/>([^<]+)</)?.[1] || '?').join(', ')}]`);
+            // @@@RTL: NO JS reversal here — the badge row inherits direction:rtl from preview-page[dir="rtl"],
+            // which naturally reverses flex item order. JS reversal would double-reverse.
             const badges = badgeItems.join('');
-            const rtlStyle = isRTLContent ? ' style="flex-direction: row-reverse; direction: ltr;"' : '';
-            formatted.push(`<div class="section-badges-row"${rtlStyle}>${badges}</div>`);
+            formatted.push(`<div class="section-badges-row">${badges}</div>`);
         }
 
         formatted.push('</div>'); // Close song-header
@@ -3122,6 +3146,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const isChordOnlyLine = tokens.length > 0 &&
                 tokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?$/.test(token)) &&
                 !trimmedLine.includes('|'); // Not a chord grid
+
+            // @@@RTL trace line classification
+            if (tokens.length > 0 && tokens.length <= 8 && /^[A-G]/.test(tokens[0])) {
+                const tokenResults = tokens.map(t => `${t}=${/^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?$/.test(t)}`);
+                console.log(`@@@RTL   LINE: "${trimmedLine}" | isChordOnly: ${isChordOnlyLine} | tokens: [${tokenResults.join(', ')}]`);
+            }
 
             if (isChordOnlyLine && mode !== 'lyrics') {
                 // Preserve original spacing - replace chords in-place with formatted versions
@@ -3322,9 +3352,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     'badge-other';
                 return `<span class="section-badge ${colorClass}">${label}</span>`;
             });
+            if (isRTLContent) { badgeItems = badgeItems.reverse(); } // @@@RTL BADGE ORDER — convertBadgeLineToStyled (legacy format inline badges)
             const badges = badgeItems.join('');
-            const rtlStyle = isRTLContent ? ' style="flex-direction: row-reverse; direction: ltr;"' : '';
-            return `<div class="section-badges-row"${rtlStyle}>${badges}</div>`;
+            return `<div class="section-badges-row">${badges}</div>`;
         };
 
         const finishSection = () => {
@@ -3455,9 +3485,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                                     'badge-other';
                                 return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
                             });
+                            if (isRTLContent) { badgeItems = badgeItems.reverse(); } // @@@RTL BADGE ORDER — formatForPreview metadata section (legacy format with explicit Key: line)
                             const badges = badgeItems.join('');
-                            const rtlStyle = isRTLContent ? ' style="flex-direction: row-reverse; direction: ltr;"' : '';
-                            formatted.push(`<div class="section-badges-row"${rtlStyle}>${badges}</div>`);
+                            formatted.push(`<div class="section-badges-row">${badges}</div>`);
                         }
 
                         formatted.push('</div>'); // Close song-header
@@ -3610,14 +3640,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const isNormalizedFormat = /Key:\s*[A-G][#b]?.*,.*\d+\s*BPM/i.test(visualContent);
         const isV4Format = /\{(?:title|key|tempo|subtitle|artist|time|capo):/i.test(visualContent);
 
-        // For v4/normalized formats with inline brackets, let formatForPreview handle chord formatting
-        // This prevents double-processing that strips brackets
-        if ((isV4Format || isNormalizedFormat) && hasInlineBrackets) {
-            // Format with structured HTML - formatForPreview/formatV4ForPreview handles chords
+        console.log(`@@@RTL updateLivePreview | isV4: ${isV4Format} | isNormalized: ${isNormalizedFormat} | hasInlineBrackets: ${hasInlineBrackets}`);
+
+        if (isV4Format || isNormalizedFormat) {
+            // PATH A: v4 or normalized format — formatV4ForPreview handles both inline brackets AND above-line chords
+            console.log(`@@@RTL   → PATH A: formatForPreview → formatV4ForPreview (v4/normalized)`);
             const formattedHTML = formatForPreview(visualContent);
             livePreview.innerHTML = formattedHTML;
         } else {
-            // Legacy format: use makeChordsBold for above-line chord formatting
+            // PATH B: legacy format only (no Key:/BPM metadata) — needs makeChordsBold preprocessing
+            console.log(`@@@RTL   → PATH B: makeChordsBold + formatForPreview (legacy)`);
             visualContent = makeChordsBold(visualContent);
             const formattedHTML = formatForPreview(visualContent);
             livePreview.innerHTML = formattedHTML;
@@ -3649,9 +3681,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Detect if content is RTL (Hebrew, Arabic, etc.)
         const isRTL = /[\u0590-\u05FF\u0600-\u06FF]/.test(content);
-
-        // Check if content has inline [chord] bracket notation
         const hasInlineBrackets = /\[[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\]/.test(content);
+        console.log(`@@@RTL makeChordsBold | isRTL: ${isRTL} | hasInlineBrackets: ${hasInlineBrackets} | lines: ${lines.length}`);
 
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
@@ -3665,7 +3696,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     line = line.replace(bracketPattern, '');
                     result.push(line);
                 } else if (isRTL) {
-                    // RTL content: build chord and lyric lines character-by-character for precise alignment
+                    // @@@RTL CHORD BUILDER — character-by-character: chord placed at same index as its syllable.
+                    // chord-line gets direction:rtl from CSS, so index 0 anchors to the RIGHT over first Hebrew char.
                     let chordLine = '';
                     let lyricLine = '';
                     let idx = 0;
@@ -3698,8 +3730,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                     // Create chord line above lyrics with proper alignment
                     if (chordLine.trim()) {
-                        // Convert spaces to &nbsp; to preserve alignment in HTML
                         const spacedChordLine = chordLine.replace(/ /g, '&nbsp;');
+                        console.log(`@@@RTL CHORD BUILDER | chordLine: "${chordLine.trim()}" | lyricLine: "${lyricLine}"`);
                         result.push(`<div class="chord-line">${spacedChordLine}</div>`);
                     }
                     // Lyrics line
@@ -4802,15 +4834,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
         });
 
+        if (isRTLContent) { badgeItems = badgeItems.reverse(); } // @@@RTL BADGE ORDER — updateEditorBadges DOM path (editor badge row above canvas)
         const badges = badgeItems.join('');
         badgesRow.innerHTML = badges;
-        if (isRTLContent) {
-            badgesRow.style.flexDirection = 'row-reverse';
-            badgesRow.style.direction = 'ltr';
-        } else {
-            badgesRow.style.flexDirection = '';
-            badgesRow.style.direction = '';
-        }
+        badgesRow.style.flexDirection = '';
+        badgesRow.style.direction = '';
     }
 
     // ✅ Call once on page load if there's content

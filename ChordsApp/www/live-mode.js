@@ -592,7 +592,7 @@ const liveMode = {
     },
 
     /**
-     * Detect if text contains RTL characters (Hebrew, Arabic, etc.)
+     * @@@RTL DETECTOR (live-mode copy) — duplicate of detectRTL in app.js
      */
     detectRTL(text) {
         const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
@@ -679,7 +679,8 @@ const liveMode = {
                     }
 
                     if (badgesList.length > 0) {
-                        // Detect RTL for badge ordering
+                        // @@@RTL BADGE ORDER — live-mode badge row. Array reversed + dir="rtl" on row.
+                        // NOTE: uses dir attr on badgesRow (not class), different from app.js approach.
                         const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
                         const isRTLContent = rtlChars.test(cleanContent);
 
@@ -746,7 +747,7 @@ const liveMode = {
                 chartDisplay.style.fontSize = this.currentFontSize + 'pt';
             }
 
-            // Apply RTL/LTR direction based on content
+            // @@@RTL LAYOUT — live-mode chart display: sets dir attr + inline direction/textAlign
             const isRTL = this.detectRTL(this.currentSongContent);
             const direction = isRTL ? 'rtl' : 'ltr';
             chartDisplay.setAttribute('dir', direction);

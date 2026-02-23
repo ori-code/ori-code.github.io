@@ -1388,27 +1388,41 @@ input[type="checkbox"]:checked::after {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-/* RTL chord support */
-[dir="rtl"] .chord-line,
-.live-preview[dir="rtl"] .chord-line {
-    direction: rtl;
-    text-align: right;
+
+/* @@@RTL chord-line: Keep LTR direction so chord positions match textarea (which uses unicode-bidi:plaintext).
+   Chords are spatially authored to align with lyrics — reversing direction would misalign them.
+   Right-align to match RTL text flow. */
+[dir="rtl"] .chord-line,                /* @@@RTL GLOBAL: editor/songbookOutput */
+.live-preview.rtl-content .chord-line { /* @@@RTL OVERRIDE: livePreview */
+    direction: ltr !important;
+    text-align: right !important;
 }
 
-[dir="rtl"] .chord-line .chord,
-.live-preview[dir="rtl"] .chord-line .chord {
-    direction: ltr;
-    unicode-bidi: embed;
+/* @@@RTL section-header: GLOBAL — section names (Intro, Verse 1...) right-aligned */
+[dir="rtl"] .section-header,
+.live-preview.rtl-content .section-header {
+    direction: rtl !important;
+    text-align: right !important;
 }
 
-[dir="rtl"] .chord-line b,
-.live-preview[dir="rtl"] .chord-line b,
-[dir="rtl"] .preview-page b,
-.preview-page[dir="rtl"] b {
-    direction: ltr;
-    unicode-bidi: embed;
-    display: inline-block;
+/* @@@RTL lyric-line: GLOBAL — lyric text right-aligned */
+[dir="rtl"] .lyric-line,
+.live-preview.rtl-content .lyric-line {
+    direction: rtl !important;
+    text-align: right !important;
 }
+
+/* @@@RTL song-header/title/meta: GLOBAL — title block right-aligned */
+[dir="rtl"] .song-header,
+.live-preview.rtl-content .song-header,
+[dir="rtl"] .song-title,
+.live-preview.rtl-content .song-title,
+[dir="rtl"] .song-meta,
+.live-preview.rtl-content .song-meta {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
 
 /* Preview page */
 .preview-page {
@@ -1425,8 +1439,9 @@ input[type="checkbox"]:checked::after {
     direction: ltr;
 }
 
-.preview-page:has(.live-preview[dir="rtl"]) .preview-logo,
-.preview-page[dir="rtl"] .preview-logo {
+/* @@@RTL logo: OVERRIDE — flip logo to left side for RTL songs */
+.preview-page:has(.live-preview.rtl-content) .preview-logo, /* @@@RTL livePreview class-based */
+.preview-page[dir="rtl"] .preview-logo {                    /* @@@RTL editor dir attr-based */
     right: auto;
     left: 20px;
     direction: ltr;
@@ -1903,8 +1918,9 @@ input[type="checkbox"]:checked::after {
     font-weight: 400;
 }
 
+/* @@@RTL badge separator dot: OVERRIDE — dot moves from left side to right side between badges */
 [dir="rtl"] .section-badge+.section-badge::before,
-.live-preview[dir="rtl"] .section-badge+.section-badge::before {
+.live-preview.rtl-content .section-badge+.section-badge::before {
     left: auto;
     right: -9px;
 }
@@ -2635,8 +2651,9 @@ input[type="checkbox"]:checked::after {
         font-size: 10px;
     }
 
+    /* @@@RTL badge separator dot @media tablet */
     [dir="rtl"] .section-badge+.section-badge::before,
-    .live-preview[dir="rtl"] .section-badge+.section-badge::before {
+    .live-preview.rtl-content .section-badge+.section-badge::before {
         left: auto;
         right: -8px;
     }
@@ -2657,8 +2674,9 @@ input[type="checkbox"]:checked::after {
         font-size: 9px;
     }
 
+    /* @@@RTL badge separator dot @media mobile */
     [dir="rtl"] .section-badge+.section-badge::before,
-    .live-preview[dir="rtl"] .section-badge+.section-badge::before {
+    .live-preview.rtl-content .section-badge+.section-badge::before {
         left: auto;
         right: -7px;
     }
