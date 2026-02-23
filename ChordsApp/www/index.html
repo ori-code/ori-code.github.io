@@ -136,12 +136,14 @@
                         best recognition
                         results.</p>
                     <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
-                    <label class="primary-action" for="chartFileInput" style="width: 100%;"
-                        data-i18n="step1.btn">Upload</label>
+                    <div style="display: flex; gap: 8px; width: 100%;">
+                        <label class="primary-action" for="chartFileInput" style="flex: 1; text-align: center;"
+                            data-i18n="step1.btn">Upload</label>
+                        <button class="primary-action" id="pasteImageBtn" style="flex: 1;">Paste</button>
+                    </div>
                     <div class="preview-panel" id="uploadPreview" tabindex="0">
                         <img id="previewImage" alt="Uploaded chart preview">
                         <p class="preview-placeholder" data-i18n="step1.placeholder">No file selected yet.<br>
-                            Upload, paste (Ctrl+V), or drag &amp; drop.<br>
                             <span style="opacity: 0.5; font-size: 0.65rem;">Supported: JPG, PNG, HEIC, PDF.</span></p>
                     </div>
                 </article>
@@ -5186,6 +5188,29 @@
                 }
             }
         });
+
+        // Paste button — read from clipboard API
+        const pasteBtn = document.getElementById('pasteImageBtn');
+        if (pasteBtn) {
+            pasteBtn.addEventListener('click', async () => {
+                try {
+                    const clipboardItems = await navigator.clipboard.read();
+                    for (const item of clipboardItems) {
+                        const imageType = item.types.find(t => t.startsWith('image/'));
+                        if (imageType) {
+                            const blob = await item.getType(imageType);
+                            const file = new File([blob], 'pasted-image.png', { type: imageType });
+                            handleImageFile(file);
+                            return;
+                        }
+                    }
+                    window.showAlert && showAlert('No image found in clipboard. Copy an image first, then click Paste.');
+                } catch (err) {
+                    // Fallback: prompt user to use Ctrl+V
+                    window.showAlert && showAlert('Paste not available. Use Ctrl+V (or Cmd+V) to paste an image.');
+                }
+            });
+        }
 
         // Drag & drop onto preview panel
         uploadPreview.addEventListener('dragover', (e) => {
