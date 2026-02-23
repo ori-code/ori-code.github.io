@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="aChordim">
 
-    <link rel="stylesheet" href="styles-bw.css?v=12">
+    <link rel="stylesheet" href="styles-bw.css?v=13">
     <!-- PayPal SDK is loaded dynamically in paypal-subscription.js based on environment -->
 
     <!-- PDF.js for PDF preview -->
@@ -55,7 +55,7 @@
                 </button>
                 <a href="https://www.thefaithsound.com/ChordsApp/www/" class="header-brand"
                     style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
-                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v60</span></span>
+                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v61</span></span>
                     <span class="header-brand-url" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
                 </a>
@@ -346,6 +346,12 @@
                         <label class="side-menu-checkbox">
                             <input type="checkbox" id="hideEmojisToggle">
                             <span data-i18n="menu.check.hide_emojis">Hide Emojis</span>
+                        </label>
+                    </div>
+                    <div class="side-menu-row">
+                        <label class="side-menu-checkbox">
+                            <input type="checkbox" id="plainChordsToggle">
+                            <span>Plain Chords</span>
                         </label>
                     </div>
                 </div>
@@ -3464,7 +3470,7 @@
     <!-- Chords App Format Parser (ChordPro-like format v4) -->
     <script src="chordpro-parser.js"></script>
 
-    <script src="app.js?v=51"></script>
+    <script src="app.js?v=52"></script>
 
     <style>
         /* Auth message states - B&W */
@@ -5252,14 +5258,17 @@
                 contentInput.style.height = Math.min(contentInput.scrollHeight, 200) + 'px';
             });
 
-            function putTextInEditor(text) {
-                const editor = document.getElementById('visualEditor');
-                if (editor) {
-                    editor.value = text;
-                    editor.dispatchEvent(new Event('input', { bubbles: true }));
-                    const editorSection = document.getElementById('editor');
-                    if (editorSection) editorSection.style.display = 'block';
-                    editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            function processAIResult(transcription) {
+                // Use the full pipeline from app.js (raw → normalize → editor → preview)
+                if (window.processAITextResult) {
+                    window.processAITextResult(transcription);
+                } else {
+                    // Fallback: put directly in editor
+                    const editor = document.getElementById('visualEditor');
+                    if (editor) {
+                        editor.value = transcription;
+                        editor.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
                 }
             }
 
@@ -5289,7 +5298,7 @@
                     if (!isUrl) {
                         // Plain text: send to AI for v4 conversion
                         const formatted = await analyzeTextWithAI(input);
-                        putTextInEditor(formatted);
+                        processAIResult(formatted);
                         contentInput.value = '';
                         contentInput.style.height = 'auto';
                         return;
@@ -5319,7 +5328,7 @@
                         // Webpage text: send through AI for v4 conversion
                         fetchUrlBtn.textContent = 'AI...';
                         const formatted = await analyzeTextWithAI(result.data);
-                        putTextInEditor(formatted);
+                        processAIResult(formatted);
                     }
                     contentInput.value = '';
                     contentInput.style.height = 'auto';

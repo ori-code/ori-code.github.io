@@ -1859,6 +1859,31 @@ input[type="checkbox"]:checked::after {
     unicode-bidi: embed;
 }
 
+/* Plain chords mode — no background box, just bold text */
+.plain-chords .inline-chord b {
+    background: transparent !important;
+    color: var(--text) !important;
+    border: none !important;
+    padding: 0 !important;
+    font-weight: 700;
+}
+
+.plain-chords .chord-line b {
+    background: transparent !important;
+    color: var(--text) !important;
+    border: none !important;
+    padding: 0 !important;
+    font-weight: 700;
+}
+
+/* Also handle #livePreview specificity */
+#livePreview.plain-chords .inline-chord b {
+    background: transparent !important;
+    color: var(--text) !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
 /* Styled prompt modal z-index */
 #styledPromptModal {
     z-index: 99999 !important;

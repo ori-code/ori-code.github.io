@@ -960,6 +960,46 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Expose globally for testing
     window.normalizeContent = normalizeContent;
 
+    // Expose function to process AI text result through the same pipeline as image OCR
+    window.processAITextResult = (transcription) => {
+        if (!transcription) return;
+
+        const cleaned = removeAnalysisLines(transcription);
+        baselineChart = cleaned;
+        currentTransposeSteps = 0;
+
+        const normalizedChart = normalizeContent(cleaned);
+        let visualFormat = convertToAboveLineFormat(normalizedChart, true);
+        visualFormat = autoInsertArrangementLine(visualFormat);
+        visualFormat = ensureMetadata(visualFormat);
+        visualFormat = normalizeMetadataSpacing(visualFormat);
+
+        visualEditor.value = reverseArrangementLineForRTL(visualFormat);
+
+        if (songbookOutput) {
+            songbookOutput.value = normalizedChart;
+            setDirectionalLayout(songbookOutput, normalizedChart);
+        }
+
+        if (aiReferenceContent) {
+            aiReferenceContent.textContent = cleaned;
+            setDirectionalLayout(aiReferenceContent, cleaned);
+        }
+
+        extractAndDisplayKey(transcription);
+        extractAndApplyLayout(transcription);
+
+        if (transposeStepInput) transposeStepInput.value = 0;
+
+        // Trigger editor update → preview
+        visualEditor.dispatchEvent(new Event('input', { bubbles: true }));
+
+        // Show editor section
+        const editorSection = document.getElementById('editor');
+        if (editorSection) editorSection.style.display = 'block';
+        visualEditor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
     // Expose function to convert visual format to inline songbook format
     window.convertToInlineFormat = (visualContent) => {
         // Convert above-line format back to inline [C] format
@@ -5082,6 +5122,20 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     livePreview.classList.remove('hide-badges');
                 } else {
                     livePreview.classList.add('hide-badges');
+                }
+            }
+        });
+    }
+
+    // Handle plain chords toggle
+    const plainChordsToggle = document.getElementById('plainChordsToggle');
+    if (plainChordsToggle) {
+        plainChordsToggle.addEventListener('change', () => {
+            if (livePreview) {
+                if (plainChordsToggle.checked) {
+                    livePreview.classList.add('plain-chords');
+                } else {
+                    livePreview.classList.remove('plain-chords');
                 }
             }
         });
