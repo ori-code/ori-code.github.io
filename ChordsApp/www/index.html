@@ -55,7 +55,7 @@
                 </button>
                 <a href="https://www.thefaithsound.com/ChordsApp/www/" class="header-brand"
                     style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
-                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v58</span></span>
+                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v59</span></span>
                     <span class="header-brand-url" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
                 </a>
@@ -5189,42 +5189,30 @@
             }
         });
 
-        // Paste button — works on both desktop and iOS
+        // Paste button — clipboard API on desktop, photo picker fallback on iOS
         const pasteBtn = document.getElementById('pasteImageBtn');
         if (pasteBtn) {
-            // Create a contenteditable paste zone inside the preview panel (iOS needs visible + focused)
-            const pasteZone = document.createElement('div');
-            pasteZone.contentEditable = true;
-            pasteZone.setAttribute('role', 'textbox');
-            pasteZone.setAttribute('aria-label', 'Paste image here');
-            pasteZone.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;z-index:10;cursor:pointer;-webkit-user-select:text;user-select:text;';
-            pasteZone.style.display = 'none';
-            uploadPreview.style.position = 'relative';
-            uploadPreview.appendChild(pasteZone);
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-            pasteZone.addEventListener('paste', (e) => {
-                e.preventDefault();
-                pasteZone.style.display = 'none';
-                pasteZone.innerHTML = '';
-                const items = e.clipboardData?.items;
-                if (!items) return;
-                for (const item of items) {
-                    if (item.type.startsWith('image/')) {
-                        handleImageFile(item.getAsFile());
-                        return;
-                    }
-                }
-                window.showAlert && showAlert('No image found in clipboard. Copy an image first, then paste.');
-            });
-
-            // Hide paste zone if user taps elsewhere
-            pasteZone.addEventListener('blur', () => {
-                setTimeout(() => { pasteZone.style.display = 'none'; pasteZone.innerHTML = ''; }, 200);
-            });
-
-            pasteBtn.addEventListener('click', async () => {
-                // Try modern clipboard API first (works on Chrome/Edge desktop)
-                if (navigator.clipboard?.read) {
+            if (isMobile) {
+                // iOS/Android: clipboard image paste is not supported.
+                // Repurpose as quick camera/photo access.
+                pasteBtn.textContent = 'Camera';
+                const cameraInput = document.createElement('input');
+                cameraInput.type = 'file';
+                cameraInput.accept = 'image/*';
+                cameraInput.capture = 'environment';
+                cameraInput.style.display = 'none';
+                document.body.appendChild(cameraInput);
+                cameraInput.addEventListener('change', () => {
+                    const file = cameraInput.files?.[0];
+                    if (file) handleImageFile(file);
+                    cameraInput.value = '';
+                });
+                pasteBtn.addEventListener('click', () => cameraInput.click());
+            } else {
+                // Desktop: use clipboard API
+                pasteBtn.addEventListener('click', async () => {
                     try {
                         const clipboardItems = await navigator.clipboard.read();
                         for (const item of clipboardItems) {
@@ -5236,17 +5224,12 @@
                                 return;
                             }
                         }
-                        window.showAlert && showAlert('No image found in clipboard. Copy an image first, then paste.');
-                        return;
+                        window.showAlert && showAlert('No image found in clipboard. Copy an image first, then click Paste.');
                     } catch (err) {
-                        // clipboard.read() denied or unavailable — fall through to iOS method
+                        window.showAlert && showAlert('Paste not available. Use Ctrl+V (or Cmd+V) to paste an image.');
                     }
-                }
-                // iOS/Safari fallback: show contenteditable over preview, focus it.
-                // iOS shows native "Paste" callout on focused contenteditable when clipboard has content.
-                pasteZone.style.display = 'block';
-                pasteZone.focus();
-            });
+                });
+            }
         }
 
         // Drag & drop onto preview panel
