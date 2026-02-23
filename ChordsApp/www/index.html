@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="aChordim">
 
-    <link rel="stylesheet" href="styles-bw.css?v=11">
+    <link rel="stylesheet" href="styles-bw.css?v=12">
     <!-- PayPal SDK is loaded dynamically in paypal-subscription.js based on environment -->
 
     <!-- PDF.js for PDF preview -->
@@ -224,39 +224,25 @@
                 <div class="preview-header-row">
                     <h2 id="previewHeaderTitle" data-i18n="preview.title">Print Preview</h2>
 
-                    <!-- View Toggle Group -->
-                    <div class="header-btn-group view-toggles">
+                    <!-- All toolbar buttons in one clean row -->
+                    <div class="header-btn-group">
                         <button id="toggleControlsBtn2" class="header-btn display-toggle"
                             data-i18n="preview.btn.controls">Controls</button>
                         <button id="toggleEditorBtn2" class="header-btn display-toggle"
                             data-i18n="preview.btn.editor">Editor</button>
-                    </div>
-
-                    <!-- Music Tools Group (hidden — accessible from side menu) -->
-                    <div class="header-btn-group music-tools" style="display: none;">
-                        <button class="header-btn pads-btn" id="headerPadsBtn" data-i18n="preview.btn.pads">Pads</button>
-                        <button class="header-btn metro-btn" id="headerMetronomeBtn" data-i18n="preview.btn.metro">Metro</button>
-                    </div>
-
-                    <!-- Live Preview -->
-                    <div class="header-btn-group live-group">
-                        <button class="header-btn go-live-btn" id="headerGoLiveBtn" style="display: none;">Go
-                            Live</button>
                         <button class="header-btn live-preview-btn" id="headerLivePreview"
                             data-i18n="preview.btn.preview">Preview</button>
-                    </div>
-
-                    <div class="header-spacer"></div>
-
-                    <!-- File Actions Group -->
-                    <div class="header-btn-group file-actions">
                         <button class="header-btn" id="headerSaveSong" data-i18n="preview.btn.save">Save</button>
                         <button class="header-btn" id="headerLoadSong" data-i18n="preview.btn.load">Load</button>
                         <button class="header-btn" id="headerSaveAsImage" data-i18n="preview.btn.image">Image</button>
                         <button class="header-btn" id="printButton" data-i18n="preview.btn.print">Print</button>
-                        <button class="header-btn" id="headerAutoFit" data-i18n="preview.btn.autofit">Auto
-                            Fit</button>
+                        <button class="header-btn" id="headerAutoFit" data-i18n="preview.btn.autofit">Auto Fit</button>
                     </div>
+
+                    <!-- Hidden buttons (accessible from side menu) -->
+                    <button class="header-btn pads-btn" id="headerPadsBtn" style="display:none;">Pads</button>
+                    <button class="header-btn metro-btn" id="headerMetronomeBtn" style="display:none;">Metro</button>
+                    <button class="header-btn go-live-btn" id="headerGoLiveBtn" style="display:none;">Go Live</button>
                 </div>
             </div>
         </section>

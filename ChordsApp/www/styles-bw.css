@@ -504,21 +504,26 @@ input[type="checkbox"]:checked::after {
 /* Header Button Groups */
 .header-btn-group {
     display: flex;
-    gap: 4px;
-    padding: 4px;
+    gap: 0;
+    padding: 0;
     background: transparent;
     border-radius: 0;
-    border: 1px solid var(--border);
+    border: none;
     flex-shrink: 0;
 }
 
 [data-theme="light"] .header-btn-group {
     background: transparent;
-    border-color: #000;
+    border: none;
 }
 
 .header-btn-group .header-btn {
     border-radius: 0;
+    margin-left: -1px; /* collapse adjacent borders */
+}
+
+.header-btn-group .header-btn:first-child {
+    margin-left: 0;
 }
 
 /* Override all colored button variants to B&W */
@@ -555,11 +560,12 @@ input[type="checkbox"]:checked::after {
     color: var(--bg);
 }
 
-/* Live group — single Preview button, no group border needed */
+/* Live group — only Preview button visible */
 .header-btn-group.live-group {
     background: transparent;
     border: none;
     padding: 0;
+    margin: 0;
 }
 
 /* --- Workflow --- */
