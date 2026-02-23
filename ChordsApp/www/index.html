@@ -141,10 +141,10 @@
                             data-i18n="step1.btn">Upload</label>
                         <button class="primary-action" id="pasteImageBtn" style="flex: 1; display: none;">Paste</button>
                     </div>
-                    <div style="display: flex; gap: 6px; width: 100%; margin-top: 8px;">
-                        <input type="text" id="imageUrlInput" placeholder="Paste URL (image or chord page)..."
-                            style="flex: 1; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); outline: none; font-family: inherit;">
-                        <button class="primary-action" id="fetchUrlBtn" style="white-space: nowrap;">Fetch</button>
+                    <div style="display: flex; gap: 6px; width: 100%; margin-top: 8px; align-items: flex-start;">
+                        <textarea id="contentInput" rows="1" placeholder="Paste URL or chord text..."
+                            style="flex: 1; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); outline: none; font-family: inherit; resize: vertical; min-height: 36px; max-height: 200px;"></textarea>
+                        <button class="primary-action" id="fetchUrlBtn" style="white-space: nowrap; margin-top: 1px;">Go</button>
                     </div>
                     <div class="preview-panel" id="uploadPreview" tabindex="0">
                         <img id="previewImage" alt="Uploaded chart preview">
@@ -5240,26 +5240,51 @@
             }
         });
 
-        // Fetch content from URL (images or text/chord pages)
+        // Content input: handles URLs (fetch via proxy) or plain text (paste directly to editor)
         const fetchUrlBtn = document.getElementById('fetchUrlBtn');
-        const imageUrlInput = document.getElementById('imageUrlInput');
-        if (fetchUrlBtn && imageUrlInput) {
+        const contentInput = document.getElementById('contentInput');
+        if (fetchUrlBtn && contentInput) {
             const FETCH_URL_API = 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/fetchUrl';
 
-            async function fetchFromUrl() {
-                const url = imageUrlInput.value.trim();
-                if (!url) return;
-                if (!/^https?:\/\//i.test(url)) {
-                    window.showAlert && showAlert('Please enter a valid URL starting with http:// or https://');
+            // Auto-expand textarea on paste
+            contentInput.addEventListener('input', () => {
+                contentInput.style.height = 'auto';
+                contentInput.style.height = Math.min(contentInput.scrollHeight, 200) + 'px';
+            });
+
+            function putTextInEditor(text) {
+                const editor = document.getElementById('visualEditor');
+                if (editor) {
+                    editor.value = text;
+                    editor.dispatchEvent(new Event('input', { bubbles: true }));
+                    const editorSection = document.getElementById('editor');
+                    if (editorSection) editorSection.style.display = 'block';
+                    editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+
+            async function handleContentInput() {
+                const input = contentInput.value.trim();
+                if (!input) return;
+
+                const isUrl = /^https?:\/\//i.test(input);
+
+                if (!isUrl) {
+                    // Plain text: put directly into editor
+                    putTextInEditor(input);
+                    contentInput.value = '';
+                    contentInput.style.height = 'auto';
                     return;
                 }
+
+                // URL: fetch via Cloud Function proxy
                 fetchUrlBtn.textContent = '...';
                 fetchUrlBtn.disabled = true;
                 try {
                     const resp = await fetch(FETCH_URL_API, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url })
+                        body: JSON.stringify({ url: input })
                     });
                     if (!resp.ok) {
                         const err = await resp.json().catch(() => ({}));
@@ -5268,7 +5293,6 @@
                     const result = await resp.json();
 
                     if (result.type === 'image') {
-                        // Image: convert base64 to file and feed into scanner
                         const byteChars = atob(result.data);
                         const byteArray = new Uint8Array(byteChars.length);
                         for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
@@ -5276,30 +5300,18 @@
                         const file = new File([blob], 'url-image.png', { type: result.contentType });
                         handleImageFile(file);
                     } else {
-                        // Text/HTML: put extracted text into the editor
-                        const editor = document.getElementById('visualEditor');
-                        if (editor) {
-                            editor.value = result.data;
-                            editor.dispatchEvent(new Event('input', { bubbles: true }));
-                            // Show editor section if hidden
-                            const editorSection = document.getElementById('editor');
-                            if (editorSection) editorSection.style.display = 'block';
-                            // Scroll to editor
-                            editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
+                        putTextInEditor(result.data);
                     }
-                    imageUrlInput.value = '';
+                    contentInput.value = '';
+                    contentInput.style.height = 'auto';
                 } catch (err) {
                     window.showAlert && showAlert(err.message || 'Could not fetch URL content.');
                 } finally {
-                    fetchUrlBtn.textContent = 'Fetch';
+                    fetchUrlBtn.textContent = 'Go';
                     fetchUrlBtn.disabled = false;
                 }
             }
-            fetchUrlBtn.addEventListener('click', fetchFromUrl);
-            imageUrlInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') fetchFromUrl();
-            });
+            fetchUrlBtn.addEventListener('click', handleContentInput);
         }
     })();
     </script>
