@@ -912,6 +912,81 @@ exports.deleteOrphanUser = functions
 });
 
 /**
+ * analyzeText - Convert raw chord text to Chords App Format v4 using AI
+ * POST request with { text }
+ */
+exports.analyzeText = functions
+    .runWith({
+        secrets: ['ANTHROPIC_API_KEY'],
+        timeoutSeconds: 120,
+        memory: '512MB'
+    })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const apiKey = process.env.ANTHROPIC_API_KEY;
+            if (!apiKey) {
+                throw new Error('ANTHROPIC_API_KEY not configured');
+            }
+
+            const anthropic = new Anthropic({ apiKey });
+            const { text } = req.body;
+
+            if (!text || !text.trim()) {
+                return res.status(400).json({ error: 'No text provided' });
+            }
+
+            const textPrompt = `You are given raw chord sheet text (copied from a website, document, or typed by hand). Convert it to CHORDS APP FORMAT v4.
+
+The input text may use various formats:
+- Chords above lyrics (with spacing to align)
+- Chords in [brackets] inline with lyrics
+- Section headers like [Verse], [Chorus], (Intro), etc.
+- Tab/spacing-based chord positioning
+- Mixed formats
+
+Your job: analyze the text and output clean Chords App Format v4.
+
+${BASE_PROMPT}
+
+---
+Here is the raw text to convert:
+
+${text}`;
+
+            const response = await anthropic.messages.create({
+                model: CLAUDE_MODEL,
+                max_tokens: 4096,
+                messages: [{ role: 'user', content: textPrompt }]
+            });
+
+            const transcription = response.content?.[0]?.text || '';
+            console.log('Text analysis successful, length:', transcription.length);
+
+            return res.status(200).json({
+                success: true,
+                transcription: transcription,
+                metadata: {
+                    model: CLAUDE_MODEL,
+                    source: 'text'
+                }
+            });
+
+        } catch (error) {
+            console.error('Error analyzing text:', error);
+            return res.status(500).json({
+                error: 'Failed to analyze text',
+                message: error.message
+            });
+        }
+    });
+});
+
+/**
  * fetchUrl - Proxy to fetch any URL and return its content
  * POST request with { url }
  * Returns { contentType, data } where data is base64 for images or text for HTML/text

@@ -5240,11 +5240,11 @@
             }
         });
 
-        // Content input: handles URLs (fetch via proxy) or plain text (paste directly to editor)
+        // Content input: handles URLs (fetch + AI) or plain text (AI convert to v4)
         const fetchUrlBtn = document.getElementById('fetchUrlBtn');
         const contentInput = document.getElementById('contentInput');
         if (fetchUrlBtn && contentInput) {
-            const FETCH_URL_API = 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/fetchUrl';
+            const API_BASE = 'https://us-central1-chordsapp-e10e7.cloudfunctions.net';
 
             // Auto-expand textarea on paste
             contentInput.addEventListener('input', () => {
@@ -5263,25 +5263,40 @@
                 }
             }
 
+            async function analyzeTextWithAI(text) {
+                const resp = await fetch(API_BASE + '/analyzeText', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.error || 'AI analysis failed');
+                }
+                const result = await resp.json();
+                return result.transcription;
+            }
+
             async function handleContentInput() {
                 const input = contentInput.value.trim();
                 if (!input) return;
 
                 const isUrl = /^https?:\/\//i.test(input);
-
-                if (!isUrl) {
-                    // Plain text: put directly into editor
-                    putTextInEditor(input);
-                    contentInput.value = '';
-                    contentInput.style.height = 'auto';
-                    return;
-                }
-
-                // URL: fetch via Cloud Function proxy
                 fetchUrlBtn.textContent = '...';
                 fetchUrlBtn.disabled = true;
+
                 try {
-                    const resp = await fetch(FETCH_URL_API, {
+                    if (!isUrl) {
+                        // Plain text: send to AI for v4 conversion
+                        const formatted = await analyzeTextWithAI(input);
+                        putTextInEditor(formatted);
+                        contentInput.value = '';
+                        contentInput.style.height = 'auto';
+                        return;
+                    }
+
+                    // URL: fetch via proxy first
+                    const resp = await fetch(API_BASE + '/fetchUrl', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ url: input })
@@ -5293,6 +5308,7 @@
                     const result = await resp.json();
 
                     if (result.type === 'image') {
+                        // Image URL: feed into scanner
                         const byteChars = atob(result.data);
                         const byteArray = new Uint8Array(byteChars.length);
                         for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
@@ -5300,7 +5316,10 @@
                         const file = new File([blob], 'url-image.png', { type: result.contentType });
                         handleImageFile(file);
                     } else {
-                        putTextInEditor(result.data);
+                        // Webpage text: send through AI for v4 conversion
+                        fetchUrlBtn.textContent = 'AI...';
+                        const formatted = await analyzeTextWithAI(result.data);
+                        putTextInEditor(formatted);
                     }
                     contentInput.value = '';
                     contentInput.style.height = 'auto';
