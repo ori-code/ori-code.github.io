@@ -423,7 +423,7 @@ input[type="checkbox"]:checked::after {
     background: transparent !important;
     border: 1px solid var(--border) !important;
     color: var(--text) !important;
-    opacity: 0.6;
+    opacity: 1;
     transition: all 0.2s ease !important;
 }
 
@@ -526,22 +526,24 @@ input[type="checkbox"]:checked::after {
     margin-left: 0;
 }
 
-/* Override all colored button variants to B&W */
+/* All header buttons uniform style */
 .header-btn.pads-btn,
 .header-btn.metro-btn,
 .header-btn.go-live-btn,
-.header-btn.live-preview-btn {
+.header-btn.live-preview-btn,
+.header-btn.display-toggle {
     background: transparent;
     border-color: var(--border);
     color: var(--text);
-    font-weight: 600;
+    font-weight: normal;
     text-shadow: none;
 }
 
 .header-btn.pads-btn:hover,
 .header-btn.metro-btn:hover,
 .header-btn.go-live-btn:hover,
-.header-btn.live-preview-btn:hover {
+.header-btn.live-preview-btn:hover,
+.header-btn.display-toggle:hover {
     background: var(--text);
     color: var(--bg);
     box-shadow: none;
@@ -552,11 +554,6 @@ input[type="checkbox"]:checked::after {
 .header-btn.display-toggle.active {
     background: var(--text);
     border-color: var(--text);
-    color: var(--bg);
-}
-
-.header-btn.display-toggle:hover {
-    background: var(--text);
     color: var(--bg);
 }
 
