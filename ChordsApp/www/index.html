@@ -141,6 +141,11 @@
                             data-i18n="step1.btn">Upload</label>
                         <button class="primary-action" id="pasteImageBtn" style="flex: 1; display: none;">Paste</button>
                     </div>
+                    <div style="display: flex; gap: 6px; width: 100%; margin-top: 8px;">
+                        <input type="text" id="imageUrlInput" placeholder="Paste image URL..."
+                            style="flex: 1; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); outline: none; font-family: inherit;">
+                        <button class="primary-action" id="fetchUrlBtn" style="white-space: nowrap;">URL</button>
+                    </div>
                     <div class="preview-panel" id="uploadPreview" tabindex="0">
                         <img id="previewImage" alt="Uploaded chart preview">
                         <p class="preview-placeholder" data-i18n="step1.placeholder">No file selected yet.<br>
@@ -5234,6 +5239,61 @@
                 }
             }
         });
+
+        // Fetch image from URL
+        const fetchUrlBtn = document.getElementById('fetchUrlBtn');
+        const imageUrlInput = document.getElementById('imageUrlInput');
+        if (fetchUrlBtn && imageUrlInput) {
+            async function fetchImageFromUrl() {
+                const url = imageUrlInput.value.trim();
+                if (!url) return;
+                if (!/^https?:\/\//i.test(url)) {
+                    window.showAlert && showAlert('Please enter a valid URL starting with http:// or https://');
+                    return;
+                }
+                fetchUrlBtn.textContent = '...';
+                fetchUrlBtn.disabled = true;
+                try {
+                    // Load image via <img> to avoid CORS fetch issues
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = () => reject(new Error('Failed to load image'));
+                        img.src = url;
+                    });
+                    // Draw to canvas and convert to blob
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    canvas.getContext('2d').drawImage(img, 0, 0);
+                    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+                    const file = new File([blob], 'url-image.png', { type: 'image/png' });
+                    handleImageFile(file);
+                    imageUrlInput.value = '';
+                } catch (err) {
+                    // Fallback: try direct fetch
+                    try {
+                        const resp = await fetch(url);
+                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                        const blob = await resp.blob();
+                        if (!blob.type.startsWith('image/')) throw new Error('Not an image');
+                        const file = new File([blob], 'url-image.png', { type: blob.type });
+                        handleImageFile(file);
+                        imageUrlInput.value = '';
+                    } catch (err2) {
+                        window.showAlert && showAlert('Could not load image from URL. The server may block external access.');
+                    }
+                } finally {
+                    fetchUrlBtn.textContent = 'URL';
+                    fetchUrlBtn.disabled = false;
+                }
+            }
+            fetchUrlBtn.addEventListener('click', fetchImageFromUrl);
+            imageUrlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') fetchImageFromUrl();
+            });
+        }
     })();
     </script>
 
