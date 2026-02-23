@@ -55,7 +55,7 @@
                 </button>
                 <a href="https://www.thefaithsound.com/ChordsApp/www/" class="header-brand"
                     style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
-                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v59</span></span>
+                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v60</span></span>
                     <span class="header-brand-url" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
                 </a>
@@ -136,10 +136,10 @@
                         best recognition
                         results.</p>
                     <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
-                    <div style="display: flex; gap: 8px; width: 100%;">
+                    <div id="uploadBtnRow" style="display: flex; gap: 8px; width: 100%;">
                         <label class="primary-action" for="chartFileInput" style="flex: 1; text-align: center;"
                             data-i18n="step1.btn">Upload</label>
-                        <button class="primary-action" id="pasteImageBtn" style="flex: 1;">Paste</button>
+                        <button class="primary-action" id="pasteImageBtn" style="flex: 1; display: none;">Paste</button>
                     </div>
                     <div class="preview-panel" id="uploadPreview" tabindex="0">
                         <img id="previewImage" alt="Uploaded chart preview">
@@ -5189,29 +5189,12 @@
             }
         });
 
-        // Paste button — clipboard API on desktop, photo picker fallback on iOS
+        // Paste button — desktop only (clipboard API not supported on iOS)
         const pasteBtn = document.getElementById('pasteImageBtn');
         if (pasteBtn) {
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-            if (isMobile) {
-                // iOS/Android: clipboard image paste is not supported.
-                // Repurpose as quick camera/photo access.
-                pasteBtn.textContent = 'Camera';
-                const cameraInput = document.createElement('input');
-                cameraInput.type = 'file';
-                cameraInput.accept = 'image/*';
-                cameraInput.capture = 'environment';
-                cameraInput.style.display = 'none';
-                document.body.appendChild(cameraInput);
-                cameraInput.addEventListener('change', () => {
-                    const file = cameraInput.files?.[0];
-                    if (file) handleImageFile(file);
-                    cameraInput.value = '';
-                });
-                pasteBtn.addEventListener('click', () => cameraInput.click());
-            } else {
-                // Desktop: use clipboard API
+            if (!isMobile) {
+                pasteBtn.style.display = 'block';
                 pasteBtn.addEventListener('click', async () => {
                     try {
                         const clipboardItems = await navigator.clipboard.read();
