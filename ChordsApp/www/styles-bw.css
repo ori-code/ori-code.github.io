@@ -555,10 +555,11 @@ input[type="checkbox"]:checked::after {
     color: var(--bg);
 }
 
-/* Live Session group */
+/* Live group — single Preview button, no group border needed */
 .header-btn-group.live-group {
     background: transparent;
-    border-color: var(--border);
+    border: none;
+    padding: 0;
 }
 
 /* --- Workflow --- */

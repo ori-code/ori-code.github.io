@@ -94,6 +94,11 @@
             <button class="nav-tab" data-tab="tools">
                 <span class="nav-tab-label" data-i18n="nav.tab.tools">Tools</span>
             </button>
+            <!-- Hidden for now
+            <button class="nav-tab" data-tab="features" onclick="window.location.href='indextestui.html'">
+                <span class="nav-tab-label" data-i18n="nav.tab.features">Features</span>
+            </button>
+            -->
         </div>
         <!-- Live Session sub-menu (hidden by default) -->
         <div id="liveSessionSubmenu" class="nav-submenu" style="display: none;">
@@ -133,10 +138,11 @@
                     <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
                     <label class="primary-action" for="chartFileInput" style="width: 100%;"
                         data-i18n="step1.btn">Upload</label>
-                    <div class="preview-panel" id="uploadPreview">
+                    <div class="preview-panel" id="uploadPreview" tabindex="0">
                         <img id="previewImage" alt="Uploaded chart preview">
-                        <p class="preview-placeholder" data-i18n="step1.placeholder">No file selected yet. Supported:
-                            JPG, PNG, HEIC, PDF.</p>
+                        <p class="preview-placeholder" data-i18n="step1.placeholder">No file selected yet.<br>
+                            Upload, paste (Ctrl+V), or drag &amp; drop.<br>
+                            <span style="opacity: 0.5; font-size: 0.65rem;">Supported: JPG, PNG, HEIC, PDF.</span></p>
                     </div>
                 </article>
                 <article class="step-card">
@@ -224,15 +230,15 @@
                             data-i18n="preview.btn.editor">Editor</button>
                     </div>
 
-                    <!-- Music Tools Group -->
-                    <div class="header-btn-group music-tools">
+                    <!-- Music Tools Group (hidden — accessible from side menu) -->
+                    <div class="header-btn-group music-tools" style="display: none;">
                         <button class="header-btn pads-btn" id="headerPadsBtn" data-i18n="preview.btn.pads">Pads</button>
                         <button class="header-btn metro-btn" id="headerMetronomeBtn" data-i18n="preview.btn.metro">Metro</button>
                     </div>
 
-                    <!-- Live Session Group -->
+                    <!-- Live Preview -->
                     <div class="header-btn-group live-group">
-                        <button class="header-btn go-live-btn" id="headerGoLiveBtn" data-i18n="preview.btn.golive">Go
+                        <button class="header-btn go-live-btn" id="headerGoLiveBtn" style="display: none;">Go
                             Live</button>
                         <button class="header-btn live-preview-btn" id="headerLivePreview"
                             data-i18n="preview.btn.preview">Preview</button>
@@ -5119,6 +5125,101 @@
         }
 
         window.navBar = { switchTab: switchTab };
+    })();
+    </script>
+
+    <!-- Paste & Drag-Drop for chart upload -->
+    <script>
+    (function() {
+        'use strict';
+        const uploadPreview = document.getElementById('uploadPreview');
+        const previewImage = document.getElementById('previewImage');
+        const chartFileInput = document.getElementById('chartFileInput');
+        const placeholder = uploadPreview ? uploadPreview.querySelector('.preview-placeholder') : null;
+
+        if (!uploadPreview || !previewImage) return;
+
+        function handleImageFile(file) {
+            if (!file) return;
+            const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/webp', 'application/pdf'];
+            if (!validTypes.includes(file.type) && !file.name?.match(/\.(jpe?g|png|heic|webp|pdf)$/i)) {
+                window.showAlert && showAlert('Unsupported file type. Please use JPG, PNG, HEIC, or PDF.');
+                return;
+            }
+
+            if (file.type === 'application/pdf' || file.name?.endsWith('.pdf')) {
+                previewImage.style.display = 'none';
+                if (placeholder) {
+                    placeholder.textContent = file.name || 'PDF pasted';
+                    placeholder.style.display = '';
+                }
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                chartFileInput.files = dt.files;
+                chartFileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewImage.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            chartFileInput.files = dt.files;
+            chartFileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // Paste (Ctrl+V / Cmd+V) — listen on document for convenience
+        document.addEventListener('paste', (e) => {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+            for (const item of items) {
+                if (item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    handleImageFile(item.getAsFile());
+                    return;
+                }
+            }
+        });
+
+        // Drag & drop onto preview panel
+        uploadPreview.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadPreview.style.borderColor = 'var(--text)';
+            uploadPreview.style.borderStyle = 'dashed';
+        });
+        uploadPreview.addEventListener('dragleave', () => {
+            uploadPreview.style.borderColor = '';
+            uploadPreview.style.borderStyle = '';
+        });
+        uploadPreview.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadPreview.style.borderColor = '';
+            uploadPreview.style.borderStyle = '';
+            const file = e.dataTransfer?.files?.[0];
+            if (file) handleImageFile(file);
+        });
+
+        // File input change — show preview for images
+        chartFileInput.addEventListener('change', (e) => {
+            if (e.isTrusted) {
+                const file = e.target.files?.[0];
+                if (file && file.type?.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        previewImage.src = ev.target.result;
+                        previewImage.style.display = 'block';
+                        if (placeholder) placeholder.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
     })();
     </script>
 
