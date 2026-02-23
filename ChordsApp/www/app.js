@@ -1356,11 +1356,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 detectedLayout = layoutValue;
                 console.log('📐 Layout detected from AI:', layoutValue, 'column(s)');
 
-                // Apply to column count dropdown
+                // Apply to column count dropdown and trigger full layout pipeline
                 const columnCountSelect = document.getElementById('columnCount');
                 if (columnCountSelect && livePreview) {
                     columnCountSelect.value = layoutValue;
-                    livePreview.style.columns = layoutValue.toString();
+                    columnCountSelect.dispatchEvent(new Event('change', { bubbles: true }));
                     console.log('✅ Applied detected layout:', layoutValue, 'column(s)');
                 }
                 return layoutValue;
