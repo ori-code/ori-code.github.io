@@ -142,9 +142,9 @@
                         <button class="primary-action" id="pasteImageBtn" style="flex: 1; display: none;">Paste</button>
                     </div>
                     <div style="display: flex; gap: 6px; width: 100%; margin-top: 8px;">
-                        <input type="text" id="imageUrlInput" placeholder="Paste image URL..."
+                        <input type="text" id="imageUrlInput" placeholder="Paste URL (image or chord page)..."
                             style="flex: 1; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); outline: none; font-family: inherit;">
-                        <button class="primary-action" id="fetchUrlBtn" style="white-space: nowrap;">URL</button>
+                        <button class="primary-action" id="fetchUrlBtn" style="white-space: nowrap;">Fetch</button>
                     </div>
                     <div class="preview-panel" id="uploadPreview" tabindex="0">
                         <img id="previewImage" alt="Uploaded chart preview">
@@ -5240,11 +5240,13 @@
             }
         });
 
-        // Fetch image from URL
+        // Fetch content from URL (images or text/chord pages)
         const fetchUrlBtn = document.getElementById('fetchUrlBtn');
         const imageUrlInput = document.getElementById('imageUrlInput');
         if (fetchUrlBtn && imageUrlInput) {
-            async function fetchImageFromUrl() {
+            const FETCH_URL_API = 'https://us-central1-chordsapp-e10e7.cloudfunctions.net/fetchUrl';
+
+            async function fetchFromUrl() {
                 const url = imageUrlInput.value.trim();
                 if (!url) return;
                 if (!/^https?:\/\//i.test(url)) {
@@ -5254,44 +5256,49 @@
                 fetchUrlBtn.textContent = '...';
                 fetchUrlBtn.disabled = true;
                 try {
-                    // Load image via <img> to avoid CORS fetch issues
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    await new Promise((resolve, reject) => {
-                        img.onload = resolve;
-                        img.onerror = () => reject(new Error('Failed to load image'));
-                        img.src = url;
+                    const resp = await fetch(FETCH_URL_API, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url })
                     });
-                    // Draw to canvas and convert to blob
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.naturalWidth;
-                    canvas.height = img.naturalHeight;
-                    canvas.getContext('2d').drawImage(img, 0, 0);
-                    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-                    const file = new File([blob], 'url-image.png', { type: 'image/png' });
-                    handleImageFile(file);
+                    if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({}));
+                        throw new Error(err.error || 'Failed to fetch URL');
+                    }
+                    const result = await resp.json();
+
+                    if (result.type === 'image') {
+                        // Image: convert base64 to file and feed into scanner
+                        const byteChars = atob(result.data);
+                        const byteArray = new Uint8Array(byteChars.length);
+                        for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+                        const blob = new Blob([byteArray], { type: result.contentType });
+                        const file = new File([blob], 'url-image.png', { type: result.contentType });
+                        handleImageFile(file);
+                    } else {
+                        // Text/HTML: put extracted text into the editor
+                        const editor = document.getElementById('visualEditor');
+                        if (editor) {
+                            editor.value = result.data;
+                            editor.dispatchEvent(new Event('input', { bubbles: true }));
+                            // Show editor section if hidden
+                            const editorSection = document.getElementById('editor');
+                            if (editorSection) editorSection.style.display = 'block';
+                            // Scroll to editor
+                            editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
                     imageUrlInput.value = '';
                 } catch (err) {
-                    // Fallback: try direct fetch
-                    try {
-                        const resp = await fetch(url);
-                        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-                        const blob = await resp.blob();
-                        if (!blob.type.startsWith('image/')) throw new Error('Not an image');
-                        const file = new File([blob], 'url-image.png', { type: blob.type });
-                        handleImageFile(file);
-                        imageUrlInput.value = '';
-                    } catch (err2) {
-                        window.showAlert && showAlert('Could not load image from URL. The server may block external access.');
-                    }
+                    window.showAlert && showAlert(err.message || 'Could not fetch URL content.');
                 } finally {
-                    fetchUrlBtn.textContent = 'URL';
+                    fetchUrlBtn.textContent = 'Fetch';
                     fetchUrlBtn.disabled = false;
                 }
             }
-            fetchUrlBtn.addEventListener('click', fetchImageFromUrl);
+            fetchUrlBtn.addEventListener('click', fetchFromUrl);
             imageUrlInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') fetchImageFromUrl();
+                if (e.key === 'Enter') fetchFromUrl();
             });
         }
     })();

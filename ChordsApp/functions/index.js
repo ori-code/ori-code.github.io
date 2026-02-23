@@ -912,6 +912,83 @@ exports.deleteOrphanUser = functions
 });
 
 /**
+ * fetchUrl - Proxy to fetch any URL and return its content
+ * POST request with { url }
+ * Returns { contentType, data } where data is base64 for images or text for HTML/text
+ */
+exports.fetchUrl = functions
+    .runWith({ timeoutSeconds: 30, memory: '256MB' })
+    .https.onRequest((req, res) => {
+    cors(req, res, async () => {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        try {
+            const { url } = req.body;
+            if (!url || !/^https?:\/\//i.test(url)) {
+                return res.status(400).json({ error: 'Valid URL required' });
+            }
+
+            const response = await fetch(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; aChordim/1.0)',
+                    'Accept': 'text/html,application/xhtml+xml,image/*,*/*'
+                },
+                redirect: 'follow',
+                signal: AbortSignal.timeout(15000)
+            });
+
+            if (!response.ok) {
+                return res.status(502).json({ error: `Remote server returned ${response.status}` });
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+
+            if (contentType.startsWith('image/')) {
+                // Image: return as base64
+                const buffer = Buffer.from(await response.arrayBuffer());
+                return res.status(200).json({
+                    type: 'image',
+                    contentType: contentType.split(';')[0],
+                    data: buffer.toString('base64')
+                });
+            } else {
+                // HTML/text: extract readable text
+                const html = await response.text();
+
+                // Strip HTML tags, scripts, styles → plain text
+                let text = html
+                    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                    .replace(/<br\s*\/?>/gi, '\n')
+                    .replace(/<\/?(p|div|h[1-6]|li|tr)[^>]*>/gi, '\n')
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/&nbsp;/gi, ' ')
+                    .replace(/&amp;/gi, '&')
+                    .replace(/&lt;/gi, '<')
+                    .replace(/&gt;/gi, '>')
+                    .replace(/&quot;/gi, '"')
+                    .replace(/&#39;/gi, "'")
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+
+                return res.status(200).json({
+                    type: 'text',
+                    contentType: contentType.split(';')[0],
+                    data: text,
+                    title: (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1]?.trim() || ''
+                });
+            }
+
+        } catch (error) {
+            console.error('Error fetching URL:', error);
+            return res.status(500).json({ error: 'Failed to fetch URL: ' + error.message });
+        }
+    });
+});
+
+/**
  * userStats - Get stats for a specific user (Admin Only)
  * GET request with ?userId=xxx&adminKey=xxx
  */
