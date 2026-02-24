@@ -170,15 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         yearSpan.textContent = new Date().getFullYear();
     }
 
-    // Preload pad sounds from Cloudinary CDN on page load (no user interaction needed)
-    // Files are fetched and cached silently, decoded when user first plays a pad
-    if (window.padPlayer) {
-        window.padPlayer.preloadFiles().then(count => {
-            console.log(`🎹 Pads preloaded from CDN: ${count} files ready`);
-        }).catch(err => {
-            console.log('Pad preloading error:', err.message);
-        });
-    }
+    // Pad sounds load on demand when user clicks a key (no bulk preload)
 
     // ============= A4 PREVIEW SCALING =============
     // Scales the A4 preview to fit available space (mobile or side-by-side layout)
@@ -2895,6 +2887,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const formatted = [];
         let sectionCounter = 0;
 
+        // Filter out music link lines from preview (YouTube, Spotify, etc.)
+        const musicLinkPattern = /^(YouTube|Spotify|AppleMusic|SoundCloud|Link):\s*https?:\/\/.*/i;
+        content = content.split('\n').filter(line => !musicLinkPattern.test(line.trim())).join('\n');
+
         console.log(`@@@RTL formatV4ForPreview ENTERED | content length: ${content.length}`); // @@@RTL
 
         // NOTE: No arrangement reversal needed here.
@@ -3310,6 +3306,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     const formatForPreview = (content, options = {}) => {
         const { enableSectionBlocks = false } = options;
 
+        // Filter out music link lines from preview (YouTube, Spotify, etc.)
+        const musicLinkPattern = /^(YouTube|Spotify|AppleMusic|SoundCloud|Link):\s*https?:\/\/.*/i;
+        content = content.split('\n').filter(line => !musicLinkPattern.test(line.trim())).join('\n');
+
         // NOTE: No text-level arrangement reversal needed here.
         // The dir="rtl" attribute on the badge container handles RTL display natively.
 
@@ -3708,6 +3708,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }, 100);
 
         console.log('Live preview updated successfully');
+
+        // Check for music links in content
+        if (typeof checkForMusicLinks === 'function') {
+            checkForMusicLinks();
+        }
     };
 
     // Make all chords bold with optional Nashville numbers
@@ -6241,6 +6246,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Regenerate preview first
         updateSongBookFromVisual();
 
+        // Check for music links in the loaded song
+        if (typeof checkForMusicLinks === 'function') {
+            checkForMusicLinks();
+        }
+
         // Per-song preferences (transpose, etc.) are now handled by Live Mode
         // via loadSongPreferences() in updateFromBroadcast()
 
@@ -6424,6 +6434,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
         // Regenerate preview
         updateSongBookFromVisual();
         updateEditorBadges(); // ✅ Update badges in edit mode
+
+        // Check for music links in the loaded song
+        if (typeof checkForMusicLinks === 'function') {
+            checkForMusicLinks();
+        }
 
         // If leader, broadcast this song
         if (window.sessionManager && window.sessionManager.isLeader) {
@@ -7079,4 +7094,396 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Initialize subscription UI
     initSubscriptionUI();
+
+    // Initialize music links section
+    initMusicSection();
 });
+
+// ============= MUSIC LINKS FUNCTIONALITY =============
+
+// Platform configurations
+const MUSIC_PLATFORMS = {
+    youtube: {
+        name: 'YouTube',
+        contentKey: 'YouTube',
+        pattern: /(?:youtube\.com|youtu\.be)/i,
+        extractId: (url) => {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
+                /^([a-zA-Z0-9_-]{11})$/
+            ];
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) return match[1];
+            }
+            return null;
+        },
+        embedType: 'iframe',
+        getEmbedUrl: (id) => `https://www.youtube.com/embed/${id}?rel=0`
+    },
+    spotify: {
+        name: 'Spotify',
+        contentKey: 'Spotify',
+        pattern: /open\.spotify\.com/i,
+        embedType: 'link'
+    },
+    apple: {
+        name: 'Apple Music',
+        contentKey: 'AppleMusic',
+        pattern: /music\.apple\.com/i,
+        embedType: 'link'
+    },
+    soundcloud: {
+        name: 'SoundCloud',
+        contentKey: 'SoundCloud',
+        pattern: /soundcloud\.com/i,
+        embedType: 'link'
+    },
+    generic: {
+        name: 'Link',
+        contentKey: 'Link',
+        pattern: null,
+        embedType: 'link'
+    }
+};
+
+// Current music links state
+let currentMusicLinks = {};
+
+/**
+ * Initialize Music section on page load
+ */
+function initMusicSection() {
+    checkForMusicLinks();
+
+    // Add input listener for platform detection
+    const input = document.getElementById('musicUrlInput');
+    if (input) {
+        input.addEventListener('input', detectPlatformFromInput);
+    }
+}
+
+/**
+ * Detect platform from URL as user types
+ */
+function detectPlatformFromInput() {
+    const input = document.getElementById('musicUrlInput');
+    const detectedDiv = document.getElementById('detectedPlatform');
+    const detectedName = document.getElementById('detectedPlatformName');
+
+    if (!input || !detectedDiv || !detectedName) return;
+
+    const url = input.value.trim();
+    if (!url) {
+        detectedDiv.style.display = 'none';
+        return;
+    }
+
+    const platform = detectPlatform(url);
+    if (platform) {
+        detectedName.textContent = MUSIC_PLATFORMS[platform].name;
+        detectedDiv.style.display = 'block';
+    } else {
+        detectedDiv.style.display = 'none';
+    }
+}
+
+/**
+ * Detect which platform a URL belongs to
+ */
+function detectPlatform(url) {
+    if (!url) return null;
+
+    for (const [key, platform] of Object.entries(MUSIC_PLATFORMS)) {
+        if (platform.pattern && platform.pattern.test(url)) {
+            return key;
+        }
+    }
+
+    // Check if it's a valid URL for generic link
+    try {
+        new URL(url);
+        return 'generic';
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Open the Music link modal
+ */
+function openMusicModal() {
+    const modal = document.getElementById('musicModal');
+    const input = document.getElementById('musicUrlInput');
+    const error = document.getElementById('musicUrlError');
+    const detectedDiv = document.getElementById('detectedPlatform');
+
+    if (modal) {
+        modal.style.display = 'flex';
+        if (input) {
+            input.value = '';
+            input.focus();
+            if (error) error.style.display = 'none';
+            if (detectedDiv) detectedDiv.style.display = 'none';
+
+            // Add Enter key support
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveMusicLink();
+                } else if (e.key === 'Escape') {
+                    closeMusicModal();
+                }
+            };
+        }
+    }
+}
+
+/**
+ * Close the Music link modal
+ */
+function closeMusicModal() {
+    const modal = document.getElementById('musicModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Save the music link from the modal
+ */
+function saveMusicLink() {
+    const input = document.getElementById('musicUrlInput');
+    const error = document.getElementById('musicUrlError');
+    const url = input?.value?.trim() || '';
+
+    if (!url) {
+        if (error) error.style.display = 'block';
+        return;
+    }
+
+    const platform = detectPlatform(url);
+
+    if (!platform) {
+        if (error) {
+            error.textContent = 'Please enter a valid URL';
+            error.style.display = 'block';
+        }
+        return;
+    }
+
+    // For YouTube, validate the video ID
+    if (platform === 'youtube') {
+        const videoId = MUSIC_PLATFORMS.youtube.extractId(url);
+        if (!videoId) {
+            if (error) {
+                error.textContent = 'Please enter a valid YouTube URL';
+                error.style.display = 'block';
+            }
+            return;
+        }
+    }
+
+    // Save the link
+    currentMusicLinks[platform] = url;
+    updateMusicLinkInContent(platform, url);
+    updateMusicUI();
+
+    // Close modal
+    closeMusicModal();
+}
+
+/**
+ * Update or add music link in the editor content
+ */
+function updateMusicLinkInContent(platform, url) {
+    const visualEditor = document.getElementById('visualEditor');
+    if (!visualEditor) return;
+
+    const contentKey = MUSIC_PLATFORMS[platform].contentKey;
+    let content = visualEditor.value;
+    const linePattern = new RegExp(`^${contentKey}:\\s*https?:\\/\\/[^\\n]+$`, 'm');
+
+    if (linePattern.test(content)) {
+        // Update existing line
+        content = content.replace(linePattern, `${contentKey}: ${url}`);
+    } else {
+        // Add line after metadata
+        const lines = content.split('\n');
+        let insertIndex = 0;
+
+        // Find insertion point after metadata
+        for (let i = 0; i < Math.min(lines.length, 15); i++) {
+            const line = lines[i].trim();
+            if (line.match(/^(Key|BPM|Time|Author|Title|YouTube|Spotify|AppleMusic|SoundCloud|Link):/i) || line === '' || i < 3) {
+                insertIndex = i + 1;
+            }
+        }
+
+        lines.splice(insertIndex, 0, `${contentKey}: ${url}`);
+        content = lines.join('\n');
+    }
+
+    visualEditor.value = content;
+    triggerEditorUpdate();
+}
+
+/**
+ * Remove a music link
+ */
+function removeMusicLink(platform) {
+    const visualEditor = document.getElementById('visualEditor');
+    if (!visualEditor) return;
+
+    const contentKey = MUSIC_PLATFORMS[platform].contentKey;
+    let content = visualEditor.value;
+    const linePattern = new RegExp(`^${contentKey}:\\s*https?:\\/\\/[^\\n]*\\n?`, 'm');
+    content = content.replace(linePattern, '');
+    visualEditor.value = content;
+
+    delete currentMusicLinks[platform];
+    updateMusicUI();
+    triggerEditorUpdate();
+}
+
+/**
+ * Check for music links in content and update UI
+ */
+function checkForMusicLinks() {
+    const visualEditor = document.getElementById('visualEditor');
+    if (!visualEditor) return;
+
+    const content = visualEditor.value;
+    currentMusicLinks = {};
+
+    // Check for each platform
+    for (const [key, platform] of Object.entries(MUSIC_PLATFORMS)) {
+        const pattern = new RegExp(`^${platform.contentKey}:\\s*(https?:\\/\\/[^\\n]+)`, 'm');
+        const match = content.match(pattern);
+        if (match && match[1]) {
+            currentMusicLinks[key] = match[1].trim();
+        }
+    }
+
+    updateMusicUI();
+}
+
+/**
+ * Update the music section UI based on current links
+ */
+function updateMusicUI() {
+    const addBtn = document.getElementById('musicAddBtn');
+    const youtubeContainer = document.getElementById('youtubePlayerContainer');
+    const youtubeIframe = document.getElementById('youtubeIframe');
+    const linksRow = document.getElementById('musicLinksRow');
+
+    const hasYoutube = !!currentMusicLinks.youtube;
+
+    // YouTube player
+    if (hasYoutube && youtubeContainer && youtubeIframe) {
+        const videoId = MUSIC_PLATFORMS.youtube.extractId(currentMusicLinks.youtube);
+        if (videoId) {
+            youtubeIframe.src = `https://www.youtube.com/embed/${videoId}?rel=0`;
+            youtubeContainer.style.display = 'block';
+        }
+    } else if (youtubeContainer) {
+        youtubeContainer.style.display = 'none';
+        if (youtubeIframe) youtubeIframe.src = '';
+    }
+
+    // Other platform buttons
+    if (linksRow) {
+        let hasVisibleLinks = false;
+
+        // Spotify
+        const spotifyBtn = document.getElementById('spotifyLinkBtn');
+        if (spotifyBtn) {
+            if (currentMusicLinks.spotify) {
+                spotifyBtn.href = currentMusicLinks.spotify;
+                spotifyBtn.style.display = 'inline-flex';
+                hasVisibleLinks = true;
+            } else {
+                spotifyBtn.style.display = 'none';
+            }
+        }
+
+        // Apple Music
+        const appleBtn = document.getElementById('appleLinkBtn');
+        if (appleBtn) {
+            if (currentMusicLinks.apple) {
+                appleBtn.href = currentMusicLinks.apple;
+                appleBtn.style.display = 'inline-flex';
+                hasVisibleLinks = true;
+            } else {
+                appleBtn.style.display = 'none';
+            }
+        }
+
+        // SoundCloud
+        const soundcloudBtn = document.getElementById('soundcloudLinkBtn');
+        if (soundcloudBtn) {
+            if (currentMusicLinks.soundcloud) {
+                soundcloudBtn.href = currentMusicLinks.soundcloud;
+                soundcloudBtn.style.display = 'inline-flex';
+                hasVisibleLinks = true;
+            } else {
+                soundcloudBtn.style.display = 'none';
+            }
+        }
+
+        // Generic Link
+        const genericBtn = document.getElementById('genericLinkBtn');
+        const genericText = document.getElementById('genericLinkText');
+        if (genericBtn) {
+            if (currentMusicLinks.generic) {
+                genericBtn.href = currentMusicLinks.generic;
+                genericBtn.style.display = 'inline-flex';
+                // Try to show domain name
+                try {
+                    const domain = new URL(currentMusicLinks.generic).hostname.replace('www.', '');
+                    if (genericText) genericText.textContent = domain;
+                } catch {
+                    if (genericText) genericText.textContent = 'Link';
+                }
+                hasVisibleLinks = true;
+            } else {
+                genericBtn.style.display = 'none';
+            }
+        }
+
+        linksRow.style.display = hasVisibleLinks ? 'flex' : 'none';
+    }
+
+    // Always show add button so user can add more links
+    if (addBtn) {
+        addBtn.style.display = 'flex';
+    }
+}
+
+/**
+ * Trigger editor content update
+ */
+function triggerEditorUpdate() {
+    if (typeof updateSongBookFromVisual === 'function') {
+        updateSongBookFromVisual();
+    }
+    if (typeof updateLivePreview === 'function') {
+        updateLivePreview();
+    }
+}
+
+// Make functions globally accessible
+window.openMusicModal = openMusicModal;
+window.closeMusicModal = closeMusicModal;
+window.saveMusicLink = saveMusicLink;
+window.removeMusicLink = removeMusicLink;
+window.checkForMusicLinks = checkForMusicLinks;
+
+// Backward compatibility aliases
+window.openYoutubeModal = openMusicModal;
+window.closeYoutubeModal = closeMusicModal;
+window.saveYoutubeLink = saveMusicLink;
+window.removeYoutubeLink = () => removeMusicLink('youtube');
+window.checkForYoutubeLink = checkForMusicLinks;
+
+// ============= END MUSIC LINKS FUNCTIONALITY =============

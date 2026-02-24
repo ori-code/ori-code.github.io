@@ -312,14 +312,56 @@ const padPlayer = {
     },
 
     /**
+     * Load a single pad sound on demand
+     */
+    async loadSingle(key, onProgress = null) {
+        if (this.buffers[key]) return true;
+
+        await this.init();
+
+        try {
+            let arrayBuffer;
+
+            if (this.rawAudioCache[key]) {
+                arrayBuffer = this.rawAudioCache[key];
+            } else {
+                const url = this.soundUrls[key];
+                if (!url) return false;
+
+                if (onProgress) onProgress('fetching');
+                const response = await fetch(url);
+                if (!response.ok) return false;
+                arrayBuffer = await response.arrayBuffer();
+            }
+
+            if (onProgress) onProgress('decoding');
+            const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+            this.buffers[key] = audioBuffer;
+            delete this.rawAudioCache[key];
+            console.log(`Loaded pad on demand: ${key}`);
+            return true;
+        } catch (error) {
+            console.error(`Error loading pad ${key}:`, error);
+            return false;
+        }
+    },
+
+    /**
      * Play a pad sound (looped) - crossfades from any currently playing pad
+     * Auto-loads the pad on demand if not yet loaded
      */
     async play(key) {
         await this.init();
 
+        // On-demand loading: fetch and decode just this one pad if needed
         if (!this.buffers[key]) {
-            console.warn(`Pad not loaded: ${key}`);
-            return false;
+            this.updateKeyUI(key, 'loading');
+            const loaded = await this.loadSingle(key);
+            if (!loaded) {
+                this.updateKeyUI(key, false);
+                console.warn(`Pad not loaded: ${key}`);
+                return false;
+            }
         }
 
         // Crossfade: Stop all other playing pads (fade out)
@@ -539,20 +581,30 @@ const padPlayer = {
         // Update modal button
         const keyBtn = document.getElementById(`pad-key-${key}`);
         if (keyBtn) {
-            if (isPlaying) {
+            if (isPlaying === 'loading') {
+                keyBtn.classList.add('loading');
+                keyBtn.classList.remove('playing');
+            } else if (isPlaying) {
                 keyBtn.classList.add('playing');
+                keyBtn.classList.remove('loading');
             } else {
                 keyBtn.classList.remove('playing');
+                keyBtn.classList.remove('loading');
             }
         }
 
         // Update mini player button in side menu
         const miniBtn = document.querySelector(`.mini-pad-key[data-key="${key}"]`);
         if (miniBtn) {
-            if (isPlaying) {
+            if (isPlaying === 'loading') {
+                miniBtn.classList.add('loading');
+                miniBtn.classList.remove('playing');
+            } else if (isPlaying) {
                 miniBtn.classList.add('playing');
+                miniBtn.classList.remove('loading');
             } else {
                 miniBtn.classList.remove('playing');
+                miniBtn.classList.remove('loading');
             }
         }
 

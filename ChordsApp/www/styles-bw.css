@@ -2651,6 +2651,22 @@ input[type="checkbox"]:checked::after {
     color: var(--bg);
 }
 
+.pad-key-btn.loading,
+.mini-pad-key.loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.pad-key-btn.playing {
+    background: var(--text);
+    color: var(--bg);
+}
+
+.mini-pad-key.playing {
+    background: var(--text);
+    color: var(--bg);
+}
+
 /* --- Mobile Responsive --- */
 @media (max-width: 768px) {
     .side-menu-panel {

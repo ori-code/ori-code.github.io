@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="aChordim">
 
-    <link rel="stylesheet" href="styles-bw.css?v=13">
+    <link rel="stylesheet" href="styles-bw.css?v=14">
     <!-- PayPal SDK is loaded dynamically in paypal-subscription.js based on environment -->
 
     <!-- PDF.js for PDF preview -->
@@ -55,7 +55,7 @@
                 </button>
                 <a href="https://www.thefaithsound.com/ChordsApp/www/" class="header-brand"
                     style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
-                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v61</span></span>
+                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v62</span></span>
                     <span class="header-brand-url" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
                 </a>
@@ -3470,7 +3470,7 @@
     <!-- Chords App Format Parser (ChordPro-like format v4) -->
     <script src="chordpro-parser.js"></script>
 
-    <script src="app.js?v=52"></script>
+    <script src="app.js?v=53"></script>
 
     <style>
         /* Auth message states - B&W */
@@ -3780,27 +3780,11 @@
             // Header Pads button
             const headerPadsBtn = document.getElementById('headerPadsBtn');
             if (headerPadsBtn) {
-                headerPadsBtn.addEventListener('click', async () => {
+                headerPadsBtn.addEventListener('click', () => {
                     const padsModal = document.getElementById('padsModal');
                     if (padsModal) {
                         padsModal.style.display = 'flex';
-
-                        // Load sounds if not already loaded
-                        if (window.padPlayer && Object.keys(padPlayer.buffers).length === 0) {
-                            const loadingDiv = document.getElementById('padsLoading');
-                            const gridDiv = document.getElementById('padsGrid');
-                            const progressDiv = document.getElementById('padsLoadingProgress');
-
-                            if (loadingDiv) loadingDiv.style.display = 'block';
-                            if (gridDiv) gridDiv.style.opacity = '0.3';
-
-                            await padPlayer.loadSounds((loaded, total) => {
-                                if (progressDiv) progressDiv.textContent = `${loaded}/${total}`;
-                            });
-
-                            if (loadingDiv) loadingDiv.style.display = 'none';
-                            if (gridDiv) gridDiv.style.opacity = '1';
-                        }
+                        // Pads load on demand when user clicks a key
                     }
                 });
             }
@@ -4598,13 +4582,7 @@
                     const key = btn.dataset.key;
                     if (!key) return;
 
-                    // Load sounds if not already loaded
-                    if (window.padPlayer && Object.keys(padPlayer.buffers).length === 0) {
-                        btn.textContent = '...';
-                        await padPlayer.loadSounds();
-                        btn.textContent = padPlayer.keyDisplayNames[key] || key;
-                    }
-
+                    // Pad loads on demand via toggle/play
                     padPlayer.toggle(key);
                 });
             }
@@ -4623,28 +4601,12 @@
             // Pads: Open Pads Modal (Full Controls)
             const sideMenuOpenPads = document.getElementById('sideMenuOpenPads');
             if (sideMenuOpenPads) {
-                sideMenuOpenPads.addEventListener('click', async () => {
+                sideMenuOpenPads.addEventListener('click', () => {
                     closeMenu();
                     const padsModal = document.getElementById('padsModal');
                     if (padsModal) {
                         padsModal.style.display = 'flex';
-
-                        // Load sounds if not already loaded
-                        if (window.padPlayer && Object.keys(padPlayer.buffers).length === 0) {
-                            const loadingDiv = document.getElementById('padsLoading');
-                            const gridDiv = document.getElementById('padsGrid');
-                            const progressDiv = document.getElementById('padsLoadingProgress');
-
-                            if (loadingDiv) loadingDiv.style.display = 'block';
-                            if (gridDiv) gridDiv.style.opacity = '0.3';
-
-                            await padPlayer.loadSounds((loaded, total) => {
-                                if (progressDiv) progressDiv.textContent = `${loaded}/${total}`;
-                            });
-
-                            if (loadingDiv) loadingDiv.style.display = 'none';
-                            if (gridDiv) gridDiv.style.opacity = '1';
-                        }
+                        // Pads load on demand when user clicks a key
                     }
                 });
             }
@@ -5086,10 +5048,7 @@
                     padsPanel.appendChild(child);
                 });
 
-                // Load pad sounds if needed
-                if (window.padPlayer && Object.keys(padPlayer.buffers).length === 0) {
-                    padPlayer.loadSounds();
-                }
+                // Pads load on demand when user clicks a key
 
                 // Add Stop All button for pads
                 if (!document.getElementById('toolsPadsStopBtn')) {
