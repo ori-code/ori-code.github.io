@@ -1479,14 +1479,6 @@ const liveMode = {
             sessionCodeSpan.textContent = sessionCode;
             sessionIdDiv.style.display = 'block';
 
-            // Generate QR code
-            const qrDiv = document.getElementById('liveModeSessionQR');
-            if (qrDiv) {
-                const joinUrl = `${window.location.origin}${window.location.pathname}?join=${sessionCode.replace('-', '')}`;
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(joinUrl)}`;
-                qrDiv.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="width: 120px; height: 120px; display: block;">`;
-            }
-
             // Show/hide "Manage Session" button (leader only)
             const editSessionBtn = document.getElementById('editSessionBtn');
             if (editSessionBtn) {
@@ -1730,7 +1722,7 @@ const liveMode = {
      * Remove song from playlist (Leader only)
      */
     async removeSongFromPlaylist(songId) {
-        if (!window.sessionManager || !window.sessionManager.isLeader) {
+        if (!window.sessionManager || !(window.sessionManager.isLeader || this._managingIsLeader)) {
             console.log('Only leader can remove songs');
             return;
         }
@@ -1766,35 +1758,49 @@ const liveMode = {
      * Show modal to add songs to playlist
      */
     async showAddSongModal() {
-        if (!window.sessionManager || !window.sessionManager.isLeader) {
+        const isLeader = window.sessionManager?.isLeader || this._managingIsLeader;
+        if (!window.sessionManager || !isLeader) {
             console.log('Only leader can add songs');
             return;
         }
+
+        // Reset selection state on open
+        this._addSongSelectMode = false;
+        this._addSongSelected = new Set();
 
         // Create modal if it doesn't exist
         let modal = document.getElementById('liveAddSongModal');
         if (!modal) {
             modal = document.createElement('div');
             modal.id = 'liveAddSongModal';
+            modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200000; display:flex; align-items:center; justify-content:center; padding:20px;';
             modal.innerHTML = `
-                <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 20px;">
-                    <div style="background: var(--bg-secondary, #1a1a2e); border-radius: 12px; width: 100%; max-width: 450px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
-                        <div style="padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-                            <h3 style="margin: 0; color: var(--text); font-size: 16px;">Add Song to Playlist</h3>
-                            <button onclick="liveMode.hideAddSongModal()" style="background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+                <div style="background:var(--bg); border:1px solid var(--border); width:100%; max-width:600px; max-height:88vh; display:flex; flex-direction:column;">
+                    <div class="modal-header">
+                        <h3 style="margin:0; font-size:16px; font-weight:600;">Add Song to Playlist</h3>
+                        <button onclick="liveMode.hideAddSongModal()" class="modal-close">&times;</button>
+                    </div>
+                    <div style="padding:12px 16px; border-bottom:1px solid var(--border);">
+                        <div style="display:flex; gap:6px; margin-bottom:8px; align-items:center;">
+                            <select id="liveAddSongSource" onchange="liveMode.loadAddSongList()" class="modal-input" style="flex:1; font-size:0.85rem; padding:8px 6px;">
+                                <option value="my-songs">All Songs</option>
+                                <option value="public">Public Songs</option>
+                            </select>
+                            <button onclick="liveMode.toggleAddSongSelectMode()" id="liveAddSongSelectBtn" class="ghost-button" style="padding:8px 10px; font-size:0.85rem; flex-shrink:0;">Select</button>
                         </div>
-                        <div style="padding: 12px; border-bottom: 1px solid var(--border);">
-                            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                                <select id="liveAddSongSource" onchange="liveMode.loadAddSongList()" style="flex: 1; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--button-bg); color: var(--text); font-size: 13px; cursor: pointer;">
-                                    <option value="my-songs">📁 My Songs</option>
-                                    <option value="public">🌐 Public Songs</option>
-                                </select>
+                        <input type="text" id="liveAddSongSearch" placeholder="Search..." oninput="liveMode.filterAddSongList(this.value)"
+                               class="modal-input" style="width:100%; font-size:0.85rem; padding:8px 10px; box-sizing:border-box;" />
+                    </div>
+                    <div id="liveAddSongList" style="flex:1; overflow-y:auto; padding:12px 16px; min-height:200px;">
+                        <p style="text-align:center; opacity:0.5;">Loading songs...</p>
+                    </div>
+                    <div id="liveAddSongBulkBar" style="display:none; padding:12px 16px; border-top:1px solid var(--border); background:var(--bg);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                            <span id="liveAddSongSelectedCount" style="opacity:0.6; font-size:0.9rem;">0 selected</span>
+                            <div style="display:flex; gap:8px;">
+                                <button onclick="liveMode.selectAllAddSongs()" class="ghost-button" style="padding:8px 14px; font-size:0.85rem;">Select All</button>
+                                <button onclick="liveMode.addSelectedSongs()" style="padding:8px 14px; font-size:0.85rem; background:var(--text); color:var(--bg); border:none; cursor:pointer; font-weight:600;">Add Selected</button>
                             </div>
-                            <input type="text" id="liveAddSongSearch" placeholder="Search songs..." oninput="liveMode.filterAddSongList(this.value)"
-                                   style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-size: 14px; box-sizing: border-box;" />
-                        </div>
-                        <div id="liveAddSongList" style="flex: 1; overflow-y: auto; padding: 12px; min-height: 200px; max-height: 400px;">
-                            <p style="color: var(--text-muted); text-align: center;">Loading songs...</p>
                         </div>
                     </div>
                 </div>
@@ -1802,11 +1808,15 @@ const liveMode = {
             document.body.appendChild(modal);
         }
 
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
 
-        // Reset search
+        // Reset search and select button label
         const searchInput = document.getElementById('liveAddSongSearch');
         if (searchInput) searchInput.value = '';
+        const selectBtn = document.getElementById('liveAddSongSelectBtn');
+        if (selectBtn) selectBtn.textContent = 'Select';
+        const bulkBar = document.getElementById('liveAddSongBulkBar');
+        if (bulkBar) bulkBar.style.display = 'none';
 
         // Load user's books into the source dropdown
         await this.loadBookOptions();
@@ -1961,19 +1971,48 @@ const liveMode = {
                 return;
             }
 
-            // Render song list with source indicator
-            listContainer.innerHTML = songList.map(song => {
-                const sourceIcon = song.isPublic ? '🌐' : song.bookId ? '📖' : '';
+            // Render song list — matching library modal row style
+            const selectMode = this._addSongSelectMode;
+            const selected = this._addSongSelected;
+            listContainer.innerHTML = songList.map((song, idx) => {
+                const title = song.name || song.title || 'Untitled';
+                const author = song.author || '';
+                const metaParts = [];
+                const keyStr = song.originalKey || song.key;
+                if (keyStr) metaParts.push(keyStr);
+                if (song.bpm || song.tempo) metaParts.push(`${song.bpm || song.tempo} BPM`);
+                if (song.timeSignature) metaParts.push(song.timeSignature);
+                const meta = metaParts.join(' · ');
+                const safeId = String(song.id).replace(/'/g, "\\'");
+                const isChecked = selected.has(song.id);
+                const leftEl = selectMode
+                    ? `<input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); liveMode.toggleAddSongCheck('${safeId}', this.checked)"
+                         style="width:16px; height:16px; cursor:pointer; accent-color:var(--text); flex-shrink:0;" />`
+                    : `<span style="opacity:0.4; min-width:20px; font-size:12px; font-weight:600; flex-shrink:0; text-align:right;">${idx + 1}</span>`;
+                const rightEl = selectMode ? '' : `
+                    <button onclick="event.stopPropagation(); liveMode.addSongToPlaylist('${safeId}')"
+                            style="background:transparent; border:1px solid var(--border); color:var(--text); font-size:16px; font-weight:600; cursor:pointer; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; opacity:0.6;"
+                            title="Add to playlist">+</button>`;
+                const rowClick = selectMode
+                    ? `liveMode.toggleAddSongCheck('${safeId}', !liveMode._addSongSelected.has('${safeId}'))`
+                    : `liveMode.addSongToPlaylist('${safeId}')`;
                 return `
-                <div onclick="liveMode.addSongToPlaylist('${song.id}')"
-                     style="padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s ease;"
-                     onmouseover="this.style.background='var(--button-hover)'" onmouseout="this.style.background='var(--button-bg)'">
-                    <div style="color: var(--text); font-size: 13px; font-weight: 500;">${sourceIcon} ${song.name || 'Untitled'}</div>
-                    <div style="color: var(--text-muted); font-size: 11px; margin-top: 2px;">
-                        ${song.originalKey || song.key || '--'} ${song.bpm || song.tempo ? `• ${song.bpm || song.tempo} BPM` : ''}
+                <div onclick="${rowClick}"
+                     data-song-id="${song.id}"
+                     style="padding:12px 14px; margin-bottom:6px; background:${isChecked ? 'rgba(255,255,255,0.08)' : 'var(--bg)'}; color:var(--text); border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; gap:10px;"
+                     onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
+                    ${leftEl}
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</div>
+                        ${author ? `<div style="font-size:11px; opacity:0.5; font-style:italic; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${author}</div>` : ''}
+                        ${meta ? `<div style="font-size:11px; opacity:0.5; margin-top:2px;">${meta}</div>` : ''}
                     </div>
+                    ${rightEl}
                 </div>
             `}).join('');
+
+            // Store song list for select-all
+            this._addSongCurrentList = songList;
 
         } catch (error) {
             console.error('Error loading songs:', error);
@@ -1989,10 +2028,75 @@ const liveMode = {
     },
 
     /**
+     * Toggle select mode in the Add Song modal
+     */
+    toggleAddSongSelectMode() {
+        this._addSongSelectMode = !this._addSongSelectMode;
+        this._addSongSelected = new Set();
+        const btn = document.getElementById('liveAddSongSelectBtn');
+        if (btn) btn.textContent = this._addSongSelectMode ? 'Cancel' : 'Select';
+        const bar = document.getElementById('liveAddSongBulkBar');
+        if (bar) bar.style.display = this._addSongSelectMode ? 'block' : 'none';
+        this.loadAddSongList(document.getElementById('liveAddSongSearch')?.value || '');
+    },
+
+    /**
+     * Toggle checkbox for a song in the Add Song modal
+     */
+    toggleAddSongCheck(songId, checked) {
+        if (!this._addSongSelected) this._addSongSelected = new Set();
+        if (checked) {
+            this._addSongSelected.add(songId);
+        } else {
+            this._addSongSelected.delete(songId);
+        }
+        // Update row background
+        const row = document.querySelector(`[data-song-id="${songId}"]`);
+        if (row) row.style.background = checked ? 'rgba(255,255,255,0.08)' : 'var(--bg)';
+        // Update checkbox state
+        const cb = row?.querySelector('input[type="checkbox"]');
+        if (cb) cb.checked = checked;
+        // Update count
+        const countEl = document.getElementById('liveAddSongSelectedCount');
+        if (countEl) countEl.textContent = `${this._addSongSelected.size} selected`;
+    },
+
+    /**
+     * Select all currently visible songs in the Add Song modal
+     */
+    selectAllAddSongs() {
+        const songs = this._addSongCurrentList || [];
+        songs.forEach(s => this._addSongSelected.add(s.id));
+        // Update all rows
+        document.querySelectorAll('#liveAddSongList [data-song-id]').forEach(row => {
+            row.style.background = 'rgba(255,255,255,0.08)';
+            const cb = row.querySelector('input[type="checkbox"]');
+            if (cb) cb.checked = true;
+        });
+        const countEl = document.getElementById('liveAddSongSelectedCount');
+        if (countEl) countEl.textContent = `${this._addSongSelected.size} selected`;
+    },
+
+    /**
+     * Add all selected songs to the playlist
+     */
+    async addSelectedSongs() {
+        if (!this._addSongSelected || this._addSongSelected.size === 0) return;
+        const ids = Array.from(this._addSongSelected);
+        for (const id of ids) {
+            await this.addSongToPlaylist(id);
+        }
+        this._addSongSelected = new Set();
+        this._addSongSelectMode = false;
+        this.hideAddSongModal();
+    },
+
+    /**
      * Add a song to the playlist
      */
     async addSongToPlaylist(songId) {
-        if (!window.sessionManager || !window.sessionManager.isLeader) {
+        const isLeader = window.sessionManager?.isLeader || this._managingIsLeader;
+        if (!window.sessionManager || !isLeader) {
             console.log('Only leader can add songs');
             return;
         }
@@ -2042,21 +2146,39 @@ const liveMode = {
                 return;
             }
 
-            // Add to playlist
-            await window.sessionManager.addSongToPlaylist({
-                id: songId,
+            const entry = {
                 name: songData.name || 'Untitled',
-                title: songData.name || 'Untitled',
-                content: songData.content || '',
-                originalKey: songData.originalKey || songData.key || '',
+                title: songData.title || songData.name || 'Untitled',
+                author: songData.author || '',
                 key: songData.originalKey || songData.key || '',
-                bpm: songData.bpm || null
-            });
+                originalKey: songData.originalKey || songData.key || '',
+                bpm: songData.bpm || null,
+                timeSignature: songData.timeSignature || '',
+                content: songData.content || '',
+                addedAt: Date.now()
+            };
+
+            if (window.sessionManager?.isLeader && window.sessionManager?.activeSession) {
+                // Active session — use sessionManager (handles ordering)
+                await window.sessionManager.addSongToPlaylist({ id: songId, ...entry });
+            } else if (this._managingIsLeader && this._managingSessionId) {
+                // Managing a non-active session — write directly to Firebase
+                const db = firebase.database();
+                const playlistRef = db.ref(`sessions/${this._managingSessionId}/playlist`);
+                const snap = await playlistRef.once('value');
+                const current = snap.val() || {};
+                const order = Object.keys(current).length;
+                await playlistRef.child(songId).set({ ...entry, order });
+            } else {
+                console.warn('Cannot add song: not a leader for any session');
+                return;
+            }
 
             console.log(`➕ Added song to playlist: ${songData.name}`);
 
             // Refresh playlist and modal
             this.showPlaylist();
+            this.loadManagerPlaylist();
             this.loadAddSongList(document.getElementById('liveAddSongSearch')?.value || '');
 
         } catch (error) {
@@ -2245,7 +2367,7 @@ const liveMode = {
         const sessionCode = window.sessionManager?.activeSessionCode;
         if (!sessionCode) return;
 
-        const joinUrl = `${window.location.origin}${window.location.pathname}?join=${sessionCode.replace('-', '')}`;
+        const joinUrl = `${window.location.origin}${window.location.pathname}?join=${sessionCode}`;
 
         try {
             await navigator.clipboard.writeText(joinUrl);
@@ -2347,6 +2469,14 @@ const liveMode = {
         const codeEl = document.getElementById('sessionManagerCode');
         if (codeEl) codeEl.textContent = sessionCode || sessionId;
 
+        // Generate QR code in the modal
+        const qrEl = document.getElementById('sessionManagerQR');
+        if (qrEl && sessionCode) {
+            const joinUrl = `${window.location.origin}${window.location.pathname}?join=${sessionCode}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(joinUrl)}`;
+            qrEl.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="width:140px; height:140px; display:block;">`;
+        }
+
         // Generate and display singer link (keep the dash - Firebase stores code with dash)
         const singerLinkEl = document.getElementById('sessionManagerSingerLink');
         if (singerLinkEl && sessionCode) {
@@ -2364,6 +2494,10 @@ const liveMode = {
                 titleEl.textContent = metadata.title || 'Live Session';
             }
 
+            // Determine if current user is leader of THIS session
+            const currentUid = firebase.auth().currentUser?.uid;
+            this._managingIsLeader = !!(metadata?.leaderId && currentUid && metadata.leaderId === currentUid) || !!window.sessionManager?.isLeader;
+
             // Update allowSingers toggle and visibility
             const allowSingersToggle = document.getElementById('allowSingersToggle');
             const singerLinkSection = document.getElementById('singerLinkSection');
@@ -2379,6 +2513,9 @@ const liveMode = {
 
         // Load participants
         await this.loadSessionParticipants();
+
+        // Load playlist
+        await this.loadManagerPlaylist();
 
         // Show modal
         modal.style.display = 'flex';
@@ -2420,6 +2557,200 @@ const liveMode = {
 
         // Clear managed session ID
         this._managingSessionId = null;
+        this._managingIsLeader = false;
+    },
+
+    /** Circle of Fifths helper: get 4th and 5th relative keys */
+    _getRelativeKeys(key) {
+        if (!key || key === 'Unknown') return null;
+        const normalized = key.trim();
+        const isMinor = /minor$/i.test(normalized) || (/m$/.test(normalized) && !/Major$/i.test(normalized));
+        const root = normalized.replace(/\s*(Major|Minor|m)$/i, '').trim();
+        const circle = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+        const toSharp = { 'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B' };
+        const keyDisplay = { 'A#':'Bb','D#':'Eb','G#':'Ab' };
+        const rootNorm = toSharp[root] || root;
+        const idx = circle.indexOf(rootNorm);
+        if (idx === -1) return null;
+        const suffix = isMinor ? 'm' : '';
+        const fourthDisplay = keyDisplay[circle[(idx + 5) % 12]] || circle[(idx + 5) % 12];
+        const fifthDisplay = keyDisplay[circle[(idx + 7) % 12]] || circle[(idx + 7) % 12];
+        return { fourth: fourthDisplay + suffix, fifth: fifthDisplay + suffix };
+    },
+
+    /** Compare two key strings (normalize enharmonics) */
+    _keysMatch(key1, key2) {
+        if (!key1 || !key2) return false;
+        const normalize = (k) => {
+            let s = k.trim().replace(/\s*Major$/i, '').trim();
+            const isMinor = /minor$/i.test(s) || (/m$/.test(s) && !/M$/.test(s));
+            const root = s.replace(/\s*(Minor|m)$/i, '').trim();
+            const toSharp = { 'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B' };
+            return (toSharp[root] || root) + (isMinor ? 'm' : '');
+        };
+        return normalize(key1) === normalize(key2);
+    },
+
+    /**
+     * Load and render the session playlist inside the Manage Session modal
+     */
+    async loadManagerPlaylist() {
+        const sessionId = this._managingSessionId || window.sessionManager?.activeSession;
+        const container = document.getElementById('sessionManagerPlaylist');
+        const countEl = document.getElementById('sessionManagerPlaylistCount');
+        if (!container || !sessionId) return;
+
+        try {
+            const snapshot = await firebase.database().ref(`sessions/${sessionId}/playlist`).once('value');
+            const data = snapshot.val() || {};
+            const playlist = Object.entries(data)
+                .map(([id, song]) => ({ id, ...song }))
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+            if (countEl) countEl.textContent = `(${playlist.length})`;
+
+            if (playlist.length === 0) {
+                container.innerHTML = '<div style="padding:16px; text-align:center; opacity:0.5; font-size:13px;">No songs in playlist</div>';
+                return;
+            }
+
+            const isLeader = this._managingIsLeader || window.sessionManager?.isLeader;
+            const rows = [];
+            const btn = 'padding:4px 8px; background:transparent; color:var(--text); border:1px solid var(--border); cursor:pointer; font-size:12px; flex-shrink:0;';
+            playlist.forEach((song, idx) => {
+                const name = (song.name || song.title || 'Untitled').replace(/'/g, '&#39;');
+                const safeName = (song.name || song.title || 'Untitled').replace(/'/g, "\\'");
+                const keyStr = song.key || '';
+                const bpm = song.bpm || '';
+                const isCurrent = song.id === this.currentSongId;
+                const rowBg = isCurrent ? 'background:rgba(255,255,255,0.08);' : '';
+
+                // Two-line subtitle: "E Major · 120 BPM"
+                const subtitleParts = [];
+                if (keyStr) subtitleParts.push(keyStr);
+                if (bpm) subtitleParts.push(`${bpm} BPM`);
+                const subtitle = subtitleParts.length > 0
+                    ? `<div style="font-size:11px; opacity:0.5; margin-top:3px;">${subtitleParts.join(' · ')}</div>`
+                    : '';
+
+                const controls = isLeader ? `
+                    <div style="display:flex; gap:4px; flex-shrink:0;">
+                        <button onclick="liveMode.managerMoveSong('${song.id}',-1)" ${idx === 0 ? 'disabled' : ''}
+                            style="${btn} opacity:${idx === 0 ? '0.25' : '1'};">↑</button>
+                        <button onclick="liveMode.managerMoveSong('${song.id}',1)" ${idx === playlist.length - 1 ? 'disabled' : ''}
+                            style="${btn} opacity:${idx === playlist.length - 1 ? '0.25' : '1'};">↓</button>
+                        <button onclick="liveMode.managerEditSong('${song.id}','${safeName}')"
+                            style="${btn}" title="Open in editor">✎</button>
+                        <button onclick="liveMode.managerRemoveSong('${song.id}','${name}')"
+                            style="${btn}">✕</button>
+                    </div>` : '';
+
+                rows.push(`<div style="display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); ${rowBg}">
+                    <span style="opacity:0.4; font-size:12px; font-weight:600; min-width:20px;">${idx + 1}</span>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:14px; font-weight:${isCurrent ? '700' : '600'}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${name}</div>
+                        ${subtitle}
+                    </div>
+                    ${controls}
+                </div>`);
+
+                // Key transition hint to next song
+                if (idx < playlist.length - 1 && keyStr) {
+                    const nextKey = playlist[idx + 1].key || '';
+                    if (nextKey) {
+                        const rel = this._getRelativeKeys(keyStr);
+                        const isSmooth = rel && (this._keysMatch(nextKey, rel.fourth) || this._keysMatch(nextKey, rel.fifth) || this._keysMatch(nextKey, keyStr));
+                        const hint = rel ? `suggest: ${rel.fourth}, ${rel.fifth}` : '';
+                        if (hint) rows.push(`<div style="padding:4px 12px 4px 32px; font-size:11px; opacity:${isSmooth ? '0.6' : '0.35'}; border-bottom:1px solid var(--border);">→ ${hint}</div>`);
+                    }
+                }
+            });
+            container.innerHTML = rows.join('');
+        } catch (err) {
+            console.error('Error loading manager playlist:', err);
+            container.innerHTML = '<div style="padding:16px; text-align:center; opacity:0.5; font-size:13px;">Failed to load playlist</div>';
+        }
+    },
+
+    /**
+     * Move a song up or down in the playlist from the Manage Session modal
+     */
+    async managerMoveSong(songId, direction) {
+        const sessionId = this._managingSessionId || window.sessionManager?.activeSession;
+        if (!sessionId) return;
+        try {
+            const snapshot = await firebase.database().ref(`sessions/${sessionId}/playlist`).once('value');
+            const playlistData = snapshot.val() || {};
+            const playlist = Object.entries(playlistData)
+                .map(([id, data]) => ({ id, ...data }))
+                .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+            const currentIndex = playlist.findIndex(s => s.id === songId);
+            if (currentIndex === -1) return;
+            const newIndex = currentIndex + direction;
+            if (newIndex < 0 || newIndex >= playlist.length) return;
+
+            const currentOrder = playlist[currentIndex].order ?? currentIndex;
+            const swapOrder = playlist[newIndex].order ?? newIndex;
+            await firebase.database().ref(`sessions/${sessionId}/playlist/${songId}/order`).set(swapOrder);
+            await firebase.database().ref(`sessions/${sessionId}/playlist/${playlist[newIndex].id}/order`).set(currentOrder);
+            await this.loadManagerPlaylist();
+        } catch (err) {
+            console.error('Error moving song:', err);
+        }
+    },
+
+    /**
+     * Remove a song from the playlist from the Manage Session modal
+     */
+    async managerRemoveSong(songId, songName) {
+        const sessionId = this._managingSessionId || window.sessionManager?.activeSession;
+        if (!sessionId) return;
+
+        const confirmed = window.showConfirm
+            ? await window.showConfirm(`Remove "${songName}" from playlist?`, { icon: '🗑️', title: 'Remove Song', confirmText: 'Remove', cancelText: 'Keep', type: 'danger' })
+            : confirm(`Remove "${songName}" from playlist?`);
+        if (!confirmed) return;
+
+        try {
+            if (window.sessionManager?.isLeader && window.sessionManager?.activeSession) {
+                await window.sessionManager.removeSongFromPlaylist(songId);
+            } else {
+                // Non-active session — write directly
+                await firebase.database().ref(`sessions/${sessionId}/playlist/${songId}`).remove();
+            }
+            await this.loadManagerPlaylist();
+            // Also refresh sidebar playlist if open
+            if (this.sidebarVisible) this.showPlaylist();
+        } catch (err) {
+            console.error('Error removing song:', err);
+        }
+    },
+
+    /**
+     * Open a playlist song in the main editor (pencil button in Manage Session modal)
+     */
+    async managerEditSong(songId, songName) {
+        // Close the manage session modal
+        this.closeSessionManager();
+
+        // Load song into editor via the existing playlist callback
+        if (window.onLoadSongFromPlaylist) {
+            window.onLoadSongFromPlaylist(songId);
+        }
+
+        // Make sure editor section is visible
+        const editorSection = document.getElementById('editor');
+        const toggleEditorBtn = document.getElementById('toggleEditorBtn');
+        if (editorSection && editorSection.classList.contains('hidden')) {
+            if (toggleEditorBtn) toggleEditorBtn.click();
+            else editorSection.classList.remove('hidden');
+        }
+
+        // Scroll to editor
+        if (editorSection) {
+            setTimeout(() => editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+        }
     },
 
     /**
