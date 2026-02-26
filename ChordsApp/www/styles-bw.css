@@ -3879,3 +3879,11 @@ input[type="checkbox"]:checked::after {
         grid-template-columns: 1fr;
     }
 }
+
+/* On mobile screens (not print), collapse livePreview to content height — avoids huge empty A4 space */
+@media screen and (max-width: 768px) {
+    #livePreview {
+        height: auto !important;
+        max-height: none !important;
+    }
+}
