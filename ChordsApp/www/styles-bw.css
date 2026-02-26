@@ -1451,6 +1451,14 @@ input[type="checkbox"]:checked::after {
     direction: ltr;
 }
 
+/* Collapse preview area when no song is loaded (livePreview has no child elements) */
+#pagesWrapper:has(#livePreview:not(:has(*))) {
+    display: none !important;
+}
+.preview-container:has(#livePreview:not(:has(*))) #pageCounter {
+    display: none !important;
+}
+
 /* Preview Page Footer */
 .preview-page-footer {
     display: flex;
