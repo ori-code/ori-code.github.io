@@ -2772,6 +2772,8 @@ input[type="checkbox"]:checked::after {
         gap: 4px;
         justify-content: center;
         border: 1px solid var(--border);
+        flex-wrap: wrap;
+        width: 100%;
     }
 
     .header-btn-group.view-toggles {
