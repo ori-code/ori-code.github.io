@@ -218,8 +218,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewContainer.style.width = A4_WIDTH_PX + 'px';
                 previewContainer.style.transform = `scale(${scale})`;
 
-                // Set wrapper height to match scaled content
-                const contentHeight = previewContainer.offsetHeight;
+                // Set wrapper height to match scaled content.
+                // On mobile, measure actual content height (not fixed A4 height)
+                // by temporarily collapsing livePreview to auto height.
+                const livePreviewEl = previewContainer.querySelector('#livePreview');
+                let contentHeight;
+                if (livePreviewEl && livePreviewEl.innerHTML.trim()) {
+                    const origHeight = livePreviewEl.style.height;
+                    const origColumns = livePreviewEl.style.columns;
+                    livePreviewEl.style.height = 'auto';
+                    livePreviewEl.style.columns = '1';
+                    void previewContainer.offsetHeight; // force reflow
+                    contentHeight = previewContainer.offsetHeight;
+                    livePreviewEl.style.height = origHeight;
+                    livePreviewEl.style.columns = origColumns;
+                } else {
+                    contentHeight = previewContainer.offsetHeight;
+                }
                 scaleWrapper.style.height = (contentHeight * scale) + 'px';
             } else {
                 // No scaling needed — enough room for full A4
