@@ -3880,10 +3880,12 @@ input[type="checkbox"]:checked::after {
     }
 }
 
-/* On mobile screens (not print), collapse livePreview to content height — avoids huge empty A4 space */
+/* On mobile screens (not print), collapse livePreview to content height — avoids huge empty A4 space.
+   Force single column so column-fill:auto doesn't stack all content in col-1 and create extra height. */
 @media screen and (max-width: 768px) {
     #livePreview {
         height: auto !important;
         max-height: none !important;
+        column-count: 1 !important;
     }
 }
