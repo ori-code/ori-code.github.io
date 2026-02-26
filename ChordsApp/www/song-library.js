@@ -960,10 +960,10 @@
         });
 
         // Function to create a single song item DOM element
-        function createSongItem(song, user, database) {
+        function createSongItem(song, user, database, index = 0) {
             const songItem = document.createElement('div');
             const isSelected = selectedSongIds.has(song.id);
-            songItem.style.cssText = 'padding: 16px; margin-bottom: 12px; background: var(--bg); color: var(--text); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease; display: flex; justify-content: space-between; align-items: center;';
+            songItem.style.cssText = 'padding: 12px 14px; margin-bottom: 6px; background: var(--bg); color: var(--text); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 10px;';
             if (isSelected) songItem.classList.add('song-item-selected');
             songItem.dataset.songId = song.id;
 
@@ -972,7 +972,7 @@
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.checked = isSelected;
-                checkbox.style.cssText = 'width: 20px; height: 20px; margin-right: 12px; cursor: pointer; accent-color: var(--text);';
+                checkbox.style.cssText = 'width: 16px; height: 16px; cursor: pointer; accent-color: var(--text); flex-shrink: 0;';
                 checkbox.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (checkbox.checked) {
@@ -985,70 +985,58 @@
                     updateBulkActionBar();
                 });
                 songItem.appendChild(checkbox);
+            } else {
+                // Row number (like Live Session playlist)
+                const numEl = document.createElement('span');
+                numEl.textContent = index + 1;
+                numEl.style.cssText = 'color: var(--text); opacity: 0.4; min-width: 20px; font-size: 12px; font-weight: 600; flex-shrink: 0; text-align: right;';
+                songItem.appendChild(numEl);
             }
 
             const songInfo = document.createElement('div');
-            songInfo.style.cssText = 'flex: 1;';
+            songInfo.style.cssText = 'flex: 1; min-width: 0;';
 
             // ✅ DISPLAY TITLE FROM STRUCTURED FIELD
             const songTitle = document.createElement('div');
             songTitle.textContent = song.title || song.name;
-            songTitle.style.cssText = 'font-weight: 600; color: var(--text); margin-bottom: 4px; font-size: 1.05rem;';
+            songTitle.style.cssText = 'font-weight: 600; color: var(--text); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+            songInfo.appendChild(songTitle);
 
             // ✅ DISPLAY AUTHOR IF AVAILABLE
             if (song.author) {
                 const songAuthor = document.createElement('div');
                 songAuthor.textContent = song.author;
-                songAuthor.style.cssText = 'font-size: 0.9rem; color: var(--text-muted); margin-bottom: 6px; font-style: italic;';
-                songInfo.appendChild(songTitle);
+                songAuthor.style.cssText = 'font-size: 11px; color: var(--text); opacity: 0.5; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
                 songInfo.appendChild(songAuthor);
-            } else {
-                songInfo.appendChild(songTitle);
             }
 
-            // ✅ METADATA BADGES (Key, BPM, Time Signature)
-            const metadataRow = document.createElement('div');
-            metadataRow.style.cssText = 'display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;';
-
+            // ✅ COMPACT METADATA (Key · BPM · Time — inline, no badges)
+            const metaParts = [];
             if (song.key || song.originalKey) {
-                const keyBadge = document.createElement('span');
-                keyBadge.textContent = `Key: ${song.key || song.originalKey}`;
+                let keyText = song.key || song.originalKey;
                 if (song.transposeSteps && song.transposeSteps !== 0) {
-                    keyBadge.textContent += ` (${song.transposeSteps > 0 ? '+' : ''}${song.transposeSteps})`;
+                    keyText += ` (${song.transposeSteps > 0 ? '+' : ''}${song.transposeSteps})`;
                 }
-                keyBadge.style.cssText = 'background: transparent; color: var(--text); padding: 4px 10px; border: 1px solid var(--border); font-size: 0.8rem; font-weight: 500;';
-                metadataRow.appendChild(keyBadge);
+                metaParts.push(keyText);
+            }
+            if (song.bpm) metaParts.push(`${song.bpm} BPM`);
+            if (song.timeSignature) metaParts.push(song.timeSignature);
+
+            if (metaParts.length > 0) {
+                const metaEl = document.createElement('div');
+                metaEl.textContent = metaParts.join(' · ');
+                metaEl.style.cssText = 'font-size: 11px; color: var(--text); opacity: 0.5; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+                songInfo.appendChild(metaEl);
             }
 
-            if (song.bpm) {
-                const bpmBadge = document.createElement('span');
-                bpmBadge.textContent = `${song.bpm} BPM`;
-                bpmBadge.style.cssText = 'background: transparent; color: var(--text); padding: 4px 10px; border: 1px solid var(--border); font-size: 0.8rem; font-weight: 500;';
-                metadataRow.appendChild(bpmBadge);
-            }
-
-            if (song.timeSignature) {
-                const timeBadge = document.createElement('span');
-                timeBadge.textContent = song.timeSignature;
-                timeBadge.style.cssText = 'background: transparent; color: var(--text); padding: 4px 10px; border: 1px solid var(--border); font-size: 0.8rem; font-weight: 500;';
-                metadataRow.appendChild(timeBadge);
-            }
-
-            if (metadataRow.children.length > 0) {
-                songInfo.appendChild(metadataRow);
-            }
-
-            // Last edited date
-            const songDate = document.createElement('div');
-            const date = new Date(song.updatedAt || song.createdAt);
-            songDate.textContent = 'Last edited: ' + date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-            songDate.style.cssText = 'font-size: 0.8rem; color: var(--text-muted);';
-            songInfo.appendChild(songDate);
+            // Action buttons container
+            const actionsEl = document.createElement('div');
+            actionsEl.style.cssText = 'display: flex; gap: 2px; flex-shrink: 0; align-items: center;';
 
             // Add to Session button
             const addToSessionBtn = document.createElement('button');
-            addToSessionBtn.textContent = '➕';
-            addToSessionBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: opacity 0.2s ease; margin-right: 4px; opacity: 0.5;';
+            addToSessionBtn.textContent = '+';
+            addToSessionBtn.style.cssText = 'background: transparent; border: 1px solid var(--border); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: 0.5; flex-shrink: 0;';
             addToSessionBtn.title = 'Add to session playlist';
 
             addToSessionBtn.addEventListener('click', async (e) => {
@@ -1127,8 +1115,8 @@
             });
 
             const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = '🗑️';
-            deleteBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: opacity 0.2s ease; opacity: 0.5;';
+            deleteBtn.textContent = '×';
+            deleteBtn.style.cssText = 'background: transparent; border: 1px solid var(--border); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: 0.5; flex-shrink: 0;';
             deleteBtn.title = 'Delete song';
 
             deleteBtn.addEventListener('click', async (e) => {
@@ -1167,8 +1155,8 @@
             // Public toggle button (globe icon)
             const publicBtn = document.createElement('button');
             const isPublic = song.isPublic === true;
-            publicBtn.textContent = '🌐';
-            publicBtn.style.cssText = `background: transparent; border: none; border-bottom: ${isPublic ? '2px solid var(--text)' : '2px solid transparent'}; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: opacity 0.2s ease; margin-right: 4px; opacity: ${isPublic ? '1' : '0.5'};`;
+            publicBtn.textContent = '⊕';
+            publicBtn.style.cssText = `background: ${isPublic ? 'var(--text)' : 'transparent'}; color: ${isPublic ? 'var(--bg)' : 'var(--text)'}; border: 1px solid var(--border); font-size: 13px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: ${isPublic ? '1' : '0.5'}; flex-shrink: 0;`;
             publicBtn.title = isPublic ? 'Make private (click to unpublish)' : 'Make public (share with everyone)';
 
             publicBtn.addEventListener('click', async (e) => {
@@ -1186,8 +1174,8 @@
 
             // Share button
             const shareBtn = document.createElement('button');
-            shareBtn.textContent = '🔗';
-            shareBtn.style.cssText = 'background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; transition: opacity 0.2s ease; margin-right: 4px; opacity: 0.5;';
+            shareBtn.textContent = '↗';
+            shareBtn.style.cssText = 'background: transparent; border: 1px solid var(--border); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: 0.5; flex-shrink: 0;';
             shareBtn.title = 'Share song link';
 
             shareBtn.addEventListener('click', async (e) => {
@@ -1209,8 +1197,8 @@
             if (song.isPublicSong) {
                 // Public songs: show only "Open in Live Mode" button
                 const openBtn = document.createElement('button');
-                openBtn.textContent = '▶️ Open';
-                openBtn.style.cssText = 'background: var(--text); border: 1px solid var(--border); color: var(--bg); font-size: 0.9rem; cursor: pointer; padding: 8px 16px; transition: background 0.2s ease; font-weight: 500;';
+                openBtn.textContent = '▶';
+                openBtn.style.cssText = 'background: var(--text); border: 1px solid var(--border); color: var(--bg); font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: 600;';
                 openBtn.title = 'Open in Live Mode';
 
                 openBtn.addEventListener('click', async (e) => {
@@ -1232,13 +1220,15 @@
                     openBtn.style.opacity = '1';
                 });
 
-                songItem.appendChild(openBtn);
+                actionsEl.appendChild(openBtn);
+                songItem.appendChild(actionsEl);
             } else {
-                // User's own songs: show all action buttons
-                songItem.appendChild(addToSessionBtn);
-                songItem.appendChild(publicBtn);
-                songItem.appendChild(shareBtn);
-                songItem.appendChild(deleteBtn);
+                // User's own songs: show all action buttons in container
+                actionsEl.appendChild(addToSessionBtn);
+                actionsEl.appendChild(publicBtn);
+                actionsEl.appendChild(shareBtn);
+                actionsEl.appendChild(deleteBtn);
+                songItem.appendChild(actionsEl);
             }
 
             // Load song on click (or toggle selection in bulk mode)
@@ -1412,8 +1402,8 @@
                     songList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px 20px;">No songs saved yet. Save your first song to start building your library!</p>';
                 }
             } else {
-                displaySongs.forEach(song => {
-                    const songItem = createSongItem(song, user, database);
+                displaySongs.forEach((song, i) => {
+                    const songItem = createSongItem(song, user, database, i);
                     songList.appendChild(songItem);
                 });
             }

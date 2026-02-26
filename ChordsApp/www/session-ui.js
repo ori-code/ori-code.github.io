@@ -323,17 +323,25 @@ class SessionUI {
                     }
                 }
 
+                const metaParts = [];
+                if (currentKey) metaParts.push(currentKey);
+                if (song.bpm) metaParts.push(`${song.bpm} BPM`);
+                if (song.timeSignature) metaParts.push(song.timeSignature);
+                const metaText = metaParts.join(' · ');
+
                 return `
-                <div class="playlist-drag-item" data-index="${index}" data-session="${sessionId}" ${isOwner ? 'draggable="true"' : ''} style="display: flex; align-items: center; gap: 6px; padding: 8px; background: transparent; border: 1px solid var(--border); margin-bottom: 4px; font-size: 12px; ${isOwner ? 'cursor: grab;' : ''}">
-                    <span style="color: var(--text); opacity: 0.6; min-width: 20px;">${index + 1}.</span>
-                    <span style="flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${song.name}</span>
-                    <span style="color: var(--text); opacity: 0.6; font-size: 10px;">${currentKey || ''}</span>
+                <div class="playlist-drag-item" data-index="${index}" data-session="${sessionId}" ${isOwner ? 'draggable="true"' : ''} style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); margin-bottom: 6px; ${isOwner ? 'cursor: grab;' : ''}">
+                    <span style="color: var(--text); opacity: 0.4; min-width: 20px; font-size: 12px; font-weight: 600; text-align: right; flex-shrink: 0;">${index + 1}</span>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${song.name}</div>
+                        ${metaText ? `<div style="font-size: 11px; color: var(--text); opacity: 0.5; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${metaText}</div>` : ''}
+                    </div>
                     ${isOwner ? `
-                        <div style="display: flex; gap: 2px;">
-                            ${index > 0 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', -1)" style="padding: 2px 4px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;" title="Move up">↑</button>` : ''}
-                            ${index < playlist.length - 1 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', 1)" style="padding: 2px 4px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;" title="Move down">↓</button>` : ''}
-                            <button onclick="sessionUI.editSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;" title="Edit">✎</button>
-                            <button onclick="sessionUI.deleteSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="padding: 2px 4px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;" title="Delete">✕</button>
+                        <div style="display: flex; gap: 2px; flex-shrink: 0;">
+                            ${index > 0 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', -1)" style="width: 24px; height: 24px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; opacity: 0.6;" title="Move up">↑</button>` : ''}
+                            ${index < playlist.length - 1 ? `<button onclick="sessionUI.moveSessionSong('${sessionId}', '${song.id}', 1)" style="width: 24px; height: 24px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; opacity: 0.6;" title="Move down">↓</button>` : ''}
+                            <button onclick="sessionUI.editSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="width: 24px; height: 24px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; opacity: 0.6;" title="Edit">✎</button>
+                            <button onclick="sessionUI.deleteSessionSong('${sessionId}', '${song.id}', '${song.name.replace(/'/g, "\\'")}')" style="width: 24px; height: 24px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; opacity: 0.6;" title="Delete">×</button>
                         </div>
                     ` : ''}
                 </div>

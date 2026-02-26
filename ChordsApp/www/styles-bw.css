@@ -1269,6 +1269,13 @@ input[type="checkbox"]:checked::after {
     margin: 64px 0;
 }
 
+@media screen and (max-width: 800px) {
+    .preview-section {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
 .preview-section-content {
     position: relative;
     z-index: 1;
@@ -3196,12 +3203,37 @@ input[type="checkbox"]:checked::after {
 
 @media screen and (max-width: 800px) {
     .preview-scale-wrapper {
-        background: var(--bg);
+        background: transparent;
         border-radius: 0;
     }
 
     .preview-container.mobile-scaled {
         margin: 0;
+        border: 1px solid var(--border);
+    }
+
+    /* Hide editor workspace on mobile (user toggles it via button) */
+    .editor-preview-wrapper > .editor {
+        display: none !important;
+    }
+
+    #editor {
+        display: none !important;
+    }
+
+    /* Collapse any hidden elements' extra space inside preview-section-content */
+    .preview-section-content {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .preview-section-content > * {
+        flex-shrink: 0;
+    }
+
+    /* Force editor hidden on mobile */
+    #editor {
+        display: none !important;
     }
 }
 

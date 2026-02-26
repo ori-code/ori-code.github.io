@@ -213,31 +213,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const scale = Math.min(1, availableWidth / A4_WIDTH_PX);
 
             if (scale < 0.99) {
-                // Need to scale down — preview is wider than available space
+                // Mobile view: keep full A4 dimensions (proper page look).
                 previewContainer.classList.add('mobile-scaled');
                 previewContainer.style.width = A4_WIDTH_PX + 'px';
                 previewContainer.style.transform = `scale(${scale})`;
-
-                // Set wrapper height to match scaled content.
-                // On mobile, measure actual content height (not fixed A4 height)
-                // by temporarily collapsing livePreview to auto height.
-                const livePreviewEl = previewContainer.querySelector('#livePreview');
-                let contentHeight;
-                if (livePreviewEl && livePreviewEl.innerHTML.trim()) {
-                    const origHeight = livePreviewEl.style.height;
-                    const origColumns = livePreviewEl.style.columns;
-                    livePreviewEl.style.height = 'auto';
-                    livePreviewEl.style.columns = '1';
-                    void previewContainer.offsetHeight; // force reflow
-                    contentHeight = previewContainer.offsetHeight;
-                    livePreviewEl.style.height = origHeight;
-                    livePreviewEl.style.columns = origColumns;
-                } else {
-                    contentHeight = previewContainer.offsetHeight;
-                }
-                scaleWrapper.style.height = (contentHeight * scale) + 'px';
+                // getBoundingClientRect includes transform → scaled height
+                scaleWrapper.style.height = previewContainer.getBoundingClientRect().height + 'px';
             } else {
-                // No scaling needed — enough room for full A4
+                // Desktop: no scaling needed
                 previewContainer.classList.remove('mobile-scaled');
             }
         }
