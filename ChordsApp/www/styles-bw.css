@@ -1361,7 +1361,7 @@ input[type="checkbox"]:checked::after {
 
 .live-preview {
     font-family: 'Courier New', monospace;
-    font-size: 8.5pt;
+    font-size: 12pt;
     line-height: 1.5;
     color: var(--text);
     white-space: pre-wrap;
@@ -1897,6 +1897,168 @@ input[type="checkbox"]:checked::after {
     color: var(--text) !important;
     border: none !important;
     padding: 0 !important;
+}
+
+/* Chord Selector v5 - Circle of Fifths + Quality Grid */
+#chordEditorOverlay {
+    border: 2px solid var(--text) !important;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.chord-selector {
+    width: 300px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+.chord-selector-header {
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chord-selector-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.chord-selector-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.5;
+    font-weight: 600;
+}
+
+.chord-selector-current {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    letter-spacing: -0.02em;
+}
+
+.chord-selector-apply {
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid var(--text);
+    background: var(--bg);
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.chord-selector-apply:hover {
+    background: var(--text);
+    color: var(--bg);
+}
+
+.chord-circle-wrap {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: 6px auto 2px;
+}
+
+.chord-circle-note {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    border: 2px solid var(--text);
+    background: var(--bg);
+    color: var(--text);
+    transform: translate(-50%, -50%);
+}
+
+.chord-circle-note:hover {
+    background: var(--text);
+    color: var(--bg);
+}
+
+.chord-circle-note.active {
+    background: var(--text);
+    color: var(--bg);
+}
+
+/* Inner ring: relative minor chords */
+.chord-circle-minor {
+    width: 28px;
+    height: 28px;
+    font-size: 9px;
+    font-weight: 600;
+    border-width: 1px;
+    opacity: 0.65;
+}
+
+.chord-circle-minor:hover {
+    opacity: 1;
+    background: var(--text);
+    color: var(--bg);
+}
+
+.chord-circle-minor.active {
+    opacity: 1;
+    background: var(--text);
+    color: var(--bg);
+}
+
+.chord-quality-section {
+    border-top: 2px solid var(--text);
+}
+
+.chord-quality-label {
+    padding: 5px 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    opacity: 0.5;
+    border-bottom: 1px solid var(--border);
+}
+
+.chord-quality-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.chord-quality-option {
+    padding: 7px 2px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    color: var(--text);
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+.chord-quality-option:hover {
+    background: var(--text);
+    color: var(--bg);
+}
+
+.chord-quality-option.active {
+    background: var(--text);
+    color: var(--bg);
+    opacity: 0.6;
+}
+
+/* Make chords look clickable in preview */
+#livePreview .chord-line b,
+#livePreview .inline-chord b,
+#livePreview .chord-grid b {
+    cursor: pointer;
 }
 
 /* Styled prompt modal z-index */

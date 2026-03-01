@@ -198,6 +198,10 @@ const liveMode = {
         const zoomValue = document.getElementById('liveModeZoomValue');
         if (zoomValue) zoomValue.textContent = size + 'pt';
 
+        // Sync font slider
+        const fontSlider = document.getElementById('liveModeFontSlider');
+        if (fontSlider) fontSlider.value = size;
+
         // Save per-song font size if we have a current song, otherwise save global
         if (this.currentSongId) {
             this.saveSongFontSize(this.currentSongId, size);
@@ -302,6 +306,18 @@ const liveMode = {
             // Update zoom display
             const zoomValue = document.getElementById('liveModeZoomValue');
             if (zoomValue) zoomValue.textContent = (this.currentFontSize || 14) + 'pt';
+        }
+
+        // Setup font size slider
+        const fontSlider = document.getElementById('liveModeFontSlider');
+        if (fontSlider) {
+            fontSlider.value = this.currentFontSize || 14;
+            if (!fontSlider._liveListenerAdded) {
+                fontSlider.addEventListener('input', () => {
+                    this.setFontSize(parseInt(fontSlider.value));
+                });
+                fontSlider._liveListenerAdded = true;
+            }
         }
 
         // Update display

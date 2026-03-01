@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="aChordim">
 
-    <link rel="stylesheet" href="styles-bw.css?v=79">
+    <link rel="stylesheet" href="styles-bw.css?v=87">
     <!-- PayPal SDK is loaded dynamically in paypal-subscription.js based on environment -->
 
     <!-- PDF.js for PDF preview -->
@@ -55,8 +55,12 @@
                 </button>
                 <a href="https://www.thefaithsound.com/ChordsApp/www/" class="header-brand"
                     style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
-                    <span class="header-brand-name" style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span id="appVersion" style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v79</span></span>
-                    <span class="header-brand-url" style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
+                    <span class="header-brand-name"
+                        style="font-weight: 700; font-size: 1.2rem; color: var(--text);">א/aChordim <span
+                            id="appVersion"
+                            style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v87</span></span>
+                    <span class="header-brand-url"
+                        style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
                 </a>
             </div>
@@ -144,12 +148,14 @@
                     <div style="display: flex; gap: 6px; width: 100%; margin-top: 8px; align-items: flex-start;">
                         <textarea id="contentInput" rows="1" placeholder="Paste URL or chord text..."
                             style="flex: 1; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); outline: none; font-family: inherit; resize: vertical; min-height: 36px; max-height: 200px;"></textarea>
-                        <button class="primary-action" id="fetchUrlBtn" style="white-space: nowrap; margin-top: 1px;">Go</button>
+                        <button class="primary-action" id="fetchUrlBtn"
+                            style="white-space: nowrap; margin-top: 1px;">Go</button>
                     </div>
                     <div class="preview-panel" id="uploadPreview" tabindex="0">
                         <img id="previewImage" alt="Uploaded chart preview">
                         <p class="preview-placeholder" data-i18n="step1.placeholder">No file selected yet.<br>
-                            <span style="opacity: 0.5; font-size: 0.65rem;">Supported: JPG, PNG, HEIC, PDF.</span></p>
+                            <span style="opacity: 0.5; font-size: 0.65rem;">Supported: JPG, PNG, HEIC, PDF.</span>
+                        </p>
                     </div>
                 </article>
                 <article class="step-card">
@@ -169,8 +175,9 @@
                     <label id="intenseScanOption"
                         style="display: none; margin-top: 8px; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; user-select: none;">
                         <input type="checkbox" id="intenseScanCheckbox" style="margin-right: 6px; cursor: pointer;">
-                        <span style="color: var(--text);"></span> <span data-i18n="step2.intense">Intense Scan</span> <span
-                            data-i18n="step2.intense.desc" style="color: var(--text-muted); font-size: 0.75rem;">(Pro -
+                        <span style="color: var(--text);"></span> <span data-i18n="step2.intense">Intense Scan</span>
+                        <span data-i18n="step2.intense.desc" style="color: var(--text-muted); font-size: 0.75rem;">(Pro
+                            -
                             better for hard scans)</span>
                     </label>
                     <div class="status-panel" id="analysisStatus" role="status" aria-live="polite">
@@ -215,7 +222,8 @@
                     </div>
                     <div class="ai-reference-preview" id="aiReferencePreview"
                         style="flex: 1; display: none; max-height: 300px; overflow-y: auto; background: var(--surface); padding: 12px; margin-top: 8px;">
-                        <h4 style="margin: 0 0 8px 0; color: var(--text); font-size: 12px;" data-i18n="step3.raw.title">Raw
+                        <h4 style="margin: 0 0 8px 0; color: var(--text); font-size: 12px;" data-i18n="step3.raw.title">
+                            Raw
                             Output (v4 Format)</h4>
                         <pre class="reference-content" id="aiReferenceContent"
                             style="margin: 0; white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 11px; color: var(--text); line-height: 1.4;">transcription will appear here after analysis.</pre>
@@ -293,8 +301,8 @@
                     </div>
                     <div class="side-menu-row">
                         <label data-i18n="menu.label.fontsize">Font Size:</label>
-                        <input type="range" id="sideMenuFontSize" min="8" max="28" value="8.5" step="0.5">
-                        <span id="sideMenuFontSizeVal">8.5pt</span>
+                        <input type="range" id="sideMenuFontSize" min="8" max="28" value="12" step="0.5">
+                        <span id="sideMenuFontSizeVal">12pt</span>
                     </div>
                     <div class="side-menu-row">
                         <label data-i18n="menu.label.linespacing">Line Spacing:</label>
@@ -460,7 +468,8 @@
                     <div class="side-menu-buttons">
                         <button class="side-menu-btn green" id="sideMenuCreateSession"
                             data-i18n="menu.btn.create_session">Create Session</button>
-                        <button class="side-menu-btn blue" id="sideMenuJoinSession" data-i18n="menu.btn.join_session">Join Session</button>
+                        <button class="side-menu-btn blue" id="sideMenuJoinSession"
+                            data-i18n="menu.btn.join_session">Join Session</button>
                         <button class="side-menu-btn" id="sideMenuMySessions" data-i18n="menu.btn.my_sessions">My
                             Sessions</button>
                         <button class="side-menu-btn purple" id="sideMenuGoLive" data-i18n="menu.btn.go_live">Go
@@ -542,8 +551,7 @@
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                         <span style="font-size: 12px; opacity: 0.6;"></span>
                         <input type="range" id="miniMetronomeVolume" min="0" max="100" value="70"
-                            style="flex: 1; height: 4px;"
-                            oninput="metronome.setVolume(this.value / 100);">
+                            style="flex: 1; height: 4px;" oninput="metronome.setVolume(this.value / 100);">
                         <span style="font-size: 12px; opacity: 0.6;"></span>
                     </div>
                     <!-- Full controls button -->
@@ -585,9 +593,12 @@
                             style="width: 40px; height: 40px; min-width: 40px; background: var(--text); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--bg); font-weight: 600; cursor: pointer; position: relative; overflow: hidden;"
                             title="Click to upload logo">
                             <span id="sideMenuUserAvatar">?</span>
-                            <img id="sideMenuUserLogo" style="display: none; width: 40px; height: 40px; object-fit: contain; position: absolute; top: 0; left: 0;" alt="Logo">
+                            <img id="sideMenuUserLogo"
+                                style="display: none; width: 40px; height: 40px; object-fit: contain; position: absolute; top: 0; left: 0;"
+                                alt="Logo">
                         </div>
-                        <input type="file" id="logoUploadInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display: none;">
+                        <input type="file" id="logoUploadInput" accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                            style="display: none;">
                         <div style="flex: 1; min-width: 0;">
                             <div id="sideMenuUserName"
                                 style="font-weight: 600; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -595,10 +606,8 @@
                             <div id="sideMenuTierBadge"
                                 style="display: inline-block; padding: 2px 8px; font-size: 11px; font-weight: 600; margin-top: 4px; background: var(--surface); color: var(--text);">
                                 Free</div>
-                            <input type="text" id="brandingTextInput"
-                                placeholder="Band / Church name..."
-                                data-i18n-placeholder="branding.placeholder"
-                                maxlength="40"
+                            <input type="text" id="brandingTextInput" placeholder="Band / Church name..."
+                                data-i18n-placeholder="branding.placeholder" maxlength="40"
                                 style="display: none; width: 100%; margin-top: 6px; padding: 4px 8px; font-size: 11px; background: transparent; border: 1px solid var(--border); color: var(--text); font-family: inherit;">
                             <button id="clearLogoBtn" data-i18n="branding.remove_logo"
                                 style="display: none; font-size: 10px; padding: 2px 6px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; margin-top: 4px;">
@@ -690,8 +699,7 @@
                 style="display: none; flex-direction: column; gap: 12px; margin-bottom: 20px; overflow: hidden; transition: all 0.3s ease;">
 
                 <!-- 1. Transpose Controls (FIRST) -->
-                <div
-                    style="background: var(--bg); border: 1px solid var(--border); padding: 16px;">
+                <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px;">
                     <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 0.9rem; font-weight: 600;"
                         data-i18n="adv.transpose.title">Transpose</h4>
 
@@ -742,8 +750,7 @@
                 </div>
 
                 <!-- 2. Layout Customization (SECOND) -->
-                <div
-                    style="background: var(--bg); border: 1px solid var(--border); padding: 16px;">
+                <div style="background: var(--bg); border: 1px solid var(--border); padding: 16px;">
                     <h4 style="margin: 0 0 12px 0; color: var(--text); font-size: 0.9rem; font-weight: 600;"
                         data-i18n="adv.layout.title">Layout
                         Customization</h4>
@@ -883,14 +890,15 @@
                         <button id="layoutPrintButton" data-i18n="adv.btn.print_short"
                             style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1;">Print</button>
                         <button id="layoutAutoFitButton" data-i18n="adv.btn.autofit_short"
-                            style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1;">Auto Fit</button>
+                            style="display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-size: 0.8rem; cursor: pointer; font-weight: 500; flex: 1;">Auto
+                            Fit</button>
                     </div>
                     <!-- Row 1: Sliders -->
                     <div class="layout-sliders-row"
                         style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
                         <label class="font-size-control" style="flex: 1 1 140px; min-width: 140px;">
-                            Font Size: <span id="fontSizeValue">8</span>pt
-                            <input type="range" id="fontSizeSlider" min="8" max="28" value="8" step="0.5">
+                            Font Size: <span id="fontSizeValue">12</span>pt
+                            <input type="range" id="fontSizeSlider" min="8" max="28" value="12" step="0.5">
                         </label>
                         <label class="line-height-control" style="flex: 1 1 140px; min-width: 140px;">
                             Line Spacing: <span id="lineHeightValue">1.2</span>
@@ -921,34 +929,37 @@
 
                 <!-- Preview Container (LEFT) - wrapped for A4 scaling -->
                 <div class="preview-scale-wrapper">
-                <div class="preview-container" style="position: relative; padding: 0; overflow: hidden;">
-                    <div id="pageCounter"
-                        style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">
-                        Page 1 of 1 (A4)</div>
-                    <div id="pagesWrapper" style="display: flex; flex-direction: column; gap: 20px;">
-                        <div class="preview-page" data-page="1">
-                            <!-- Logo removed per user request -->
-                            <div id="livePreview" class="live-preview"
-                                style="height: 1123px; max-height: 1123px; overflow: hidden; border: none; padding: 20px 20px 40px 20px; width: 100%; max-width: 210mm; column-count: 2; column-gap: 40px; column-fill: auto;">
-                            </div>
-                            <!-- Page Footer with User Branding + TheFaithSound branding -->
-                            <div class="preview-page-footer">
-                                <!-- User Branding (left, hidden by default) -->
-                                <div id="userBrandingFooter" style="display: none; align-items: center; gap: 6px; margin-right: auto;">
-                                    <img id="footerUserLogo" style="width: 16px; height: 16px; object-fit: contain; display: none;" alt="">
-                                    <span id="footerBrandingText" style="font-weight: 600; font-size: 11px;"></span>
+                    <div class="preview-container" style="position: relative; padding: 0; overflow: hidden;">
+                        <div id="pageCounter"
+                            style="position: absolute; top: -24px; right: 0; font-size: 11px; color: var(--text-muted); font-weight: 500;">
+                            Page 1 of 1 (A4)</div>
+                        <div id="pagesWrapper" style="display: flex; flex-direction: column; gap: 20px;">
+                            <div class="preview-page" data-page="1">
+                                <!-- Logo removed per user request -->
+                                <div id="livePreview" class="live-preview"
+                                    style="height: 1123px; max-height: 1123px; overflow: hidden; border: none; padding: 20px 20px 40px 20px; width: 100%; max-width: 210mm; column-count: 2; column-gap: 40px; column-fill: auto;">
                                 </div>
-                                <!-- aChordim branding (right, toggleable) -->
-                                <span id="achordimBranding" style="display: flex; align-items: center; gap: 6px;">
-                                    <img src="achordim-icon-app.svg" alt="" class="footer-icon">
-                                    <span class="footer-brand">א/aChordim</span>
-                                    <span class="footer-url">www.thefaith<span
-                                            class="footer-highlight">sound</span>.com</span>
-                                </span>
+                                <!-- Page Footer with User Branding + TheFaithSound branding -->
+                                <div class="preview-page-footer">
+                                    <!-- User Branding (left, hidden by default) -->
+                                    <div id="userBrandingFooter"
+                                        style="display: none; align-items: center; gap: 6px; margin-right: auto;">
+                                        <img id="footerUserLogo"
+                                            style="width: 16px; height: 16px; object-fit: contain; display: none;"
+                                            alt="">
+                                        <span id="footerBrandingText" style="font-weight: 600; font-size: 11px;"></span>
+                                    </div>
+                                    <!-- aChordim branding (right, toggleable) -->
+                                    <span id="achordimBranding" style="display: flex; align-items: center; gap: 6px;">
+                                        <img src="achordim-icon-app.svg" alt="" class="footer-icon">
+                                        <span class="footer-brand">א/aChordim</span>
+                                        <span class="footer-url">www.thefaith<span
+                                                class="footer-highlight">sound</span>.com</span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 </div><!-- End preview-scale-wrapper -->
 
                 <!-- Edit Workspace (RIGHT) -->
@@ -1117,11 +1128,11 @@
         </section>
 
         <section class="support-section" id="support"
-            style="max-width: 1100px; margin: 0 auto 80px; padding: 40px 30px; text-align: center; background: var(--bg); border: 1px solid var(--border); position: relative; overflow: hidden;">
+            style="max-width: 1100px; margin: 40px auto 80px; padding: 40px 30px; text-align: center; background: var(--bg); border: 1px solid var(--border); position: relative; overflow: hidden;">
             <div style="position: relative; z-index: 1;">
-                <div
-                    style="display: inline-block; background: var(--text); padding: 8px 20px; margin-bottom: 20px;">
-                    <span style="color: var(--bg); font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;">UNLOCK FULL
+                <div style="display: inline-block; background: var(--text); padding: 8px 20px; margin-bottom: 20px;">
+                    <span style="color: var(--bg); font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;">UNLOCK
+                        FULL
                         POWER power1</span>
                 </div>
 
@@ -1132,8 +1143,7 @@
                     <img src="achordim-icon-app.svg" alt=""
                         style="width: clamp(32px, 8vw, 44px); height: clamp(32px, 8vw, 44px); align-self: flex-start;">
                     <span style="display: flex; flex-direction: column; line-height: 1.2;">
-                        <span
-                            style="color: var(--text);">א/aChordim</span>
+                        <span style="color: var(--text);">א/aChordim</span>
                         <span style="font-size: 0.5rem; color: var(--text); font-weight: 400;">www.thefaith<span
                                 style="color: var(--text);">sound</span>.com</span>
                     </span>
@@ -1230,8 +1240,8 @@
     </main>
 
     <footer class="app-footer">
-        <p>&copy; <span id="year"></span> The Faith Sound. <span data-i18n="footer.tagline">Built with love for worship leaders and musicians.</span> <span
-                style="opacity: 0.7;">| v3.1 - 28/01/2026</span></p>
+        <p>&copy; <span id="year"></span> The Faith Sound. <span data-i18n="footer.tagline">Built with love for worship
+                leaders and musicians.</span> <span style="opacity: 0.7;">| v3.1 - 28/01/2026</span></p>
         <p style="margin-top: 8px; font-size: 0.85rem;">
             <a href="privacy.html" style="color: var(--text-muted);" data-i18n="footer.privacy">Privacy Policy</a> ·
             <a href="terms.html" style="color: var(--text-muted);" data-i18n="footer.terms">Terms of Service</a>
@@ -1553,7 +1563,8 @@
 
                 <!-- Row 1: Book selector + Search -->
                 <div style="display: flex; gap: 6px; margin-bottom: 6px; align-items: center;">
-                    <select id="bookFilter" class="modal-input" style="flex: 0 0 auto; width: 140px; font-size: 0.85rem; padding: 8px 6px;">
+                    <select id="bookFilter" class="modal-input"
+                        style="flex: 0 0 auto; width: 140px; font-size: 0.85rem; padding: 8px 6px;">
                         <option value="all">All Songs</option>
                         <!-- Books populated dynamically -->
                     </select>
@@ -1567,7 +1578,8 @@
 
                 <!-- Row 2: Key filter + Sort -->
                 <div style="display: flex; gap: 6px; margin-bottom: 12px; align-items: center;">
-                    <select id="songKeyFilter" class="modal-input" style="flex: 1; font-size: 0.85rem; padding: 8px 6px;">
+                    <select id="songKeyFilter" class="modal-input"
+                        style="flex: 1; font-size: 0.85rem; padding: 8px 6px;">
                         <option value="">All Keys</option>
                         <option value="C">C Major</option>
                         <option value="C#">C# Major</option>
@@ -1614,10 +1626,12 @@
                             <button id="bulkSelectAll" class="ghost-button"
                                 style="padding: 8px 14px; font-size: 0.85rem;">Select All</button>
                             <button id="bulkAddToBook" class="primary-button"
-                                style="padding: 8px 14px; font-size: 0.85rem; background: var(--text); color: var(--bg);">Add to
+                                style="padding: 8px 14px; font-size: 0.85rem; background: var(--text); color: var(--bg);">Add
+                                to
                                 Book</button>
                             <button id="bulkAddToSession" class="primary-button"
-                                style="padding: 8px 14px; font-size: 0.85rem; background: var(--text); color: var(--bg);">Add to
+                                style="padding: 8px 14px; font-size: 0.85rem; background: var(--text); color: var(--bg);">Add
+                                to
                                 Session</button>
                             <button id="bulkDeleteBtn" class="primary-button"
                                 style="padding: 8px 14px; font-size: 0.85rem; background: var(--text); color: var(--bg);">Delete</button>
@@ -1801,7 +1815,8 @@
     <div id="subscriptionModal" class="modal-overlay">
         <div class="modal-container" style="max-width: 1100px; width: 95%; background: var(--bg);">
             <div class="modal-header" style="background: transparent; border-bottom: 1px solid var(--border);">
-                <h3 data-i18n="modal.plan.title" style="color: var(--text); font-weight: 700; font-size: 20px;">Choose Your
+                <h3 data-i18n="modal.plan.title" style="color: var(--text); font-weight: 700; font-size: 20px;">Choose
+                    Your
                     Plan</h3>
                 <button class="modal-close" id="subscriptionModalClose">&times;</button>
             </div>
@@ -1842,7 +1857,8 @@
                         <div style="font-size: 36px; font-weight: 700; color: var(--text);">$0.99<span
                                 style="font-size: 16px; font-weight: 400; color: var(--text-muted);"
                                 data-i18n="pricing.per_month">/mo</span></div>
-                        <div data-i18n="modal.plan.trial" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                        <div data-i18n="modal.plan.trial"
+                            style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
                             3-day free trial</div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
@@ -1850,7 +1866,8 @@
                             <li>✓ <span data-i18n="modal.plan.save">Save to Library</span></li>
                             <li>✓ <span data-i18n="modal.plan.transpose">Transpose</span></li>
                             <li>✓ <span data-i18n="modal.plan.print">Print/Export</span></li>
-                            <li style="opacity: 0.5; color: var(--text-muted);">✗ <span data-i18n="modal.plan.nashville">Nashville
+                            <li style="opacity: 0.5; color: var(--text-muted);">✗ <span
+                                    data-i18n="modal.plan.nashville">Nashville
                                     Numbers</span></li>
                         </ul>
                         <div id="pricing-basic-action" style="margin-top: auto; padding-top: 16px;">
@@ -1869,7 +1886,8 @@
                         <div style="font-size: 36px; font-weight: 700; color: var(--text);">$1.99<span
                                 style="font-size: 16px; font-weight: 400; color: var(--text-muted);"
                                 data-i18n="pricing.per_month">/mo</span></div>
-                        <div data-i18n="modal.plan.trial" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                        <div data-i18n="modal.plan.trial"
+                            style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
                             3-day free trial</div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
@@ -1893,10 +1911,12 @@
                         <h3 data-i18n="modal.plan.book"
                             style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Book</h3>
                         <div style="font-size: 36px; font-weight: 700; color: var(--text);">$9.99<span
-                                style="font-size: 16px; font-weight: 400; color: var(--text-muted);" data-i18n="pricing.once">
+                                style="font-size: 16px; font-weight: 400; color: var(--text-muted);"
+                                data-i18n="pricing.once">
                                 once</span></div>
                         <div data-i18n="modal.plan.lifetime"
-                            style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Lifetime + 20 scans</div>
+                            style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Lifetime + 20 scans
+                        </div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
                             <li>✓ <span data-i18n="modal.plan.scans20_included">20 scans included</span></li>
@@ -1923,16 +1943,20 @@
                     <div class="scan-packs-grid">
                         <div
                             style="text-align: center; padding: 20px; background: var(--bg); border: 1px solid var(--border);">
-                            <div data-i18n="modal.scan.5" style="font-weight: 600; font-size: 16px; color: var(--text);">5
+                            <div data-i18n="modal.scan.5"
+                                style="font-weight: 600; font-size: 16px; color: var(--text);">5
                                 Scans</div>
-                            <div style="font-size: 28px; font-weight: 700; color: var(--text); margin: 8px 0;">$0.99</div>
+                            <div style="font-size: 28px; font-weight: 700; color: var(--text); margin: 8px 0;">$0.99
+                            </div>
                             <div id="paypal-scan-starter" style="margin-top: 12px;"></div>
                         </div>
                         <div
                             style="text-align: center; padding: 20px; background: var(--bg); border: 1px solid var(--border);">
-                            <div data-i18n="modal.scan.15" style="font-weight: 600; font-size: 16px; color: var(--text);">15
+                            <div data-i18n="modal.scan.15"
+                                style="font-weight: 600; font-size: 16px; color: var(--text);">15
                                 Scans</div>
-                            <div style="font-size: 28px; font-weight: 700; color: var(--text); margin: 8px 0;">$1.99</div>
+                            <div style="font-size: 28px; font-weight: 700; color: var(--text); margin: 8px 0;">$1.99
+                            </div>
                             <div id="paypal-scan-value" style="margin-top: 12px;"></div>
                         </div>
                         <div
@@ -1940,9 +1964,11 @@
                             <div
                                 style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 4px 12px; font-size: 11px; font-weight: 600;">
                                 BEST VALUE</div>
-                            <div data-i18n="modal.scan.50" style="font-weight: 600; font-size: 16px; color: var(--text);">50
+                            <div data-i18n="modal.scan.50"
+                                style="font-weight: 600; font-size: 16px; color: var(--text);">50
                                 Scans</div>
-                            <div style="font-size: 28px; font-weight: 700; color: var(--text); margin: 8px 0;">$4.99</div>
+                            <div style="font-size: 28px; font-weight: 700; color: var(--text); margin: 8px 0;">$4.99
+                            </div>
                             <div id="paypal-scan-bundle" style="margin-top: 12px;"></div>
                         </div>
                     </div>
@@ -1951,12 +1977,15 @@
                 <!-- Cancel Subscription Section (for paid subscribers) -->
                 <div id="currentSubscriptionInfo"
                     style="display: none; background: var(--bg); border: 1px solid var(--border); padding: 16px; margin-top: 24px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                         <div>
-                            <p style="margin: 0 0 4px 0; font-size: 13px; color: var(--text-muted); font-weight: 500;">MANAGE SUBSCRIPTION</p>
+                            <p style="margin: 0 0 4px 0; font-size: 13px; color: var(--text-muted); font-weight: 500;">
+                                MANAGE SUBSCRIPTION</p>
                             <p style="margin: 0; font-size: 14px; color: var(--text);">
                                 Current plan: <strong id="currentPlanName" style="color: var(--text);">Pro</strong>
-                                <span id="currentPlanStatus" style="font-size: 12px; color: var(--text-muted); margin-left: 8px;">(Active)</span>
+                                <span id="currentPlanStatus"
+                                    style="font-size: 12px; color: var(--text-muted); margin-left: 8px;">(Active)</span>
                             </p>
                         </div>
                         <button id="cancelSubscriptionBtn" onclick="handleCancelSubscription()"
@@ -1997,7 +2026,8 @@
                         style="border: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column;">
                         <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Free</h3>
                         <div style="font-size: 36px; font-weight: 700; color: var(--text);">$0</div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">No credit card</div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">No credit card
+                        </div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
                             <li>✓ 3 scans/month</li>
@@ -2018,7 +2048,8 @@
                         <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Basic</h3>
                         <div style="font-size: 36px; font-weight: 700; color: var(--text);">$0.99<span
                                 style="font-size: 16px; font-weight: 400; color: var(--text-muted);">/mo</span></div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">3-day free trial</div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">3-day free trial
+                        </div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
                             <li>✓ 20 scans/month</li>
@@ -2041,7 +2072,8 @@
                         <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Pro</h3>
                         <div style="font-size: 36px; font-weight: 700; color: var(--text);">$1.99<span
                                 style="font-size: 16px; font-weight: 400; color: var(--text-muted);">/mo</span></div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">3-day free trial</div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">3-day free trial
+                        </div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
                             <li>✓ 50 scans/month</li>
@@ -2064,7 +2096,8 @@
                         <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Book</h3>
                         <div style="font-size: 36px; font-weight: 700; color: var(--text);">$9.99<span
                                 style="font-size: 16px; font-weight: 400; color: var(--text-muted);"> once</span></div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Lifetime + 20 scans</div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Lifetime + 20 scans
+                        </div>
                         <ul
                             style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
                             <li>✓ 20 scans included</li>
@@ -2082,11 +2115,13 @@
 
                 <!-- Footer -->
                 <div style="text-align: center; padding-top: 16px; border-top: 1px solid var(--border);">
-                    <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--text-muted);">Subscriptions include 3-day free
+                    <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--text-muted);">Subscriptions include 3-day
+                        free
                         trial. Cancel anytime.</p>
                     <span style="font-size: 13px; color: var(--text-muted);">Already have an account? </span>
                     <a href="#" id="loginFromPrompt"
-                        style="font-size: 13px; color: var(--text); font-weight: 600; text-decoration: none;">Sign In</a>
+                        style="font-size: 13px; color: var(--text); font-weight: 600; text-decoration: none;">Sign
+                        In</a>
                 </div>
             </div>
         </div>
@@ -2095,14 +2130,14 @@
     <!-- Features Modal -->
     <div id="featuresModal" class="modal-overlay">
         <div class="modal-container" style="max-width: 750px; background: var(--bg);">
-            <div class="modal-header"
-                style="background: var(--text); color: var(--bg);">
+            <div class="modal-header" style="background: var(--text); color: var(--bg);">
                 <h3>Everything You Need to Lead Worship</h3>
                 <button class="modal-close" id="featuresModalClose">&times;</button>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding: 24px;">
                 <!-- Intro -->
-                <p style="text-align: center; font-size: 15px; color: var(--text-muted); margin: 0 0 24px 0; line-height: 1.6;">
+                <p
+                    style="text-align: center; font-size: 15px; color: var(--text-muted); margin: 0 0 24px 0; line-height: 1.6;">
                     aChordim transforms any chord sheet image into a beautiful, editable, print-ready format in
                     seconds.<br>
                     <strong style="color: var(--text);">No more manual typing. No more messy printouts.</strong>
@@ -2174,7 +2209,8 @@
                         <li>✓ <strong>Smart search</strong> - find songs by title, lyrics, or key</li>
                         <li>✓ <strong>Cloud sync</strong> - access from any device, anytime</li>
                     </ul>
-                    <p style="margin: 12px 0 0 0; font-size: 12px; color: var(--text-muted); font-style: italic;">Available with
+                    <p style="margin: 12px 0 0 0; font-size: 12px; color: var(--text-muted); font-style: italic;">
+                        Available with
                         Basic & Pro plans</p>
                 </div>
 
@@ -2197,15 +2233,18 @@
                 <!-- Get Started CTA -->
                 <div
                     style="text-align: center; padding: 24px; background: var(--bg); border: 1px solid var(--border); margin-top: 8px;">
-                    <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--text);">Ready to transform
+                    <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--text);">Ready to
+                        transform
                         your worship experience?</p>
-                    <p style="margin: 0 0 16px 0; font-size: 14px; color: var(--text-muted);">Start free with 3 scans. Upgrade
+                    <p style="margin: 0 0 16px 0; font-size: 14px; color: var(--text-muted);">Start free with 3 scans.
+                        Upgrade
                         anytime for more features.</p>
                     <button id="featuresModalUpgrade"
                         style="padding: 14px 40px; background: var(--text); color: var(--bg); border: none; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform 0.2s;">
                         View Plans & Pricing
                     </button>
-                    <p style="margin: 12px 0 0 0; font-size: 12px; color: var(--text-muted);">Plans start at just $0.99/month</p>
+                    <p style="margin: 12px 0 0 0; font-size: 12px; color: var(--text-muted);">Plans start at just
+                        $0.99/month</p>
                 </div>
             </div>
         </div>
@@ -2507,8 +2546,8 @@
 
                 <!-- BPM Slider -->
                 <div style="margin-bottom: 12px;">
-                    <input type="range" id="metronome-bpm-slider" min="20" max="300" value="120"
-                        style="width: 100%;" oninput="metronome.setBpm(this.value)">
+                    <input type="range" id="metronome-bpm-slider" min="20" max="300" value="120" style="width: 100%;"
+                        oninput="metronome.setBpm(this.value)">
                     <div
                         style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 2px;">
                         <span>20</span>
@@ -2574,8 +2613,8 @@
                 <div>
                     <label
                         style="display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 6px;">Volume</label>
-                    <input type="range" id="metronome-volume" min="0" max="100" value="70"
-                        style="width: 100%;" oninput="metronome.setVolume(this.value / 100)">
+                    <input type="range" id="metronome-volume" min="0" max="100" value="70" style="width: 100%;"
+                        oninput="metronome.setVolume(this.value / 100)">
                 </div>
             </div>
             <div class="modal-footer" style="border-top: 1px solid var(--border); padding: 10px 16px;">
@@ -2590,8 +2629,7 @@
     <!-- Session Manager Modal (higher z-index for Live Mode) -->
     <div id="sessionManagerModal" class="modal-overlay" style="z-index: 100000;">
         <div class="modal-container" style="max-width: 500px;">
-            <div class="modal-header"
-                style="background: var(--bg); border-bottom: 1px solid var(--border);">
+            <div class="modal-header" style="background: var(--bg); border-bottom: 1px solid var(--border);">
                 <h3 style="display: flex; align-items: center; gap: 8px;">
                     <span></span> Manage Session
                 </h3>
@@ -2606,13 +2644,19 @@
                     <div id="sessionManagerCode"
                         style="font-size: 28px; font-weight: 700; color: var(--text); font-family: 'Courier New', monospace; letter-spacing: 3px; margin: 4px 0;">
                     </div>
-                    <div id="sessionManagerTitle" style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;"></div>
+                    <div id="sessionManagerTitle"
+                        style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;"></div>
                     <!-- QR Code -->
-                    <div id="sessionManagerQR" style="margin: 0 auto 10px; background: white; padding: 8px; display: inline-block;"></div>
+                    <div id="sessionManagerQR"
+                        style="margin: 0 auto 10px; background: white; padding: 8px; display: inline-block;"></div>
                     <!-- Copy buttons -->
                     <div style="display: flex; gap: 8px; justify-content: center;">
-                        <button onclick="liveMode.copySessionLink()" style="flex:1; padding:8px 12px; background:var(--text); color:var(--bg); border:none; cursor:pointer; font-size:12px; font-weight:600;">Copy Link</button>
-                        <button onclick="liveMode.copySessionCode()" style="flex:1; padding:8px 12px; background:transparent; color:var(--text); border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:600;">Copy Code</button>
+                        <button onclick="liveMode.copySessionLink()"
+                            style="flex:1; padding:8px 12px; background:var(--text); color:var(--bg); border:none; cursor:pointer; font-size:12px; font-weight:600;">Copy
+                            Link</button>
+                        <button onclick="liveMode.copySessionCode()"
+                            style="flex:1; padding:8px 12px; background:transparent; color:var(--text); border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:600;">Copy
+                            Code</button>
                     </div>
                 </div>
 
@@ -2634,13 +2678,19 @@
                 <!-- Playlist Section -->
                 <div style="margin-bottom: 16px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-                        <h4 style="margin:0; color:var(--text); font-size:14px; display:flex; align-items:center; gap:8px;">
-                            Playlist <span id="sessionManagerPlaylistCount" style="font-size:12px; color:var(--text-muted); font-weight:normal;">(0)</span>
+                        <h4
+                            style="margin:0; color:var(--text); font-size:14px; display:flex; align-items:center; gap:8px;">
+                            Playlist <span id="sessionManagerPlaylistCount"
+                                style="font-size:12px; color:var(--text-muted); font-weight:normal;">(0)</span>
                         </h4>
-                        <button onclick="liveMode.showAddSongModal()" style="padding:6px 12px; background:transparent; color:var(--text); border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:600;">+ Add Song</button>
+                        <button onclick="liveMode.showAddSongModal()"
+                            style="padding:6px 12px; background:transparent; color:var(--text); border:1px solid var(--border); cursor:pointer; font-size:12px; font-weight:600;">+
+                            Add Song</button>
                     </div>
-                    <div id="sessionManagerPlaylist" style="border:1px solid var(--border); max-height:300px; overflow-y:auto;">
-                        <div style="padding:16px; text-align:center; opacity:0.5; font-size:13px;">Loading playlist...</div>
+                    <div id="sessionManagerPlaylist"
+                        style="border:1px solid var(--border); max-height:300px; overflow-y:auto;">
+                        <div style="padding:16px; text-align:center; opacity:0.5; font-size:13px;">Loading playlist...
+                        </div>
                     </div>
                 </div>
 
@@ -2914,8 +2964,15 @@
         }
 
         @keyframes pendingBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         #metronome-play-btn.playing {
@@ -3006,10 +3063,21 @@
         <!-- Floating Quick-Access Buttons (always visible in live mode) -->
         <button id="liveFloatPlaylist" onclick="liveMode.togglePlaylistFloat()"
             style="display: none; position: absolute; bottom: 20px; right: 20px; z-index: 10004; width: 40px; height: 40px; background: transparent; color: var(--text); border: none; cursor: pointer; opacity: 0.5; padding: 0;"
-            title="Toggle Playlist"><svg width="22" height="22" viewBox="0 0 20 20" fill="none" style="display:block;margin:auto;"><line x1="3" y1="5" x2="17" y2="5" stroke="currentColor" stroke-width="2"/><line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="2"/><line x1="3" y1="15" x2="17" y2="15" stroke="currentColor" stroke-width="2"/></svg></button>
+            title="Toggle Playlist"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"
+                style="display:block;margin:auto;">
+                <line x1="3" y1="5" x2="17" y2="5" stroke="currentColor" stroke-width="2" />
+                <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="2" />
+                <line x1="3" y1="15" x2="17" y2="15" stroke="currentColor" stroke-width="2" />
+            </svg></button>
         <button id="liveFloatControls" onclick="liveMode.toggleControlsFloat()"
             style="display: none; position: absolute; bottom: 20px; left: 20px; z-index: 10004; width: 40px; height: 40px; background: transparent; color: var(--text); border: none; cursor: pointer; opacity: 0.5; padding: 0;"
-            title="Toggle Controls"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="display:block;margin:auto;"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="1.5"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.5"/></svg></button>
+            title="Toggle Controls"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                style="display:block;margin:auto;">
+                <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="1.5" />
+                <path
+                    d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"
+                    stroke="currentColor" stroke-width="1.5" />
+            </svg></button>
 
         <!-- Left Controls Sidebar (slides in from left) -->
         <div id="liveModeBottomBar"
@@ -3017,7 +3085,9 @@
 
             <!-- KEY -->
             <div style="margin-bottom: 10px;">
-                <div style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Key</div>
+                <div
+                    style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Key</div>
                 <div id="liveModeTransposeRow"
                     style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; border: 1px solid var(--border);">
                     <button onclick="liveMode.transpose(-1)"
@@ -3032,8 +3102,11 @@
 
             <!-- METRONOME -->
             <div style="margin-bottom: 10px;">
-                <div style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Metronome</div>
-                <div style="display: flex; align-items: center; gap: 3px; padding: 4px 6px; border: 1px solid var(--border); flex-wrap: wrap;">
+                <div
+                    style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Metronome</div>
+                <div
+                    style="display: flex; align-items: center; gap: 3px; padding: 4px 6px; border: 1px solid var(--border); flex-wrap: wrap;">
                     <button id="liveMetroPlay" onclick="window.metronome && window.metronome.toggle()"
                         style="min-width: 36px; height: 28px; background: var(--text); border: none; color: var(--bg); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0 6px;">PLAY</button>
                     <button onclick="window.metronome && window.metronome.decreaseBpm()"
@@ -3065,17 +3138,27 @@
 
             <!-- PADS -->
             <div style="margin-bottom: 10px;">
-                <div style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Pads <span id="livePadKey" style="opacity: 1;">--</span></div>
-                <div style="display: flex; align-items: center; gap: 2px; padding: 4px 6px; border: 1px solid var(--border); flex-wrap: wrap;">
+                <div
+                    style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Pads <span id="livePadKey" style="opacity: 1;">--</span></div>
+                <div
+                    style="display: flex; align-items: center; gap: 2px; padding: 4px 6px; border: 1px solid var(--border); flex-wrap: wrap;">
                     <button id="livePadStop" onclick="window.padPlayer && window.padPlayer.stopAll()"
                         style="min-width: 36px; height: 28px; background: var(--text); border: none; color: var(--bg); font-size: 10px; font-weight: 700; cursor: pointer; padding: 0 6px;">STOP</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('C')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">C</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('D')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">D</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('E')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">E</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('F')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">F</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('G')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">G</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('A')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">A</button>
-                    <button onclick="window.padPlayer && window.padPlayer.play('B')" style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">B</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('C')"
+                        style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">C</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('D')"
+                        style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">D</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('E')"
+                        style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">E</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('F')"
+                        style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">F</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('G')"
+                        style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">G</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('A')"
+                        style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">A</button>
+                    <button onclick="window.padPlayer && window.padPlayer.play('B')"
+                        style="padding: 5px 7px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">B</button>
                 </div>
                 <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
                     <span style="font-size: 9px; color: var(--text); opacity: 0.5; min-width: 22px;">Vol</span>
@@ -3087,20 +3170,27 @@
 
             <!-- FONT SIZE -->
             <div style="margin-bottom: 10px;">
-                <div style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Font Size</div>
-                <div style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; border: 1px solid var(--border);">
+                <div
+                    style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Font Size</div>
+                <div
+                    style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; border: 1px solid var(--border);">
                     <button onclick="liveMode.setFontSize(Math.max(8, liveMode.currentFontSize - 1))"
                         style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; padding: 0;">−</button>
                     <span id="liveModeZoomValue"
                         style="font-size: 12px; font-weight: 600; color: var(--text); min-width: 32px; text-align: center;">14pt</span>
-                    <button onclick="liveMode.setFontSize(Math.min(24, liveMode.currentFontSize + 1))"
+                    <button onclick="liveMode.setFontSize(Math.min(72, liveMode.currentFontSize + 1))"
                         style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; padding: 0;">+</button>
                 </div>
+                <input type="range" id="liveModeFontSlider" min="8" max="72" value="14" step="1"
+                    style="width: 100%; margin-top: 4px; cursor: pointer; accent-color: var(--text);">
             </div>
 
             <!-- AUTO-SCROLL -->
             <div style="margin-bottom: 10px;">
-                <div style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Auto Scroll</div>
+                <div
+                    style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Auto Scroll</div>
                 <div id="autoScrollControls"
                     style="display: flex; align-items: center; gap: 3px; padding: 4px 6px; border: 1px solid var(--border);">
                     <button id="autoScrollPlayBtn" onclick="liveMode.toggleAutoScroll()"
@@ -3117,16 +3207,20 @@
                     <div style="flex: 1; height: 4px; background: var(--border); overflow: hidden; cursor: pointer;"
                         onclick="liveMode.handleProgressBarClick(event)">
                         <div id="autoScrollProgressFill"
-                            style="width: 0%; height: 100%; background: var(--text); transition: width 0.1s linear;"></div>
+                            style="width: 0%; height: 100%; background: var(--text); transition: width 0.1s linear;">
+                        </div>
                     </div>
                     <span id="autoScrollTimeDisplay"
-                        style="font-size: 9px; color: var(--text); opacity: 0.5; font-weight: 600; white-space: nowrap;">0:00 / 3:00</span>
+                        style="font-size: 9px; color: var(--text); opacity: 0.5; font-weight: 600; white-space: nowrap;">0:00
+                        / 3:00</span>
                 </div>
             </div>
 
             <!-- DISPLAY -->
             <div style="margin-bottom: 10px;">
-                <div style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Display</div>
+                <div
+                    style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Display</div>
                 <div style="padding: 6px; border: 1px solid var(--border);">
                     <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
                         <select id="liveModeDisplayMode" onchange="liveMode.setDisplayMode(this.value)"
@@ -3144,16 +3238,25 @@
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
-                            <input type="checkbox" id="liveModeBadges" checked onchange="liveMode.toggleBadges(this.checked)" style="cursor: pointer; width: 14px; height: 14px;">
+                        <label
+                            style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
+                            <input type="checkbox" id="liveModeBadges" checked
+                                onchange="liveMode.toggleBadges(this.checked)"
+                                style="cursor: pointer; width: 14px; height: 14px;">
                             <span>Badges</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
-                            <input type="checkbox" id="liveModeBorders" checked onchange="liveMode.toggleBorders(this.checked)" style="cursor: pointer; width: 14px; height: 14px;">
+                        <label
+                            style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
+                            <input type="checkbox" id="liveModeBorders" checked
+                                onchange="liveMode.toggleBorders(this.checked)"
+                                style="cursor: pointer; width: 14px; height: 14px;">
                             <span>Borders</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
-                            <input type="checkbox" id="liveModeTimeline" onchange="liveMode.toggleTimeline(this.checked)" style="cursor: pointer; width: 14px; height: 14px;">
+                        <label
+                            style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
+                            <input type="checkbox" id="liveModeTimeline"
+                                onchange="liveMode.toggleTimeline(this.checked)"
+                                style="cursor: pointer; width: 14px; height: 14px;">
                             <span>Timeline</span>
                         </label>
                     </div>
@@ -3164,15 +3267,21 @@
             <div style="margin-bottom: 10px;">
                 <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                     <button id="liveModeMidiBtn" onclick="openMidiSettings()"
-                        style="flex: 1; padding: 8px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; font-weight: 500;">MIDI<span id="midiStatus" style="display: none; color: var(--text); font-size: 10px;"> ●</span></button>
+                        style="flex: 1; padding: 8px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 12px; font-weight: 500;">MIDI<span
+                            id="midiStatus" style="display: none; color: var(--text); font-size: 10px;">
+                            ●</span></button>
                 </div>
             </div>
 
             <!-- SESSION CONTROLS -->
             <div id="liveModeSessionControls" style="display: none; margin-bottom: 10px;">
-                <div style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Session</div>
-                <div style="padding: 6px; border: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
-                    <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
+                <div
+                    style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Session</div>
+                <div
+                    style="padding: 6px; border: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                    <label
+                        style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
                         <input type="checkbox" id="liveModePlaylistToggle"
                             onchange="liveMode.setPlaylistVisible(this.checked); document.getElementById('playlistToggleLabel').textContent = this.checked ? 'ON' : 'OFF'"
                             style="cursor: pointer; width: 14px; height: 14px;">
@@ -3185,13 +3294,15 @@
                             style="cursor: pointer; width: 14px; height: 14px;">
                         <span id="lockToggleLabel">Unlocked</span>
                     </label>
-                    <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
+                    <label
+                        style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
                         <input type="checkbox" id="liveModeAutoHidePlaylist" checked
                             onchange="liveMode.toggleAutoHidePlaylist(this.checked)"
                             style="cursor: pointer; width: 14px; height: 14px;">
                         <span>Auto-hide</span>
                     </label>
-                    <label id="liveModeFollowLeader" style="display: none; cursor: pointer; font-size: 11px; color: var(--text);">
+                    <label id="liveModeFollowLeader"
+                        style="display: none; cursor: pointer; font-size: 11px; color: var(--text);">
                         <input type="checkbox" id="followLeaderCheckbox" checked
                             onchange="liveMode.toggleFollowLeader(this.checked)"
                             style="margin-right: 4px; width: 14px; height: 14px;">
@@ -3203,7 +3314,8 @@
 
             <!-- EXIT -->
             <button id="liveModeCloseBtn" onclick="liveMode.exit()"
-                style="width: 100%; padding: 10px; background: var(--text); border: none; color: var(--bg); cursor: pointer; font-size: 13px; font-weight: 600;">Exit Live Mode</button>
+                style="width: 100%; padding: 10px; background: var(--text); border: none; color: var(--bg); cursor: pointer; font-size: 13px; font-weight: 600;">Exit
+                Live Mode</button>
         </div>
     </div>
 
@@ -3475,7 +3587,7 @@
     <!-- Chords App Format Parser (ChordPro-like format v4) -->
     <script src="chordpro-parser.js"></script>
 
-    <script src="app.js?v=80"></script>
+    <script src="app.js?v=87"></script>
 
     <style>
         /* Auth message states - B&W */
@@ -4068,13 +4180,18 @@
             }
 
             if (toggle) {
-                const saved = localStorage.getItem(EMOJI_KEY) === 'true';
+                let savedStr = localStorage.getItem(EMOJI_KEY);
+                if (savedStr === null) {
+                    savedStr = 'true'; // Default to hiding emojis
+                    localStorage.setItem(EMOJI_KEY, savedStr);
+                }
+                const saved = savedStr === 'true';
                 toggle.checked = saved;
 
                 toggle.addEventListener('change', () => {
-                    const hidden = toggle.checked;
-                    localStorage.setItem(EMOJI_KEY, String(hidden));
-                    applyEmojiState(hidden);
+                    const h = toggle.checked;
+                    localStorage.setItem(EMOJI_KEY, String(h));
+                    applyEmojiState(h);
                 });
 
                 // Apply on load (after small delay to let translations render)
@@ -4085,7 +4202,8 @@
 
             // Re-strip after language change
             window.addEventListener('languageChanged', () => {
-                if (localStorage.getItem(EMOJI_KEY) === 'true') {
+                const sv = localStorage.getItem(EMOJI_KEY);
+                if (sv === null || sv === 'true') {
                     setTimeout(() => stripEmojis(), 100);
                 }
             });
@@ -4891,427 +5009,427 @@
 
     <!-- Navigation Tab Bar Logic -->
     <script>
-    (function() {
-        'use strict';
+        (function () {
+            'use strict';
 
-        const navTabs = document.querySelectorAll('.nav-tab');
-        const mainContainer = document.querySelector('main.container');
-        const liveSessionSubmenu = document.getElementById('liveSessionSubmenu');
-        const toolsCombinedView = document.getElementById('toolsCombinedView');
-        let currentTab = 'scanner';
-        let toolsInitialized = false;
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const mainContainer = document.querySelector('main.container');
+            const liveSessionSubmenu = document.getElementById('liveSessionSubmenu');
+            const toolsCombinedView = document.getElementById('toolsCombinedView');
+            let currentTab = 'scanner';
+            let toolsInitialized = false;
 
-        // Saved references for DOM move approach
-        let metronomeModalBody = null;
-        let padsModalBody = null;
-        let metronomeSavedChildren = null;
-        let padsSavedChildren = null;
+            // Saved references for DOM move approach
+            let metronomeModalBody = null;
+            let padsModalBody = null;
+            let metronomeSavedChildren = null;
+            let padsSavedChildren = null;
 
-        navTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const targetTab = tab.dataset.tab;
-                if (targetTab === currentTab && targetTab === 'livesession') {
-                    liveSessionSubmenu.style.display =
-                        liveSessionSubmenu.style.display === 'none' ? 'flex' : 'none';
-                    return;
-                }
-                switchTab(targetTab);
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.dataset.tab;
+                    if (targetTab === currentTab && targetTab === 'livesession') {
+                        liveSessionSubmenu.style.display =
+                            liveSessionSubmenu.style.display === 'none' ? 'flex' : 'none';
+                        return;
+                    }
+                    switchTab(targetTab);
+                });
             });
-        });
 
-        function switchTab(targetTab) {
-            // Move tools content back to modals before switching away
-            if (currentTab === 'tools' && targetTab !== 'tools') {
-                moveToolsBackToModals();
+            function switchTab(targetTab) {
+                // Move tools content back to modals before switching away
+                if (currentTab === 'tools' && targetTab !== 'tools') {
+                    moveToolsBackToModals();
+                }
+
+                navTabs.forEach(t => t.classList.remove('active'));
+                const activeTab = document.querySelector('.nav-tab[data-tab="' + targetTab + '"]');
+                if (activeTab) activeTab.classList.add('active');
+
+                liveSessionSubmenu.style.display = 'none';
+                toolsCombinedView.style.display = 'none';
+                mainContainer.style.display = '';
+
+                switch (targetTab) {
+                    case 'scanner':
+                        break;
+
+                    case 'songbook':
+                        openSongBook();
+                        break;
+
+                    case 'livesession':
+                        liveSessionSubmenu.style.display = 'flex';
+                        break;
+
+                    case 'tools':
+                        mainContainer.style.display = 'none';
+                        toolsCombinedView.style.display = 'block';
+                        if (!toolsInitialized) {
+                            initToolsPanelHeaders();
+                            toolsInitialized = true;
+                        }
+                        moveToolsFromModals();
+                        break;
+                }
+
+                currentTab = targetTab;
             }
 
-            navTabs.forEach(t => t.classList.remove('active'));
-            const activeTab = document.querySelector('.nav-tab[data-tab="' + targetTab + '"]');
-            if (activeTab) activeTab.classList.add('active');
+            // --- Song Book ---
+            function openSongBook() {
+                const loadSongBtn = document.getElementById('loadSongButton');
+                if (loadSongBtn) {
+                    loadSongBtn.click();
+                } else {
+                    const modal = document.getElementById('loadSongModal');
+                    if (modal) modal.style.display = 'flex';
+                }
 
-            liveSessionSubmenu.style.display = 'none';
-            toolsCombinedView.style.display = 'none';
-            mainContainer.style.display = '';
-
-            switch (targetTab) {
-                case 'scanner':
-                    break;
-
-                case 'songbook':
-                    openSongBook();
-                    break;
-
-                case 'livesession':
-                    liveSessionSubmenu.style.display = 'flex';
-                    break;
-
-                case 'tools':
-                    mainContainer.style.display = 'none';
-                    toolsCombinedView.style.display = 'block';
-                    if (!toolsInitialized) {
-                        initToolsPanelHeaders();
-                        toolsInitialized = true;
-                    }
-                    moveToolsFromModals();
-                    break;
-            }
-
-            currentTab = targetTab;
-        }
-
-        // --- Song Book ---
-        function openSongBook() {
-            const loadSongBtn = document.getElementById('loadSongButton');
-            if (loadSongBtn) {
-                loadSongBtn.click();
-            } else {
                 const modal = document.getElementById('loadSongModal');
-                if (modal) modal.style.display = 'flex';
-            }
-
-            const modal = document.getElementById('loadSongModal');
-            if (modal) {
-                const observer = new MutationObserver(function(mutations) {
-                    for (const m of mutations) {
-                        if (m.attributeName === 'style' && modal.style.display === 'none') {
-                            if (currentTab === 'songbook') {
-                                switchTab('scanner');
+                if (modal) {
+                    const observer = new MutationObserver(function (mutations) {
+                        for (const m of mutations) {
+                            if (m.attributeName === 'style' && modal.style.display === 'none') {
+                                if (currentTab === 'songbook') {
+                                    switchTab('scanner');
+                                }
+                                observer.disconnect();
+                                return;
                             }
-                            observer.disconnect();
-                            return;
                         }
+                    });
+                    observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
+                }
+            }
+
+            // --- Live Session sub-menu ---
+            document.getElementById('navCreateSession').addEventListener('click', function () {
+                if (window.sessionUI) sessionUI.showCreateSessionModal();
+            });
+            document.getElementById('navJoinSession').addEventListener('click', function () {
+                if (window.sessionUI) sessionUI.showJoinSessionModal();
+            });
+            document.getElementById('navMySessions').addEventListener('click', function () {
+                if (window.sessionUI) sessionUI.showMySessionsModal();
+            });
+
+            // --- Tools: DOM move approach ---
+            function initToolsPanelHeaders() {
+                var metroPanel = document.getElementById('toolsMetronomePanel');
+                var padsPanel = document.getElementById('toolsPadsPanel');
+                if (metroPanel) {
+                    var h = document.createElement('h3');
+                    h.className = 'tools-panel-header';
+                    h.setAttribute('data-i18n', 'nav.tools.metronome');
+                    h.textContent = 'Metronome';
+                    metroPanel.appendChild(h);
+                }
+                if (padsPanel) {
+                    var h = document.createElement('h3');
+                    h.className = 'tools-panel-header';
+                    h.setAttribute('data-i18n', 'nav.tools.pads');
+                    h.textContent = 'Worship Pads';
+                    padsPanel.appendChild(h);
+                }
+            }
+
+            function moveToolsFromModals() {
+                var metroPanel = document.getElementById('toolsMetronomePanel');
+                var padsPanel = document.getElementById('toolsPadsPanel');
+
+                // Move metronome content
+                if (!metronomeModalBody) {
+                    var metroModal = document.getElementById('metronomeModal');
+                    if (metroModal) metronomeModalBody = metroModal.querySelector('.modal-body');
+                }
+                if (metronomeModalBody && metroPanel) {
+                    metronomeSavedChildren = Array.from(metronomeModalBody.children);
+                    metronomeSavedChildren.forEach(function (child) {
+                        metroPanel.appendChild(child);
+                    });
+
+                    // Add Play/Stop button for metronome
+                    if (!document.getElementById('toolsMetronomePlayBtn')) {
+                        var playBtn = document.createElement('button');
+                        playBtn.id = 'toolsMetronomePlayBtn';
+                        playBtn.textContent = 'Play';
+                        playBtn.style.cssText = 'width: 100%; padding: 12px; margin-top: 12px; background: var(--text); color: var(--bg); border: 1px solid var(--border); cursor: pointer; font-size: 14px; font-weight: 600; font-family: inherit;';
+                        playBtn.addEventListener('click', function () {
+                            if (window.metronome) {
+                                metronome.toggle();
+                                playBtn.textContent = metronome.isPlaying ? 'Stop' : 'Play';
+                            }
+                        });
+                        metroPanel.appendChild(playBtn);
                     }
-                });
-                observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
-            }
-        }
+                }
 
-        // --- Live Session sub-menu ---
-        document.getElementById('navCreateSession').addEventListener('click', function() {
-            if (window.sessionUI) sessionUI.showCreateSessionModal();
-        });
-        document.getElementById('navJoinSession').addEventListener('click', function() {
-            if (window.sessionUI) sessionUI.showJoinSessionModal();
-        });
-        document.getElementById('navMySessions').addEventListener('click', function() {
-            if (window.sessionUI) sessionUI.showMySessionsModal();
-        });
-
-        // --- Tools: DOM move approach ---
-        function initToolsPanelHeaders() {
-            var metroPanel = document.getElementById('toolsMetronomePanel');
-            var padsPanel = document.getElementById('toolsPadsPanel');
-            if (metroPanel) {
-                var h = document.createElement('h3');
-                h.className = 'tools-panel-header';
-                h.setAttribute('data-i18n', 'nav.tools.metronome');
-                h.textContent = 'Metronome';
-                metroPanel.appendChild(h);
-            }
-            if (padsPanel) {
-                var h = document.createElement('h3');
-                h.className = 'tools-panel-header';
-                h.setAttribute('data-i18n', 'nav.tools.pads');
-                h.textContent = 'Worship Pads';
-                padsPanel.appendChild(h);
-            }
-        }
-
-        function moveToolsFromModals() {
-            var metroPanel = document.getElementById('toolsMetronomePanel');
-            var padsPanel = document.getElementById('toolsPadsPanel');
-
-            // Move metronome content
-            if (!metronomeModalBody) {
-                var metroModal = document.getElementById('metronomeModal');
-                if (metroModal) metronomeModalBody = metroModal.querySelector('.modal-body');
-            }
-            if (metronomeModalBody && metroPanel) {
-                metronomeSavedChildren = Array.from(metronomeModalBody.children);
-                metronomeSavedChildren.forEach(function(child) {
-                    metroPanel.appendChild(child);
-                });
-
-                // Add Play/Stop button for metronome
-                if (!document.getElementById('toolsMetronomePlayBtn')) {
-                    var playBtn = document.createElement('button');
-                    playBtn.id = 'toolsMetronomePlayBtn';
-                    playBtn.textContent = 'Play';
-                    playBtn.style.cssText = 'width: 100%; padding: 12px; margin-top: 12px; background: var(--text); color: var(--bg); border: 1px solid var(--border); cursor: pointer; font-size: 14px; font-weight: 600; font-family: inherit;';
-                    playBtn.addEventListener('click', function() {
-                        if (window.metronome) {
-                            metronome.toggle();
-                            playBtn.textContent = metronome.isPlaying ? 'Stop' : 'Play';
-                        }
+                // Move pads content
+                if (!padsModalBody) {
+                    var padsModal = document.getElementById('padsModal');
+                    if (padsModal) padsModalBody = padsModal.querySelector('.modal-body');
+                }
+                if (padsModalBody && padsPanel) {
+                    padsSavedChildren = Array.from(padsModalBody.children);
+                    padsSavedChildren.forEach(function (child) {
+                        padsPanel.appendChild(child);
                     });
-                    metroPanel.appendChild(playBtn);
+
+                    // Pads load on demand when user clicks a key
+
+                    // Add Stop All button for pads
+                    if (!document.getElementById('toolsPadsStopBtn')) {
+                        var stopBtn = document.createElement('button');
+                        stopBtn.id = 'toolsPadsStopBtn';
+                        stopBtn.textContent = 'Stop All';
+                        stopBtn.style.cssText = 'width: 100%; padding: 12px; margin-top: 12px; background: var(--text); color: var(--bg); border: 1px solid var(--border); cursor: pointer; font-size: 14px; font-weight: 600; font-family: inherit;';
+                        stopBtn.addEventListener('click', function () {
+                            if (window.padPlayer) padPlayer.stopAll();
+                        });
+                        padsPanel.appendChild(stopBtn);
+                    }
+                }
+
+                // Update translations for moved content
+                if (window.localization) localization.updateUI();
+            }
+
+            function moveToolsBackToModals() {
+                if (metronomeSavedChildren && metronomeModalBody) {
+                    metronomeSavedChildren.forEach(function (child) {
+                        metronomeModalBody.appendChild(child);
+                    });
+                    metronomeSavedChildren = null;
+                }
+                if (padsSavedChildren && padsModalBody) {
+                    padsSavedChildren.forEach(function (child) {
+                        padsModalBody.appendChild(child);
+                    });
+                    padsSavedChildren = null;
                 }
             }
 
-            // Move pads content
-            if (!padsModalBody) {
-                var padsModal = document.getElementById('padsModal');
-                if (padsModal) padsModalBody = padsModal.querySelector('.modal-body');
-            }
-            if (padsModalBody && padsPanel) {
-                padsSavedChildren = Array.from(padsModalBody.children);
-                padsSavedChildren.forEach(function(child) {
-                    padsPanel.appendChild(child);
-                });
-
-                // Pads load on demand when user clicks a key
-
-                // Add Stop All button for pads
-                if (!document.getElementById('toolsPadsStopBtn')) {
-                    var stopBtn = document.createElement('button');
-                    stopBtn.id = 'toolsPadsStopBtn';
-                    stopBtn.textContent = 'Stop All';
-                    stopBtn.style.cssText = 'width: 100%; padding: 12px; margin-top: 12px; background: var(--text); color: var(--bg); border: 1px solid var(--border); cursor: pointer; font-size: 14px; font-weight: 600; font-family: inherit;';
-                    stopBtn.addEventListener('click', function() {
-                        if (window.padPlayer) padPlayer.stopAll();
-                    });
-                    padsPanel.appendChild(stopBtn);
-                }
-            }
-
-            // Update translations for moved content
-            if (window.localization) localization.updateUI();
-        }
-
-        function moveToolsBackToModals() {
-            if (metronomeSavedChildren && metronomeModalBody) {
-                metronomeSavedChildren.forEach(function(child) {
-                    metronomeModalBody.appendChild(child);
-                });
-                metronomeSavedChildren = null;
-            }
-            if (padsSavedChildren && padsModalBody) {
-                padsSavedChildren.forEach(function(child) {
-                    padsModalBody.appendChild(child);
-                });
-                padsSavedChildren = null;
-            }
-        }
-
-        window.navBar = { switchTab: switchTab };
-    })();
+            window.navBar = { switchTab: switchTab };
+        })();
     </script>
 
     <!-- Paste & Drag-Drop for chart upload -->
     <script>
-    (function() {
-        'use strict';
-        const uploadPreview = document.getElementById('uploadPreview');
-        const previewImage = document.getElementById('previewImage');
-        const chartFileInput = document.getElementById('chartFileInput');
-        const placeholder = uploadPreview ? uploadPreview.querySelector('.preview-placeholder') : null;
+        (function () {
+            'use strict';
+            const uploadPreview = document.getElementById('uploadPreview');
+            const previewImage = document.getElementById('previewImage');
+            const chartFileInput = document.getElementById('chartFileInput');
+            const placeholder = uploadPreview ? uploadPreview.querySelector('.preview-placeholder') : null;
 
-        if (!uploadPreview || !previewImage) return;
+            if (!uploadPreview || !previewImage) return;
 
-        function handleImageFile(file) {
-            if (!file) return;
-            const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/webp', 'application/pdf'];
-            if (!validTypes.includes(file.type) && !file.name?.match(/\.(jpe?g|png|heic|webp|pdf)$/i)) {
-                window.showAlert && showAlert('Unsupported file type. Please use JPG, PNG, HEIC, or PDF.');
-                return;
-            }
-
-            if (file.type === 'application/pdf' || file.name?.endsWith('.pdf')) {
-                previewImage.style.display = 'none';
-                if (placeholder) {
-                    placeholder.textContent = file.name || 'PDF pasted';
-                    placeholder.style.display = '';
+            function handleImageFile(file) {
+                if (!file) return;
+                const validTypes = ['image/jpeg', 'image/png', 'image/heic', 'image/webp', 'application/pdf'];
+                if (!validTypes.includes(file.type) && !file.name?.match(/\.(jpe?g|png|heic|webp|pdf)$/i)) {
+                    window.showAlert && showAlert('Unsupported file type. Please use JPG, PNG, HEIC, or PDF.');
+                    return;
                 }
+
+                if (file.type === 'application/pdf' || file.name?.endsWith('.pdf')) {
+                    previewImage.style.display = 'none';
+                    if (placeholder) {
+                        placeholder.textContent = file.name || 'PDF pasted';
+                        placeholder.style.display = '';
+                    }
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    chartFileInput.files = dt.files;
+                    chartFileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 chartFileInput.files = dt.files;
                 chartFileInput.dispatchEvent(new Event('change', { bubbles: true }));
-                return;
             }
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                previewImage.src = e.target.result;
-                previewImage.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-            };
-            reader.readAsDataURL(file);
-
-            const dt = new DataTransfer();
-            dt.items.add(file);
-            chartFileInput.files = dt.files;
-            chartFileInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-
-        // Paste (Ctrl+V / Cmd+V) — listen on document for convenience
-        document.addEventListener('paste', (e) => {
-            const items = e.clipboardData?.items;
-            if (!items) return;
-            for (const item of items) {
-                if (item.type.startsWith('image/')) {
-                    e.preventDefault();
-                    handleImageFile(item.getAsFile());
-                    return;
-                }
-            }
-        });
-
-        // Paste button — desktop only (clipboard API not supported on iOS)
-        const pasteBtn = document.getElementById('pasteImageBtn');
-        if (pasteBtn) {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            if (!isMobile) {
-                pasteBtn.style.display = 'block';
-                pasteBtn.addEventListener('click', async () => {
-                    try {
-                        const clipboardItems = await navigator.clipboard.read();
-                        for (const item of clipboardItems) {
-                            const imageType = item.types.find(t => t.startsWith('image/'));
-                            if (imageType) {
-                                const blob = await item.getType(imageType);
-                                const file = new File([blob], 'pasted-image.png', { type: imageType });
-                                handleImageFile(file);
-                                return;
-                            }
-                        }
-                        window.showAlert && showAlert('No image found in clipboard. Copy an image first, then click Paste.');
-                    } catch (err) {
-                        window.showAlert && showAlert('Paste not available. Use Ctrl+V (or Cmd+V) to paste an image.');
-                    }
-                });
-            }
-        }
-
-        // Drag & drop onto preview panel
-        uploadPreview.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadPreview.style.borderColor = 'var(--text)';
-            uploadPreview.style.borderStyle = 'dashed';
-        });
-        uploadPreview.addEventListener('dragleave', () => {
-            uploadPreview.style.borderColor = '';
-            uploadPreview.style.borderStyle = '';
-        });
-        uploadPreview.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadPreview.style.borderColor = '';
-            uploadPreview.style.borderStyle = '';
-            const file = e.dataTransfer?.files?.[0];
-            if (file) handleImageFile(file);
-        });
-
-        // File input change — show preview for images
-        chartFileInput.addEventListener('change', (e) => {
-            if (e.isTrusted) {
-                const file = e.target.files?.[0];
-                if (file && file.type?.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        previewImage.src = ev.target.result;
-                        previewImage.style.display = 'block';
-                        if (placeholder) placeholder.style.display = 'none';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
-        });
-
-        // Content input: handles URLs (fetch + AI) or plain text (AI convert to v4)
-        const fetchUrlBtn = document.getElementById('fetchUrlBtn');
-        const contentInput = document.getElementById('contentInput');
-        if (fetchUrlBtn && contentInput) {
-            const API_BASE = 'https://us-central1-chordsapp-e10e7.cloudfunctions.net';
-
-            // Auto-expand textarea on paste
-            contentInput.addEventListener('input', () => {
-                contentInput.style.height = 'auto';
-                contentInput.style.height = Math.min(contentInput.scrollHeight, 200) + 'px';
-            });
-
-            function processAIResult(transcription) {
-                // Use the full pipeline from app.js (raw → normalize → editor → preview)
-                if (window.processAITextResult) {
-                    window.processAITextResult(transcription);
-                } else {
-                    // Fallback: put directly in editor
-                    const editor = document.getElementById('visualEditor');
-                    if (editor) {
-                        editor.value = transcription;
-                        editor.dispatchEvent(new Event('input', { bubbles: true }));
-                    }
-                }
-            }
-
-            async function analyzeTextWithAI(text) {
-                const resp = await fetch(API_BASE + '/analyzeText', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text })
-                });
-                if (!resp.ok) {
-                    const err = await resp.json().catch(() => ({}));
-                    throw new Error(err.error || 'AI analysis failed');
-                }
-                const result = await resp.json();
-                return result.transcription;
-            }
-
-            async function handleContentInput() {
-                const input = contentInput.value.trim();
-                if (!input) return;
-
-                const isUrl = /^https?:\/\//i.test(input);
-                fetchUrlBtn.textContent = '...';
-                fetchUrlBtn.disabled = true;
-
-                try {
-                    if (!isUrl) {
-                        // Plain text: send to AI for v4 conversion
-                        const formatted = await analyzeTextWithAI(input);
-                        processAIResult(formatted);
-                        contentInput.value = '';
-                        contentInput.style.height = 'auto';
+            // Paste (Ctrl+V / Cmd+V) — listen on document for convenience
+            document.addEventListener('paste', (e) => {
+                const items = e.clipboardData?.items;
+                if (!items) return;
+                for (const item of items) {
+                    if (item.type.startsWith('image/')) {
+                        e.preventDefault();
+                        handleImageFile(item.getAsFile());
                         return;
                     }
+                }
+            });
 
-                    // URL: fetch via proxy first
-                    const resp = await fetch(API_BASE + '/fetchUrl', {
+            // Paste button — desktop only (clipboard API not supported on iOS)
+            const pasteBtn = document.getElementById('pasteImageBtn');
+            if (pasteBtn) {
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (!isMobile) {
+                    pasteBtn.style.display = 'block';
+                    pasteBtn.addEventListener('click', async () => {
+                        try {
+                            const clipboardItems = await navigator.clipboard.read();
+                            for (const item of clipboardItems) {
+                                const imageType = item.types.find(t => t.startsWith('image/'));
+                                if (imageType) {
+                                    const blob = await item.getType(imageType);
+                                    const file = new File([blob], 'pasted-image.png', { type: imageType });
+                                    handleImageFile(file);
+                                    return;
+                                }
+                            }
+                            window.showAlert && showAlert('No image found in clipboard. Copy an image first, then click Paste.');
+                        } catch (err) {
+                            window.showAlert && showAlert('Paste not available. Use Ctrl+V (or Cmd+V) to paste an image.');
+                        }
+                    });
+                }
+            }
+
+            // Drag & drop onto preview panel
+            uploadPreview.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadPreview.style.borderColor = 'var(--text)';
+                uploadPreview.style.borderStyle = 'dashed';
+            });
+            uploadPreview.addEventListener('dragleave', () => {
+                uploadPreview.style.borderColor = '';
+                uploadPreview.style.borderStyle = '';
+            });
+            uploadPreview.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadPreview.style.borderColor = '';
+                uploadPreview.style.borderStyle = '';
+                const file = e.dataTransfer?.files?.[0];
+                if (file) handleImageFile(file);
+            });
+
+            // File input change — show preview for images
+            chartFileInput.addEventListener('change', (e) => {
+                if (e.isTrusted) {
+                    const file = e.target.files?.[0];
+                    if (file && file.type?.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            previewImage.src = ev.target.result;
+                            previewImage.style.display = 'block';
+                            if (placeholder) placeholder.style.display = 'none';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+
+            // Content input: handles URLs (fetch + AI) or plain text (AI convert to v4)
+            const fetchUrlBtn = document.getElementById('fetchUrlBtn');
+            const contentInput = document.getElementById('contentInput');
+            if (fetchUrlBtn && contentInput) {
+                const API_BASE = 'https://us-central1-chordsapp-e10e7.cloudfunctions.net';
+
+                // Auto-expand textarea on paste
+                contentInput.addEventListener('input', () => {
+                    contentInput.style.height = 'auto';
+                    contentInput.style.height = Math.min(contentInput.scrollHeight, 200) + 'px';
+                });
+
+                function processAIResult(transcription) {
+                    // Use the full pipeline from app.js (raw → normalize → editor → preview)
+                    if (window.processAITextResult) {
+                        window.processAITextResult(transcription);
+                    } else {
+                        // Fallback: put directly in editor
+                        const editor = document.getElementById('visualEditor');
+                        if (editor) {
+                            editor.value = transcription;
+                            editor.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }
+                }
+
+                async function analyzeTextWithAI(text) {
+                    const resp = await fetch(API_BASE + '/analyzeText', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: input })
+                        body: JSON.stringify({ text })
                     });
                     if (!resp.ok) {
                         const err = await resp.json().catch(() => ({}));
-                        throw new Error(err.error || 'Failed to fetch URL');
+                        throw new Error(err.error || 'AI analysis failed');
                     }
                     const result = await resp.json();
-
-                    if (result.type === 'image') {
-                        // Image URL: feed into scanner
-                        const byteChars = atob(result.data);
-                        const byteArray = new Uint8Array(byteChars.length);
-                        for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
-                        const blob = new Blob([byteArray], { type: result.contentType });
-                        const file = new File([blob], 'url-image.png', { type: result.contentType });
-                        handleImageFile(file);
-                    } else {
-                        // Webpage text: send through AI for v4 conversion
-                        fetchUrlBtn.textContent = 'AI...';
-                        const formatted = await analyzeTextWithAI(result.data);
-                        processAIResult(formatted);
-                    }
-                    contentInput.value = '';
-                    contentInput.style.height = 'auto';
-                } catch (err) {
-                    window.showAlert && showAlert(err.message || 'Could not fetch URL content.');
-                } finally {
-                    fetchUrlBtn.textContent = 'Go';
-                    fetchUrlBtn.disabled = false;
+                    return result.transcription;
                 }
+
+                async function handleContentInput() {
+                    const input = contentInput.value.trim();
+                    if (!input) return;
+
+                    const isUrl = /^https?:\/\//i.test(input);
+                    fetchUrlBtn.textContent = '...';
+                    fetchUrlBtn.disabled = true;
+
+                    try {
+                        if (!isUrl) {
+                            // Plain text: send to AI for v4 conversion
+                            const formatted = await analyzeTextWithAI(input);
+                            processAIResult(formatted);
+                            contentInput.value = '';
+                            contentInput.style.height = 'auto';
+                            return;
+                        }
+
+                        // URL: fetch via proxy first
+                        const resp = await fetch(API_BASE + '/fetchUrl', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: input })
+                        });
+                        if (!resp.ok) {
+                            const err = await resp.json().catch(() => ({}));
+                            throw new Error(err.error || 'Failed to fetch URL');
+                        }
+                        const result = await resp.json();
+
+                        if (result.type === 'image') {
+                            // Image URL: feed into scanner
+                            const byteChars = atob(result.data);
+                            const byteArray = new Uint8Array(byteChars.length);
+                            for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+                            const blob = new Blob([byteArray], { type: result.contentType });
+                            const file = new File([blob], 'url-image.png', { type: result.contentType });
+                            handleImageFile(file);
+                        } else {
+                            // Webpage text: send through AI for v4 conversion
+                            fetchUrlBtn.textContent = 'AI...';
+                            const formatted = await analyzeTextWithAI(result.data);
+                            processAIResult(formatted);
+                        }
+                        contentInput.value = '';
+                        contentInput.style.height = 'auto';
+                    } catch (err) {
+                        window.showAlert && showAlert(err.message || 'Could not fetch URL content.');
+                    } finally {
+                        fetchUrlBtn.textContent = 'Go';
+                        fetchUrlBtn.disabled = false;
+                    }
+                }
+                fetchUrlBtn.addEventListener('click', handleContentInput);
             }
-            fetchUrlBtn.addEventListener('click', handleContentInput);
-        }
-    })();
+        })();
     </script>
 
     <!-- PWA Service Worker -->

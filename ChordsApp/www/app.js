@@ -1021,7 +1021,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const lyricLine = lines[i + 1];
 
                 // If current line has chords and next line is text, combine them
-                if (/[A-G][#b]?(maj|min|m|dim|aug|sus|add)?[0-9]*/.test(chordLine)) {
+                if (/[A-G][#b]?(maj|ma|min|m|M|dim|aug|add)?[0-9]*([b#][0-9]+)*(sus[24])?/.test(chordLine)) {
                     // Simple inline conversion: place chords in brackets before lyrics
                     const chords = chordLine.trim().split(/\s+/);
                     let combined = lyricLine;
@@ -1665,16 +1665,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     updateUsageDisplay();
                 }
 
-                // Reset font size to minimum (8pt) for new analysis
+                // Reset font size to default (12pt) for new analysis
                 if (fontSizeSlider && fontSizeValue && livePreview) {
-                    fontSizeSlider.value = 8;
-                    fontSizeValue.textContent = '8';
-                    livePreview.style.fontSize = '8pt';
+                    fontSizeSlider.value = 12;
+                    fontSizeValue.textContent = '12';
+                    livePreview.style.fontSize = '12pt';
                     // Also sync side menu slider
                     const sideMenuFontSize = document.getElementById('sideMenuFontSize');
                     const sideMenuFontSizeVal = document.getElementById('sideMenuFontSizeVal');
-                    if (sideMenuFontSize) sideMenuFontSize.value = 8;
-                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = '8pt';
+                    if (sideMenuFontSize) sideMenuFontSize.value = 12;
+                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = '12pt';
                 }
 
                 // Update the live preview
@@ -1959,11 +1959,11 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
 
             // Check if this line contains chords (has multiple chord-like patterns)
-            const hasChords = /\b[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\b/.test(line);
+            const hasChords = /\b[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?\b/.test(line);
 
             if (hasChords) {
                 // Find all chords with their positions
-                const chordPattern = /\b([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
+                const chordPattern = /\b([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?)\b/g;
                 const chords = [];
                 let match;
 
@@ -2760,7 +2760,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const nextLine = lines[i + 1];
 
                 // Check if current line might be chords (contains chord-like patterns)
-                const hasChordPattern = /[A-G](#|b)?(maj|min|m|dim|aug|sus|add)?[0-9]*(\/[A-G](#|b)?)?/.test(line);
+                const hasChordPattern = /[A-G](#|b)?(maj|ma|min|m|M|dim|aug|add)?[0-9]*([b#][0-9]+)*(sus[24])?(\/[A-G](#|b)?)?/.test(line);
 
                 if (hasChordPattern && !nextLine.match(/^(Title:|Artists?:|Authors?:|Key:|.*:$)/)) {
                     // This looks like a chord line followed by lyrics
@@ -2775,7 +2775,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     // Extract chords from chord line
                     const chordMatches = [];
                     let match;
-                    const chordRegex = /[A-G](#|b)?(maj|min|m|dim|aug|sus|add)?[0-9]*(\/[A-G](#|b)?)?/g;
+                    const chordRegex = /[A-G](#|b)?(maj|ma|min|m|M|dim|aug|add)?[0-9]*([b#][0-9]+)*(sus[24])?(\/[A-G](#|b)?)?/g;
                     while ((match = chordRegex.exec(chordLine)) !== null) {
                         chordMatches.push({
                             chord: match[0],
@@ -3178,18 +3178,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // This detects lines like "G    C    G" or "D/F#  Em7  Cma7" that appear above lyrics
             const tokens = trimmedLine.split(/\s+/).filter(t => t.length > 0);
             const isChordOnlyLine = tokens.length > 0 &&
-                tokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?$/.test(token)) &&
+                tokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?$/.test(token)) &&
                 !trimmedLine.includes('|'); // Not a chord grid
 
             // @@@RTL trace line classification
             if (tokens.length > 0 && tokens.length <= 8 && /^[A-G]/.test(tokens[0])) {
-                const tokenResults = tokens.map(t => `${t}=${/^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?$/.test(t)}`);
+                const tokenResults = tokens.map(t => `${t}=${/^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?$/.test(t)}`);
                 console.log(`@@@RTL   LINE: "${trimmedLine}" | isChordOnly: ${isChordOnlyLine} | tokens: [${tokenResults.join(', ')}]`);
             }
 
             if (isChordOnlyLine && mode !== 'lyrics') {
                 // Preserve original spacing - replace chords in-place with formatted versions
-                const chordPattern = /([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?)/g;
+                const chordPattern = /([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?)/g;
                 const formattedChordLine = line.replace(chordPattern, (chord) => {
                     const number = chordToNashville(chord, key);
                     if (mode === 'both' && number) {
@@ -3218,7 +3218,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 let formattedGrid = trimmedLine;
 
                 // First handle bracketed chords [G] in grids (from wrapChordGridChords)
-                formattedGrid = formattedGrid.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g, (match, chord) => {
+                formattedGrid = formattedGrid.replace(/\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?)\]/g, (match, chord) => {
                     const number = chordToNashville(chord, key);
                     if (mode === 'both' && number) {
                         return `<b>${chord}|${number}</b>`;
@@ -3230,7 +3230,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 });
 
                 // Also handle bare chords after | or . (legacy format)
-                formattedGrid = formattedGrid.replace(/([|\.\s])([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(?=[\s\.|]|$)/g, (match, prefix, chord) => {
+                formattedGrid = formattedGrid.replace(/([|\.\s])([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?)(?=[\s\.|]|$)/g, (match, prefix, chord) => {
                     // Skip if already formatted (contains <b>)
                     if (match.includes('<b>')) return match;
                     const number = chordToNashville(chord, key);
@@ -3262,7 +3262,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     formattedLine = formattedLine.replace(/\[[^\]]+\]/g, '');
                 } else {
                     // Style chord brackets
-                    formattedLine = formattedLine.replace(/\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g, (match, chord) => {
+                    formattedLine = formattedLine.replace(/\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?)\]/g, (match, chord) => {
                         const number = chordToNashville(chord, key);
                         if (mode === 'both' && number) {
                             return `<span class="inline-chord"><b>${chord}|${number}</b></span>`;
@@ -3582,7 +3582,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 chordTokens.every(token => /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|sus|add|sus2|sus4)?[0-9]*(?:\/[A-G][#b]?)?(?:\|[0-9#b]+)?$/.test(token));
 
             // Detect if line has chord patterns (either <b>chord</b> or bare chords)
-            const hasChordBoldTags = /<b>[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?(?:\|[0-9#b]+)?<\/b>/.test(line);
+            const hasChordBoldTags = /<b>[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?(?:\|[0-9#b]+)?<\/b>/.test(line);
 
             // Wrap lines in appropriate divs to preserve spacing
             let outputLine;
@@ -3674,7 +3674,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         }
 
         // Check if content uses v4/normalized format (has [chord] brackets or normalized metadata)
-        const hasInlineBrackets = /\[[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\]/.test(visualContent);
+        const hasInlineBrackets = /\[[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?\]/.test(visualContent);
         const isNormalizedFormat = /Key:\s*[A-G][#b]?.*,.*\d+\s*BPM/i.test(visualContent);
         const isV4Format = /\{(?:title|key|tempo|subtitle|artist|time|capo):/i.test(visualContent);
 
@@ -3711,7 +3711,12 @@ Our [Em7]hearts will cry, these bones will [D]sing
         if (typeof checkForMusicLinks === 'function') {
             checkForMusicLinks();
         }
+
     };
+
+    // --- Chord Selector v5 (Circle of Fifths + Quality Grid) ---
+    const CHORD_DROPDOWN_VERSION = 'v5';
+    console.log(`[ChordSelector ${CHORD_DROPDOWN_VERSION}] initialized`);
 
     // Make all chords bold with optional Nashville numbers
     const makeChordsBold = (content) => {
@@ -3724,15 +3729,15 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
         // Detect if content is RTL (Hebrew, Arabic, etc.)
         const isRTL = /[\u0590-\u05FF\u0600-\u06FF]/.test(content);
-        const hasInlineBrackets = /\[[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\]/.test(content);
+        const hasInlineBrackets = /\[[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?\]/.test(content);
         console.log(`@@@RTL makeChordsBold | isRTL: ${isRTL} | hasInlineBrackets: ${hasInlineBrackets} | lines: ${lines.length}`);
 
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
 
             // Handle inline [chord] bracket notation (e.g., [Am]word [G]word2)
-            if (hasInlineBrackets && /\[[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\]/.test(line)) {
-                const bracketPattern = /\[([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\]/g;
+            if (hasInlineBrackets && /\[[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?\]/.test(line)) {
+                const bracketPattern = /\[([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?)\]/g;
 
                 if (mode === 'lyrics') {
                     // Lyrics mode: remove chord brackets entirely
@@ -3831,7 +3836,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
                 // Check if this is a chord-only line
                 const hasRTLChars = /[\u0590-\u05FF\u0600-\u06FF]/.test(line);
-                const chordPattern = /\b[A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?\b/g;
+                const chordPattern = /\b[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?\b/g;
                 const lineWithoutChords = line.replace(chordPattern, '').trim();
 
                 // If line has RTL characters, it's lyrics - keep it
@@ -3859,7 +3864,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // This means it's a pure chord line above the lyrics
                 if (!hasHebrewChars) {
                     // Process chord-only lines for RTL content
-                    const chordPattern = /(^|\s)([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)(\s|$)/g;
+                    const chordPattern = /(^|\s)([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?)(\s|$)/g;
                     line = line.replace(chordPattern, (_, before, chord, after) => {
                         const number = chordToNashville(chord, key);
                         if (mode === 'both' && number) {
@@ -3874,7 +3879,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // If line has Hebrew chars, leave it completely as-is (don't try to parse chords from mixed text)
             } else {
                 // For English text, use normal pattern
-                const chordPattern = /\b([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)\b/g;
+                const chordPattern = /\b([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?)\b/g;
                 line = line.replace(chordPattern, (chord) => {
                     const number = chordToNashville(chord, key);
                     if (mode === 'both' && number) {
@@ -3916,7 +3921,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
 
             // Pattern to find bold chords: <b>ChordName</b>
-            const boldChordPattern = /<b>([A-G][#b]?(?:maj|min|m|dim|aug|sus|add)?[0-9]*(?:\/[A-G][#b]?)?)<\/b>/g;
+            const boldChordPattern = /<b>([A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?)<\/b>/g;
 
             // Add Nashville numbers inside the bold tags with pipe separator
             line = line.replace(boldChordPattern, (match, chord) => {
@@ -6794,6 +6799,409 @@ Our [Em7]hearts will cry, these bones will [D]sing
     });
 
     // ============= END SECTION HEADER EDITOR =============
+
+    // ============= CHORD EDITOR v5 (Circle of Fifths + Quality Grid) =============
+    const CIRCLE_OF_FIFTHS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
+    const ENHARMONIC_MAP = { 'Gb': 'F#', 'C#': 'Db', 'G#': 'Ab', 'D#': 'Eb', 'A#': 'Bb' };
+    const CIRCLE_OF_FIFTHS_MINOR = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'Ebm', 'Bbm', 'Fm', 'Cm', 'Gm', 'Dm'];
+
+    const CHORD_QUALITIES = [
+        // Basic triads
+        { label: 'maj', value: '' },
+        { label: 'min', value: 'm' },
+        { label: 'dim', value: 'dim' },
+        { label: 'aug', value: 'aug' },
+        { label: 'sus2', value: 'sus2' },
+        { label: 'sus4', value: 'sus4' },
+        // Sevenths
+        { label: '7', value: '7' },
+        { label: 'm7', value: 'm7' },
+        { label: 'maj7', value: 'maj7' },
+        { label: 'dim7', value: 'dim7' },
+        { label: '6', value: '6' },
+        { label: 'm6', value: 'm6' },
+        // Extended
+        { label: '9', value: '9' },
+        { label: 'm9', value: 'm9' },
+        { label: 'maj9', value: 'maj9' },
+        { label: '11', value: '11' },
+        { label: 'm11', value: 'm11' },
+        { label: '13', value: '13' },
+        // Altered / Special
+        { label: 'm7b5', value: 'm7b5' },
+        { label: 'aug7', value: 'aug7' },
+        { label: '7sus4', value: '7sus4' },
+        { label: '7b9', value: '7b9' },
+        { label: '7#9', value: '7#9' },
+        { label: 'add9', value: 'add9' },
+    ];
+
+    const CHORD_TOKEN_RE = /^[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?$/;
+
+    // Create chord editor overlay
+    const chordEditorOverlay = document.createElement('div');
+    chordEditorOverlay.id = 'chordEditorOverlay';
+    chordEditorOverlay.style.cssText = `
+        position: fixed;
+        display: none;
+        background: var(--bg);
+        border: 2px solid var(--text);
+        padding: 0;
+        z-index: 10000;
+    `;
+    document.body.appendChild(chordEditorOverlay);
+
+    let chordEditorState = null;
+
+    function normalizeRoot(root) {
+        return ENHARMONIC_MAP[root] || root;
+    }
+
+    function parseChord(chordStr) {
+        const m = chordStr.match(/^([A-G][#b]?)(.*?)(\/[A-G][#b]?)?$/);
+        if (!m) return null;
+        return { root: m[1], quality: m[2] || '', bass: m[3] || '' };
+    }
+
+    function isChordOnlyLine(line) {
+        const trimmed = line.trim();
+        if (!trimmed) return false;
+        if (/^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|TURN|BREAK)[\s\d]*:?/i.test(trimmed)) return false;
+        if (/^(Key:|Title:|Artist:|Capo:|Time:|\{)/i.test(trimmed)) return false;
+        if (/^\(.*\)/.test(trimmed)) return false;
+        if (/^\|/.test(trimmed)) return false;
+        const tokens = trimmed.split(/\s+/).filter(t => t.length > 0);
+        return tokens.length > 0 && tokens.every(t => CHORD_TOKEN_RE.test(t));
+    }
+
+    function findChordAtCursor(line, cursorCol) {
+        const re = /[A-G][#b]?(?:maj|ma|min|m|M|dim|aug|add)?[0-9]*(?:[b#][0-9]+)*(?:sus[24])?(?:\/[A-G][#b]?)?/g;
+        let match;
+        let best = null;
+        while ((match = re.exec(line)) !== null) {
+            const start = match.index;
+            const end = start + match[0].length;
+            if (cursorCol >= start && cursorCol <= end) {
+                return { chord: match[0], start, end };
+            }
+            if (!best || Math.abs(start - cursorCol) < Math.abs(best.start - cursorCol)) {
+                best = { chord: match[0], start, end };
+            }
+        }
+        return best;
+    }
+
+    function showChordEditor(_line, lineNumber, chordInfo, clickX, clickY) {
+        chordEditorOverlay.innerHTML = '';
+
+        const parsed = parseChord(chordInfo.chord);
+        if (!parsed) return;
+
+        chordEditorState = {
+            lineNumber,
+            chordStart: chordInfo.start,
+            chordEnd: chordInfo.end,
+            selectedRoot: parsed.root,
+            originalQuality: parsed.quality,
+            bass: parsed.bass
+        };
+
+        const container = document.createElement('div');
+        container.className = 'chord-selector';
+
+        // --- Header: current chord + apply button ---
+        const header = document.createElement('div');
+        header.className = 'chord-selector-header';
+
+        const leftDiv = document.createElement('div');
+        leftDiv.className = 'chord-selector-left';
+        const labelSpan = document.createElement('div');
+        labelSpan.className = 'chord-selector-label';
+        labelSpan.textContent = 'CHORD';
+        const currentSpan = document.createElement('div');
+        currentSpan.className = 'chord-selector-current';
+        currentSpan.id = 'chordSelectorDisplay';
+        const displayQuality = parsed.quality || '';
+        currentSpan.textContent = parsed.root + (displayQuality || 'maj') + parsed.bass;
+        leftDiv.appendChild(labelSpan);
+        leftDiv.appendChild(currentSpan);
+
+        const applyBtn = document.createElement('button');
+        applyBtn.className = 'chord-selector-apply';
+        applyBtn.textContent = 'APPLY';
+        applyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            applyChordChange(chordEditorState.selectedRoot, chordEditorState.originalQuality);
+        });
+
+        header.appendChild(leftDiv);
+        header.appendChild(applyBtn);
+        container.appendChild(header);
+
+        // --- Circle of Fifths ---
+        const circleWrap = document.createElement('div');
+        circleWrap.className = 'chord-circle-wrap';
+
+        const centerX = 120, centerY = 120;
+        const outerRadius = 95;
+        const innerRadius = 55;
+        const normalizedCurrent = normalizeRoot(parsed.root);
+
+        // --- Outer ring: Major roots ---
+        CIRCLE_OF_FIFTHS.forEach((root, i) => {
+            const angle = (i * 30 - 90) * (Math.PI / 180);
+            const x = centerX + outerRadius * Math.cos(angle);
+            const y = centerY + outerRadius * Math.sin(angle);
+
+            const note = document.createElement('div');
+            note.className = 'chord-circle-note';
+            if (root === normalizedCurrent) note.classList.add('active');
+            note.textContent = root;
+            note.style.left = x + 'px';
+            note.style.top = y + 'px';
+
+            note.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectChordRoot(root);
+            });
+
+            circleWrap.appendChild(note);
+        });
+
+        // --- Inner ring: Relative minor chords ---
+        CIRCLE_OF_FIFTHS_MINOR.forEach((minorLabel, i) => {
+            const angle = (i * 30 - 90) * (Math.PI / 180);
+            const x = centerX + innerRadius * Math.cos(angle);
+            const y = centerY + innerRadius * Math.sin(angle);
+
+            const note = document.createElement('div');
+            note.className = 'chord-circle-note chord-circle-minor';
+
+            // Highlight if current chord matches this minor (check enharmonic too)
+            const minorRoot = minorLabel.slice(0, -1);
+            if (parsed.quality === 'm') {
+                const normParsed = normalizeRoot(parsed.root);
+                const normMinor = normalizeRoot(minorRoot);
+                if (parsed.root === minorRoot || normParsed === normMinor) {
+                    note.classList.add('active');
+                }
+            }
+
+            note.textContent = minorLabel;
+            note.style.left = x + 'px';
+            note.style.top = y + 'px';
+
+            note.addEventListener('click', (e) => {
+                e.stopPropagation();
+                applyChordChange(minorRoot, 'm');
+            });
+
+            circleWrap.appendChild(note);
+        });
+
+        container.appendChild(circleWrap);
+
+        // --- Quality Grid ---
+        const qualSection = document.createElement('div');
+        qualSection.className = 'chord-quality-section';
+
+        const qualLabel = document.createElement('div');
+        qualLabel.className = 'chord-quality-label';
+        qualLabel.textContent = 'QUALITY';
+        qualSection.appendChild(qualLabel);
+
+        const qualGrid = document.createElement('div');
+        qualGrid.className = 'chord-quality-grid';
+        qualGrid.id = 'chordQualityGrid';
+
+        CHORD_QUALITIES.forEach(q => {
+            const opt = document.createElement('div');
+            opt.className = 'chord-quality-option';
+            if (parsed.quality === q.value) opt.classList.add('active');
+            opt.textContent = q.label;
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                applyChordChange(chordEditorState.selectedRoot, q.value);
+            });
+            qualGrid.appendChild(opt);
+        });
+
+        qualSection.appendChild(qualGrid);
+        container.appendChild(qualSection);
+
+        chordEditorOverlay.appendChild(container);
+
+        // --- Position near click, clamped to viewport ---
+        chordEditorOverlay.style.display = 'block';
+        const rect = chordEditorOverlay.getBoundingClientRect();
+        let leftPos = clickX + 5;
+        let topPos = clickY + 5;
+
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        if (leftPos + rect.width > vw - 10) leftPos = vw - rect.width - 10;
+        if (topPos + rect.height > vh - 10) topPos = vh - rect.height - 10;
+        if (leftPos < 5) leftPos = 5;
+        if (topPos < 5) topPos = 5;
+
+        chordEditorOverlay.style.left = leftPos + 'px';
+        chordEditorOverlay.style.top = topPos + 'px';
+    }
+
+    function selectChordRoot(newRoot) {
+        if (!chordEditorState) return;
+        chordEditorState.selectedRoot = newRoot;
+
+        // Update header display
+        const display = document.getElementById('chordSelectorDisplay');
+        if (display) {
+            const q = chordEditorState.originalQuality;
+            display.textContent = newRoot + (q || 'maj') + chordEditorState.bass;
+        }
+
+        // Update outer ring highlighting only
+        const notes = chordEditorOverlay.querySelectorAll('.chord-circle-note:not(.chord-circle-minor)');
+        const normalized = normalizeRoot(newRoot);
+        notes.forEach(n => {
+            n.classList.toggle('active', n.textContent === normalized);
+        });
+
+        // Clear inner ring highlighting (selecting a root doesn't auto-select minor)
+        chordEditorOverlay.querySelectorAll('.chord-circle-minor').forEach(n => n.classList.remove('active'));
+    }
+
+    function applyChordChange(newRoot, newQuality) {
+        if (!chordEditorState || !visualEditor) return;
+        const { lineNumber, chordStart, chordEnd, bass } = chordEditorState;
+        const lines = visualEditor.value.split('\n');
+        if (lineNumber >= lines.length) return;
+
+        const line = lines[lineNumber];
+        const newChord = newRoot + newQuality + bass;
+        const before = line.substring(0, chordStart);
+        const after = line.substring(chordEnd);
+        lines[lineNumber] = before + newChord + after;
+
+        visualEditor.value = lines.join('\n');
+
+        if (typeof updateSongBookFromVisual === 'function') updateSongBookFromVisual();
+        if (typeof updateLivePreview === 'function') updateLivePreview();
+
+        hideChordEditor();
+    }
+
+    function hideChordEditor() {
+        chordEditorOverlay.style.display = 'none';
+        chordEditorState = null;
+    }
+
+    // --- Editor textarea chord click handler ---
+    if (visualEditor) {
+        visualEditor.addEventListener('click', (e) => {
+            hideChordEditor();
+
+            const textarea = e.target;
+            const cursorPos = textarea.selectionStart;
+            const textBeforeCursor = textarea.value.substring(0, cursorPos);
+            const lineNumber = textBeforeCursor.split('\n').length - 1;
+            const lines = textarea.value.split('\n');
+            const currentLine = lines[lineNumber];
+
+            const lastNewline = textBeforeCursor.lastIndexOf('\n');
+            const cursorCol = lastNewline >= 0 ? cursorPos - lastNewline - 1 : cursorPos;
+
+            if (isChordOnlyLine(currentLine)) {
+                const chordInfo = findChordAtCursor(currentLine, cursorCol);
+                if (chordInfo) {
+                    console.log(`[ChordSelector v5] editor chord "${chordInfo.chord}" at col ${chordInfo.start}-${chordInfo.end}`);
+                    showChordEditor(currentLine, lineNumber, chordInfo, e.clientX, e.clientY);
+                }
+            }
+        });
+    }
+
+    // Close chord editor on outside click
+    document.addEventListener('click', (e) => {
+        if (chordEditorOverlay.style.display === 'block' &&
+            !chordEditorOverlay.contains(e.target) &&
+            e.target !== visualEditor) {
+            hideChordEditor();
+        }
+    });
+
+    // --- livePreview chord click handler ---
+    if (livePreview) {
+        livePreview.addEventListener('click', (e) => {
+            const b = (e.target.tagName === 'B') ? e.target : e.target.closest && e.target.closest('b');
+            if (!b) return;
+            const parent = b.parentElement;
+            if (!parent) return;
+            const isChord = parent.classList.contains('chord-line') ||
+                            parent.classList.contains('inline-chord') ||
+                            parent.classList.contains('chord-grid');
+            if (!isChord) return;
+
+            let chordText = b.textContent.trim();
+            const pipeIdx = chordText.indexOf('|');
+            if (pipeIdx >= 0) chordText = chordText.substring(0, pipeIdx);
+
+            if (!visualEditor) return;
+            const lines = visualEditor.value.split('\n');
+            let found = false;
+
+            const allChordBs = livePreview.querySelectorAll('.chord-line b, .inline-chord b, .chord-grid b');
+            let clickedIndex = -1;
+            let sameChordCount = 0;
+            for (let i = 0; i < allChordBs.length; i++) {
+                let t = allChordBs[i].textContent.trim();
+                const p = t.indexOf('|');
+                if (p >= 0) t = t.substring(0, p);
+                if (t === chordText) {
+                    sameChordCount++;
+                    if (allChordBs[i] === b) {
+                        clickedIndex = sameChordCount;
+                        break;
+                    }
+                }
+            }
+
+            const chordRe = new RegExp('(?:^|\\s)(' + chordText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')(?=\\s|$)', 'g');
+            let occurrence = 0;
+            for (let ln = 0; ln < lines.length; ln++) {
+                let m;
+                while ((m = chordRe.exec(lines[ln])) !== null) {
+                    occurrence++;
+                    if (occurrence === clickedIndex) {
+                        const start = m.index + m[0].indexOf(m[1]);
+                        const end = start + m[1].length;
+                        const chordInfo = { chord: chordText, start, end };
+                        console.log(`[ChordSelector v5-preview] chord "${chordText}" line ${ln} col ${start}-${end}`);
+                        showChordEditor(lines[ln], ln, chordInfo, e.clientX, e.clientY);
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+                chordRe.lastIndex = 0;
+            }
+
+            if (!found) {
+                for (let ln = 0; ln < lines.length; ln++) {
+                    const idx = lines[ln].indexOf(chordText);
+                    if (idx >= 0 && isChordOnlyLine(lines[ln])) {
+                        const chordInfo = { chord: chordText, start: idx, end: idx + chordText.length };
+                        console.log(`[ChordSelector v5-preview fallback] chord "${chordText}" line ${ln}`);
+                        showChordEditor(lines[ln], ln, chordInfo, e.clientX, e.clientY);
+                        break;
+                    }
+                }
+            }
+
+            e.stopPropagation();
+        });
+    }
+
+    // ============= END CHORD EDITOR =============
 
     // ============= ARRANGEMENT TAG EDITOR =============
     // Arrangement tag options for dropdown (with repeat counts and flow arrow)
