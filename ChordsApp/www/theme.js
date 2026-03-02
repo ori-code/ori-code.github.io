@@ -58,6 +58,12 @@ class ThemeManager {
         if (sideMenuDarkMode) {
             sideMenuDarkMode.checked = theme === 'dark';
         }
+
+        // Sync live mode theme toggle label
+        const liveModeThemeToggle = document.getElementById('liveModeThemeToggle');
+        if (liveModeThemeToggle) {
+            liveModeThemeToggle.textContent = theme === 'dark' ? 'White' : 'Black';
+        }
     }
 
     getCurrentTheme() {

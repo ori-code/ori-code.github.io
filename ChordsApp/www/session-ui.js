@@ -9,10 +9,10 @@ function getRelativeKeys(key) {
     const isMinor = /minor$/i.test(normalized) || (/m$/.test(normalized) && !/Major$/i.test(normalized));
     const root = normalized.replace(/\s*(Major|Minor|m)$/i, '').trim();
 
-    const circle = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-    const toSharp = { 'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B' };
+    const circle = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const toSharp = { 'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B' };
     // Preferred display: use flats where conventional (Bb not A#, Eb not D#, Ab not G#)
-    const keyDisplay = { 'A#':'Bb','D#':'Eb','G#':'Ab' };
+    const keyDisplay = { 'A#': 'Bb', 'D#': 'Eb', 'G#': 'Ab' };
 
     const rootNorm = toSharp[root] || root;
     const idx = circle.indexOf(rootNorm);
@@ -34,7 +34,7 @@ function keysMatch(key1, key2) {
         let s = k.trim().replace(/\s*Major$/i, '').trim();
         const isMinor = /minor$/i.test(s) || (/m$/.test(s) && !/M$/.test(s));
         const root = s.replace(/\s*(Minor|m)$/i, '').trim();
-        const toSharp = { 'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B' };
+        const toSharp = { 'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B' };
         return (toSharp[root] || root) + (isMinor ? 'm' : '');
     };
     return normalize(key1) === normalize(key2);
@@ -153,8 +153,8 @@ class SessionUI {
                                     <button onclick="sessionUI.addCurrentSongToSession('${session.id}')"
                                             style="padding: 6px 12px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 12px; white-space: nowrap; font-weight: 600;">
                                         ${window.pendingSongsToAdd && window.pendingSongsToAdd.length > 0
-                                            ? `+ Add ${window.pendingSongsToAdd.length} Song${window.pendingSongsToAdd.length > 1 ? 's' : ''}`
-                                            : (window.pendingSongToAdd ? '+ Add Selected Song' : '+ Add Current Song')}
+                            ? `+ Add ${window.pendingSongsToAdd.length} Song${window.pendingSongsToAdd.length > 1 ? 's' : ''}`
+                            : (window.pendingSongToAdd ? '+ Add Selected Song' : '+ Add Current Song')}
                                     </button>
                                     <button onclick="sessionUI.reactivateSession('${session.id}')"
                                             style="padding: 6px 12px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 12px; font-weight: 600;">
@@ -746,6 +746,14 @@ class SessionUI {
 
             this.showToast(`✅ Rejoined session: ${session.metadata.title}`);
 
+            // Automatically enter Live Mode (same as reactivateSession)
+            if (window.liveMode) {
+                setTimeout(() => {
+                    window.liveMode.enter();
+                    console.log('🎸 Auto-entered Live Mode after rejoining session');
+                }, 300);
+            }
+
         } catch (error) {
             console.error('Error joining session:', error);
             this.showToast('❌ ' + error.message);
@@ -1017,9 +1025,11 @@ class SessionUI {
         const baseUrl = window.location.origin + window.location.pathname;
         const joinLink = `${baseUrl}?join=${sessionCode}`;
         const singerLink = `${baseUrl}?singer=${sessionCode}`;
+        const presenterLink = `${baseUrl}?presenter=${sessionCode}`;
 
-        // Get current singers status
+        // Get current singers and presenters status
         const allowSingers = window.sessionManager ? window.sessionManager.getAllowSingers() : false;
+        const allowPresenters = window.sessionManager ? window.sessionManager.getAllowPresenters() : false;
 
         // Create modal
         const modal = document.createElement('div');
@@ -1090,6 +1100,32 @@ class SessionUI {
                     </div>
                 </div>
 
+                <!-- Allow Presenters Toggle -->
+                <div style="margin-bottom: 16px; padding: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="shareBadgePresentersToggle" ${allowPresenters ? 'checked' : ''}
+                               onchange="sessionUI.handleShareBadgePresenterToggle(this.checked, '${sessionCode}')"
+                               style="width: 18px; height: 18px; cursor: pointer;">
+                        <div>
+                            <div style="font-size: 14px; color: #e5e5e5;">${window.t ? window.t('session.label.presenters') : 'Allow Presenters'}</div>
+                            <div style="font-size: 11px; color: #9ca3af;">${window.t ? window.t('session.desc.presenters') : 'Lyrics only, no account needed'}</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Presenter Link (shown when enabled) -->
+                <div id="shareBadgePresenterSection" style="margin-bottom: 16px; display: ${allowPresenters ? 'block' : 'none'};">
+                    <label style="display: block; font-size: 12px; color: #6ee7b7; margin-bottom: 6px;">Presenter Link (Lyrics only)</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" value="${presenterLink}" readonly id="shareBadgePresenterLink"
+                               style="flex: 1; padding: 10px; border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 6px; background: rgba(16, 185, 129, 0.15); color: #e5e5e5; font-size: 12px;">
+                        <button onclick="navigator.clipboard.writeText('${presenterLink}'); sessionUI.showToast('📺 Presenter link copied!')"
+                                style="padding: 10px 16px; background: #10b981; border: none; border-radius: 6px; color: white; cursor: pointer; font-size: 12px; white-space: nowrap;">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Close Button -->
                 <button onclick="document.getElementById('shareBadgeModal').remove()"
                         style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #e5e5e5; cursor: pointer; font-size: 14px; margin-top: 8px;">
@@ -1136,6 +1172,23 @@ class SessionUI {
     }
 
     /**
+     * Handle presenter toggle from share badge
+     */
+    async handleShareBadgePresenterToggle(allow, sessionCode) {
+        if (window.sessionManager) {
+            await window.sessionManager.toggleAllowPresenters(allow);
+        }
+
+        // Show/hide presenter section
+        const presenterSection = document.getElementById('shareBadgePresenterSection');
+        if (presenterSection) {
+            presenterSection.style.display = allow ? 'block' : 'none';
+        }
+
+        this.showToast(allow ? '📺 Presenters enabled!' : '📺 Presenters disabled');
+    }
+
+    /**
      * Show session controls (participants, playlist, etc.)
      */
     async showSessionControls() {
@@ -1174,9 +1227,10 @@ class SessionUI {
         try {
             const participants = await window.sessionManager.getParticipants();
 
-            // Separate singers and regular participants
+            // Separate singers, presenters and regular participants
             const singers = participants.filter(p => p.type === 'singer');
-            const regulars = participants.filter(p => p.type !== 'singer');
+            const presenters = participants.filter(p => p.type === 'presenter');
+            const regulars = participants.filter(p => p.type !== 'singer' && p.type !== 'presenter');
 
             let html = '';
 
@@ -1200,15 +1254,34 @@ class SessionUI {
                     <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
                         <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">🎤 Singers (${singers.length})</div>
                         ${singers.map(p => {
-                            const statusIcon = p.status === 'connected' ? '🟢' : '⚪';
-                            return `
+                    const statusIcon = p.status === 'connected' ? '🟢' : '⚪';
+                    return `
                                 <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(139, 92, 246, 0.1); border-radius: 6px; margin-bottom: 4px;">
                                     <span>${statusIcon}</span>
                                     <span style="flex: 1; color: var(--text); font-size: 13px; opacity: 0.8;">${p.name}</span>
                                     <span style="font-size: 11px; color: #8b5cf6;">Lyrics only</span>
                                 </div>
                             `;
-                        }).join('')}
+                }).join('')}
+                    </div>
+                `;
+            }
+
+            // Presenters section (if any)
+            if (presenters.length > 0) {
+                html += `
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">📺 Presenters (${presenters.length})</div>
+                        ${presenters.map(p => {
+                    const statusIcon = p.status === 'connected' ? '🟢' : '⚪';
+                    return `
+                                <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: rgba(16, 185, 129, 0.1); border-radius: 6px; margin-bottom: 4px;">
+                                    <span>${statusIcon}</span>
+                                    <span style="flex: 1; color: var(--text); font-size: 13px; opacity: 0.8;">${p.name}</span>
+                                    <span style="font-size: 11px; color: #10b981;">Lyrics only</span>
+                                </div>
+                            `;
+                }).join('')}
                     </div>
                 `;
             }
@@ -1590,12 +1663,12 @@ const sessionUI = new SessionUI();
 window.sessionUI = sessionUI;
 
 // Expose loadUserSessions for song-library.js to call
-window.loadMySessions = async function() {
+window.loadMySessions = async function () {
     await sessionUI.loadUserSessions();
 };
 
 // Filter sessions list by title
-window.filterSessionsList = function(searchText) {
+window.filterSessionsList = function (searchText) {
     const sessionsList = document.getElementById('sessionsList');
     if (!sessionsList) return;
 

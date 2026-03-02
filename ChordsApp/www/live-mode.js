@@ -21,6 +21,7 @@ const liveMode = {
     savedDisplaySettings: null,
     currentColumnLayout: 2,
     currentFontSize: 14,
+    currentTagFontSize: 14,
     isSingerMode: false, // Singer mode: chords + lyrics, limited controls (no transpose)
     isPublicViewMode: false, // Public view mode: viewing shared public song
     songMetronomeEnabled: {}, // Track which songs have metronome enabled { songId: true/false }
@@ -51,6 +52,7 @@ const liveMode = {
         const prefs = {
             columnLayout: this.currentColumnLayout,
             fontSize: this.currentFontSize || 14,
+            tagFontSize: this.currentTagFontSize || 14,
             displayMode: this.displayMode,
             showBadges: this.showBadges,
             showBorders: this.showBorders,
@@ -213,6 +215,35 @@ const liveMode = {
     },
 
     /**
+     * Set font size for section tags (Chorus, Verse, etc.) independently of regular text
+     */
+    setTagFontSize(size) {
+        this.currentTagFontSize = size;
+
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            // Apply to all section-header elements
+            const headers = chartDisplay.querySelectorAll('.section-header');
+            headers.forEach(h => {
+                h.style.fontSize = size + 'pt';
+            });
+        }
+
+        // Update tag size display
+        const tagSizeValue = document.getElementById('liveModeTagSizeValue');
+        if (tagSizeValue) tagSizeValue.textContent = size + 'pt';
+
+        // Sync tag font slider
+        const tagSlider = document.getElementById('liveModeTagFontSlider');
+        if (tagSlider) tagSlider.value = size;
+
+        // Save preference
+        this.saveLiveModePreferences();
+
+        console.log(`📺 Tag font size set to ${size}pt`);
+    },
+
+    /**
      * Enter live mode with current song
      */
     async enter() {
@@ -267,6 +298,7 @@ const liveMode = {
         if (savedPrefs) {
             if (savedPrefs.columnLayout) this.currentColumnLayout = savedPrefs.columnLayout;
             if (savedPrefs.fontSize) this.currentFontSize = savedPrefs.fontSize;
+            if (savedPrefs.tagFontSize) this.currentTagFontSize = savedPrefs.tagFontSize;
             if (savedPrefs.displayMode) {
                 this.displayMode = savedPrefs.displayMode;
                 const liveModeDropdown = document.getElementById('liveModeDisplayMode');
@@ -306,6 +338,11 @@ const liveMode = {
             // Update zoom display
             const zoomValue = document.getElementById('liveModeZoomValue');
             if (zoomValue) zoomValue.textContent = (this.currentFontSize || 14) + 'pt';
+            // Update tag size display
+            const tagSizeValue = document.getElementById('liveModeTagSizeValue');
+            if (tagSizeValue) tagSizeValue.textContent = (this.currentTagFontSize || 14) + 'pt';
+            const tagSlider = document.getElementById('liveModeTagFontSlider');
+            if (tagSlider) tagSlider.value = this.currentTagFontSize || 14;
         }
 
         // Setup font size slider
@@ -529,6 +566,67 @@ const liveMode = {
     },
 
     /**
+     * Enter Presenter Mode - simplified view for anonymous users
+     * Shows lyrics only, hides chords and transpose controls
+     */
+    async enterPresenterMode() {
+        this.isPresenterMode = true;
+        this.displayMode = 'lyrics'; // Show lyrics only for presenters
+
+        // Force the dropdown to lyrics mode so updateDisplay uses it
+        const displayDropdown = document.getElementById('liveModeDisplayMode');
+        if (displayDropdown) displayDropdown.value = 'lyrics';
+
+        // Also sync the main editor dropdown
+        const nashvilleDropdown = document.getElementById('nashvilleMode');
+        if (nashvilleDropdown) nashvilleDropdown.value = 'lyrics';
+
+        // Show overlay first
+        const overlay = document.getElementById('liveModeOverlay');
+        if (overlay) {
+            overlay.style.display = 'block';
+            this.isActive = true;
+            this.sidebarVisible = false;
+
+            // Show floating quick-access buttons
+            this._setFloatButtonsVisible(true);
+
+            // Lock body scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Hide controls that presenters shouldn't see
+        const controlsToHide = [
+            'liveModeDisplayMode',       // No display mode dropdown for presenters
+            'liveModeTransposeRow'       // Hide entire transpose row (-1, key, +1)
+        ];
+
+        controlsToHide.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // Update UI to show presenter mode
+        const songNameEl = document.getElementById('liveModeSongName');
+        if (songNameEl) {
+            songNameEl.textContent = 'Waiting for leader...';
+        }
+
+        // Show simplified controls
+        this.showControls();
+
+        // Load saved font size preference (presenters can still zoom)
+        const savedPrefs = await this.loadLiveModePreferences();
+        if (savedPrefs && savedPrefs.fontSize) {
+            this.currentFontSize = savedPrefs.fontSize;
+            const zoomValue = document.getElementById('liveModeZoomValue');
+            if (zoomValue) zoomValue.textContent = this.currentFontSize + 'pt';
+        }
+
+        console.log('📺 Entered Presenter Mode (lyrics only)');
+    },
+
+    /**
      * Enter Public View Mode - for viewing shared public songs
      * Shows all controls except playlist (single song view)
      */
@@ -709,14 +807,14 @@ const liveMode = {
                                 const colorClass = window.chordsAppParser
                                     ? window.chordsAppParser.getBadgeColorClass(label)
                                     : (label.replace(/\d+$/, '') === 'I' ? 'badge-intro' :
-                                       label.replace(/\d+$/, '') === 'V' ? 'badge-verse' :
-                                       label.replace(/\d+$/, '') === 'C' ? 'badge-chorus' :
-                                       label.replace(/\d+$/, '') === 'B' ? 'badge-bridge' :
-                                       label.replace(/\d+$/, '') === 'PC' ? 'badge-prechorus' :
-                                       label.replace(/\d+$/, '') === 'O' ? 'badge-outro' :
-                                       label.replace(/\d+$/, '') === 'TURN' ? 'badge-turn' :
-                                       label.replace(/\d+$/, '') === 'BRK' ? 'badge-break' :
-                                       'badge-other');
+                                        label.replace(/\d+$/, '') === 'V' ? 'badge-verse' :
+                                            label.replace(/\d+$/, '') === 'C' ? 'badge-chorus' :
+                                                label.replace(/\d+$/, '') === 'B' ? 'badge-bridge' :
+                                                    label.replace(/\d+$/, '') === 'PC' ? 'badge-prechorus' :
+                                                        label.replace(/\d+$/, '') === 'O' ? 'badge-outro' :
+                                                            label.replace(/\d+$/, '') === 'TURN' ? 'badge-turn' :
+                                                                label.replace(/\d+$/, '') === 'BRK' ? 'badge-break' :
+                                                                    'badge-other');
                                 const repeatSup = repeat > 1 ? `<sup class="repeat-count">${repeat}x</sup>` : '';
                                 return `<span class="section-badge ${colorClass}">${label}${repeatSup}</span>`;
                             });
@@ -761,6 +859,14 @@ const liveMode = {
             // Apply saved Live Mode font size (overrides printPreviewPreferences)
             if (this.currentFontSize) {
                 chartDisplay.style.fontSize = this.currentFontSize + 'pt';
+            }
+
+            // Apply tag font size to section headers (independent of regular font size)
+            if (this.currentTagFontSize) {
+                const headers = chartDisplay.querySelectorAll('.section-header');
+                headers.forEach(h => {
+                    h.style.fontSize = this.currentTagFontSize + 'pt';
+                });
             }
 
             // @@@RTL LAYOUT — live-mode chart display: sets dir attr + inline direction/textAlign
@@ -1117,6 +1223,7 @@ const liveMode = {
         chartDisplay.style.columnCount = '';
         chartDisplay.style.columnWidth = '';
 
+        // Apply column layout
         // Apply column layout
         const A4_HEIGHT_PX = 1123;
         chartDisplay.style.columns = columns.toString();
@@ -2501,6 +2608,14 @@ const liveMode = {
             singerLinkEl.value = singerLink;
         }
 
+        // Generate and display presenter link
+        const presenterLinkEl = document.getElementById('sessionManagerPresenterLink');
+        if (presenterLinkEl && sessionCode) {
+            const baseUrl = `${window.location.origin}${window.location.pathname}`;
+            const presenterLink = `${baseUrl}?presenter=${sessionCode}`;
+            presenterLinkEl.value = presenterLink;
+        }
+
         // Get session metadata for title and allowSingers
         try {
             const sessionSnapshot = await firebase.database().ref(`sessions/${sessionId}/metadata`).once('value');
@@ -2523,6 +2638,16 @@ const liveMode = {
             if (allowSingersToggle) allowSingersToggle.checked = allowSingers;
             if (singerLinkSection) singerLinkSection.style.display = allowSingers ? 'block' : 'none';
             if (singerLinkDisabled) singerLinkDisabled.style.display = allowSingers ? 'none' : 'block';
+
+            // Update allowPresenters toggle and visibility
+            const allowPresentersToggle = document.getElementById('allowPresentersToggle');
+            const presenterLinkSection = document.getElementById('presenterLinkSection');
+            const presenterLinkDisabled = document.getElementById('presenterLinkDisabled');
+            const allowPresenters = metadata?.allowPresenters || false;
+
+            if (allowPresentersToggle) allowPresentersToggle.checked = allowPresenters;
+            if (presenterLinkSection) presenterLinkSection.style.display = allowPresenters ? 'block' : 'none';
+            if (presenterLinkDisabled) presenterLinkDisabled.style.display = allowPresenters ? 'none' : 'block';
         } catch (err) {
             console.error('Error loading session metadata:', err);
         }
@@ -2559,6 +2684,24 @@ const liveMode = {
     },
 
     /**
+     * Copy presenter link to clipboard
+     */
+    async copyPresenterLink() {
+        const presenterLinkEl = document.getElementById('sessionManagerPresenterLink');
+        if (!presenterLinkEl || !presenterLinkEl.value) return;
+
+        try {
+            await navigator.clipboard.writeText(presenterLinkEl.value);
+            this.showToast('📺 Presenter link copied!');
+        } catch (err) {
+            console.error('Failed to copy presenter link:', err);
+            presenterLinkEl.select();
+            document.execCommand('copy');
+            this.showToast('📺 Presenter link copied!');
+        }
+    },
+
+    /**
      * Close the session manager modal
      */
     closeSessionManager() {
@@ -2582,9 +2725,9 @@ const liveMode = {
         const normalized = key.trim();
         const isMinor = /minor$/i.test(normalized) || (/m$/.test(normalized) && !/Major$/i.test(normalized));
         const root = normalized.replace(/\s*(Major|Minor|m)$/i, '').trim();
-        const circle = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-        const toSharp = { 'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B' };
-        const keyDisplay = { 'A#':'Bb','D#':'Eb','G#':'Ab' };
+        const circle = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const toSharp = { 'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B' };
+        const keyDisplay = { 'A#': 'Bb', 'D#': 'Eb', 'G#': 'Ab' };
         const rootNorm = toSharp[root] || root;
         const idx = circle.indexOf(rootNorm);
         if (idx === -1) return null;
@@ -2601,7 +2744,7 @@ const liveMode = {
             let s = k.trim().replace(/\s*Major$/i, '').trim();
             const isMinor = /minor$/i.test(s) || (/m$/.test(s) && !/M$/.test(s));
             const root = s.replace(/\s*(Minor|m)$/i, '').trim();
-            const toSharp = { 'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#','Ab':'G#','Bb':'A#','Cb':'B' };
+            const toSharp = { 'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B' };
             return (toSharp[root] || root) + (isMinor ? 'm' : '');
         };
         return normalize(key1) === normalize(key2);
@@ -2793,6 +2936,29 @@ const liveMode = {
     },
 
     /**
+     * Toggle allow presenters setting
+     */
+    async toggleAllowPresenters(allowed) {
+        const sessionId = this._managingSessionId || window.sessionManager?.activeSession;
+        if (!sessionId) return;
+
+        try {
+            await firebase.database().ref(`sessions/${sessionId}/metadata/allowPresenters`).set(allowed);
+
+            // Update UI
+            const presenterLinkSection = document.getElementById('presenterLinkSection');
+            const presenterLinkDisabled = document.getElementById('presenterLinkDisabled');
+            if (presenterLinkSection) presenterLinkSection.style.display = allowed ? 'block' : 'none';
+            if (presenterLinkDisabled) presenterLinkDisabled.style.display = allowed ? 'none' : 'block';
+
+            this.showToast(allowed ? '📺 Presenters enabled' : '📺 Presenters disabled');
+        } catch (err) {
+            console.error('Error toggling allow presenters:', err);
+            this.showToast('Failed to update setting');
+        }
+    },
+
+    /**
      * Load and display session participants
      */
     async loadSessionParticipants() {
@@ -2881,6 +3047,11 @@ const liveMode = {
                 roleBadge = '<span style="font-size: 10px; background: rgba(139, 92, 246, 0.2); color: #8b5cf6; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Singer</span>';
                 avatarBg = 'rgba(139, 92, 246, 0.2)';
                 avatarBorder = 'rgba(139, 92, 246, 0.4)';
+            } else if (participantData.type === 'presenter') {
+                roleIcon = '📺';
+                roleBadge = '<span style="font-size: 10px; background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Presenter</span>';
+                avatarBg = 'rgba(16, 185, 129, 0.2)';
+                avatarBorder = 'rgba(16, 185, 129, 0.4)';
             } else {
                 roleBadge = '<span style="font-size: 10px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Player</span>';
                 avatarBg = 'rgba(59, 130, 246, 0.2)';
@@ -3423,15 +3594,15 @@ const liveMode = {
                     let glowCount = 0;
                     const glowInterval = setInterval(() => {
                         if (glowCount % 2 === 0) {
-                            // Bright glow - very visible in both themes
-                            selectedBlock.style.border = '3px solid #a855f7';
-                            selectedBlock.style.background = 'rgba(168, 85, 247, 0.4)';
-                            selectedBlock.style.boxShadow = '0 0 25px rgba(168, 85, 247, 0.8), 0 0 50px rgba(168, 85, 247, 0.4)';
+                            // Bright glow - white/grey for B&W theme
+                            selectedBlock.style.border = '3px solid rgba(255, 255, 255, 0.9)';
+                            selectedBlock.style.background = 'rgba(255, 255, 255, 0.15)';
+                            selectedBlock.style.boxShadow = '0 0 25px rgba(255, 255, 255, 0.4), 0 0 50px rgba(255, 255, 255, 0.15)';
                         } else {
                             // Dim glow
-                            selectedBlock.style.border = '3px solid rgba(168, 85, 247, 0.6)';
-                            selectedBlock.style.background = 'rgba(168, 85, 247, 0.2)';
-                            selectedBlock.style.boxShadow = '0 0 15px rgba(168, 85, 247, 0.5)';
+                            selectedBlock.style.border = '3px solid rgba(255, 255, 255, 0.5)';
+                            selectedBlock.style.background = 'rgba(255, 255, 255, 0.08)';
+                            selectedBlock.style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.2)';
                         }
                         glowCount++;
                         if (glowCount >= 4) {

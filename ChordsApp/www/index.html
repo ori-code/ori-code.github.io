@@ -2727,6 +2727,40 @@
                         Enable "Allow Singers" to share the singer link
                     </div>
                 </div>
+
+                <!-- Presenting Mode Section -->
+                <div style="margin-bottom: 16px;">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                        <h4
+                            style="margin: 0; color: var(--text); font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                            Presenting Mode
+                        </h4>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <span style="font-size: 12px; color: var(--text-muted);">Allow Presenters</span>
+                            <input type="checkbox" id="allowPresentersToggle"
+                                onchange="liveMode.toggleAllowPresenters(this.checked)"
+                                style="width: 18px; height: 18px; cursor: pointer;">
+                        </label>
+                    </div>
+                    <div id="presenterLinkSection" style="display: none;">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Lyrics only, no
+                            account needed</div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="sessionManagerPresenterLink" readonly
+                                style="flex: 1; padding: 10px; font-size: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--text); cursor: pointer;"
+                                onclick="this.select()">
+                            <button onclick="liveMode.copyPresenterLink()"
+                                style="padding: 10px 16px; background: transparent; color: var(--text); border: 1px solid var(--border); cursor: pointer; font-weight: 600; white-space: nowrap;">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div id="presenterLinkDisabled"
+                        style="padding: 12px; background: var(--surface); border: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 12px;">
+                        Enable "Allow Presenters" to share the presenter link
+                    </div>
+                </div>
             </div>
             <div class="modal-footer" style="border-top: 1px solid var(--border);">
                 <button class="ghost-button" onclick="liveMode.endSession()"
@@ -3179,11 +3213,35 @@
                         style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; padding: 0;">−</button>
                     <span id="liveModeZoomValue"
                         style="font-size: 12px; font-weight: 600; color: var(--text); min-width: 32px; text-align: center;">14pt</span>
-                    <button onclick="liveMode.setFontSize(Math.min(72, liveMode.currentFontSize + 1))"
+                    <button onclick="liveMode.setFontSize(Math.min(40, liveMode.currentFontSize + 1))"
                         style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; padding: 0;">+</button>
                 </div>
-                <input type="range" id="liveModeFontSlider" min="8" max="72" value="14" step="1"
-                    style="width: 100%; margin-top: 4px; cursor: pointer; accent-color: var(--text);">
+                <div style="padding: 4px 6px;">
+                    <input type="range" id="liveModeFontSlider" min="8" max="40" value="14"
+                        oninput="liveMode.setFontSize(parseInt(this.value))"
+                        style="width: 100%; height: 4px; accent-color: var(--text); cursor: pointer;">
+                </div>
+            </div>
+
+            <!-- TAG SIZE (Chorus, Verse labels) -->
+            <div style="margin-bottom: 10px;">
+                <div
+                    style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Tag Size</div>
+                <div
+                    style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; border: 1px solid var(--border);">
+                    <button onclick="liveMode.setTagFontSize(Math.max(8, liveMode.currentTagFontSize - 1))"
+                        style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; padding: 0;">−</button>
+                    <span id="liveModeTagSizeValue"
+                        style="font-size: 12px; font-weight: 600; color: var(--text); min-width: 32px; text-align: center;">14pt</span>
+                    <button onclick="liveMode.setTagFontSize(Math.min(40, liveMode.currentTagFontSize + 1))"
+                        style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; padding: 0;">+</button>
+                </div>
+                <div style="padding: 4px 6px;">
+                    <input type="range" id="liveModeTagFontSlider" min="8" max="40" value="14"
+                        oninput="liveMode.setTagFontSize(parseInt(this.value))"
+                        style="width: 100%; height: 4px; accent-color: var(--text); cursor: pointer;">
+                </div>
             </div>
 
             <!-- AUTO-SCROLL -->
@@ -3259,6 +3317,13 @@
                                 style="cursor: pointer; width: 14px; height: 14px;">
                             <span>Timeline</span>
                         </label>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <button id="liveModeThemeToggle"
+                            onclick="window.themeManager && window.themeManager.toggleTheme(); this.textContent = (document.documentElement.getAttribute('data-theme') === 'light') ? 'Black' : 'White';"
+                            style="width: 100%; padding: 6px 10px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600; text-align: center;">
+                            White
+                        </button>
                     </div>
                 </div>
             </div>
@@ -3402,7 +3467,7 @@
 
     <!-- Firebase Configuration and Auth -->
     <script src="firebase-config.js"></script>
-    <script src="auth.js"></script>
+    <script src="auth.js?v=87"></script>
 
     <!-- Subscription System -->
     <script src="subscription.js"></script>
@@ -3420,7 +3485,7 @@
     <script src="session-ui.js?v=2"></script>
 
     <!-- Live Mode (full-screen performance view) -->
-    <script src="live-mode.js?v=2"></script>
+    <script src="live-mode.js?v=87"></script>
 
     <!-- MIDI Controller (hands-free control for Live Mode) -->
     <script src="midi-controller.js"></script>
@@ -3659,6 +3724,7 @@
         #liveModeChartDisplay .song-header .song-meta {
             display: none;
         }
+
 
         /* Always show section badges row in Live Mode (unless hide-badges is set) */
         #liveModeChartDisplay .section-badges-row {
@@ -4180,13 +4246,10 @@
             }
 
             if (toggle) {
-                let savedStr = localStorage.getItem(EMOJI_KEY);
-                if (savedStr === null) {
-                    savedStr = 'true'; // Default to hiding emojis
-                    localStorage.setItem(EMOJI_KEY, savedStr);
-                }
-                const saved = savedStr === 'true';
-                toggle.checked = saved;
+                // Default: hide emojis (true) unless user explicitly set to false
+                const savedVal = localStorage.getItem(EMOJI_KEY);
+                const hidden = savedVal === null ? true : savedVal === 'true';
+                toggle.checked = hidden;
 
                 toggle.addEventListener('change', () => {
                     const h = toggle.checked;
@@ -4195,7 +4258,7 @@
                 });
 
                 // Apply on load (after small delay to let translations render)
-                if (saved) {
+                if (hidden) {
                     setTimeout(() => applyEmojiState(true), 200);
                 }
             }
@@ -4932,14 +4995,21 @@
                 });
             }
 
+            // One-time migration: auth.js used to force-hide editor on every login.
+            // Clear the old forced 'false' so the new default (shown) takes effect.
+            if (!localStorage.getItem('chordsapp-editor-migrated')) {
+                localStorage.removeItem('chordsapp-show-editor');
+                localStorage.setItem('chordsapp-editor-migrated', '1');
+            }
+
             // Display: Show Edit Workspace toggle
             const sideMenuShowEditor = document.getElementById('sideMenuShowEditor');
             const editorSection = document.getElementById('editor');
 
             if (sideMenuShowEditor && editorSection) {
-                // Load saved preference or use default (unchecked/hidden)
+                // Default: editor visible. User can hide via side menu toggle.
                 const savedShowEditor = localStorage.getItem('chordsapp-show-editor');
-                const showEditor = savedShowEditor === 'true';
+                const showEditor = savedShowEditor !== 'false';
                 sideMenuShowEditor.checked = showEditor;
                 editorSection.style.display = showEditor ? 'block' : 'none';
 
@@ -5457,5 +5527,7 @@
     </script>
 
 </body>
+
+</html>
 
 </html>

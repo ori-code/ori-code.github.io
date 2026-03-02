@@ -519,7 +519,8 @@ input[type="checkbox"]:checked::after {
 
 .header-btn-group .header-btn {
     border-radius: 0;
-    margin-left: -1px; /* collapse adjacent borders */
+    margin-left: -1px;
+    /* collapse adjacent borders */
 }
 
 .header-btn-group .header-btn:first-child {
@@ -1403,8 +1404,10 @@ input[type="checkbox"]:checked::after {
 /* @@@RTL chord-line: Keep LTR direction so chord positions match textarea (which uses unicode-bidi:plaintext).
    Chords are spatially authored to align with lyrics — reversing direction would misalign them.
    Right-align to match RTL text flow. */
-[dir="rtl"] .chord-line,                /* @@@RTL GLOBAL: editor/songbookOutput */
-.live-preview.rtl-content .chord-line { /* @@@RTL OVERRIDE: livePreview */
+[dir="rtl"] .chord-line,
+/* @@@RTL GLOBAL: editor/songbookOutput */
+.live-preview.rtl-content .chord-line {
+    /* @@@RTL OVERRIDE: livePreview */
     direction: ltr !important;
     text-align: right !important;
 }
@@ -1451,8 +1454,10 @@ input[type="checkbox"]:checked::after {
 }
 
 /* @@@RTL logo: OVERRIDE — flip logo to left side for RTL songs */
-.preview-page:has(.live-preview.rtl-content) .preview-logo, /* @@@RTL livePreview class-based */
-.preview-page[dir="rtl"] .preview-logo {                    /* @@@RTL editor dir attr-based */
+.preview-page:has(.live-preview.rtl-content) .preview-logo,
+/* @@@RTL livePreview class-based */
+.preview-page[dir="rtl"] .preview-logo {
+    /* @@@RTL editor dir attr-based */
     right: auto;
     left: 20px;
     direction: ltr;
@@ -1462,6 +1467,7 @@ input[type="checkbox"]:checked::after {
 #pagesWrapper:has(#livePreview:not(:has(*))) {
     display: none !important;
 }
+
 .preview-container:has(#livePreview:not(:has(*))) #pageCounter {
     display: none !important;
 }
@@ -2194,7 +2200,7 @@ input[type="checkbox"]:checked::after {
 .song-section-block {
     margin: 1px 0;
     padding: 2px 4px;
-    border: 1px dashed #000;
+    border: 1px dashed var(--text);
     border-radius: 0;
     cursor: pointer;
     transition: background-color 0.15s ease;
@@ -2205,14 +2211,14 @@ input[type="checkbox"]:checked::after {
 }
 
 .song-section-block:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(255, 255, 255, 0.06);
 }
 
 .song-section-block.section-selected {
-    border-color: #000;
+    border-color: var(--text);
     border-width: 2px;
     border-style: solid;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.12);
     animation: sectionBlink 1s ease-in-out 2;
 }
 
@@ -2220,16 +2226,16 @@ input[type="checkbox"]:checked::after {
 
     0%,
     100% {
-        background: rgba(0, 0, 0, 0.05);
+        background: rgba(255, 255, 255, 0.06);
     }
 
     50% {
-        background: rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.2);
     }
 }
 
 .song-section-block.section-selected-static {
-    border-color: #000;
+    border-color: var(--text);
     border-width: 2px;
     background: transparent;
 }
@@ -3375,7 +3381,7 @@ input[type="checkbox"]:checked::after {
     }
 
     /* Hide editor workspace on mobile (user toggles it via button) */
-    .editor-preview-wrapper > .editor {
+    .editor-preview-wrapper>.editor {
         display: none !important;
     }
 
@@ -3389,7 +3395,7 @@ input[type="checkbox"]:checked::after {
         flex-direction: column !important;
     }
 
-    .preview-section-content > * {
+    .preview-section-content>* {
         flex-shrink: 0;
     }
 
@@ -3724,13 +3730,16 @@ input[type="checkbox"]:checked::after {
     color: var(--bg) !important;
     border-color: var(--border) !important;
 }
+
 #loadSongModal .song-item-selected * {
     color: var(--bg) !important;
 }
+
 #loadSongModal .song-item-selected span[style*="border"] {
     border-color: var(--bg) !important;
     background: transparent !important;
 }
+
 #loadSongModal .song-item-selected input[type="checkbox"] {
     accent-color: var(--bg) !important;
 }
@@ -3767,12 +3776,12 @@ input[type="checkbox"]:checked::after {
     }
 
     /* Session cards: stack info and buttons vertically */
-    .session-item > [style*="display: flex"][style*="justify-content: space-between"] {
+    .session-item>[style*="display: flex"][style*="justify-content: space-between"] {
         flex-direction: column !important;
         gap: 12px;
     }
 
-    .session-item > [style*="display: flex"] > [style*="flex-direction: column"] {
+    .session-item>[style*="display: flex"]>[style*="flex-direction: column"] {
         flex-direction: row !important;
         flex-wrap: wrap;
         gap: 8px;
@@ -4073,4 +4082,3 @@ input[type="checkbox"]:checked::after {
         grid-template-columns: 1fr;
     }
 }
-
