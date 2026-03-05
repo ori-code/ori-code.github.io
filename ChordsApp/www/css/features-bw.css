@@ -53,7 +53,9 @@
     margin-bottom: 48px;
 }
 
-.features-section, .highlight-section, .pricing-section {
+.features-section,
+.highlight-section,
+.pricing-section {
     max-width: 1200px;
     margin: 0 auto;
     padding: 100px 32px;
@@ -177,7 +179,7 @@
     direction: rtl;
 }
 
-.highlight-row.reverse > * {
+.highlight-row.reverse>* {
     direction: ltr;
 }
 
@@ -387,27 +389,33 @@
         grid-template-columns: 1fr;
         gap: 40px;
     }
+
     .highlight-row.reverse {
-        direction: ltr; 
+        direction: ltr;
     }
 }
 
 html[dir="rtl"] .hero-badge {
     direction: rtl;
 }
+
 html[dir="rtl"] .pricing-card ul {
     text-align: right;
 }
+
 html[dir="rtl"] .highlight-row.reverse {
     direction: ltr;
 }
-html[dir="rtl"] .highlight-row.reverse > * {
+
+html[dir="rtl"] .highlight-row.reverse>* {
     direction: rtl;
 }
+
 html[dir="rtl"] .highlight-row:not(.reverse) {
     direction: rtl;
 }
-html[dir="rtl"] .highlight-row:not(.reverse) > * {
+
+html[dir="rtl"] .highlight-row:not(.reverse)>* {
     direction: rtl;
 }
 
@@ -476,7 +484,8 @@ html[dir="rtl"] .highlight-row:not(.reverse) > * {
     border-bottom: none;
 }
 
-.lang-option:hover, .lang-option.active {
+.lang-option:hover,
+.lang-option.active {
     background: var(--text);
     color: var(--bg);
 }
@@ -484,4 +493,147 @@ html[dir="rtl"] .highlight-row:not(.reverse) > * {
 .lang-option.active::after {
     content: '✓';
     font-size: 14px;
+}
+
+/* ═══ NAVBAR & LINKS (Strict B&W) ═══ */
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+}
+
+.nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+}
+
+.nav-logo {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.nav-logo span {
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--text);
+    opacity: 0.6;
+}
+
+.nav-links {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+.nav-links a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.2s, opacity 0.2s;
+    opacity: 0.8;
+}
+
+.nav-links a:hover {
+    opacity: 1;
+}
+
+.nav-cta {
+    background: var(--text) !important;
+    color: var(--bg) !important;
+    padding: 8px 16px;
+    border-radius: 0;
+    font-weight: 600;
+    font-size: 13px;
+    border: 1px solid var(--text);
+    transition: background 0.2s, color 0.2s;
+}
+
+.nav-cta:hover {
+    background: transparent !important;
+    color: var(--text) !important;
+}
+
+@media (max-width: 768px) {
+    .nav-links a:not(.nav-cta) {
+        display: none;
+    }
+}
+
+/* ═══ MOCK VISUALS (Transports & Performance) ═══ */
+.highlight-visual .big-icon {
+    font-size: 80px;
+    color: var(--border);
+    opacity: 1;
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+}
+
+.mock-keys {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: 260px;
+    z-index: 10;
+}
+
+.mock-session {
+    text-align: center;
+    color: var(--text);
+    z-index: 10;
+}
+
+.mock-session .code {
+    font-size: 36px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    margin-bottom: 12px;
+    font-family: inherit;
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    background: var(--bg);
+}
+
+.mock-session .status {
+    font-size: 12px;
+    color: var(--text);
+    opacity: 0.6;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mock-session .participants {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.mock-session .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 0;
+    background: transparent;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
 }
