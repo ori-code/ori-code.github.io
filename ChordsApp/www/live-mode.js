@@ -1770,6 +1770,18 @@ const liveMode = {
                         </button>
                     `;
                 }
+
+                // Add "Print All" and "Share" buttons for everyone
+                playlistContent.innerHTML += `
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button onclick="liveMode.printAllPlaylist()" style="flex: 1; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                            🖨 Print All
+                        </button>
+                        <button onclick="liveMode.sharePlaylistLink()" style="flex: 1; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                            🔗 Share
+                        </button>
+                    </div>
+                `;
             } else {
                 playlistContent.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Not in a session</p>';
             }
@@ -1777,6 +1789,141 @@ const liveMode = {
             console.error('Error loading playlist:', error);
             playlistContent.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading playlist</p>';
         }
+    },
+
+    /**
+     * Print all playlist songs — each on its own page
+     */
+    async printAllPlaylist() {
+        if (!window.sessionManager || !window.sessionManager.activeSession) {
+            if (window.sessionUI) window.sessionUI.showToast('No active session');
+            return;
+        }
+
+        try {
+            const playlist = await window.sessionManager.getPlaylist();
+            if (playlist.length === 0) {
+                if (window.sessionUI) window.sessionUI.showToast('No songs in playlist');
+                return;
+            }
+
+            // Build print HTML for all songs
+            let pagesHTML = '';
+            for (const song of playlist) {
+                let processedContent = song.content || '';
+                if (!processedContent) continue;
+
+                // Apply makeChordsBold if available
+                if (window.makeChordsBold) {
+                    // Temporarily sync key selector
+                    const keySelector = document.getElementById('keySelector');
+                    const origKey = keySelector ? keySelector.value : null;
+                    if (keySelector && song.originalKey) keySelector.value = song.originalKey;
+
+                    processedContent = window.makeChordsBold(processedContent);
+
+                    if (keySelector && origKey !== null) keySelector.value = origKey;
+                }
+
+                const formattedHTML = window.formatForPreview ? window.formatForPreview(processedContent, { enableSectionBlocks: true }) : processedContent;
+
+                // Detect RTL content (Hebrew, Arabic, etc.)
+                const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+                const isRTL = rtlChars.test(song.content || '');
+                const dirAttr = isRTL ? 'dir="rtl"' : '';
+
+                pagesHTML += `
+                    <div class="print-page" ${dirAttr} style="page-break-after: always; position: relative; height: 297mm; max-height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box;">
+                        <div style="column-count: 2; column-gap: 40px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: 12pt;">
+                            ${formattedHTML}
+                        </div>
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 20px; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
+                            <span>www.thefaith<b>sound</b>.com</span>
+                            <span style="font-weight: 700;">א/aChordim</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Open print window
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                if (window.sessionUI) window.sessionUI.showToast('Please allow popups to print');
+                return;
+            }
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html data-theme="light">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Playlist Print</title>
+                    <link rel="stylesheet" href="styles-bw.css">
+                    <style>
+                        @page { margin: 0; }
+                        * { box-sizing: border-box; color: #000 !important; }
+                        body {
+                            margin: 0; padding: 0;
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                            background: #fff !important; color: #000 !important;
+                        }
+                        .print-page:last-child { page-break-after: avoid; }
+                        .song-section-block { border-color: #ccc !important; background: transparent !important; }
+                        .section-header { color: #000 !important; }
+                        .chord { color: #000 !important; font-weight: bold; }
+                        .section-badge { color: #000 !important; border-color: #000 !important; background: transparent !important; }
+                        .section-badges-row { margin-bottom: 8px; }
+                        .song-title, .song-meta, .song-header { color: #000 !important; }
+                        @media print {
+                            body { background: #fff !important; color: #000 !important; }
+                            * { color: #000 !important; }
+                            .print-page { break-after: page; }
+                            .print-page:last-child { break-after: avoid; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${pagesHTML}
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() { window.print(); }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+
+        } catch (error) {
+            console.error('Error printing playlist:', error);
+            if (window.sessionUI) window.sessionUI.showToast('Error printing playlist');
+        }
+    },
+
+    /**
+     * Share playlist link — copies a ?playlist=SESSION_CODE URL
+     */
+    sharePlaylistLink() {
+        const sessionCode = window.sessionManager?.activeSessionCode;
+        if (!sessionCode) {
+            if (window.sessionUI) window.sessionUI.showToast('No active session');
+            return;
+        }
+
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareUrl = `${baseUrl}?playlist=${sessionCode}`;
+
+        // Try Web Share API first (mobile), then clipboard
+        if (navigator.share) {
+            navigator.share({
+                title: 'Playlist — aChordim',
+                url: shareUrl
+            }).catch(() => { });
+        } else {
+            navigator.clipboard.writeText(shareUrl);
+        }
+
+        if (window.sessionUI) window.sessionUI.showToast('📋 Playlist link copied!');
     },
 
     /**

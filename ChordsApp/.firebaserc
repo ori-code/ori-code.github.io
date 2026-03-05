@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "chordsapp-e10e7"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

@@ -215,6 +215,8 @@ const getBadgeAbbrev = (name) => {
  */
 const CHORD_PATTERN = /\[([A-G][#b]?(?:maj|min|m|M|dim|aug|sus|add|7|9|11|13|6)*\d*(?:\/[A-G][#b]?)?)\]/g;
 
+const CHORD_ROOTS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
 /**
  * Check if a line is purely a chord grid (no lyrics)
  */
@@ -282,15 +284,16 @@ const parseLine = (line) => {
 /**
  * Chord component with superscript quality and slash bass
  */
-const Chord = ({ chord, editable, onEdit }) => {
+const Chord = ({ chord, editable, onEdit, onClick }) => {
     const { root, quality, bass } = formatChord(chord);
 
     return (
         <span
-            className="chord"
+            className={`chord ${onClick ? 'chord-clickable' : ''}`}
             contentEditable={editable}
             suppressContentEditableWarning
             onBlur={onEdit}
+            onClick={onClick ? (e) => onClick(e, chord) : undefined}
         >
             {root}
             {quality && <sup>{quality}</sup>}
@@ -303,11 +306,11 @@ const Chord = ({ chord, editable, onEdit }) => {
  * ChordGrid component - displays chord progression
  * RTL display order is handled by CSS dir="rtl" - no JS reverse needed
  */
-const ChordGrid = ({ chords }) => {
+const ChordGrid = ({ chords, onChordClick }) => {
     return (
         <div className="chord-grid">
             {chords.map((chord, idx) => (
-                <Chord key={idx} chord={chord} />
+                <Chord key={idx} chord={chord} onClick={onChordClick} />
             ))}
         </div>
     );
@@ -318,9 +321,8 @@ const ChordGrid = ({ chords }) => {
  * For RTL: stacked layout - chord row above, lyrics row below (like standard chord sheets)
  * For LTR: paired inline elements
  */
-const LyricLine = ({ parts, isRtl }) => {
+const LyricLine = ({ parts, isRtl, onChordClick }) => {
     if (isRtl) {
-        // RTL: Stacked rows - chords on top, lyrics below (like first editor)
         const chords = parts.filter(p => p.chord);
         const lyrics = parts.map(p => p.lyric).join(' ');
 
@@ -328,7 +330,7 @@ const LyricLine = ({ parts, isRtl }) => {
             <div className="lyric-line lyric-line-rtl-stacked">
                 <div className="rtl-chords-row">
                     {chords.map((part, idx) => (
-                        <span key={idx} className="rtl-chord"><Chord chord={part.chord} /></span>
+                        <span key={idx} className="rtl-chord"><Chord chord={part.chord} onClick={onChordClick} /></span>
                     ))}
                 </div>
                 <div className="rtl-lyrics-row">{lyrics}</div>
@@ -336,13 +338,12 @@ const LyricLine = ({ parts, isRtl }) => {
         );
     }
 
-    // LTR: paired inline as before
     return (
         <div className="lyric-line">
             {parts.map((part, idx) => (
                 <span key={idx} className="chord-lyric-pair">
                     <span className="chord-above">
-                        {part.chord ? <Chord chord={part.chord} /> : <span>&nbsp;</span>}
+                        {part.chord ? <Chord chord={part.chord} onClick={onChordClick} /> : <span>&nbsp;</span>}
                     </span>
                     <span className="lyric-below">{part.lyric || '\u00A0'}</span>
                 </span>
@@ -354,7 +355,7 @@ const LyricLine = ({ parts, isRtl }) => {
 /**
  * Section component with badge and border
  */
-const SectionBox = ({ section, sectionIndex, isRtl }) => {
+const SectionBox = ({ section, sectionIndex, isRtl, onChordClick }) => {
     const badge = getBadgeAbbrev(section.name, sectionIndex);
     const badgeClass = `badge-${section.type}`;
 
@@ -373,13 +374,14 @@ const SectionBox = ({ section, sectionIndex, isRtl }) => {
                 {section.lines.map((line, lineIdx) => {
                     const parsed = parseLine(line);
                     if (parsed.type === 'grid') {
-                        return <ChordGrid key={lineIdx} chords={parsed.chords} />;
+                        return <ChordGrid key={lineIdx} chords={parsed.chords} onChordClick={onChordClick} />;
                     }
                     return (
                         <LyricLine
                             key={lineIdx}
                             parts={parsed.parts}
                             isRtl={isRtl}
+                            onChordClick={onChordClick}
                         />
                     );
                 })}
@@ -427,7 +429,7 @@ const getSectionTypeFromBadge = (badge) => {
 /**
  * A4 Print Preview
  */
-const A4PrintPreview = ({ content, metadata, transposeSteps, fontSize, columns, showArrangement = true }) => {
+const A4PrintPreview = ({ content, metadata, transposeSteps, fontSize, columns, showArrangement = true, onChordClick }) => {
     const previewRef = useRef(null);
 
     const rtl = isRTL(content);
@@ -479,6 +481,7 @@ const A4PrintPreview = ({ content, metadata, transposeSteps, fontSize, columns, 
                             section={section}
                             sectionIndex={idx}
                             isRtl={rtl}
+                            onChordClick={onChordClick}
                         />
                     ))}
                 </div>
@@ -506,6 +509,50 @@ const ChordProEditor = ({ content, onChange }) => {
 /**
  * Main SongEditor Component
  */
+/**
+ * Chord Dropdown component — fixed-position 4x3 grid
+ */
+const ChordDropdown = ({ chord, x, y, onSelect, onClose }) => {
+    const dropdownRef = useRef(null);
+    const m = chord.match(/^([A-G][#b]?)(.*)/);
+    const currentRoot = m ? m[1] : '';
+    const quality = m ? m[2] : '';
+
+    useEffect(() => {
+        const handleClick = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                onClose();
+            }
+        };
+        setTimeout(() => document.addEventListener('click', handleClick), 0);
+        return () => document.removeEventListener('click', handleClick);
+    }, [onClose]);
+
+    // Adjust position to stay on screen
+    let left = x;
+    let top = y + 5;
+    if (left + 200 > window.innerWidth) left = window.innerWidth - 210;
+    if (top + 160 > window.innerHeight) top = y - 165;
+
+    return (
+        <div
+            ref={dropdownRef}
+            className="chord-dropdown-overlay"
+            style={{ left, top }}
+        >
+            {CHORD_ROOTS.map(root => (
+                <div
+                    key={root}
+                    className={`chord-dropdown-opt ${root === currentRoot ? 'active' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); onSelect(root + quality); }}
+                >
+                    {root}{quality}
+                </div>
+            ))}
+        </div>
+    );
+};
+
 const SongEditor = ({ song, onClose, onSave }) => {
     const { t } = useTranslation();
     const [content, setContent] = useState('');
@@ -515,6 +562,7 @@ const SongEditor = ({ song, onClose, onSave }) => {
     const [showEditor, setShowEditor] = useState(false);
     const [columns, setColumns] = useState(1);
     const [showArrangement, setShowArrangement] = useState(true);
+    const [chordDropdown, setChordDropdown] = useState(null); // { chord, x, y }
 
     useEffect(() => {
         if (song) {
@@ -539,6 +587,24 @@ const SongEditor = ({ song, onClose, onSave }) => {
         setContent(newContent);
         setMetadata(chordsAppParser.extractMetadata(newContent));
     }, []);
+
+    const handleChordClick = useCallback((e, chord) => {
+        e.stopPropagation();
+        setChordDropdown({ chord, x: e.clientX, y: e.clientY });
+    }, []);
+
+    const handleChordSelect = useCallback((newChord) => {
+        if (!chordDropdown) return;
+        const oldChord = chordDropdown.chord;
+        // Replace [oldChord] → [newChord] in content
+        const updated = content.replace(
+            new RegExp(`\\[${oldChord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'g'),
+            `[${newChord}]`
+        );
+        setContent(updated);
+        setMetadata(chordsAppParser.extractMetadata(updated));
+        setChordDropdown(null);
+    }, [chordDropdown, content]);
 
     const handleSave = () => {
         onSave?.({ ...song, content, transposeSteps });
@@ -620,7 +686,18 @@ const SongEditor = ({ song, onClose, onSave }) => {
                         fontSize={fontSize}
                         columns={columns}
                         showArrangement={showArrangement}
+                        onChordClick={handleChordClick}
                     />
+
+                    {chordDropdown && (
+                        <ChordDropdown
+                            chord={chordDropdown.chord}
+                            x={chordDropdown.x}
+                            y={chordDropdown.y}
+                            onSelect={handleChordSelect}
+                            onClose={() => setChordDropdown(null)}
+                        />
+                    )}
 
                     {showEditor && (
                         <ChordProEditor

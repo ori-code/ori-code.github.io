@@ -1441,6 +1441,9 @@ input[type="checkbox"]:checked::after {
 /* Preview page */
 .preview-page {
     position: relative;
+    height: 297mm;
+    max-height: 297mm;
+    overflow: hidden;
 }
 
 .preview-logo {
@@ -1474,14 +1477,20 @@ input[type="checkbox"]:checked::after {
 
 /* Preview Page Footer */
 .preview-page-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 8px 20px;
+    padding: 6px 20px;
     border-top: 1px solid var(--text);
     font-size: 11px;
     color: var(--text);
+    background: var(--bg);
+    z-index: 5;
 }
 
 .footer-icon {
@@ -1544,6 +1553,7 @@ input[type="checkbox"]:checked::after {
     align-items: center;
     justify-content: center;
     padding: 20px;
+    box-sizing: border-box;
 }
 
 .modal-container {
@@ -1552,6 +1562,8 @@ input[type="checkbox"]:checked::after {
     border-radius: 0;
     max-width: 480px;
     width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
     animation: modalSlideIn 0.2s ease-out;
 }
 
@@ -1604,6 +1616,8 @@ input[type="checkbox"]:checked::after {
 
 .modal-body {
     padding: 24px 28px;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .modal-body p {
@@ -1624,6 +1638,7 @@ input[type="checkbox"]:checked::after {
     font-size: 1.1rem;
     font-weight: 500;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .modal-input:focus {
@@ -1834,6 +1849,16 @@ input[type="checkbox"]:checked::after {
 
 .hide-badges .section-badges-row {
     display: none !important;
+}
+
+.hide-badges .section-header {
+    display: none !important;
+}
+
+.hide-badges .song-section-block {
+    margin: 0 !important;
+    padding: 1px 4px !important;
+    border: none !important;
 }
 
 /* Live Mode */
@@ -2363,7 +2388,7 @@ input[type="checkbox"]:checked::after {
 /* --- Print Styles --- */
 @media print {
     @page {
-        margin: 0.5cm;
+        margin: 0.5cm 0.5cm 0 0.5cm;
         size: A4 portrait;
     }
 
@@ -2391,8 +2416,24 @@ input[type="checkbox"]:checked::after {
     button,
     input,
     label,
-    #printPreview {
+    #printPreview,
+    #viewOnlyBanner {
         display: none !important;
+    }
+
+    html,
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .preview-page {
+        background: #fff !important;
+        border: none !important;
+        box-shadow: none !important;
+        height: 297mm !important;
+        max-height: 297mm !important;
+        overflow: hidden !important;
     }
 
     body,
@@ -2401,6 +2442,7 @@ input[type="checkbox"]:checked::after {
     .preview-section-content {
         margin: 0 !important;
         padding: 0 !important;
+        padding-top: 0 !important;
     }
 
     .preview-section {
@@ -2422,9 +2464,43 @@ input[type="checkbox"]:checked::after {
         border: none !important;
         min-height: auto !important;
         width: 100% !important;
-        padding: 0 !important;
+        padding: 0 0 40px 0 !important;
         margin: 0 !important;
         color: #000 !important;
+        background: #fff !important;
+        height: calc(297mm - 30px) !important;
+        max-height: calc(297mm - 30px) !important;
+        overflow: hidden !important;
+        columns: 2 !important;
+    }
+
+    /* Force all text to black on white for print regardless of theme */
+    #livePreview *,
+    .preview-page *,
+    .preview-page-footer,
+    .preview-page-footer * {
+        color: #000 !important;
+        background: transparent !important;
+        border-color: #000 !important;
+    }
+
+    .section-header {
+        color: #000 !important;
+    }
+
+    .section-badge {
+        color: #000 !important;
+        border: 1px solid #000 !important;
+        background: transparent !important;
+    }
+
+    .section-badges-row {
+        color: #000 !important;
+    }
+
+    .preview-page-footer {
+        background: #fff !important;
+        border-top: 1px solid #000 !important;
     }
 
     .preview-container>div[style*="position: absolute"] {
@@ -2464,8 +2540,16 @@ input[type="checkbox"]:checked::after {
 
     .preview-page-footer {
         display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        padding: 6px 20px;
+        border-top: 1px solid #000;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
+        z-index: 100;
     }
 
     #userBrandingFooter.active {
@@ -4081,4 +4165,30 @@ input[type="checkbox"]:checked::after {
     .tools-combined-container {
         grid-template-columns: 1fr;
     }
+}
+
+/* ============= VIEW ONLY MODE (shared song links) ============= */
+body.view-only-mode .app-header,
+body.view-only-mode #appNavBar,
+body.view-only-mode .hero,
+body.view-only-mode .workflow,
+body.view-only-mode #toolsCombinedView,
+body.view-only-mode .side-menu-panel,
+body.view-only-mode .side-menu-overlay,
+body.view-only-mode .preview-section,
+body.view-only-mode .editor-panel,
+body.view-only-mode #advancedControls,
+body.view-only-mode .session-section,
+body.view-only-mode .support-section,
+body.view-only-mode .app-footer,
+body.view-only-mode #liveSessionSubmenu {
+    display: none !important;
+}
+
+body.view-only-mode .preview-scale-wrapper {
+    max-width: 100%;
+}
+
+body.view-only-mode .container {
+    padding-top: 10px;
 }

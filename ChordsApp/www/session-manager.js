@@ -8,6 +8,7 @@ class SessionManager {
         this.activeSessionCode = null; // Display code (e.g., "A3F-7K2")
         this.isLeader = false;
         this.isSinger = false; // Singer mode (anonymous, lyrics only)
+        this.isPresenter = false; // Presenter mode (anonymous, lyrics only)
         this.listeners = [];
         this.inLiveMode = true; // Players follow leader by default
         // Per-song preferences now stored in session: sessions/{sessionId}/playerPreferences/{uid}/{songId}/
@@ -64,7 +65,8 @@ class SessionManager {
                 sessionCode: sessionCode,
                 createdAt: Date.now(),
                 status: 'active',
-                allowSingers: false // Leader can enable to allow anonymous singers
+                allowSingers: false, // Leader can enable to allow anonymous singers
+                allowPresenters: false // Leader can enable to allow anonymous presenters
             },
             currentSong: null,
             playlist: {},
@@ -247,6 +249,78 @@ class SessionManager {
     }
 
     /**
+     * Join a session as presenter (anonymous, lyrics only)
+     * @param {string} sessionCode - 6-character code (e.g., "A3F-7K2" or "A3F7K2")
+     */
+    async joinAsPresenter(sessionCode) {
+        // Format code: add dash if missing
+        let formattedCode = sessionCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (formattedCode.length === 6 && !formattedCode.includes('-')) {
+            formattedCode = formattedCode.slice(0, 3) + '-' + formattedCode.slice(3);
+        }
+        console.log('📺 Joining as presenter with code:', formattedCode);
+
+        // Find session by code
+        const sessionsRef = this.database.ref('sessions');
+        const snapshot = await sessionsRef.orderByChild('metadata/sessionCode').equalTo(formattedCode).once('value');
+
+        if (!snapshot.exists()) {
+            throw new Error('Session not found. Check the code and try again.');
+        }
+
+        const sessionData = snapshot.val();
+        const sessionId = Object.keys(sessionData)[0];
+        const session = sessionData[sessionId];
+
+        if (session.metadata.status !== 'active') {
+            throw new Error('This session has ended');
+        }
+
+        if (!session.metadata.allowPresenters) {
+            throw new Error('This session does not allow presenters. Ask the leader to enable it.');
+        }
+
+        // Count existing presenters to generate name
+        const participants = session.participants || {};
+        let presenterCount = 0;
+        for (const uid in participants) {
+            if (participants[uid].type === 'presenter') {
+                presenterCount++;
+            }
+        }
+        const presenterName = `Presenter ${presenterCount + 1}`;
+
+        // Get current anonymous user
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            throw new Error('Anonymous authentication required');
+        }
+        this.currentUser = user;
+
+        // Start listening to session updates
+        this.listenToSessionUpdates(sessionId);
+
+        // Set as active session
+        this.activeSession = sessionId;
+        this.activeSessionCode = sessionCode;
+        this.isLeader = false;
+        this.isPresenter = true;
+        this.inLiveMode = true;
+
+        // Add as presenter participant
+        await this.database.ref(`sessions/${sessionId}/participants/${user.uid}`).set({
+            name: presenterName,
+            type: 'presenter',
+            joinedAt: Date.now(),
+            status: 'connected'
+        });
+
+        console.log(`📺 Joined session as ${presenterName}`);
+
+        return { sessionId, session, presenterName };
+    }
+
+    /**
      * Toggle allow singers setting (LEADER only)
      * @param {boolean} allow - Whether to allow anonymous singers
      */
@@ -268,6 +342,31 @@ class SessionManager {
         if (!this.activeSession) return false;
 
         const snapshot = await this.database.ref(`sessions/${this.activeSession}/metadata/allowSingers`).once('value');
+        return snapshot.val() || false;
+    }
+
+    /**
+     * Toggle allow presenters setting (LEADER only)
+     * @param {boolean} allow - Whether to allow anonymous presenters
+     */
+    async toggleAllowPresenters(allow) {
+        if (!this.isLeader || !this.activeSession) {
+            throw new Error('Only the session leader can change presenter settings');
+        }
+
+        await this.database.ref(`sessions/${this.activeSession}/metadata/allowPresenters`).set(allow);
+        console.log(`📺 Presenters ${allow ? 'enabled' : 'disabled'}`);
+
+        return allow;
+    }
+
+    /**
+     * Get whether presenters are allowed in current session
+     */
+    async getAllowPresenters() {
+        if (!this.activeSession) return false;
+
+        const snapshot = await this.database.ref(`sessions/${this.activeSession}/metadata/allowPresenters`).once('value');
         return snapshot.val() || false;
     }
 
@@ -633,6 +732,7 @@ class SessionManager {
         this.activeSessionCode = null;
         this.isLeader = false;
         this.isSinger = false;
+        this.isPresenter = false;
         this.inLiveMode = true;
         // Per-song preferences stored in session - cleared when session ends
         this.leaderCurrentSong = null;

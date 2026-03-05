@@ -1,0 +1,395 @@
+/* ==========================================================================
+   testindex.css | Ultra-Minimalist B&W Design System
+   Inspired by Aesop, Dieter Rams, Apple.
+   ========================================================================== */
+
+/* --- 1. Variables & Global Resets --- */
+:root {
+  /* Colors - Pure B&W only */
+  --black: #000000;
+  --white: #ffffff;
+  --gray-light: #f5f5f5;
+  /* For extremely subtle depth if absolutely required */
+  --gray-medium: #e0e0e0;
+  /* Borders */
+  --gray-dark: #1a1a1a;
+  /* Subtle text contrast */
+
+  /* Typography */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Layout constraints */
+  --max-width: 1400px;
+  --spacing-base: 1rem;
+  --spacing-lg: 4rem;
+  --spacing-xl: 8rem;
+  --spacing-hero: 12rem;
+
+  /* Micro-interactions */
+  --transition-standard: 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--white);
+  color: var(--black);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Base Selections */
+::selection {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* --- 2. Typography --- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 200;
+  /* Ultra-thin display weight */
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.hero-title {
+  font-size: clamp(3rem, 8vw, 7.5rem);
+  font-weight: 100;
+  margin-bottom: 2rem;
+  letter-spacing: -0.04em;
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 400;
+  color: var(--gray-dark);
+  max-width: 600px;
+  margin-bottom: 3rem;
+  line-height: 1.5;
+}
+
+.section-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 200;
+  margin-bottom: 1.5rem;
+}
+
+.section-desc {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--gray-dark);
+  margin-bottom: 2rem;
+  max-width: 480px;
+}
+
+.step-num {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 2rem;
+}
+
+/* --- 3. Layout System --- */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.section {
+  padding: var(--spacing-xl) 0;
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  position: absolute;
+  /* No sticky top-bar unless scrolled - keep it clean */
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+.nav-logo {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.logo-sub {
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--black);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 2px;
+}
+
+/* Nav Link Hover Underline Slide In */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--black);
+  transform: translateX(-101%);
+  transition: transform var(--transition-standard);
+}
+
+.nav-link:hover::after {
+  transform: translateX(0);
+}
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Generous Hero Spacing */
+.hero {
+  padding-top: var(--spacing-hero);
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+}
+
+/* Divider Rule */
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: var(--gray-medium);
+}
+
+/* Asymmetric Grid */
+.grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  align-items: center;
+}
+
+.grid-layout.reverse .grid-content {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.grid-layout.reverse .grid-empty {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.inverse {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.inverse .section-desc,
+.inverse .step-num {
+  color: var(--gray-light);
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 2rem;
+}
+
+.input-minimal {
+  width: 100%;
+  font-family: var(--font-family);
+  font-size: 1.25rem;
+  font-weight: 300;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--black);
+  padding: 1rem 0;
+  transition: border-color var(--transition-standard);
+  outline: none;
+}
+
+.inverse .input-minimal {
+  border-bottom-color: var(--white);
+}
+
+.input-minimal:focus {
+  border-bottom-color: var(--gray-dark);
+}
+
+.inverse .input-minimal:focus {
+  border-bottom-color: var(--gray-light);
+}
+
+.input-minimal::placeholder {
+  color: var(--gray-medium);
+  font-weight: 200;
+}
+
+/* --- 4. Components & Interactive Elements --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2.5rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--transition-standard);
+  background: transparent;
+  text-align: center;
+}
+
+/* Outline Sharp Button */
+.btn-outline {
+  border: 1px solid var(--black);
+  color: var(--black);
+}
+
+/* Hover State - Invert */
+.btn-outline:hover {
+  background-color: var(--black);
+  color: var(--white);
+}
+
+.inverse-btn {
+  border-color: var(--white);
+  color: var(--white);
+}
+
+.inverse-btn:hover {
+  background-color: var(--white);
+  color: var(--black);
+}
+
+/* Borderless Text Button with specific hover */
+.btn-borderless {
+  border: none;
+  padding: 0;
+  padding-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.hover-underline {
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 4px;
+}
+
+.hover-underline::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--black);
+  transform: translateX(-101%);
+  transition: transform 400ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.hover-underline:hover::after {
+  transform: translateX(0);
+}
+
+
+/* Footer */
+.flex-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.footer-legal {
+  font-size: 0.75rem;
+  color: var(--gray-dark);
+}
+
+/* --- 5. Responsiveness --- */
+@media (max-width: 768px) {
+  .hero {
+    padding-top: 8rem;
+    min-height: 60vh;
+  }
+
+  .nav-links {
+    display: none;
+    /* Hide on mobile, show hamburger */
+  }
+
+  .nav-toggle {
+    display: block;
+  }
+
+  .grid-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .grid-layout.reverse .grid-content {
+    grid-column: 1;
+  }
+
+  .grid-empty {
+    display: none;
+    /* Remove whitespace generator on mobile to save space */
+  }
+
+  .section {
+    padding: var(--spacing-lg) 0;
+  }
+}

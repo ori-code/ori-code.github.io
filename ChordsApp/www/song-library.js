@@ -1,5 +1,5 @@
 // Song Library - Save and Load Songs to/from Firebase
-(function() {
+(function () {
     'use strict';
 
     // ============= BULK SELECTION STATE =============
@@ -23,7 +23,7 @@
         // Update select all button text
         if (selectAllBtn && window.filteredSongs) {
             const allSelected = window.filteredSongs.length > 0 &&
-                                window.filteredSongs.every(s => selectedSongIds.has(s.id));
+                window.filteredSongs.every(s => selectedSongIds.has(s.id));
             selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
         }
     }
@@ -80,8 +80,8 @@
     }
 
     // Expose for external use
-    window.isBulkSelectionMode = function() { return bulkSelectionMode; };
-    window.getSelectedSongIds = function() { return selectedSongIds; };
+    window.isBulkSelectionMode = function () { return bulkSelectionMode; };
+    window.getSelectedSongIds = function () { return selectedSongIds; };
     window.resetBulkSelection = resetBulkSelection;
 
     // ============= BOOKS MANAGEMENT FUNCTIONS =============
@@ -96,7 +96,7 @@
             const snapshot = await database.ref(`users/${user.uid}/books`).once('value');
             const books = snapshot.val();
 
-            userBooks = books ? Object.entries(books).map(([id, data]) => ({id, ...data})) : [];
+            userBooks = books ? Object.entries(books).map(([id, data]) => ({ id, ...data })) : [];
 
             // Cache books to IndexedDB
             if (window.offlineStore && books) {
@@ -409,8 +409,8 @@
     window.addSongsToBook = addSongsToBook;
     window.removeSongFromBook = removeSongFromBook;
     window.showAddToBookModal = showAddToBookModal;
-    window.getCurrentBookFilter = function() { return currentBookFilter; };
-    window.getUserBooks = function() { return userBooks; };
+    window.getCurrentBookFilter = function () { return currentBookFilter; };
+    window.getUserBooks = function () { return userBooks; };
 
     // Wait for Firebase to be initialized
     function initSongLibrary() {
@@ -616,7 +616,7 @@
             let author = '';
             const combinedContent = content + '\n' + baselineChart;
             const authorMatch = combinedContent.match(/\{author:\s*([^\}]+)\}/i) ||
-                               combinedContent.match(/\{subtitle:\s*([^\}]+)\}/i);
+                combinedContent.match(/\{subtitle:\s*([^\}]+)\}/i);
             if (authorMatch) {
                 author = authorMatch[1].trim();
             }
@@ -624,7 +624,7 @@
             // Extract time signature from ChordPro format or visual format
             let timeSignature = '';
             const timeMatch = (content + '\n' + baselineChart).match(/\{time:\s*([^\}]+)\}/i) ||
-                             (content + '\n' + baselineChart).match(/Time:\s*(\d+\/\d+)/i);
+                (content + '\n' + baselineChart).match(/Time:\s*(\d+\/\d+)/i);
             if (timeMatch) {
                 timeSignature = timeMatch[1].trim();
             }
@@ -833,7 +833,7 @@
             let author = '';
             const combinedContent = content + '\n' + baselineChart;
             const authorMatch = combinedContent.match(/\{author:\s*([^\}]+)\}/i) ||
-                               combinedContent.match(/\{subtitle:\s*([^\}]+)\}/i);
+                combinedContent.match(/\{subtitle:\s*([^\}]+)\}/i);
             if (authorMatch) {
                 author = authorMatch[1].trim();
             }
@@ -841,7 +841,7 @@
             // Extract time signature from ChordPro format or visual format
             let timeSignature = '';
             const timeMatch = (content + '\n' + baselineChart).match(/\{time:\s*([^\}]+)\}/i) ||
-                             (content + '\n' + baselineChart).match(/Time:\s*(\d+\/\d+)/i);
+                (content + '\n' + baselineChart).match(/Time:\s*(\d+\/\d+)/i);
             if (timeMatch) {
                 timeSignature = timeMatch[1].trim();
             }
@@ -1156,7 +1156,7 @@
             const publicBtn = document.createElement('button');
             const isPublic = song.isPublic === true;
             publicBtn.textContent = '⊕';
-            publicBtn.style.cssText = `background: ${isPublic ? 'var(--text)' : 'transparent'}; color: ${isPublic ? 'var(--bg)' : 'var(--text)'}; border: 1px solid var(--border); font-size: 13px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: ${isPublic ? '1' : '0.5'}; flex-shrink: 0;`;
+            publicBtn.style.cssText = `background: transparent; color: var(--text); border: ${isPublic ? '2px' : '1px'} solid var(--${isPublic ? 'text' : 'border'}); font-size: 13px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: ${isPublic ? '1' : '0.5'}; flex-shrink: 0;`;
             publicBtn.title = isPublic ? 'Make private (click to unpublish)' : 'Make public (share with everyone)';
 
             publicBtn.addEventListener('click', async (e) => {
@@ -1198,7 +1198,7 @@
                 // Public songs: show only "Open in Live Mode" button
                 const openBtn = document.createElement('button');
                 openBtn.textContent = '▶';
-                openBtn.style.cssText = 'background: var(--text); border: 1px solid var(--border); color: var(--bg); font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: 600;';
+                openBtn.style.cssText = 'background: transparent; border: 2px solid var(--text); color: var(--text); font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: 600;';
                 openBtn.title = 'Open in Live Mode';
 
                 openBtn.addEventListener('click', async (e) => {
@@ -1385,7 +1385,7 @@
         }
 
         // Function to render the song list
-        window.triggerSongListRerender = function() {
+        window.triggerSongListRerender = function () {
             const user = firebase.auth().currentUser;
             if (!user) return;
 
@@ -1585,7 +1585,7 @@
             bulkSelectAll.addEventListener('click', () => {
                 const displaySongs = window.filteredSongs || window.allLoadedSongs || [];
                 const allSelected = displaySongs.length > 0 &&
-                                    displaySongs.every(s => selectedSongIds.has(s.id));
+                    displaySongs.every(s => selectedSongIds.has(s.id));
 
                 if (allSelected) {
                     // Deselect all
@@ -1889,7 +1889,7 @@
                             tempoMatch = content.match(/\{tempo:\s*([^}]+)\}/i);
                             timeMatch = content.match(/\{time:\s*([^}]+)\}/i);
                             authorMatch = content.match(/\{author:\s*([^}]+)\}/i) ||
-                                         content.match(/\{subtitle:\s*([^}]+)\}/i);
+                                content.match(/\{subtitle:\s*([^}]+)\}/i);
                             // Clean unnecessary tags from content (legacy format only)
                             content = cleanChordProContent(content);
                         }
@@ -2202,7 +2202,7 @@
                 let author = '';
                 const content = (song.content || '') + '\n' + (song.baselineChart || '');
                 const authorMatch = content.match(/\{author:\s*([^\}]+)\}/i) ||
-                                   content.match(/\{subtitle:\s*([^\}]+)\}/i);
+                    content.match(/\{subtitle:\s*([^\}]+)\}/i);
                 if (authorMatch) {
                     author = authorMatch[1].trim();
                 }

@@ -1,19 +1,19 @@
 // ============= DISABLE PINCH-TO-ZOOM ON MOBILE =============
-document.addEventListener('gesturestart', function(e) {
+document.addEventListener('gesturestart', function (e) {
     e.preventDefault();
 }, { passive: false });
 
-document.addEventListener('gesturechange', function(e) {
+document.addEventListener('gesturechange', function (e) {
     e.preventDefault();
 }, { passive: false });
 
-document.addEventListener('gestureend', function(e) {
+document.addEventListener('gestureend', function (e) {
     e.preventDefault();
 }, { passive: false });
 
 // Prevent double-tap zoom
 let lastTouchEnd = 0;
-document.addEventListener('touchend', function(e) {
+document.addEventListener('touchend', function (e) {
     const now = Date.now();
     if (now - lastTouchEnd <= 300) {
         e.preventDefault();
@@ -327,11 +327,177 @@ document.addEventListener('DOMContentLoaded', () => {
         joinAsSinger(singerSessionCode.toUpperCase());
     }
 
+    // ============= CHECK FOR PRESENTER JOIN URL =============
+    const presenterSessionCode = urlParams.get('presenter');
+    if (presenterSessionCode) {
+        // Join as presenter (anonymous, lyrics only)
+        joinAsPresenter(presenterSessionCode.toUpperCase());
+    }
+
     // ============= CHECK FOR PUBLIC SONG URL =============
     const publicSongId = urlParams.get('public');
     if (publicSongId) {
         // Load public song in Live Mode view
         loadPublicSongFromUrl(publicSongId);
+    }
+
+    // ============= CHECK FOR SHARED PLAYLIST URL =============
+    const playlistSessionCode = urlParams.get('playlist');
+    if (playlistSessionCode) {
+        loadSharedPlaylist(playlistSessionCode.toUpperCase());
+    }
+
+    /**
+     * Load shared playlist from URL — renders all songs as printable pages
+     */
+    async function loadSharedPlaylist(sessionCode) {
+        // Show loading state immediately
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#999;"><h2>Loading playlist...</h2></div>';
+
+        // Format code: add dash if missing
+        let formattedCode = sessionCode.replace(/[^A-Z0-9]/g, '');
+        if (formattedCode.length === 6 && !sessionCode.includes('-')) {
+            formattedCode = formattedCode.slice(0, 3) + '-' + formattedCode.slice(3);
+        } else {
+            formattedCode = sessionCode;
+        }
+
+        try {
+            // 1. Wait for Firebase SDK to be ready
+            await new Promise(resolve => {
+                if (typeof firebase !== 'undefined' && firebase.auth && firebase.database) {
+                    resolve();
+                } else {
+                    const check = setInterval(() => {
+                        if (typeof firebase !== 'undefined' && firebase.auth && firebase.database) {
+                            clearInterval(check); resolve();
+                        }
+                    }, 100);
+                    setTimeout(() => { clearInterval(check); resolve(); }, 10000);
+                }
+            });
+
+            // 2. Sign in anonymously (required for database access)
+            if (!firebase.auth().currentUser) {
+                await firebase.auth().signInAnonymously();
+                console.log('📋 Playlist: anonymous sign-in OK');
+            }
+
+            // 3. Look up session by code
+            const snapshot = await firebase.database()
+                .ref('sessions')
+                .orderByChild('metadata/sessionCode')
+                .equalTo(formattedCode)
+                .once('value');
+
+            if (!snapshot.exists()) {
+                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#333;background:#fff;"><h2>Playlist not found</h2></div>';
+                return;
+            }
+
+            const sessionData = snapshot.val();
+            const sessionId = Object.keys(sessionData)[0];
+            const session = sessionData[sessionId];
+            const playlistData = session.playlist || {};
+            const sessionTitle = session.metadata?.title || 'Playlist';
+
+            const playlist = Object.entries(playlistData)
+                .map(([id, data]) => ({ id, ...data }))
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            if (playlist.length === 0) {
+                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#333;background:#fff;"><h2>Playlist is empty</h2></div>';
+                return;
+            }
+
+            // 4. Wait for formatForPreview to be available
+            await new Promise((resolve) => {
+                if (window.formatForPreview) return resolve();
+                const check = setInterval(() => {
+                    if (window.formatForPreview) { clearInterval(check); resolve(); }
+                }, 100);
+                setTimeout(() => { clearInterval(check); resolve(); }, 8000);
+            });
+
+            // 5. Build pages
+            let pagesHTML = '';
+            const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+            for (const song of playlist) {
+                let content = song.content || '';
+                if (!content) continue;
+
+                // Apply makeChordsBold
+                if (window.makeChordsBold) {
+                    const keySelector = document.getElementById('keySelector');
+                    const origKey = keySelector ? keySelector.value : null;
+                    if (keySelector && song.originalKey) keySelector.value = song.originalKey;
+                    content = window.makeChordsBold(content);
+                    if (keySelector && origKey !== null) keySelector.value = origKey;
+                }
+
+                const formatted = window.formatForPreview ? window.formatForPreview(content, { enableSectionBlocks: true }) : content;
+                const isRTL = rtlChars.test(song.content || '');
+                const dirAttr = isRTL ? 'dir="rtl"' : '';
+
+                pagesHTML += `
+                    <div class="print-page" ${dirAttr} style="page-break-after: always; position: relative; width: 210mm; height: 297mm; max-height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; background: #fff;">
+                        <div style="column-count: 2; column-gap: 40px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: 12pt;">
+                            ${formatted}
+                        </div>
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 20px; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
+                            <span>www.thefaith<b>sound</b>.com</span>
+                            <span style="font-weight: 700;">א/aChordim</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 6. Replace entire page with printable view
+            document.title = `${sessionTitle} — aChordim Playlist`;
+            document.documentElement.setAttribute('data-theme', 'light');
+
+            // Inject print-optimised styles
+            const style = document.createElement('style');
+            style.textContent = `
+                @page { margin: 0; size: A4; }
+                * { box-sizing: border-box; color: #000 !important; }
+                body { margin: 0; padding: 0; background: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+                .song-section-block { border-color: #ccc !important; background: transparent !important; }
+                .section-header { color: #000 !important; }
+                .chord { color: #000 !important; font-weight: bold; }
+                .section-badge { color: #000 !important; border-color: #000 !important; background: transparent !important; }
+                .song-title, .song-meta, .song-header { color: #000 !important; }
+                .print-page { box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 20px; }
+                .print-toolbar { position: sticky; top: 0; z-index: 100; background: #222; color: #fff !important; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+                .print-toolbar * { color: #fff !important; }
+                .print-toolbar button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; color: #222 !important; }
+                @media print {
+                    body { background: #fff !important; }
+                    * { color: #000 !important; }
+                    .print-page { box-shadow: none !important; margin: 0 !important; break-after: page; }
+                    .print-page:last-child { break-after: avoid; }
+                    .print-toolbar { display: none !important; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            document.body.innerHTML = `
+                <div class="print-toolbar">
+                    <div style="font-size: 16px; font-weight: 600;">${sessionTitle} <span style="opacity: 0.6; font-size: 13px;">(${playlist.length} songs)</span></div>
+                    <button style="background: #fff; color: #222;" onclick="window.print()">🖨 Print</button>
+                </div>
+                <div style="padding: 20px 0;">
+                    ${pagesHTML}
+                </div>
+            `;
+
+            console.log(`📋 Shared playlist loaded: ${sessionTitle} (${playlist.length} songs)`);
+
+        } catch (error) {
+            console.error('Error loading shared playlist:', error);
+            document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#333;background:#fff;"><h2>Error loading playlist</h2><p style="color:#999;">${error.message || ''}</p></div>`;
+        }
     }
 
     /**
@@ -469,6 +635,81 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Join session as presenter (anonymous auth, lyrics only)
+     */
+    async function joinAsPresenter(sessionCode) {
+        try {
+            console.log('📺 Attempting to join as presenter with code:', sessionCode);
+
+            // Wait for Firebase to be ready
+            await new Promise(resolve => {
+                if (typeof firebase !== 'undefined' && firebase.auth) {
+                    resolve();
+                } else {
+                    const checkFirebase = setInterval(() => {
+                        if (typeof firebase !== 'undefined' && firebase.auth) {
+                            clearInterval(checkFirebase);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Sign in anonymously
+            console.log('📺 Signing in anonymously...');
+            await firebase.auth().signInAnonymously();
+            console.log('📺 Anonymous sign-in successful');
+
+            // Wait for session manager to be ready
+            await new Promise(resolve => {
+                if (window.sessionManager) {
+                    resolve();
+                } else {
+                    const checkManager = setInterval(() => {
+                        if (window.sessionManager) {
+                            clearInterval(checkManager);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Join the session as presenter
+            const result = await window.sessionManager.joinAsPresenter(sessionCode);
+            console.log('📺 Joined as presenter:', result.presenterName);
+
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+
+            // Wait for live mode to be ready, then enter presenter mode
+            await new Promise(resolve => {
+                if (window.liveMode) {
+                    resolve();
+                } else {
+                    const checkLiveMode = setInterval(() => {
+                        if (window.liveMode) {
+                            clearInterval(checkLiveMode);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+
+            // Enter presenter mode (lyrics only, limited controls)
+            await window.liveMode.enterPresenterMode();
+
+            // Show welcome toast
+            if (window.sessionUI) {
+                window.sessionUI.showToast(`📺 Joined as ${result.presenterName}`);
+            }
+
+        } catch (error) {
+            console.error('📺 Error joining as presenter:', error);
+            showAlert('Could not join session: ' + error.message);
+        }
+    }
+
     async function loadSharedSong(slug) {
         try {
             // Wait for Firebase to be ready
@@ -506,6 +747,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Display in preview
             if (livePreview) {
                 livePreview.innerHTML = formatForPreview(visualFormat);
+                // Apply RTL layout immediately (fix: was only applied on font size change)
+                setDirectionalLayout(livePreview, content);
             }
 
             // Update metadata displays
@@ -527,6 +770,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const sideMenuFontSizeVal = document.getElementById('sideMenuFontSizeVal');
                     if (sideMenuFontSize) sideMenuFontSize.value = song.fontSize;
                     if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = song.fontSize + 'pt';
+                    // Sync view-only toolbar slider
+                    const toolbarFontSlider = document.querySelector('#viewOnlyBanner input[type="range"]');
+                    if (toolbarFontSlider) {
+                        toolbarFontSlider.value = song.fontSize;
+                        const valSpan = toolbarFontSlider.nextElementSibling;
+                        if (valSpan) valSpan.textContent = song.fontSize;
+                    }
                 }
 
                 // Line Height
@@ -579,41 +829,215 @@ document.addEventListener('DOMContentLoaded', () => {
     function enterViewOnlyMode() {
         document.body.classList.add('view-only-mode');
 
-        // Hide editor panel
-        const editorPanel = document.querySelector('.editor-panel');
-        if (editorPanel) editorPanel.style.display = 'none';
 
-        // Hide upload section
-        const uploadSection = document.querySelector('.upload-section');
-        if (uploadSection) uploadSection.style.display = 'none';
+        // Build compact toolbar bar
+        const toolbar = document.createElement('div');
+        toolbar.id = 'viewOnlyBanner';
+        toolbar.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #111; color: #fff; padding: 6px 12px; z-index: 1000; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; font-size: 0.8rem; box-sizing: border-box;';
 
-        // Hide session section
-        const sessionSection = document.querySelector('.session-section');
-        if (sessionSection) sessionSection.style.display = 'none';
+        // Helper to create styled buttons
+        const makeBtn = (text, title, onClick) => {
+            const btn = document.createElement('button');
+            btn.textContent = text;
+            btn.title = title;
+            btn.style.cssText = 'background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.4); padding: 4px 10px; cursor: pointer; font-weight: 600; font-size: 0.8rem; min-width: 32px;';
+            btn.addEventListener('click', onClick);
+            return btn;
+        };
 
-        // Hide save/load/update buttons
-        const saveSongBtn = document.getElementById('saveSongButton');
-        const loadSongBtn = document.getElementById('loadSongButton');
-        const updateSongBtn = document.getElementById('updateSongButton');
-        const bulkImportBtn = document.getElementById('bulkImportButton');
-        const headerSaveSong = document.getElementById('headerSaveSong');
-        const headerLoadSong = document.getElementById('headerLoadSong');
-        if (saveSongBtn) saveSongBtn.style.display = 'none';
-        if (loadSongBtn) loadSongBtn.style.display = 'none';
-        if (updateSongBtn) updateSongBtn.style.display = 'none';
-        if (bulkImportBtn) bulkImportBtn.style.display = 'none';
-        if (headerSaveSong) headerSaveSong.style.display = 'none';
-        if (headerLoadSong) headerLoadSong.style.display = 'none';
+        // Helper to create − value + stepper group
+        const makeStepper = (label, min, max, value, step, onChange) => {
+            const group = document.createElement('div');
+            group.style.cssText = 'display: flex; align-items: center; gap: 2px;';
+            const lbl = document.createElement('span');
+            lbl.textContent = label;
+            lbl.style.cssText = 'font-size: 0.75rem; white-space: nowrap; color: #ccc; margin-right: 2px;';
+            let current = parseFloat(value);
+            const val = document.createElement('span');
+            val.textContent = current;
+            val.style.cssText = 'font-size: 0.8rem; min-width: 22px; text-align: center; color: #fff; font-weight: 600;';
+            const minus = makeBtn('−', `Decrease ${label}`, () => {
+                current = Math.max(parseFloat(min), current - parseFloat(step));
+                val.textContent = current;
+                onChange(current);
+            });
+            const plus = makeBtn('+', `Increase ${label}`, () => {
+                current = Math.min(parseFloat(max), current + parseFloat(step));
+                val.textContent = current;
+                onChange(current);
+            });
+            group.appendChild(lbl);
+            group.appendChild(minus);
+            group.appendChild(val);
+            group.appendChild(plus);
+            return group;
+        };
 
-        // Add "View Only" banner
-        const banner = document.createElement('div');
-        banner.id = 'viewOnlyBanner';
-        banner.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: var(--text); color: var(--bg); text-align: center; padding: 8px; font-weight: 500; z-index: 1000;';
-        banner.innerHTML = '👁️ View Only Mode - <a href="' + window.location.pathname + '" style="color: white; text-decoration: underline;">Create your own charts</a>';
-        document.body.prepend(banner);
+        // Transpose -1 / +1
+        const transposeDown = makeBtn('−1', 'Transpose down', () => {
+            const input = document.getElementById('transposeStepInput');
+            if (input) {
+                input.value = parseInt(input.value || 0) - 1;
+                const applyBtn = document.getElementById('applyTranspose');
+                if (applyBtn) applyBtn.click();
+            }
+        });
+        const transposeUp = makeBtn('+1', 'Transpose up', () => {
+            const input = document.getElementById('transposeStepInput');
+            if (input) {
+                input.value = parseInt(input.value || 0) + 1;
+                const applyBtn = document.getElementById('applyTranspose');
+                if (applyBtn) applyBtn.click();
+            }
+        });
 
-        // Add top padding to body for banner
-        document.body.style.paddingTop = '40px';
+        // Font Size − value +
+        const fontStepper = makeStepper('Font', '6', '28', '12', 1, (size) => {
+            const preview = document.getElementById('livePreview');
+            if (preview) preview.style.fontSize = size + 'pt';
+            const mainSlider = document.getElementById('fontSizeSlider');
+            const mainVal = document.getElementById('fontSizeValue');
+            if (mainSlider) mainSlider.value = size;
+            if (mainVal) mainVal.textContent = size;
+        });
+
+        // Tag Size − value +
+        const tagStepper = makeStepper('Tags', '6', '28', '12', 1, (size) => {
+            const preview = document.getElementById('livePreview');
+            if (preview) {
+                const headers = preview.querySelectorAll('.section-header');
+                headers.forEach(h => { h.style.fontSize = size + 'pt'; });
+            }
+        });
+
+        // Columns toggle (1 / 2)
+        let cols = 2;
+        const colBtn = makeBtn('2col', 'Toggle columns', () => {
+            const preview = document.getElementById('livePreview');
+            cols = cols === 2 ? 1 : 2;
+            colBtn.textContent = cols + 'col';
+            if (preview) preview.style.columnCount = cols;
+            const mainColSelect = document.getElementById('columnCount');
+            if (mainColSelect) mainColSelect.value = cols;
+        });
+
+        // Badges toggle (show/hide section badges like V1, PC, C)
+        let badgesVisible = true;
+        const badgesBtn = makeBtn('Badges', 'Toggle badges', () => {
+            badgesVisible = !badgesVisible;
+            const preview = document.getElementById('livePreview');
+            if (preview) {
+                if (badgesVisible) {
+                    preview.classList.remove('hide-badges');
+                } else {
+                    preview.classList.add('hide-badges');
+                }
+            }
+            // Also hide section headers (Verse 1, Chorus 1, etc.)
+            if (preview) {
+                const headers = preview.querySelectorAll('.section-header');
+                headers.forEach(h => { h.style.display = badgesVisible ? '' : 'none'; });
+            }
+            badgesBtn.style.opacity = badgesVisible ? '1' : '0.4';
+        });
+
+        // Print button — opens clean print window (same approach as shared playlist)
+        const printBtn = makeBtn('Print', 'Print', () => {
+            const preview = document.getElementById('livePreview');
+            if (!preview) return;
+
+            const previewHTML = preview.innerHTML;
+
+            // Detect RTL
+            const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+            const isRTL = rtlChars.test(preview.textContent || '');
+            const dirAttr = isRTL ? 'dir="rtl"' : '';
+
+            // Get current font size and column count
+            const fontSize = preview.style.fontSize || '12pt';
+            const colCount = preview.style.columnCount || '2';
+
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) return;
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html data-theme="light">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Print — aChordim</title>
+                    <link rel="stylesheet" href="styles-bw.css">
+                    <style>
+                        @page { margin: 0; size: A4; }
+                        * { box-sizing: border-box; color: #000 !important; }
+                        body { margin: 0; padding: 0; background: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+                        .print-page { position: relative; width: 210mm; height: 297mm; max-height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; background: #fff; }
+                        .print-content { column-count: ${colCount}; column-gap: 40px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: ${fontSize}; }
+                        .print-footer { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 20px; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr; }
+                        .song-section-block { border-color: #ccc !important; background: transparent !important; }
+                        .section-header { color: #000 !important; }
+                        .chord { color: #000 !important; font-weight: bold; }
+                        .section-badge { color: #000 !important; border-color: #000 !important; background: transparent !important; }
+                        .song-title, .song-meta, .song-header { color: #000 !important; }
+                        @media print {
+                            body { background: #fff !important; }
+                            * { color: #000 !important; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-page" ${dirAttr}>
+                        <div class="print-content">
+                            ${previewHTML}
+                        </div>
+                        <div class="print-footer">
+                            <span>www.thefaith<b>sound</b>.com</span>
+                            <span style="font-weight: 700;">א/aChordim</span>
+                        </div>
+                    </div>
+                    <script>
+                        window.onload = function() { setTimeout(function() { window.print(); }, 500); };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        });
+
+        // Theme toggle button
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        const themeBtn = makeBtn(isDark ? 'White' : 'Black', 'Toggle theme', () => {
+            if (window.themeManager) window.themeManager.toggleTheme();
+            const isNowLight = document.documentElement.getAttribute('data-theme') === 'light';
+            themeBtn.textContent = isNowLight ? 'Black' : 'White';
+        });
+
+        // aChordim link
+        const homeLink = document.createElement('a');
+        homeLink.href = window.location.pathname;
+        homeLink.textContent = 'aChordim →';
+        homeLink.style.cssText = 'color: rgba(255,255,255,0.6); text-decoration: underline; font-size: 0.75rem; margin-left: 4px;';
+
+        toolbar.appendChild(transposeDown);
+        toolbar.appendChild(transposeUp);
+        toolbar.appendChild(fontStepper);
+        toolbar.appendChild(tagStepper);
+        toolbar.appendChild(colBtn);
+        toolbar.appendChild(badgesBtn);
+        toolbar.appendChild(printBtn);
+        toolbar.appendChild(themeBtn);
+        toolbar.appendChild(homeLink);
+
+        document.body.prepend(toolbar);
+        document.body.style.paddingTop = '44px';
+
+        // Force 2 columns on initial load and fit within A4 with footer
+        const preview = document.getElementById('livePreview');
+        if (preview) {
+            preview.style.columnCount = 2;
+            preview.style.height = 'calc(297mm - 30px)';
+            preview.style.maxHeight = 'calc(297mm - 30px)';
+        }
     }
 
     // Always use Firebase Cloud Function for chart analysis
@@ -1445,7 +1869,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Read PDF and render first page
             const fileReader = new FileReader();
-            fileReader.onload = async function(e) {
+            fileReader.onload = async function (e) {
                 const typedarray = new Uint8Array(e.target.result);
 
                 try {
@@ -1792,9 +2216,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const transposedLines = lines.map((line, index) => {
                 // Skip metadata/title lines - they contain pipe-separated info or key/bpm labels
                 const isMetadataLine = /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line) ||
-                                       /^(Key|Title|Artists?|Authors?|BPM|Tempo|Capo):/i.test(line) ||
-                                       /\|\s*Key:/i.test(line) ||
-                                       /^Key:\s*[A-G].*\|.*BPM:/i.test(line);
+                    /^(Key|Title|Artists?|Authors?|BPM|Tempo|Capo):/i.test(line) ||
+                    /\|\s*Key:/i.test(line) ||
+                    /^Key:\s*[A-G].*\|.*BPM:/i.test(line);
                 if (isMetadataLine) {
                     console.log(`  ⏭️ Line ${index} is metadata, skipping:`, line.substring(0, 60));
                     return line;
@@ -3378,16 +3802,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const label = m[1].toUpperCase();
                 const colorClass =
                     label.startsWith('I') && !label.startsWith('INT') ? 'badge-intro' :
-                    label.startsWith('V') ? 'badge-verse' :
-                    label.startsWith('C') && !label.startsWith('CD') ? 'badge-chorus' :
-                    label.startsWith('B') && !label.startsWith('BRK') ? 'badge-bridge' :
-                    label.startsWith('PC') ? 'badge-prechorus' :
-                    label.startsWith('O') ? 'badge-outro' :
-                    label.startsWith('TURN') ? 'badge-turn' :
-                    label.startsWith('BRK') ? 'badge-break' :
-                    label.startsWith('TAG') ? 'badge-tag' :
-                    label.startsWith('INT') ? 'badge-interlude' :
-                    'badge-other';
+                        label.startsWith('V') ? 'badge-verse' :
+                            label.startsWith('C') && !label.startsWith('CD') ? 'badge-chorus' :
+                                label.startsWith('B') && !label.startsWith('BRK') ? 'badge-bridge' :
+                                    label.startsWith('PC') ? 'badge-prechorus' :
+                                        label.startsWith('O') ? 'badge-outro' :
+                                            label.startsWith('TURN') ? 'badge-turn' :
+                                                label.startsWith('BRK') ? 'badge-break' :
+                                                    label.startsWith('TAG') ? 'badge-tag' :
+                                                        label.startsWith('INT') ? 'badge-interlude' :
+                                                            'badge-other';
                 return `<span class="section-badge ${colorClass}">${label}</span>`;
             });
             if (isRTLContent) { badgeItems = badgeItems.reverse(); } // @@@RTL BADGE ORDER — convertBadgeLineToStyled (legacy format inline badges)
@@ -3430,7 +3854,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Check if line is a section header - if so, it's not metadata
                 // Allow optional comment in parentheses: "Verse 1: (Comment)"
                 const isSectionHeader = /^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|PRE-CHORUS|TAG|CODA|TURN|TURNAROUND|BREAK|INTERLUDE|INSTRUMENTAL|SOLO|ENDING|VAMP)\s*\d*:?(?:\s*\([^)]+\))?$/i.test(line) ||
-                                       /^(V|C|B)\s*\d+:(?:\s*\([^)]+\))?$/i.test(line);
+                    /^(V|C|B)\s*\d+:(?:\s*\([^)]+\))?$/i.test(line);
 
                 // Skip chord progression summary lines (e.g., "C | 1 | G | 5 D/F | 2# Em | 3")
                 const isChordProgression = /^[A-G|#b/\d\s]+\|[A-G|#b/\d\s]+/.test(line);
@@ -3513,14 +3937,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
                                 const repeatCount = section.count > 1 ? `<sup class="repeat-count">${section.count}</sup>` : '';
                                 const colorClass =
                                     section.type === 'I' ? 'badge-intro' :
-                                    section.type === 'V' ? 'badge-verse' :
-                                    section.type === 'C' ? 'badge-chorus' :
-                                    section.type === 'B' ? 'badge-bridge' :
-                                    section.type === 'PC' ? 'badge-prechorus' :
-                                    section.type === 'O' ? 'badge-outro' :
-                                    section.type === 'TURN' ? 'badge-turn' :
-                                    section.type === 'BRK' ? 'badge-break' :
-                                    'badge-other';
+                                        section.type === 'V' ? 'badge-verse' :
+                                            section.type === 'C' ? 'badge-chorus' :
+                                                section.type === 'B' ? 'badge-bridge' :
+                                                    section.type === 'PC' ? 'badge-prechorus' :
+                                                        section.type === 'O' ? 'badge-outro' :
+                                                            section.type === 'TURN' ? 'badge-turn' :
+                                                                section.type === 'BRK' ? 'badge-break' :
+                                                                    'badge-other';
                                 return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
                             });
                             if (isRTLContent) { badgeItems = badgeItems.reverse(); } // @@@RTL BADGE ORDER — formatForPreview metadata section (legacy format with explicit Key: line)
@@ -3827,7 +4251,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Must be a standalone header, not a chord line starting with C, B, etc.
                 const trimmedLine = line.trim();
                 const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|TURN|BREAK)\s*\d*\s*:?$/i.test(trimmedLine) ||
-                                       /^(V|PC)\d+\s*:?$/i.test(trimmedLine); // V1, V2, PC1, etc.
+                    /^(V|PC)\d+\s*:?$/i.test(trimmedLine); // V1, V2, PC1, etc.
                 if (isSectionHeader) {
                     result.push(''); // Add blank line before section header
                     result.push(line);
@@ -4107,6 +4531,18 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 updatePagination();
                 checkContentOverflow();
             }, 100);
+        });
+    }
+
+    // Tag (section header) size control
+    const tagSizeSlider = document.getElementById('tagSizeSlider');
+    const tagSizeValueEl = document.getElementById('tagSizeValue');
+    if (tagSizeSlider && tagSizeValueEl && livePreview) {
+        tagSizeSlider.addEventListener('input', () => {
+            const size = tagSizeSlider.value;
+            tagSizeValueEl.textContent = size;
+            const headers = livePreview.querySelectorAll('.section-header');
+            headers.forEach(h => { h.style.fontSize = size + 'pt'; });
         });
     }
 
@@ -4465,8 +4901,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Check if this is a metadata line (Title, Key, BPM, Authors, etc.)
             const isMetadata = /^(Title|Key|BPM|Tempo|Time|Authors?|Artists?):/i.test(line) ||
-                              line.includes('Key:') || line.includes('BPM:') || line.includes('Time:') ||
-                              line.startsWith('{');
+                line.includes('Key:') || line.includes('BPM:') || line.includes('Time:') ||
+                line.startsWith('{');
 
             if (isMetadata) {
                 lastMetadataIndex = i;
@@ -4569,8 +5005,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Check if it's metadata
             const isMetadata = /^(Title|Key|BPM|Tempo|Time|Authors?|Artists?):/i.test(trimmedLine) ||
-                              trimmedLine.includes('Key:') || trimmedLine.includes('BPM:') ||
-                              trimmedLine.startsWith('{');
+                trimmedLine.includes('Key:') || trimmedLine.includes('BPM:') ||
+                trimmedLine.startsWith('{');
 
             if (inMetadata && isMetadata) {
                 metadataLines.push(line);
@@ -4871,14 +5307,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const repeatCount = section.count && section.count > 1 ? `<sup class="repeat-count">${section.count}</sup>` : '';
             const colorClass =
                 section.type === 'I' ? 'badge-intro' :
-                section.type === 'V' ? 'badge-verse' :
-                section.type === 'C' ? 'badge-chorus' :
-                section.type === 'B' ? 'badge-bridge' :
-                section.type === 'PC' ? 'badge-prechorus' :
-                section.type === 'O' ? 'badge-outro' :
-                section.type === 'TURN' ? 'badge-turn' :
-                section.type === 'BRK' ? 'badge-break' :
-                'badge-other';
+                    section.type === 'V' ? 'badge-verse' :
+                        section.type === 'C' ? 'badge-chorus' :
+                            section.type === 'B' ? 'badge-bridge' :
+                                section.type === 'PC' ? 'badge-prechorus' :
+                                    section.type === 'O' ? 'badge-outro' :
+                                        section.type === 'TURN' ? 'badge-turn' :
+                                            section.type === 'BRK' ? 'badge-break' :
+                                                'badge-other';
             return `<span class="section-badge ${colorClass}">${label}${repeatCount}</span>`;
         });
 
@@ -5198,20 +5634,65 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     if (printButton) {
         printButton.addEventListener('click', () => {
-            // Use visual editor content for printing (already in above-line format)
-            if (printPreview) {
-                const visualContent = visualEditor.value;
-                printPreview.textContent = visualContent;
-                // Apply the same font size and line height as live preview
-                printPreview.style.fontSize = livePreview.style.fontSize || '10pt';
-                printPreview.style.lineHeight = livePreview.style.lineHeight || '1.3';
+            // Get formatted content from the live preview
+            const preview = document.getElementById('livePreview');
+            const content = preview ? preview.innerHTML : '';
+            if (!content) return;
 
-                // Auto-detect and apply direction
-                setDirectionalLayout(printPreview, visualContent);
-            }
+            // Detect RTL
+            const rtlChars = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+            const isRTL = rtlChars.test(preview.textContent || '');
+            const dirAttr = isRTL ? 'dir="rtl"' : '';
 
-            // Trigger print
-            window.print();
+            // Get current font size and column count
+            const fontSize = preview.style.fontSize || (livePreview ? livePreview.style.fontSize : null) || '12pt';
+            const colCount = preview.style.columnCount || '2';
+
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) return;
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html data-theme="light">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Print — aChordim</title>
+                    <link rel="stylesheet" href="styles-bw.css">
+                    <style>
+                        @page { margin: 0; size: A4; }
+                        * { box-sizing: border-box; color: #000 !important; }
+                        body { margin: 0; padding: 0; background: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+                        .print-page { position: relative; width: 210mm; height: 297mm; max-height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; background: #fff; }
+                        .print-content { column-count: ${colCount}; column-gap: 40px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: ${fontSize}; }
+                        .print-footer { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 20px; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr; }
+                        .song-section-block { border-color: #ccc !important; background: transparent !important; }
+                        .section-header { color: #000 !important; }
+                        .chord { color: #000 !important; font-weight: bold; }
+                        .section-badge { color: #000 !important; border-color: #000 !important; background: transparent !important; }
+                        .song-title, .song-meta, .song-header { color: #000 !important; }
+                        @media print {
+                            body { background: #fff !important; }
+                            * { color: #000 !important; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-page" ${dirAttr}>
+                        <div class="print-content">
+                            ${content}
+                        </div>
+                        <div class="print-footer">
+                            <span>www.thefaith<b>sound</b>.com</span>
+                            <span style="font-weight: 700;">א/aChordim</span>
+                        </div>
+                    </div>
+                    <script>
+                        window.onload = function() { setTimeout(function() { window.print(); }, 500); };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         });
     }
 
@@ -5914,7 +6395,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     window.updateSubscriptionModal = updateSubscriptionModal;
 
     // Global function to show subscription modal
-    window.showSubscriptionModal = async function() {
+    window.showSubscriptionModal = async function () {
         const modal = document.getElementById('subscriptionModal');
         if (modal) {
             // Refresh usage data from Firebase before showing modal
@@ -5929,7 +6410,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Global function to show registration prompt for non-logged-in users
     // Now shows the subscription modal directly with all plans
-    window.showRegistrationPrompt = function() {
+    window.showRegistrationPrompt = function () {
         window.showSubscriptionModal();
     };
 
@@ -7137,8 +7618,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const parent = b.parentElement;
             if (!parent) return;
             const isChord = parent.classList.contains('chord-line') ||
-                            parent.classList.contains('inline-chord') ||
-                            parent.classList.contains('chord-grid');
+                parent.classList.contains('inline-chord') ||
+                parent.classList.contains('chord-grid');
             if (!isChord) return;
 
             let chordText = b.textContent.trim();
@@ -7466,7 +7947,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
             // Check if line is an arrangement line (contains multiple tags like "(V1) (C) (V2)")
             const isArrangementLine = /\([A-Z\d]+\)/.test(currentLine) &&
-                                      currentLine.split(/\([A-Z\d]+\)/).length > 2;
+                currentLine.split(/\([A-Z\d]+\)/).length > 2;
 
             if (isArrangementLine) {
                 // Find which tag was clicked
@@ -7711,23 +8192,13 @@ function updateMusicLinkInContent(platform, url) {
     const linePattern = new RegExp(`^${contentKey}:\\s*https?:\\/\\/[^\\n]+$`, 'm');
 
     if (linePattern.test(content)) {
-        // Update existing line
+        // Update existing line in place
         content = content.replace(linePattern, `${contentKey}: ${url}`);
     } else {
-        // Add line after metadata
-        const lines = content.split('\n');
-        let insertIndex = 0;
-
-        // Find insertion point after metadata
-        for (let i = 0; i < Math.min(lines.length, 15); i++) {
-            const line = lines[i].trim();
-            if (line.match(/^(Key|BPM|Time|Author|Title|YouTube|Spotify|AppleMusic|SoundCloud|Link):/i) || line === '' || i < 3) {
-                insertIndex = i + 1;
-            }
-        }
-
-        lines.splice(insertIndex, 0, `${contentKey}: ${url}`);
-        content = lines.join('\n');
+        // Append link at the end of the song content
+        // Ensure there's a blank line before the link for readability
+        const trimmed = content.trimEnd();
+        content = trimmed + '\n\n' + `${contentKey}: ${url}` + '\n';
     }
 
     visualEditor.value = content;

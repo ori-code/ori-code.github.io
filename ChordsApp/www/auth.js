@@ -17,8 +17,7 @@ class ChordsAuthManager {
             console.log('Auth state changed:', user ? user.email : 'Not logged in');
 
             if (user) {
-                // Hide Controls and Editor panels on login
-                this.hideControlsAndEditor();
+                // Respect user's saved display preferences (don't force-hide on every auth change)
 
                 // Check if this is a returning user (page refresh) with no local session
                 const localSessionId = localStorage.getItem('chordsapp_session_id');

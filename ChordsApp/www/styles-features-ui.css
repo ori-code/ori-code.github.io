@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-2: #1a1a1a;
+    --border: #222;
+    --text: #f5f5f5;
+    --text-muted: #888;
+    --accent: #fff;
+    --accent-hover: #e5e5e5;
+    --btn-text: #000;
+    --radius: 12px;
+    --nav-bg: rgba(10, 10, 10, 0.85);
+    --ghost-hover-bg: rgba(255, 255, 255, 0.05);
+
+    /* Override existing */
+    --bg-soft: var(--surface);
+    --bg-card: var(--surface);
+    --border-strong: #333;
+    --primary: var(--accent);
+    --button-hover: var(--accent-hover);
+    --card-bg: var(--surface);
+    --background: var(--bg);
+}
+
+html[data-theme="light"],
+:root[data-theme="light"] {
+    --bg: #ffffff;
+    --surface: #f7f7f7;
+    --surface-2: #eeeeee;
+    --border: #dfdfdf;
+    --border-strong: #ccc;
+    --text: #0a0a0a;
+    --text-muted: #666666;
+    --accent: #0a0a0a;
+    --accent-hover: #333333;
+    --btn-text: #ffffff;
+    --nav-bg: rgba(255, 255, 255, 0.85);
+    --ghost-hover-bg: rgba(0, 0, 0, 0.05);
+
+    --bg-soft: var(--surface);
+    --bg-card: var(--surface);
+    --primary: var(--accent);
+    --button-hover: var(--accent-hover);
+    --card-bg: var(--surface);
+    --background: var(--bg);
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Base element overrides */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: inherit;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* Rounded corners everywhere */
+button,
+.btn,
+.primary-action,
+.ghost-button,
+.secondary-action,
+.step-card,
+.preview-panel,
+.upload-tile,
+.status-panel,
+.ai-reference-preview,
+.reference-content,
+.editor-container,
+.songbook-container,
+.live-session-container,
+.tools-panel,
+.modal-content,
+.toast,
+input,
+select,
+textarea {
+    border-radius: var(--radius) !important;
+}
+
+.step-number {
+    border-radius: 50% !important;
+}
+
+/* Hover effects */
+.primary-action,
+.secondary-action,
+.ghost-button {
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+.primary-action {
+    background: transparent !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+}
+
+.primary-action:not(:disabled):hover,
+.ghost-button:hover {
+    background: var(--text) !important;
+    color: var(--bg) !important;
+    border-color: var(--text) !important;
+    transform: translateY(-1px);
+}
+
+.primary-action.active,
+.primary-action.on,
+.ghost-button.active {
+    background: var(--text) !important;
+    color: var(--bg) !important;
+    border-color: var(--text) !important;
+}
+
+/* Specific elements from Main App */
+.app-header {
+    background: var(--nav-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+.hero {
+    min-height: auto !important;
+    padding: 60px 24px 40px !important;
+}
+
+.hero-text h1 {
+    font-weight: 900 !important;
+    letter-spacing: -1.5px !important;
+}
+
+.nav-tab {
+    font-weight: 600 !important;
+    opacity: 0.6;
+    transition: all 0.2s ease !important;
+}
+
+.nav-tab.active {
+    opacity: 1 !important;
+    background: var(--surface-2) !important;
+    border-radius: var(--radius) !important;
+}
+
+.preview-header {
+    background: var(--surface) !important;
+}

@@ -458,6 +458,48 @@
     outline: none;
 }
 
+/* ============ CHORD DROPDOWN ============ */
+.chord-clickable {
+    cursor: pointer;
+}
+
+.chord-clickable:hover {
+    outline: 2px solid #000;
+    outline-offset: 2px;
+}
+
+.chord-dropdown-overlay {
+    position: fixed;
+    z-index: 10000;
+    background: #fff;
+    border: 2px solid #000;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    min-width: 180px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.chord-dropdown-opt {
+    padding: 8px 4px;
+    cursor: pointer;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.85em;
+    border: 1px solid #eee;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.chord-dropdown-opt:hover {
+    background: #000;
+    color: #fff;
+}
+
+.chord-dropdown-opt.active {
+    background: #000;
+    color: #fff;
+    opacity: 0.6;
+}
+
 /* ============ PRINT STYLES ============ */
 @media print {
     .song-editor-overlay {

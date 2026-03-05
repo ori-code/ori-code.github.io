@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>aChordim | Minimal</title>
+
+    <!-- Single Typeface Family: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="css/testindex.css">
+</head>
+
+<body>
+
+    <!-- Navigation: minimal top bar, logo left, 3-4 text links right -->
+    <nav class="nav">
+        <a href="#" class="nav-logo">
+            <span class="logo-text">aChordim</span>
+            <span class="logo-sub">www.thefaithsound.com</span>
+        </a>
+        <div class="nav-links">
+            <a href="#" class="nav-link">Features</a>
+            <a href="#" class="nav-link">Workflow</a>
+            <a href="#" class="nav-link">Sign In</a>
+            <button class="nav-toggle" aria-label="Toggle Menu">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                    stroke-linecap="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section: massive typography, asymmetric layout -->
+    <header class="section hero">
+        <div class="container hero-container">
+            <h1 class="hero-title">Refine.<br>Transpose.<br>Print.</h1>
+            <p class="hero-subtitle">Upload any handwritten chord sheet or photo. Extract the music instantly. Edit,
+                transpose, and print with perfect clarity.</p>
+            <div class="hero-actions">
+                <button class="btn btn-outline">Upload Chart</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="divider"></div>
+
+    <!-- Workflow Section: alternating sections -->
+    <section class="section workflow">
+        <div class="container workflow-container">
+
+            <div class="grid-layout">
+                <div class="grid-content">
+                    <span class="step-num">01</span>
+                    <h2 class="section-title">Upload your chart</h2>
+                    <p class="section-desc">We accept common image formats and PDFs. High contrast photos yield the best
+                        recognition results.</p>
+                    <button class="btn btn-borderless hover-underline">Select File</button>
+                </div>
+                <!-- Empty div creating the asymmetric tension / white space -->
+                <div class="grid-empty"></div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Inverse Workflow Section (White on Black) -->
+    <section class="section workflow inverse">
+        <div class="container workflow-container">
+
+            <div class="grid-layout reverse">
+                <div class="grid-empty"></div>
+                <div class="grid-content">
+                    <span class="step-num">02</span>
+                    <h2 class="section-title">Transcription ready</h2>
+                    <p class="section-desc">Our engine auto-analyzes the upload. Edit the extracted text instantly in
+                        the clean visual editor below.</p>
+                    <button class="btn btn-outline inverse-btn">Analyze</button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="section workflow">
+        <div class="container workflow-container" style="text-align: center; max-width: 800px; margin: 0 auto;">
+            <span class="step-num">03</span>
+            <h2 class="section-title">Refine &amp; Print</h2>
+            <p class="section-desc">Transpose to any key mathematically perfectly. Generate a clean, structured print
+                layout.</p>
+
+            <div class="form-group">
+                <input type="text" class="input-minimal" placeholder="Enter song title...">
+            </div>
+
+            <div style="margin-top: 4rem;">
+                <button class="btn btn-outline">Show Editor</button>
+            </div>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <footer class="section footer">
+        <div class="container flex-footer">
+            <a href="#" class="nav-logo">
+                <span class="logo-text">aChordim</span>
+            </a>
+            <p class="footer-legal">© 2026 The Faith Sound. Minimal Version.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>
