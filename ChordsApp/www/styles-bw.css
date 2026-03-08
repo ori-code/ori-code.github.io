@@ -409,8 +409,8 @@ input[type="checkbox"]:checked::after {
 
 #themeToggle:hover,
 #langToggle:hover {
-    background: var(--text);
-    color: var(--bg);
+    color: var(--text);
+    /* Removed background flip so icons stay visible */
     transform: none;
 }
 
