@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aChordim Features — The Faith Sound</title>
+    <meta name="description"
+        content="Discover all the features of aChordim — AI-powered chord chart scanner, smart transposition, live sessions, print-ready layouts, and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <link rel="stylesheet" href="styles-bw.css?v=87">
+    <link rel="stylesheet" href="css/featurestest-bw.css">
+</head>
+
+<body>
+
+    <!-- ═══ NAV ═══ -->
+    <nav>
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo" style="display: flex; align-items: baseline; gap: 8px;"><b dir="ltr"
+                    style="font-size: 1.25rem;">אChordim</b> <span
+                    style="font-weight: 400; font-size: 14px; color: var(--text-muted);">by The Faith Sound</span></a>
+            <div class="nav-links">
+                <a href="#features" data-i18n="nav.features">Features</a>
+                <a href="#how-it-works" data-i18n="nav.how">How It Works</a>
+                <a href="#pricing" data-i18n="nav.pricing">Pricing</a>
+                <div class="lang-picker">
+                    <button class="lang-picker-btn" id="langBtn">EN ▾</button>
+                    <div class="lang-dropdown" id="langDropdown">
+                        <button class="lang-option active" data-lang="en">English</button>
+                        <button class="lang-option" data-lang="he">עברית</button>
+                        <button class="lang-option" data-lang="ru">Русский</button>
+                        <button class="lang-option" data-lang="es">Español</button>
+                        <button class="lang-option" data-lang="fr">Français</button>
+                        <button class="lang-option" data-lang="pt">Português</button>
+                    </div>
+                </div>
+                <button class="theme-toggle" id="featuresThemeToggle" aria-label="Toggle Theme"
+                    style="background: none; border: 1px solid transparent; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 0; transition: all 0.2s; padding: 0;">
+                    <svg id="moonIcon" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sunIcon" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <a href="index.html" class="nav-cta" data-i18n="nav.cta">Open App →</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ═══ HERO ═══ -->
+    <section class="hero fade-up">
+        <div class="hero-badge"><span class="dot"></span> <span data-i18n="hero.badge">Smart Chord Sheet
+                Manager</span></div>
+        <h1 data-i18n="hero.title">Turn any chord sheet into a clean, printable chart</h1>
+        <p data-i18n="hero.subtitle">Upload a handwritten sheet or photo — the system detects chords, lyrics, key and sections.
+            Transpose, format, print, and play live with your band. All in one app.</p>
+        <div class="hero-actions">
+            <a href="index.html" class="primary-action" data-i18n="hero.cta">Get Started — It's Free</a>
+            <a href="#pricing" class="ghost-button" data-i18n="hero.pricing">See Pricing</a>
+        </div>
+    </section>
+
+    <!-- ═══ FEATURES GRID ═══ -->
+    <section class="features-section" id="features">
+        <div class="section-header fade-in">
+            <div class="label" data-i18n="nav.features">Features</div>
+            <h2 data-i18n="feat.title">Everything musicians need</h2>
+            <p data-i18n="feat.sub">From scanning a handwritten chart to performing live on stage — aChordim covers
+                every step.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a2 2 0 0 1 2 2c-.11.88-.98 1.5-1.9 1.48A2 2 0 0 1 12 2Z" />
+                        <path d="M19 19h2" />
+                        <path d="M3 19h2" />
+                        <path d="M12 21v2" />
+                        <rect x="5" y="6" width="14" height="14" rx="2" ry="2" />
+                        <path d="M9 11v2" />
+                        <path d="M15 11v2" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f1.title">Smart Scanner</h3>
+                <p data-i18n="f1.desc">Upload a photo or PDF of any chord chart. It automatically detects chords,
+                    lyrics, key signature, sections, and layout direction — in any language.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f1.t1">JPG / PNG / HEIC</span>
+                    <span class="tag" data-i18n="f1.t2">PDF</span>
+                    <span class="tag" data-i18n="f1.t3">Multi-language</span>
+                    <span class="tag" data-i18n="f1.t4">RTL Support</span>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f2.title">Smart Visual Editor</h3>
+                <p data-i18n="f2.desc">Edit chords inline with ChordPro notation. Auto key detection, section markers
+                    (Verse, Chorus, Bridge), and smart formatting — all visually in real time.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f2.t1">ChordPro Format</span>
+                    <span class="tag" data-i18n="f2.t2">Auto Key Detection</span>
+                    <span class="tag" data-i18n="f2.t3">Section Markers</span>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f3.title">Smart Transposition</h3>
+                <p data-i18n="f3.desc">Transpose by semitones or jump to any key instantly. Original baseline is
+                    preserved for accurate re-transposition. Handles bass notes correctly.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f3.t1">All 12 Keys</span>
+                    <span class="tag" data-i18n="f3.t2">Bass Notes</span>
+                    <span class="tag" data-i18n="f3.t3">Baseline Preserved</span>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <path d="M3 9h18" />
+                        <path d="M9 21V9" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f4.title">Display Modes</h3>
+                <p data-i18n="f4.desc">Switch between Chords, Nashville Numbers, Both, or Lyrics Only. Perfect for
+                    worship leaders, session musicians, and singers who each need different views.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f4.t1">Chords</span>
+                    <span class="tag" data-i18n="f4.t2">Nashville</span>
+                    <span class="tag" data-i18n="f4.t3">Both</span>
+                    <span class="tag" data-i18n="f4.t4">Lyrics Only</span>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 6 2 18 2 18 9" />
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                        <rect x="6" y="14" width="12" height="8" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f5.title">Print & Export</h3>
+                <p data-i18n="f5.desc">A4 preview with adjustable font size, columns, line spacing, and character
+                    spacing. Print to paper or save as PNG image. Every print looks professional.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f5.t1">A4 Preview</span>
+                    <span class="tag" data-i18n="f5.t2">1–4 Columns</span>
+                    <span class="tag" data-i18n="f5.t3">PNG Export</span>
+                    <span class="tag" data-i18n="f5.t4">Clean Print</span>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18V5l12-2v13" />
+                        <circle cx="6" cy="18" r="3" />
+                        <circle cx="18" cy="16" r="3" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f6.title">Metronome & Worship Pads</h3>
+                <p data-i18n="f6.desc">Built-in metronome with tap tempo, 7 time signatures, and sound types. Worship
+                    pads in all 12 keys with low-pass, high-pass, reverb, and panning effects.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f6.t1">Tap Tempo</span>
+                    <span class="tag" data-i18n="f6.t2">7 Time Signatures</span>
+                    <span class="tag" data-i18n="f6.t3">12-Key Pads</span>
+                    <span class="tag" data-i18n="f6.t4">Audio FX</span>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f7.title">Song Library & Books</h3>
+                <p data-i18n="f7.desc">Save songs with full metadata. Search, filter, organize into collections (Books).
+                    Bulk import from .txt, .cho, or .chordpro files. Share songs publicly.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f7.t1">Cloud Save</span>
+                    <span class="tag" data-i18n="f7.t2">Search & Filter</span>
+                    <span class="tag" data-i18n="f7.t3">Bulk Import</span>
+                    <span class="tag" data-i18n="f7.t4">Public Sharing</span>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f8.title">Live Sessions</h3>
+                <p data-i18n="f8.desc">Create a session, share a 6-character code or QR. Leader controls song selection
+                    in real time — players follow automatically. Singer mode for lyrics-only views.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f8.t1">Real-time Sync</span>
+                    <span class="tag" data-i18n="f8.t2">QR Code Join</span>
+                    <span class="tag" data-i18n="f8.t3">Singer Mode</span>
+                    <span class="tag" data-i18n="f8.t4">Playlist</span>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                        <line x1="12" y1="18" x2="12.01" y2="18" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f9.title">Live Performance Mode</h3>
+                <p data-i18n="f9.desc">Full-screen distraction-free view with auto-hiding controls. Section highlighting
+                    keeps the whole band in sync. MIDI controller support for hands-free navigation.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f9.t1">Full Screen</span>
+                    <span class="tag" data-i18n="f9.t2">Section Highlight</span>
+                    <span class="tag" data-i18n="f9.t3">MIDI Support</span>
+                    <span class="tag" data-i18n="f9.t4">Dark / Light</span>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    </svg>
+                </div>
+                <h3 data-i18n="f10.title">Shareable Playlists</h3>
+                <p data-i18n="f10.desc">Share your session playlist with anyone via a simple link. Recipients see all
+                    songs as printable A4 pages — no login required. Print the whole set in one go.</p>
+                <div class="tag-list">
+                    <span class="tag" data-i18n="f10.t1">One-Click Share</span>
+                    <span class="tag" data-i18n="f10.t2">No Login Needed</span>
+                    <span class="tag" data-i18n="f10.t3">Print All</span>
+                    <span class="tag" data-i18n="f1.t4">RTL Support</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ HOW IT WORKS ═══ -->
+    <section class="highlight-section" id="how-it-works">
+        <div class="section-header fade-in">
+            <div class="label" data-i18n="nav.how">How It Works</div>
+            <h2 data-i18n="how.title">From photo to stage in minutes</h2>
+            <p data-i18n="how.sub">Three key workflows that make aChordim indispensable.</p>
+        </div>
+
+        <!-- Scan & Format -->
+        <div class="highlight-row">
+            <div class="highlight-content">
+                <h3 data-i18n="h1.title">Scan any chord chart</h3>
+                <p data-i18n="h1.p1">Take a photo of a handwritten or printed chord sheet. The smart scanner analyzes it in seconds
+                    — detecting chords, lyrics, key, BPM, time signature, and sections. Edit the result visually, then
+                    format it perfectly for print.</p>
+                <p data-i18n="h1.p2">Supports Hebrew, English, Spanish, Portuguese, and any language with full RTL
+                    support.</p>
+            </div>
+            <div class="highlight-visual">
+                <div class="mock-preview">
+                    <div class="mock-title" style="text-align:right;direction:rtl;">צדיק כתמר</div>
+                    <div class="mock-meta" style="text-align:right;">Key: G, 107 BPM, 4/4</div>
+                    <div style="text-align:right;direction:rtl;">
+                        <div class="mock-section" style="text-align:right;">Verse 1</div>
+                        <span class="mock-chord">Am</span> &nbsp; <span class="mock-chord">D</span> &nbsp;&nbsp; <span
+                            class="mock-chord">G</span> &nbsp; <span class="mock-chord">Em</span><br>
+                        צדיק כתמר יפרח, כארז בלבנון ישגה<br><br>
+                        <div class="mock-section" style="text-align:right;">Chorus</div>
+                        <span class="mock-chord">D</span> &nbsp; <span class="mock-chord">Em</span> &nbsp;&nbsp;&nbsp;
+                        <span class="mock-chord">C</span><br>
+                        אדוני עינינו נשואות אליך
+                    </div>
+                </div>
+                <div class="big-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transpose & Perform -->
+        <div class="highlight-row reverse">
+            <div class="highlight-content">
+                <h3 data-i18n="h2.title">Transpose & perform</h3>
+                <p data-i18n="h2.p1">Transpose to any key with one click. Choose between Chords, Nashville Numbers, or
+                    Both views. Enter Live Mode for full-screen performance with auto-hiding controls.</p>
+                <p data-i18n="h2.p2">Your original chart is always preserved — transpose back anytime without losing
+                    quality.</p>
+            </div>
+            <div class="highlight-visual">
+                <div class="mock-keys">
+                    <div class="mock-key">C</div>
+                    <div class="mock-key">C#</div>
+                    <div class="mock-key">D</div>
+                    <div class="mock-key">Eb</div>
+                    <div class="mock-key active">E</div>
+                    <div class="mock-key">F</div>
+                    <div class="mock-key">F#</div>
+                    <div class="mock-key">G</div>
+                    <div class="mock-key">Ab</div>
+                    <div class="mock-key">A</div>
+                    <div class="mock-key">Bb</div>
+                    <div class="mock-key">B</div>
+                </div>
+                <div class="big-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="5" y1="4" x2="5" y2="20"></line>
+                        <line x1="9" y1="4" x2="9" y2="20"></line>
+                        <line x1="13" y1="4" x2="13" y2="20"></line>
+                        <line x1="17" y1="4" x2="17" y2="20"></line>
+                        <line x1="21" y1="4" x2="21" y2="20"></line>
+                        <rect x="3" y="4" width="4" height="10" rx="1" ry="1" fill="currentColor"></rect>
+                        <rect x="11" y="4" width="4" height="10" rx="1" ry="1" fill="currentColor"></rect>
+                        <rect x="15" y="4" width="4" height="10" rx="1" ry="1" fill="currentColor"></rect>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Sessions -->
+        <div class="highlight-row">
+            <div class="highlight-content">
+                <h3 data-i18n="h3.title">Play live together</h3>
+                <p data-i18n="h3.p1">Create a session, share a code with your band. Everyone sees the same song in real
+                    time. Leaders control the setlist — band members follow automatically.</p>
+                <p data-i18n="h3.p2">Share the entire playlist via link — anyone can view and print, no login required.
+                </p>
+            </div>
+            <div class="highlight-visual">
+                <div class="mock-session">
+                    <div class="code">A3F-7K2</div>
+                    <div class="status" data-i18n="h3.status">● Live — 5 connected</div>
+                    <div class="participants">
+                        <div class="avatar"
+                            style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">
+                            O</div>
+                        <div class="avatar"
+                            style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">
+                            A</div>
+                        <div class="avatar"
+                            style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">
+                            B</div>
+                        <div class="avatar"
+                            style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">
+                            D</div>
+                        <div class="avatar"
+                            style="display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">
+                            E</div>
+                    </div>
+                </div>
+                <div class="big-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="2"></circle>
+                        <path
+                            d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14">
+                        </path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ PRICING ═══ -->
+    <section class="pricing-section" id="pricing">
+        <div class="section-header fade-in">
+            <div class="label" data-i18n="nav.pricing">Pricing</div>
+            <h2 data-i18n="price.title">Simple, fair pricing</h2>
+            <p data-i18n="price.sub">Start free. Upgrade when you need more.</p>
+        </div>
+        <div class="pricing-grid">
+            <!-- Free -->
+            <div class="pricing-card">
+                <div class="tier-name" data-i18n="pr.t.free">Free</div>
+                <div class="price">$0</div>
+                <div class="price-sub" data-i18n="pr.sub.forever">Forever</div>
+                <ul>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.scan3">3 scans / month</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.trans">Transpose & Print</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.metro">Metronome & Pads</span></li>
+                    <li><span class="cross">✗</span> <span data-i18n="pr.li.save">Save to Library</span></li>
+                    <li><span class="cross">✗</span> <span data-i18n="pr.li.nash">Nashville Numbers</span></li>
+                    <li><span class="cross">✗</span> <span data-i18n="pr.li.live">Live Sessions</span></li>
+                </ul>
+                <a href="index.html" class="ghost-button" data-i18n="pr.btn.start">Get Started</a>
+            </div>
+            <!-- Basic -->
+            <div class="pricing-card">
+                <div class="tier-name" data-i18n="pr.t.basic">Basic</div>
+                <div class="price">$0.99</div>
+                <div class="price-sub" data-i18n="pr.sub.month">per month</div>
+                <ul>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.scan20">20 scans / month</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.save">Save to Library</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.search">Search & Collections</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.join">Join Sessions</span></li>
+                    <li><span class="cross">✗</span> <span data-i18n="pr.li.nash">Nashville Numbers</span></li>
+                    <li><span class="cross">✗</span> <span data-i18n="pr.li.create">Create Sessions</span></li>
+                </ul>
+                <a href="index.html" class="ghost-button" data-i18n="pr.btn.sub">Subscribe</a>
+            </div>
+            <!-- Pro -->
+            <div class="pricing-card popular" data-label="Most Popular">
+                <div class="tier-name" data-i18n="pr.t.pro">Pro</div>
+                <div class="price">$1.99</div>
+                <div class="price-sub" data-i18n="pr.sub.month">per month</div>
+                <ul>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.scan50">50 scans / month</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.nash">Nashville Numbers</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.createlead">Create & Lead Sessions</span>
+                    </li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.intense">Intense Scan Mode</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.full">Full Library Access</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.support">Priority Support</span></li>
+                </ul>
+                <a href="index.html" class="primary-action" data-i18n="pr.btn.sub">Subscribe</a>
+            </div>
+            <!-- Book -->
+            <div class="pricing-card">
+                <div class="tier-name" data-i18n="pr.t.book">Book</div>
+                <div class="price">$9.99</div>
+                <div class="price-sub" data-i18n="pr.sub.once">one-time</div>
+                <ul>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.scan20inc">20 scans included</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.nash">Nashville Numbers</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.save">Save to Library</span></li>
+                    <li><span class="check">✓</span> <span data-i18n="pr.li.buypacks">Buy scan packs</span></li>
+                    <li><span class="cross">✗</span> <span data-i18n="pr.li.live">Live Sessions</span></li>
+                    <li><span class="cross">✗</span> <span data-i18n="pr.li.intense">Intense Scan</span></li>
+                </ul>
+                <a href="index.html" class="ghost-button" data-i18n="pr.btn.buy">Buy Once</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ CTA ═══ -->
+    <section class="hero" style="min-height: auto; padding: 100px 24px;">
+        <h2 data-i18n="cta.title"
+            style="font-size: clamp(28px, 4vw, 48px); font-weight: 800; letter-spacing: -1px; margin-bottom: 16px;">
+            Ready to play?</h2>
+        <p data-i18n="cta.sub"
+            style="color: var(--text-muted); font-size: 16px; max-width: 500px; margin-bottom: 32px;">Start scanning
+            chord charts for free. No credit card required.</p>
+        <a href="index.html" class="primary-action" data-i18n="cta.btn"
+            style="font-size: 17px; padding: 16px 40px;">Open aChordim →</a>
+    </section>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer>
+        <div class="brand">www.thefaith<b>sound</b>.com · <b dir="ltr">אChordim</b></div>
+        <div class="links">
+            <a href="index.html" data-i18n="ft.app">App</a>
+            <a href="privacy.html" data-i18n="ft.privacy">Privacy</a>
+            <a href="terms.html" data-i18n="ft.terms">Terms</a>
+        </div>
+    </footer>
+
+    <script src="js/features-i18n.js"></script>
+    <script>
+        // Theme Toggle
+        const themeToggleBtn = document.getElementById('featuresThemeToggle');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+
+        function updateThemeIcon() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'light') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        if (themeToggleBtn) {
+            updateThemeIcon();
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon();
+            });
+        }
+
+        // Scroll animation observer
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.feature-card, .highlight-row, .pricing-card, .fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        document.querySelectorAll('.features-grid, .pricing-grid').forEach(grid => {
+            const cards = grid.children;
+            const gridObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        Array.from(cards).forEach((card, i) => {
+                            setTimeout(() => card.classList.add('visible'), i * 80);
+                        });
+                        gridObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            gridObserver.observe(grid);
+        });
+    </script>
+
+    <script>
+        // Intersection Observer for scroll animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('in-view');
+                        // Optional: stop observing once animated in
+                        // observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            // Select all elements that should animate on scroll
+            const animatedElements = document.querySelectorAll('.fade-up, .fade-in, .feature-card, .step-card, .plan-card');
+            animatedElements.forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+
+</html>
