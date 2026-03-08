@@ -1,0 +1,32 @@
+{
+  "database": {
+    "rules": "firebase-rules.json"
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "firebase-rules.json",
+      "**/node_modules/**",
+      "**/functions/**",
+      "**/api/**",
+      "**/.git/**",
+      "**/.env*",
+      "**/package*.json",
+      "**/server.js",
+      "**/README.md",
+      "**/*.log"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

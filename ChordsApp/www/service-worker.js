@@ -1,4 +1,4 @@
-const CACHE_NAME = 'achordim-v90';
+const CACHE_NAME = 'achordim-v91';
 const PADS_CACHE = 'achordim-pads-v1';
 
 const PRECACHE_URLS = [

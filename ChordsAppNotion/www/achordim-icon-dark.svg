@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Gradient for the frame border -->
+    <linearGradient id="frameGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a855f7"/>
+      <stop offset="100%" style="stop-color:#e879f9"/>
+    </linearGradient>
+    <!-- Gradient for the lines -->
+    <linearGradient id="lineGradDark" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#a855f7"/>
+      <stop offset="50%" style="stop-color:#e879f9"/>
+      <stop offset="100%" style="stop-color:#fda4af"/>
+    </linearGradient>
+    <!-- Gradient for the badge -->
+    <linearGradient id="badgeGradDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a855f7"/>
+      <stop offset="100%" style="stop-color:#e879f9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dark background -->
+  <rect width="512" height="512" rx="100" fill="#1a1d27"/>
+
+  <!-- Subtle border -->
+  <rect x="4" y="4" width="504" height="504" rx="98" fill="none" stroke="rgba(168,85,247,0.3)" stroke-width="2"/>
+
+  <!-- Rounded frame -->
+  <rect x="110" y="130" width="292" height="292" rx="50" ry="50" fill="none" stroke="url(#frameGradDark)" stroke-width="16"/>
+
+  <!-- Staff/chord lines inside -->
+  <line x1="160" y1="200" x2="352" y2="200" stroke="url(#lineGradDark)" stroke-width="16" stroke-linecap="round"/>
+  <line x1="160" y1="260" x2="290" y2="260" stroke="url(#lineGradDark)" stroke-width="16" stroke-linecap="round"/>
+  <line x1="160" y1="320" x2="352" y2="320" stroke="url(#lineGradDark)" stroke-width="16" stroke-linecap="round"/>
+  <line x1="160" y1="380" x2="260" y2="380" stroke="url(#lineGradDark)" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- Note badge half out of frame -->
+  <circle cx="385" cy="145" r="50" fill="url(#badgeGradDark)"/>
+  <text x="385" y="163" text-anchor="middle" font-size="50" fill="white" font-family="system-ui, sans-serif">♪</text>
+</svg>

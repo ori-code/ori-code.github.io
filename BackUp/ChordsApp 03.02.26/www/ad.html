@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aChordim - אקורדים</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            /* Brand Colors */
+            --primary: #c026d3; /* Fuchsia/Magenta */
+            --primary-light: #e879f9;
+            --primary-dark: #a21caf;
+            --accent-red: #ef4444;
+            --accent-yellow: #fbbf24;
+            --accent-purple: #8b5cf6;
+            --accent-green: #22c55e;
+            
+            /* Dark Theme */
+            --dark-bg: #0f172a;
+            --dark-bg-2: #1e293b;
+            --dark-card: #1e293b;
+            --dark-card-2: #334155;
+            --dark-border: #334155;
+            --dark-text: #f8fafc;
+            --dark-text-muted: #94a3b8;
+            
+            /* Light Theme */
+            --light-bg: #fdf2f8;
+            --light-bg-2: #fce7f3;
+            --light-card: #ffffff;
+            --light-card-2: #f8fafc;
+            --light-border: #e2e8f0;
+            --light-text: #1e293b;
+            --light-text-muted: #64748b;
+        }
+
+        /* Theme Variables */
+        [data-theme="dark"] {
+            --bg: var(--dark-bg);
+            --bg-2: var(--dark-bg-2);
+            --card: var(--dark-card);
+            --card-2: var(--dark-card-2);
+            --border: var(--dark-border);
+            --text: var(--dark-text);
+            --text-muted: var(--dark-text-muted);
+            --gradient-bg: linear-gradient(180deg, #1e1b4b 0%, var(--dark-bg) 100%);
+        }
+
+        [data-theme="light"] {
+            --bg: var(--light-bg);
+            --bg-2: var(--light-bg-2);
+            --card: var(--light-card);
+            --card-2: var(--light-card-2);
+            --border: var(--light-border);
+            --text: var(--light-text);
+            --text-muted: var(--light-text-muted);
+            --gradient-bg: linear-gradient(180deg, #fce7f3 0%, var(--light-bg) 100%);
+        }
+
+        html { scroll-behavior: smooth; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            line-height: 1.6; 
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+        [dir="rtl"] body { font-family: 'Rubik', 'Poppins', sans-serif; }
+
+        /* Animations */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(192,38,211,0.3); } 50% { box-shadow: 0 0 40px rgba(192,38,211,0.6); } }
+        @keyframes scan { 0% { top: 0; } 50% { top: calc(100% - 4px); } 100% { top: 0; } }
+
+        /* Language Switcher - Matching your app style */
+        .lang-switcher {
+            display: flex;
+            background: var(--card);
+            border-radius: 50px;
+            padding: 4px;
+            border: 1px solid var(--border);
+            gap: 2px;
+        }
+
+        .lang-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .lang-btn:hover {
+            color: var(--text);
+        }
+
+        .lang-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .lang-btn .flag {
+            font-size: 16px;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--primary);
+            transform: rotate(15deg);
+        }
+
+        [data-theme="dark"] .theme-toggle .sun { display: none; }
+        [data-theme="dark"] .theme-toggle .moon { display: block; }
+        [data-theme="light"] .theme-toggle .sun { display: block; }
+        [data-theme="light"] .theme-toggle .moon { display: none; }
+
+        /* Navigation - Single combined bar */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+            transition: transform 0.3s ease, background 0.3s;
+        }
+
+        nav.hidden {
+            transform: translateY(-100%);
+        }
+
+        [data-theme="light"] nav {
+            background: rgba(253, 242, 248, 0.95);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .nav-logo-text {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-logo-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            display: block;
+            margin-top: -4px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-cta {
+            background: var(--primary);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .nav-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(192, 38, 211, 0.4);
+        }
+
+        /* Sections */
+        section {
+            min-height: 100vh;
+            padding: 100px 20px 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Hero */
+        #hero {
+            background: var(--gradient-bg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(192, 38, 211, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-logo-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 56px;
+            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 20px 60px rgba(192, 38, 211, 0.4);
+        }
+
+        .hero-title {
+            font-size: 80px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light), #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero-subtitle {
+            font-size: 24px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-weight: 400;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .hero-tagline {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 50px;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+            flex-wrap: wrap;
+        }
+
+        .hero-tagline span {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .hero-tagline span:nth-child(1) { color: var(--accent-red); }
+        .hero-tagline span:nth-child(3) { color: var(--accent-yellow); }
+        .hero-tagline span:nth-child(5) { color: var(--accent-purple); }
+        .hero-tagline span:nth-child(7) { color: var(--primary); }
+        .hero-tagline .dot { color: var(--border); }
+
+        .hero-cta {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: var(--accent-red);
+            color: white;
+            padding: 16px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            padding: 16px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            background: var(--card-2);
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-tag {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(192, 38, 211, 0.2), rgba(232, 121, 249, 0.2));
+            color: var(--primary);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Problem/Solution */
+        #problem { background: var(--bg); }
+
+        .split-container {
+            display: grid;
+            grid-template-columns: 1fr 80px 1fr;
+            gap: 30px;
+            align-items: stretch;
+        }
+
+        .problem-card, .solution-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid var(--border);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .problem-card { border-left: 4px solid var(--accent-red); }
+        [dir="rtl"] .problem-card { border-left: none; border-right: 4px solid var(--accent-red); }
+
+        .solution-card { border-left: 4px solid var(--primary); background: linear-gradient(135deg, var(--card), var(--card-2)); }
+        [dir="rtl"] .solution-card { border-left: none; border-right: 4px solid var(--primary); }
+
+        .card-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .problem-card .card-label { color: var(--accent-red); }
+        .solution-card .card-label { color: var(--primary); }
+
+        .card-list { list-style: none; }
+
+        .card-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .card-list li:last-child { margin-bottom: 0; }
+        .problem-card .icon { color: var(--accent-red); font-size: 18px; }
+        .solution-card .icon { color: var(--accent-green); font-size: 18px; }
+
+        .arrow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .arrow-icon {
+            font-size: 40px;
+            color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        [dir="rtl"] .arrow-icon { transform: scaleX(-1); }
+
+        /* Tools Grid */
+        #tools { background: var(--bg-2); }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .tool-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 35px;
+            border: 1px solid var(--border);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(192, 38, 211, 0.15);
+        }
+
+        .tool-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .tool-card:nth-child(1) .tool-icon { background: linear-gradient(135deg, var(--accent-red), #f87171); }
+        .tool-card:nth-child(2) .tool-icon { background: linear-gradient(135deg, var(--accent-yellow), #fcd34d); }
+        .tool-card:nth-child(3) .tool-icon { background: linear-gradient(135deg, var(--primary), var(--primary-light)); }
+        .tool-card:nth-child(4) .tool-icon { background: linear-gradient(135deg, var(--accent-purple), #a78bfa); }
+        .tool-card:nth-child(5) .tool-icon { background: linear-gradient(135deg, var(--accent-green), #4ade80); }
+        .tool-card:nth-child(6) .tool-icon { background: linear-gradient(135deg, #ec4899, #f472b6); }
+
+        .tool-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .tool-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .tool-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tool-tag {
+            background: var(--bg);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .tool-tag.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Collaboration */
+        #collaboration { background: var(--bg); }
+
+        .collab-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .collab-diagram { text-align: center; }
+
+        .leader-device {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 20px;
+            padding: 25px 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 50px rgba(192, 38, 211, 0.4);
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        .leader-device .emoji { font-size: 36px; }
+        .leader-device .info h4 { font-size: 20px; font-weight: 700; color: white; }
+        .leader-device .info p { font-size: 12px; opacity: 0.8; color: white; }
+
+        .connection-lines {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            margin-bottom: 20px;
+        }
+
+        .connection-line {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .line {
+            width: 2px;
+            height: 40px;
+            background: linear-gradient(to bottom, var(--primary), var(--primary-light));
+        }
+
+        .line-arrow { color: var(--primary-light); font-size: 14px; }
+
+        .band-devices {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .band-device {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 18px 22px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .band-device:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+        }
+
+        .band-device .emoji { font-size: 28px; margin-bottom: 8px; }
+        .band-device .role { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .band-device:nth-child(1) .role { color: var(--accent-yellow); }
+        .band-device:nth-child(2) .role { color: var(--accent-purple); }
+        .band-device:nth-child(3) .role { color: var(--primary); }
+        .band-device .view { font-size: 10px; color: var(--text-muted); }
+
+        .collab-features {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .collab-feature {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            transition: transform 0.3s;
+        }
+
+        .collab-feature:hover { transform: translateX(10px); }
+        [dir="rtl"] .collab-feature:hover { transform: translateX(-10px); }
+
+        .collab-feature .emoji { font-size: 28px; }
+        .collab-feature h4 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+        .collab-feature p { color: var(--text-muted); font-size: 14px; }
+
+        /* Performance */
+        #performance { background: var(--bg-2); }
+
+        .perf-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .perf-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 35px;
+            border: 1px solid var(--border);
+        }
+
+        .perf-card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .perf-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .perf-card:nth-child(1) .perf-icon { background: linear-gradient(135deg, var(--accent-green), #4ade80); }
+        .perf-card:nth-child(2) .perf-icon { background: linear-gradient(135deg, var(--accent-yellow), #fcd34d); }
+        .perf-card:nth-child(3) .perf-icon { background: linear-gradient(135deg, var(--accent-purple), #a78bfa); }
+
+        .perf-card h3 { font-size: 19px; font-weight: 700; }
+        .perf-card > p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+
+        .pad-keys {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pad-key {
+            background: var(--bg);
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .pad-key.active {
+            background: var(--accent-yellow);
+            color: var(--dark-bg);
+        }
+
+        .time-sigs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .time-sig {
+            background: var(--bg);
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .time-sig.highlight {
+            background: var(--accent-purple);
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Pricing */
+        #pricing { background: var(--bg); }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+        }
+
+        .pricing-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 35px 25px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s;
+        }
+
+        .pricing-card:hover { transform: translateY(-10px); }
+
+        .pricing-card.featured {
+            background: linear-gradient(180deg, var(--card-2), var(--card));
+            border: 2px solid var(--primary);
+            position: relative;
+            box-shadow: 0 20px 60px rgba(192, 38, 211, 0.3);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured:hover { transform: scale(1.05) translateY(-10px); }
+
+        .featured-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            padding: 6px 18px;
+            border-radius: 15px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .pricing-tier {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            color: var(--text-muted);
+        }
+
+        .pricing-card.featured .pricing-tier { color: var(--primary); }
+
+        .pricing-price { margin-bottom: 25px; }
+        .pricing-price .amount { font-size: 36px; font-weight: 800; }
+        .pricing-price .period { color: var(--text-muted); font-size: 14px; }
+
+        .pricing-features {
+            flex: 1;
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+
+        .pricing-features .check { color: var(--accent-green); font-size: 14px; }
+        .pricing-features .dash { color: var(--text-muted); font-size: 14px; }
+        .pricing-features .muted { color: var(--text-muted); }
+        .pricing-features .star { color: var(--primary); font-size: 14px; }
+
+        .pricing-btn {
+            background: var(--card-2);
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pricing-btn:hover {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .pricing-card.featured .pricing-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* CTA */
+        #cta {
+            background: var(--gradient-bg);
+            position: relative;
+        }
+
+        #cta::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(192, 38, 211, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-content {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .cta-subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin-bottom: 50px;
+        }
+
+        .cta-tagline {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-content span { color: var(--text-muted); font-size: 14px; }
+        .footer-content .divider { color: var(--border); }
+        .footer-content .brand { color: var(--primary); font-weight: 600; }
+
+        /* Language Toggle */
+        .en { display: inline; }
+        .he { display: none; }
+        [dir="rtl"] .en { display: none; }
+        [dir="rtl"] .he { display: inline; }
+
+        /* Nav controls wrapper */
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Media Promo Section */
+        #media {
+            background: var(--bg-2);
+            min-height: auto;
+            padding: 80px 20px;
+        }
+
+        .media-card {
+            background: linear-gradient(135deg, var(--card), var(--card-2));
+            border-radius: 30px;
+            padding: 60px;
+            border: 2px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(192, 38, 211, 0.3);
+        }
+
+        .media-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(192, 38, 211, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .media-card-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .media-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        .media-title {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, var(--text), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .media-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .media-items {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .media-item {
+            background: var(--bg);
+            border-radius: 20px;
+            padding: 30px 20px;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .media-item:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(192, 38, 211, 0.2);
+        }
+
+        .media-item-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 20px;
+        }
+
+        .media-item:nth-child(1) .media-item-icon {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+        }
+        .media-item:nth-child(2) .media-item-icon {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+        }
+        .media-item:nth-child(3) .media-item-icon {
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+        }
+
+        .media-item h4 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .media-item p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .media-item-tag {
+            display: inline-block;
+            background: var(--card-2);
+            color: var(--text-muted);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .media-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 18px 45px;
+            border-radius: 35px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 15px 40px rgba(192, 38, 211, 0.4);
+        }
+
+        .media-cta-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 25px 60px rgba(192, 38, 211, 0.5);
+        }
+
+        .media-cta-btn .arrow {
+            font-size: 22px;
+            transition: transform 0.3s;
+        }
+
+        .media-cta-btn:hover .arrow {
+            transform: translateX(5px);
+        }
+
+        [dir="rtl"] .media-cta-btn:hover .arrow {
+            transform: translateX(-5px);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-title { font-size: 60px; }
+            .section-title { font-size: 36px; }
+            .split-container { grid-template-columns: 1fr; }
+            .arrow-container { transform: rotate(90deg); margin: 20px 0; }
+            .collab-grid { grid-template-columns: 1fr; gap: 40px; }
+            .tools-grid, .perf-grid { grid-template-columns: 1fr 1fr; }
+            .pricing-grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+            .pricing-card.featured { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            section { padding: 80px 20px 60px; }
+            .hero-title { font-size: 42px; }
+            .hero-subtitle { font-size: 16px; }
+            .tools-grid, .perf-grid { grid-template-columns: 1fr; }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .cta-title { font-size: 32px; }
+            .lang-btn { padding: 5px 8px; font-size: 11px; }
+            .lang-btn .flag { font-size: 14px; }
+            .nav-cta { padding: 8px 16px; font-size: 12px; }
+            .theme-toggle { width: 32px; height: 32px; font-size: 14px; }
+            .nav-controls { gap: 8px; }
+            .media-card { padding: 30px 20px; }
+            .media-title { font-size: 28px; }
+            .media-items { grid-template-columns: 1fr; }
+            .media-cta-btn { padding: 14px 30px; font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation - Combined single bar -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <div class="nav-logo-icon">🎵</div>
+                <div>
+                    <span class="nav-logo-text"><span class="en">א/</span><span class="he">א/</span>aChordim</span>
+                    <span class="nav-logo-sub">www.thefaithsound.com</span>
+                </div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#tools"><span class="en">Features</span><span class="he">תכונות</span></a></li>
+                <li><a href="#collaboration"><span class="en">Collaboration</span><span class="he">שיתוף פעולה</span></a></li>
+                <li><a href="#pricing"><span class="en">Pricing</span><span class="he">מחירים</span></a></li>
+            </ul>
+            <div class="nav-controls">
+                <div class="lang-switcher">
+                    <button class="lang-btn" onclick="setLanguage('he')" id="btn-he">
+                        <span>עב</span>
+                        <span class="flag">🇮🇱</span>
+                    </button>
+                    <button class="lang-btn active" onclick="setLanguage('en')" id="btn-en">
+                        <span>EN</span>
+                        <span class="flag">🇬🇧</span>
+                    </button>
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span class="sun">☀️</span>
+                    <span class="moon">🌙</span>
+                </button>
+                <a href="#cta" class="nav-cta"><span class="en">Try Free</span><span class="he">נסה בחינם</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-logo-icon">🎵</div>
+                <h1 class="hero-title"><span class="en">aChordim</span><span class="he">אקורדים</span></h1>
+                <p class="hero-subtitle">
+                    <span class="en">The Smart Assistant for Worship Leaders & Musicians</span>
+                    <span class="he">העוזר החכם למובילי הלל ומוזיקאים</span>
+                </p>
+                <div class="hero-tagline">
+                    <span><span class="en">Scan</span><span class="he">סרוק</span></span>
+                    <span class="dot">•</span>
+                    <span><span class="en">Transpose</span><span class="he">טרנספוז</span></span>
+                    <span class="dot">•</span>
+                    <span><span class="en">Collaborate</span><span class="he">שתף</span></span>
+                    <span class="dot">•</span>
+                    <span><span class="en">Perform</span><span class="he">הופע</span></span>
+                </div>
+                <div class="hero-cta">
+                    <a href="#cta" class="btn-primary">
+                        <span class="en">Upload</span>
+                        <span class="he">העלה</span>
+                    </a>
+                    <a href="#tools" class="btn-secondary">
+                        <span class="en">✨ Show All Features</span>
+                        <span class="he">✨ הצג את כל התכונות</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Media Promo Section -->
+    <section id="media">
+        <div class="container">
+            <div class="media-card">
+                <div class="media-card-content">
+                    <div class="media-badge">
+                        <span class="en">Media Kit</span>
+                        <span class="he">ערכת מדיה</span>
+                    </div>
+                    <h2 class="media-title">
+                        <span class="en">Watch aChordim in Action</span>
+                        <span class="he">צפה ב-aChordim בפעולה</span>
+                    </h2>
+                    <p class="media-subtitle">
+                        <span class="en">Video tutorials, audio demos, and detailed guides in Hebrew, English & Arabic</span>
+                        <span class="he">סרטוני הדרכה, הדגמות אודיו ומדריכים מפורטים בעברית, אנגלית וערבית</span>
+                    </p>
+                    <div class="media-items">
+                        <a href="https://drive.google.com/drive/folders/1tOhEKuED_c9FPMXq79FIN8mvPvoUK0WW?usp=sharing" target="_blank" class="media-item">
+                            <div class="media-item-icon">🎬</div>
+                            <h4><span class="en">Video Demo</span><span class="he">הדגמת וידאו</span></h4>
+                            <p><span class="en">See aChordim transform your worship</span><span class="he">ראה איך aChordim משנה את ההלל שלך</span></p>
+                            <span class="media-item-tag">MP4 • 28MB</span>
+                        </a>
+                        <a href="https://drive.google.com/drive/folders/1tOhEKuED_c9FPMXq79FIN8mvPvoUK0WW?usp=sharing" target="_blank" class="media-item">
+                            <div class="media-item-icon">🎧</div>
+                            <h4><span class="en">Audio Guide</span><span class="he">מדריך אודיו</span></h4>
+                            <p><span class="en">Listen to how aChordim works</span><span class="he">האזן לאיך aChordim עובד</span></p>
+                            <span class="media-item-tag">M4A • 22MB</span>
+                        </a>
+                        <a href="https://drive.google.com/drive/folders/1tOhEKuED_c9FPMXq79FIN8mvPvoUK0WW?usp=sharing" target="_blank" class="media-item">
+                            <div class="media-item-icon">📄</div>
+                            <h4><span class="en">Full Guide PDF</span><span class="he">מדריך PDF מלא</span></h4>
+                            <p><span class="en">Complete ministry transformation guide</span><span class="he">מדריך מלא לשינוי השירות המוזיקלי</span></p>
+                            <span class="media-item-tag">PDF • 14MB</span>
+                        </a>
+                    </div>
+                    <a href="https://drive.google.com/drive/folders/1tOhEKuED_c9FPMXq79FIN8mvPvoUK0WW?usp=sharing" target="_blank" class="media-cta-btn">
+                        <span class="en">Open Media Kit</span>
+                        <span class="he">פתח ערכת מדיה</span>
+                        <span class="arrow">→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem & Solution -->
+    <section id="problem">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><span class="en">The Challenge</span><span class="he">האתגר</span></span>
+                <h2 class="section-title"><span class="en">Turn any chord sheet into a clean, printable chart!</span><span class="he">הפוך כל דף אקורדים לטבלה נקייה להדפסה.</span></h2>
+                <p class="section-subtitle"><span class="en">Upload a handwritten sheet or photo, extract the music, refine the result, transpose to any key, then print with confidence.</span><span class="he">העלה דף כתוב ביד או תמונה, חלץ את המוזיקה, שכלל את התוצאה, טרנספוז לכל סולם, והדפס בביטחון.</span></p>
+            </div>
+            <div class="split-container">
+                <div class="problem-card">
+                    <p class="card-label"><span class="en">The Problem</span><span class="he">הבעיה</span></p>
+                    <ul class="card-list">
+                        <li><span class="icon">✗</span><span class="en">Messy binders full of crumpled chord sheets</span><span class="he">קלסרים מבולגנים מלאים בדפי אקורדים מקומטים</span></li>
+                        <li><span class="icon">✗</span><span class="en">Manual transposition errors during rehearsal</span><span class="he">שגיאות טרנספוזיציה ידניות בחזרות</span></li>
+                        <li><span class="icon">✗</span><span class="en">No easy way to share charts with the band</span><span class="he">אין דרך קלה לשתף דפים עם הלהקה</span></li>
+                        <li><span class="icon">✗</span><span class="en">Hebrew/RTL charts unsupported by other apps</span><span class="he">דפים בעברית לא נתמכים באפליקציות אחרות</span></li>
+                    </ul>
+                </div>
+                <div class="arrow-container"><span class="arrow-icon">→</span></div>
+                <div class="solution-card">
+                    <p class="card-label"><span class="en">The Solution</span><span class="he">הפתרון</span></p>
+                    <ul class="card-list">
+                        <li><span class="icon">✓</span><span class="en">Transform paper charts to digital in seconds</span><span class="he">הפוך דפים לדיגיטליים בשניות</span></li>
+                        <li><span class="icon">✓</span><span class="en">Instant, accurate key transposition</span><span class="he">טרנספוזיציה מדויקת ומיידית</span></li>
+                        <li><span class="icon">✓</span><span class="en">Real-time sync with your entire band</span><span class="he">סנכרון בזמן אמת עם כל הלהקה</span></li>
+                        <li><span class="icon">✓</span><span class="en">Full Hebrew & Arabic RTL support</span><span class="he">תמיכה מלאה בעברית וערבית</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tools Section -->
+    <section id="tools">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><span class="en">Three Simple Steps</span><span class="he">שלושה צעדים פשוטים</span></span>
+                <h2 class="section-title"><span class="en">Professional Tools</span><span class="he">כלים מקצועיים</span></h2>
+                <p class="section-subtitle"><span class="en">Everything you need to prepare and perform</span><span class="he">כל מה שאתה צריך להכנה ולהופעה</span></p>
+            </div>
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <div class="tool-icon">📷</div>
+                    <h3><span class="en">Upload your chart</span><span class="he">העלה את הדף שלך</span></h3>
+                    <p><span class="en">Accepts images (JPG, PNG, HEIC) and PDFs. High contrast photos deliver the best recognition results.</span><span class="he">מקבל תמונות (JPG, PNG, HEIC) ו-PDF. תמונות בניגודיות גבוהה נותנות את תוצאות הזיהוי הטובות ביותר.</span></p>
+                    <div class="tool-tags">
+                        <span class="tool-tag active">JPG</span>
+                        <span class="tool-tag">PNG</span>
+                        <span class="tool-tag">HEIC</span>
+                        <span class="tool-tag">PDF</span>
+                    </div>
+                </div>
+                <div class="tool-card">
+                    <div class="tool-icon">⚡</div>
+                    <h3><span class="en">Transcription ready!</span><span class="he">התמלול מוכן!</span></h3>
+                    <p><span class="en">Edit visually in the bottom Editor. Analysis typically takes 15-60 seconds. Supports all languages texts.</span><span class="he">ערוך חזותית בעורך התחתון. הניתוח לוקח בדרך כלל 15-60 שניות. תומך בכל השפות.</span></p>
+                    <div class="tool-tags">
+                        <span class="tool-tag active"><span class="en">Auto-analyze</span><span class="he">ניתוח אוטומטי</span></span>
+                        <span class="tool-tag"><span class="en">Visual Editor</span><span class="he">עורך חזותי</span></span>
+                    </div>
+                </div>
+                <div class="tool-card">
+                    <div class="tool-icon">🎹</div>
+                    <h3><span class="en">Refine, transpose & print</span><span class="he">שכלל, טרנספוז והדפס</span></h3>
+                    <p><span class="en">Edit chords visually, transpose to any key, and enjoy playing and singing your favorite worship songs beautifully!</span><span class="he">ערוך אקורדים חזותית, טרנספוז לכל סולם, ותהנה לנגן ולשיר את שירי ההלל האהובים עליך!</span></p>
+                    <div class="tool-tags">
+                        <span class="tool-tag active"><span class="en">Nashville #</span><span class="he">נאשוויל</span></span>
+                        <span class="tool-tag">C → G</span>
+                    </div>
+                </div>
+                <div class="tool-card">
+                    <div class="tool-icon">🎧</div>
+                    <h3><span class="en">Worship Pads</span><span class="he">פאדים להלל</span></h3>
+                    <p><span class="en">Ambient pads in all 12 keys with smooth crossfading and built-in EQ controls.</span><span class="he">פאדים אמביינטיים ב-12 סולמות עם מעבר חלק ובקרי אקולייזר מובנים.</span></p>
+                    <div class="tool-tags">
+                        <span class="tool-tag active">C</span>
+                        <span class="tool-tag">D</span>
+                        <span class="tool-tag">E</span>
+                        <span class="tool-tag">F</span>
+                        <span class="tool-tag">G</span>
+                    </div>
+                </div>
+                <div class="tool-card">
+                    <div class="tool-icon">⏱️</div>
+                    <h3><span class="en">Pro Metronome</span><span class="he">מטרונום מקצועי</span></h3>
+                    <p><span class="en">Visual and audio click track with support for complex time signatures.</span><span class="he">קליק חזותי וקולי עם תמיכה במשקלים מורכבים.</span></p>
+                    <div class="tool-tags">
+                        <span class="tool-tag">4/4</span>
+                        <span class="tool-tag">3/4</span>
+                        <span class="tool-tag active">6/8</span>
+                        <span class="tool-tag">7/8</span>
+                    </div>
+                </div>
+                <div class="tool-card">
+                    <div class="tool-icon">🌍</div>
+                    <h3><span class="en">Multi-Language</span><span class="he">רב-שפתי</span></h3>
+                    <p><span class="en">Full RTL support for Hebrew and Arabic worship songs.</span><span class="he">תמיכה מלאה בעברית וערבית לשירי הלל.</span></p>
+                    <div class="tool-tags">
+                        <span class="tool-tag active"><span class="en">Hebrew ✓</span><span class="he">עברית ✓</span></span>
+                        <span class="tool-tag"><span class="en">Arabic</span><span class="he">ערבית</span></span>
+                        <span class="tool-tag"><span class="en">English</span><span class="he">אנגלית</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Collaboration Section -->
+    <section id="collaboration">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><span class="en">Real-Time Sessions</span><span class="he">סשנים בזמן אמת</span></span>
+                <h2 class="section-title"><span class="en">Sync Your Whole Band</span><span class="he">סנכרן את כל הלהקה</span></h2>
+                <p class="section-subtitle"><span class="en">Everyone plays from the same page, literally</span><span class="he">כולם מנגנים מאותו דף, ממש</span></p>
+            </div>
+            <div class="collab-grid">
+                <div class="collab-diagram">
+                    <div class="leader-device">
+                        <span class="emoji">📱</span>
+                        <div class="info">
+                            <h4><span class="en">LEADER</span><span class="he">מוביל</span></h4>
+                            <p><span class="en">Controls setlist & navigation</span><span class="he">שולט ברשימת השירים והניווט</span></p>
+                        </div>
+                    </div>
+                    <div class="connection-lines">
+                        <div class="connection-line"><div class="line"></div><span class="line-arrow">↓</span></div>
+                        <div class="connection-line"><div class="line"></div><span class="line-arrow">↓</span></div>
+                        <div class="connection-line"><div class="line"></div><span class="line-arrow">↓</span></div>
+                    </div>
+                    <div class="band-devices">
+                        <div class="band-device">
+                            <span class="emoji">🎸</span>
+                            <p class="role"><span class="en">Guitarist</span><span class="he">גיטריסט</span></p>
+                            <p class="view"><span class="en">Chords view</span><span class="he">תצוגת אקורדים</span></p>
+                        </div>
+                        <div class="band-device">
+                            <span class="emoji">🎹</span>
+                            <p class="role"><span class="en">Keys</span><span class="he">קלידים</span></p>
+                            <p class="view"><span class="en">Nashville #</span><span class="he">מספרי נאשוויל</span></p>
+                        </div>
+                        <div class="band-device">
+                            <span class="emoji">🎤</span>
+                            <p class="role"><span class="en">Singer</span><span class="he">זמר</span></p>
+                            <p class="view"><span class="en">Lyrics view</span><span class="he">תצוגת מילים</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="collab-features">
+                    <div class="collab-feature">
+                        <span class="emoji">⚡</span>
+                        <div>
+                            <h4><span class="en">Real-Time Sync</span><span class="he">סנכרון בזמן אמת</span></h4>
+                            <p><span class="en">Leader controls the setlist. All band devices update instantly when songs change.</span><span class="he">המוביל שולט ברשימת השירים. כל המכשירים מתעדכנים מיידית כשמחליפים שיר.</span></p>
+                        </div>
+                    </div>
+                    <div class="collab-feature">
+                        <span class="emoji">👥</span>
+                        <div>
+                            <h4><span class="en">Role-Based Views</span><span class="he">תצוגות לפי תפקיד</span></h4>
+                            <p><span class="en">Leaders get full controls. Players see chords. Singers see lyrics.</span><span class="he">מובילים מקבלים שליטה מלאה. נגנים רואים אקורדים. זמרים רואים מילים.</span></p>
+                        </div>
+                    </div>
+                    <div class="collab-feature">
+                        <span class="emoji">📲</span>
+                        <div>
+                            <h4><span class="en">QR Code Join</span><span class="he">הצטרפות עם QR</span></h4>
+                            <p><span class="en">Scan a code to join the session instantly. No accounts needed.</span><span class="he">סרוק קוד להצטרפות מיידית לסשן. לא צריך חשבונות.</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Section -->
+    <section id="performance">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><span class="en">Print Preview</span><span class="he">תצוגה מקדימה להדפסה</span></span>
+                <h2 class="section-title"><span class="en">Built for the Stage</span><span class="he">נבנה לבמה</span></h2>
+                <p class="section-subtitle"><span class="en">Professional tools for live worship</span><span class="he">כלים מקצועיים להלל חי</span></p>
+            </div>
+            <div class="perf-grid">
+                <div class="perf-card">
+                    <div class="perf-card-header">
+                        <div class="perf-icon">🖥️</div>
+                        <h3><span class="en">Go Live</span><span class="he">צא לשידור</span></h3>
+                    </div>
+                    <p><span class="en">Distraction-free full-screen view with auto-hiding controls. Focus on worship, not the app.</span><span class="he">תצוגת מסך מלא ללא הסחות. התמקד בהלל, לא באפליקציה.</span></p>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-card-header">
+                        <div class="perf-icon">🎹</div>
+                        <h3><span class="en">Pads</span><span class="he">פאדים</span></h3>
+                    </div>
+                    <p><span class="en">Ambient worship pads in all 12 keys.</span><span class="he">פאדים אמביינטיים להלל ב-12 סולמות.</span></p>
+                    <div class="pad-keys">
+                        <span class="pad-key active">C</span>
+                        <span class="pad-key">D</span>
+                        <span class="pad-key">E</span>
+                        <span class="pad-key">F</span>
+                        <span class="pad-key">G</span>
+                    </div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-card-header">
+                        <div class="perf-icon">🎵</div>
+                        <h3><span class="en">Metro</span><span class="he">מטרו</span></h3>
+                    </div>
+                    <p><span class="en">Visual and audio click track.</span><span class="he">קליק חזותי וקולי.</span></p>
+                    <div class="time-sigs">
+                        <span class="time-sig">4/4</span>
+                        <span class="time-sig highlight">6/8</span>
+                        <span class="time-sig">7/8</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><span class="en">Pricing</span><span class="he">מחירים</span></span>
+                <h2 class="section-title"><span class="en">Plans for Every Musician</span><span class="he">תוכניות לכל מוזיקאי</span></h2>
+                <p class="section-subtitle"><span class="en">Start free, upgrade when you're ready</span><span class="he">התחל בחינם, שדרג כשאתה מוכן</span></p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <p class="pricing-tier"><span class="en">Free</span><span class="he">חינם</span></p>
+                    <div class="pricing-price"><span class="amount">$0</span></div>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span><span class="en">Basic scanning</span><span class="he">סריקה בסיסית</span></li>
+                        <li><span class="check">✓</span><span class="en">Worship pads</span><span class="he">פאדים להלל</span></li>
+                        <li><span class="check">✓</span><span class="en">Metronome</span><span class="he">מטרונום</span></li>
+                        <li><span class="dash">–</span><span class="muted"><span class="en">Save to library</span><span class="he">שמור לספרייה</span></span></li>
+                    </ul>
+                    <button class="pricing-btn"><span class="en">Get Started</span><span class="he">התחל</span></button>
+                </div>
+                <div class="pricing-card">
+                    <p class="pricing-tier">Basic</p>
+                    <div class="pricing-price"><span class="amount">$0.99</span><span class="period">/mo</span></div>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span><span class="en">Everything in Free</span><span class="he">הכל מחינם</span></li>
+                        <li><span class="check">✓</span><span class="en">Save to library</span><span class="he">שמור לספרייה</span></li>
+                        <li><span class="check">✓</span><span class="en">Join sessions</span><span class="he">הצטרף לסשנים</span></li>
+                        <li><span class="dash">–</span><span class="muted"><span class="en">Nashville Numbers</span><span class="he">מספרי נאשוויל</span></span></li>
+                    </ul>
+                    <button class="pricing-btn"><span class="en">Subscribe</span><span class="he">הירשם</span></button>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="featured-badge"><span class="en">Best Value</span><span class="he">הכי משתלם</span></div>
+                    <p class="pricing-tier">Pro</p>
+                    <div class="pricing-price"><span class="amount">$1.99</span><span class="period">/mo</span></div>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span><span class="en">Everything in Basic</span><span class="he">הכל מבסיסי</span></li>
+                        <li><span class="star">★</span><span class="en">Nashville Numbers</span><span class="he">מספרי נאשוויל</span></li>
+                        <li><span class="star">★</span><span class="en">Intense Scan</span><span class="he">סריקה אינטנסיבית</span></li>
+                        <li><span class="star">★</span><span class="en">Lead sessions</span><span class="he">הובל סשנים</span></li>
+                    </ul>
+                    <button class="pricing-btn"><span class="en">Go Pro</span><span class="he">שדרג לפרו</span></button>
+                </div>
+                <div class="pricing-card">
+                    <p class="pricing-tier">Book</p>
+                    <div class="pricing-price"><span class="amount">$9.99</span><span class="period"><span class="en">once</span><span class="he">פ"א</span></span></div>
+                    <ul class="pricing-features">
+                        <li><span class="check">✓</span><span class="en">Digital songbook</span><span class="he">ספר שירים דיגיטלי</span></li>
+                        <li><span class="check">✓</span><span class="en">200+ songs</span><span class="he">200+ שירים</span></li>
+                        <li><span class="check">✓</span><span class="en">Hebrew & English</span><span class="he">עברית ואנגלית</span></li>
+                        <li><span class="check">✓</span><span class="en">Lifetime access</span><span class="he">גישה לכל החיים</span></li>
+                    </ul>
+                    <button class="pricing-btn"><span class="en">Get Book</span><span class="he">קבל ספר</span></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="cta-title"><span class="en">Upgrade Your Worship Experience</span><span class="he">שדרג את חווית ההלל שלך</span></h2>
+                <p class="cta-subtitle"><span class="en">Join the future of chord sheet management</span><span class="he">הצטרף לעתיד של ניהול דפי אקורדים</span></p>
+                <div class="hero-cta">
+                    <a href="https://chords.thefaithsound.com" class="btn-primary">
+                        <span class="en">Try Free Today</span>
+                        <span class="he">נסה בחינם היום</span>
+                    </a>
+                </div>
+                <p style="color: var(--primary); font-weight: 500; margin-top: 20px;">chords.thefaithsound.com</p>
+                <div class="cta-tagline">
+                    <span><span class="en">Scan</span><span class="he">סרוק</span></span>
+                    <span class="dot">•</span>
+                    <span><span class="en">Transpose</span><span class="he">טרנספוז</span></span>
+                    <span class="dot">•</span>
+                    <span><span class="en">Collaborate</span><span class="he">שתף</span></span>
+                    <span class="dot">•</span>
+                    <span><span class="en">Perform</span><span class="he">הופע</span></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <span>© 2025 aChordim</span>
+            <span class="divider">|</span>
+            <span>TheFaithSound.com</span>
+            <span class="divider">|</span>
+            <span class="brand">אקורדים</span>
+        </div>
+    </footer>
+
+    <script>
+        function setLanguage(lang) {
+            const html = document.documentElement;
+            if (lang === 'he') {
+                html.setAttribute('dir', 'rtl');
+                html.setAttribute('lang', 'he');
+                document.getElementById('btn-he').classList.add('active');
+                document.getElementById('btn-en').classList.remove('active');
+            } else {
+                html.setAttribute('dir', 'ltr');
+                html.setAttribute('lang', 'en');
+                document.getElementById('btn-en').classList.add('active');
+                document.getElementById('btn-he').classList.remove('active');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+        }
+
+        // Auto-hide navbar on scroll
+        let lastScrollY = 0;
+        const navbar = document.getElementById('navbar');
+
+        window.addEventListener('scroll', () => {
+            const currentScrollY = window.scrollY;
+
+            if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                // Scrolling down & past 100px - hide navbar
+                navbar.classList.add('hidden');
+            } else {
+                // Scrolling up - show navbar
+                navbar.classList.remove('hidden');
+            }
+
+            lastScrollY = currentScrollY;
+        });
+    </script>
+</body>
+</html>

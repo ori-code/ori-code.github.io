@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" width="420" height="120">
+  <defs>
+    <!-- Gradient for the frame border -->
+    <linearGradient id="frameGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a855f7"/>
+      <stop offset="100%" style="stop-color:#e879f9"/>
+    </linearGradient>
+    <!-- Gradient for the lines -->
+    <linearGradient id="lineGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#a855f7"/>
+      <stop offset="50%" style="stop-color:#e879f9"/>
+      <stop offset="100%" style="stop-color:#fda4af"/>
+    </linearGradient>
+    <!-- Gradient for the badge -->
+    <linearGradient id="badgeGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a855f7"/>
+      <stop offset="100%" style="stop-color:#e879f9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon: Rounded frame with lines and badge -->
+  <g transform="translate(10, 12)">
+    <!-- Rounded frame -->
+    <rect x="0" y="0" width="66" height="66" rx="12" ry="12" fill="none" stroke="url(#frameGrad2)" stroke-width="4"/>
+
+    <!-- Staff/chord lines inside -->
+    <line x1="14" y1="18" x2="52" y2="18" stroke="url(#lineGrad2)" stroke-width="4" stroke-linecap="round"/>
+    <line x1="14" y1="30" x2="40" y2="30" stroke="url(#lineGrad2)" stroke-width="4" stroke-linecap="round"/>
+    <line x1="14" y1="42" x2="52" y2="42" stroke="url(#lineGrad2)" stroke-width="4" stroke-linecap="round"/>
+    <line x1="14" y1="54" x2="36" y2="54" stroke="url(#lineGrad2)" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Note badge in top-right corner -->
+    <circle cx="60" cy="6" r="12" fill="url(#badgeGrad2)"/>
+    <text x="60" y="10" text-anchor="middle" font-size="12" fill="white" font-family="system-ui, sans-serif">♪</text>
+  </g>
+
+  <!-- Text: aChordim with gradient colors -->
+  <text x="95" y="58" font-family="Poppins, system-ui, -apple-system, sans-serif" font-size="48" font-weight="800">
+    <tspan fill="#a855f7">a</tspan><tspan fill="#e879f9">C</tspan><tspan fill="#f0abfc">h</tspan><tspan fill="#fda4af">o</tspan><tspan fill="#fca5a5">r</tspan><tspan fill="#fecaca">d</tspan><tspan fill="#ffffff">i</tspan><tspan fill="#ffffff">m</tspan>
+  </text>
+
+  <!-- Hebrew text -->
+  <text x="95" y="82" font-family="Rubik, system-ui, sans-serif" font-size="18" fill="rgba(255,255,255,0.5)" letter-spacing="5">אקורדים</text>
+</svg>

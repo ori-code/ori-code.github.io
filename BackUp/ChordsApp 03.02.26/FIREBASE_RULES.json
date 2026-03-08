@@ -1,0 +1,58 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        // Subscription data - Can CREATE if doesn't exist, but can't UPDATE
+        "subscription": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        // Usage data - Can CREATE if doesn't exist, but can't UPDATE
+        "usage": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid && !data.exists()"
+        },
+
+        // Bonus analyses - Server only (for giving away free analyses)
+        "bonusAnalyses": {
+          ".read": "$uid === auth.uid",
+          ".write": false
+        },
+
+        // Songs - Users can read/write their own songs
+        "songs": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid",
+          "$songId": {
+            ".validate": "newData.hasChildren(['name', 'content', 'createdAt'])"
+          }
+        },
+
+        // User's saved sessions - Users can read/write their own session list
+        "sessions": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        }
+      }
+    },
+
+    // Live Sessions - Public read for participants, leader can write
+    "sessions": {
+      ".read": "auth != null",
+      ".indexOn": ["metadata/sessionCode"],
+
+      "$sessionId": {
+        // Allow creating new sessions OR leader updating their session
+        ".write": "auth != null && (!data.exists() || data.child('metadata/leaderId').val() === auth.uid)",
+
+        // Participants - anyone can write their own entry (overrides parent rule)
+        "participants": {
+          "$participantUid": {
+            ".write": "auth != null && $participantUid === auth.uid"
+          }
+        }
+      }
+    }
+  }
+}

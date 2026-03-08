@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" width="120" height="40">
+  <defs>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316"/>
+      <stop offset="50%" style="stop-color:#ec4899"/>
+      <stop offset="100%" style="stop-color:#d946ef"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#waveGrad)">
+    <rect x="2" y="16" width="2" height="8" rx="1"/>
+    <rect x="6" y="12" width="2" height="16" rx="1"/>
+    <rect x="10" y="8" width="2" height="24" rx="1"/>
+    <rect x="14" y="4" width="2" height="32" rx="1"/>
+    <rect x="18" y="10" width="2" height="20" rx="1"/>
+    <rect x="22" y="6" width="2" height="28" rx="1"/>
+    <rect x="26" y="2" width="2" height="36" rx="1"/>
+    <rect x="30" y="8" width="2" height="24" rx="1"/>
+    <rect x="34" y="4" width="2" height="32" rx="1"/>
+    <rect x="38" y="10" width="2" height="20" rx="1"/>
+    <rect x="42" y="6" width="2" height="28" rx="1"/>
+    <rect x="46" y="2" width="2" height="36" rx="1"/>
+    <rect x="50" y="8" width="2" height="24" rx="1"/>
+    <rect x="54" y="12" width="2" height="16" rx="1"/>
+    <rect x="58" y="16" width="2" height="8" rx="1"/>
+    <rect x="62" y="14" width="2" height="12" rx="1"/>
+    <rect x="66" y="10" width="2" height="20" rx="1"/>
+    <rect x="70" y="6" width="2" height="28" rx="1"/>
+    <rect x="74" y="2" width="2" height="36" rx="1"/>
+    <rect x="78" y="8" width="2" height="24" rx="1"/>
+    <rect x="82" y="4" width="2" height="32" rx="1"/>
+    <rect x="86" y="10" width="2" height="20" rx="1"/>
+    <rect x="90" y="6" width="2" height="28" rx="1"/>
+    <rect x="94" y="2" width="2" height="36" rx="1"/>
+    <rect x="98" y="8" width="2" height="24" rx="1"/>
+    <rect x="102" y="4" width="2" height="32" rx="1"/>
+    <rect x="106" y="10" width="2" height="20" rx="1"/>
+    <rect x="110" y="14" width="2" height="12" rx="1"/>
+    <rect x="114" y="16" width="2" height="8" rx="1"/>
+  </g>
+</svg>
