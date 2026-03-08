@@ -35,7 +35,7 @@ class LocalizationManager {
             btn.className = 'ghost-button';
             btn.type = 'button';
             btn.title = 'Switch Language / החלף שפה';
-            btn.innerHTML = `<span style="font-size: 1.1rem; font-weight: 600;">${this.currentLang === 'en' ? 'HE' : 'EN'}</span>`;
+            btn.innerHTML = `<span style="font-weight: 600;">${this.currentLang === 'en' ? 'HE' : 'EN'}</span>`;
             btn.onclick = this.toggleLanguage;
 
             // Insert before theme toggle
@@ -71,7 +71,7 @@ class LocalizationManager {
         const toggleBtn = document.getElementById('langToggle');
         if (toggleBtn) {
             // If current is HE, show option to switch to EN
-            toggleBtn.innerHTML = `<span style="font-size: 1.1rem; font-weight: 600;">${lang === 'en' ? 'HE' : 'EN'}</span>`;
+            toggleBtn.innerHTML = `<span style="font-weight: 600;">${lang === 'en' ? 'HE' : 'EN'}</span>`;
         }
 
         // Apply translations

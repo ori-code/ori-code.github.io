@@ -6179,8 +6179,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const showAllFeaturesBtn = document.getElementById('showAllFeaturesBtn');
         if (showAllFeaturesBtn) {
             showAllFeaturesBtn.addEventListener('click', () => {
-                const modal = document.getElementById('featuresModal');
-                if (modal) modal.style.display = 'flex';
+                window.location.href = 'features.html';
             });
         }
 

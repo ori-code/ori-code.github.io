@@ -248,20 +248,20 @@
     // Dropdown toggle
     document.getElementById('langBtn')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        document.getElementById('langDropdown')?.classList.toggle('open');
+        document.getElementById('langDropdown')?.classList.toggle('show');
     });
 
     // Language selection
     document.querySelectorAll('.lang-option').forEach(opt => {
         opt.addEventListener('click', () => {
             applyLang(opt.dataset.lang);
-            document.getElementById('langDropdown')?.classList.remove('open');
+            document.getElementById('langDropdown')?.classList.remove('show');
         });
     });
 
     // Close dropdown on outside click
     document.addEventListener('click', () => {
-        document.getElementById('langDropdown')?.classList.remove('open');
+        document.getElementById('langDropdown')?.classList.remove('show');
     });
 
     // Initialize: check saved preference, then browser language

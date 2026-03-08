@@ -420,6 +420,11 @@ html[dir="rtl"] .highlight-row:not(.reverse)>* {
 }
 
 /* Language Picker Minimalist Override */
+.lang-picker {
+    position: relative;
+    display: inline-block;
+}
+
 .lang-picker-btn {
     background: transparent;
     border: 1px solid var(--border);

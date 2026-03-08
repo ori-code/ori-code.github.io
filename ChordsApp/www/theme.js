@@ -46,10 +46,22 @@ class ThemeManager {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
-        // Update toggle button text
+        // Update toggle button text or icon
         const toggleBtn = document.getElementById('themeToggle');
         if (toggleBtn) {
-            toggleBtn.textContent = theme === 'dark' ? 'Light' : 'Dark';
+            const moonIcon = document.getElementById('moonIcon');
+            const sunIcon = document.getElementById('sunIcon');
+            if (moonIcon && sunIcon) {
+                if (theme === 'light') {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                } else {
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                }
+            } else {
+                toggleBtn.textContent = theme === 'dark' ? 'Light' : 'Dark';
+            }
         }
 
         localStorage.setItem('chordsapp-theme', theme);

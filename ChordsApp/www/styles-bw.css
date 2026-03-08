@@ -102,6 +102,17 @@ a {
     gap: 16px;
 }
 
+.header-actions .ghost-button,
+.header-actions #langToggle {
+    font-size: 13px;
+    padding: 6px 12px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
 .nav-logo {
     font-size: 1.5rem;
     font-weight: 600;
