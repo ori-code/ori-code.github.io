@@ -1848,7 +1848,16 @@ input[type="checkbox"]:checked::after {
     column-span: all;
     -webkit-column-span: all;
     break-inside: avoid;
+    
     page-break-inside: avoid;
+    
+    /* Force LTR direction universally to keep tags ordered correctly */
+    direction: ltr !important;
+}
+
+/* In RTL mode, align the LTR flexbox to the right side so it anchors to Hebrew text naturally */
+[dir="rtl"] .section-badges-row {
+    justify-content: flex-end;
 }
 
 /* dir="rtl" on a flex container already reverses layout direction natively.
