@@ -1848,20 +1848,10 @@ input[type="checkbox"]:checked::after {
     column-span: all;
     -webkit-column-span: all;
     break-inside: avoid;
-    
     page-break-inside: avoid;
-    
-    /* Force LTR direction universally to keep tags ordered correctly */
-    direction: ltr !important;
+    /* Inherits direction from parent — RTL songs get direction:rtl which
+       reverses flex order to match the reversed editor arrangement line. */
 }
-
-/* In RTL mode, align the LTR flexbox to the right side so it anchors to Hebrew text naturally */
-[dir="rtl"] .section-badges-row {
-    justify-content: flex-end;
-}
-
-/* dir="rtl" on a flex container already reverses layout direction natively.
-   No flex-direction: row-reverse needed — that would cancel out the RTL effect. */
 
 .section-badges-row+* {
     margin-top: 0 !important;
@@ -2105,10 +2095,12 @@ input[type="checkbox"]:checked::after {
     opacity: 0.6;
 }
 
-/* Make chords look clickable in preview */
+/* Make chords and section headers look clickable in preview */
 #livePreview .chord-line b,
 #livePreview .inline-chord b,
-#livePreview .chord-grid b {
+#livePreview .chord-grid b,
+#livePreview .section-header,
+#livePreview .section-badge {
     cursor: pointer;
 }
 

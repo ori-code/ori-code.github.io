@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="aChordim">
 
-    <link rel="stylesheet" href="styles-bw.css?v=87">
+    <link rel="stylesheet" href="styles-bw.css?v=92">
     <!-- PayPal SDK is loaded dynamically in paypal-subscription.js based on environment -->
 
     <!-- PDF.js for PDF preview -->
@@ -58,7 +58,7 @@
                     <span class="header-brand-name"
                         style="font-weight: 700; font-size: 1.2rem; color: var(--text); display: flex; align-items: baseline; gap: 4px;"><b
                             dir="ltr">אChordim</b> <span id="appVersion"
-                            style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v92</span></span>
+                            style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v93</span></span>
                     <span class="header-brand-url"
                         style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
@@ -1720,55 +1720,164 @@
         .pricing-grid-responsive {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            grid-auto-rows: 1fr;
             gap: 16px;
             align-items: stretch;
-            padding-top: 14px;
+            padding-top: 24px;
         }
 
-        .pricing-grid-responsive .pricing-card,
-        .pricing-grid-responsive>div {
+        .pricing-grid-responsive .pricing-card {
+            border: 1px solid var(--border);
+            padding: 32px 24px;
+            text-align: center;
+            background: transparent;
             display: flex;
             flex-direction: column;
             position: relative;
-            height: 100%;
-            width: 100%;
-            min-width: 0;
+            transition: background 0.2s ease, color 0.2s ease;
             box-sizing: border-box;
             overflow: visible;
         }
 
+        .pricing-grid-responsive .pricing-card:hover {
+            background: var(--text);
+            color: var(--bg);
+        }
+
+        .pricing-grid-responsive .pricing-card:hover .check { color: var(--bg); }
+        .pricing-grid-responsive .pricing-card:hover .cross { color: var(--bg); opacity: 0.5; }
+        .pricing-grid-responsive .pricing-card:hover .price-sub { opacity: 0.8; }
+        .pricing-grid-responsive .pricing-card:hover .ghost-button,
+        .pricing-grid-responsive .pricing-card:hover .register-btn-ghost {
+            border-color: var(--bg);
+            color: var(--bg);
+            background: transparent;
+        }
+        .pricing-grid-responsive .pricing-card:hover .ghost-button:hover,
+        .pricing-grid-responsive .pricing-card:hover .register-btn-ghost:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .pricing-grid-responsive .pricing-card.popular {
+            border-width: 2px;
+            border-color: var(--text);
+        }
+
+        .pricing-grid-responsive .pricing-card.popular::before {
+            content: attr(data-label);
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: var(--bg);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            z-index: 2;
+        }
+
+        .pricing-grid-responsive .pricing-card:hover.popular::before {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .pricing-card .tier-name {
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+        }
+
+        .pricing-card .price {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .pricing-card .price-sub {
+            font-size: 0.85rem;
+            opacity: 0.6;
+            margin-bottom: 32px;
+        }
+
+        .pricing-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 32px 0;
+            text-align: left;
+            flex: 1;
+        }
+
+        .pricing-card li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom-color: inherit;
+        }
+
+        .pricing-card li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-card .check { font-weight: 700; color: var(--text); transition: color 0.2s ease; }
+        .pricing-card .cross { font-weight: 700; opacity: 0.3; color: var(--text); transition: color 0.2s ease, opacity 0.2s ease; }
+
+        .ghost-button.register-btn-ghost {
+            width: 100%;
+            margin-top: auto;
+            display: block;
+            text-align: center;
+            box-sizing: border-box;
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .ghost-button.register-btn-ghost.primary {
+            background: var(--text);
+            color: var(--bg);
+            border: 1px solid var(--text);
+        }
+        
+        .ghost-button.register-btn-ghost.primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
         /* Contain PayPal buttons within cards */
-        .pricing-grid-responsive .pricing-card>div:last-child,
-        .pricing-grid-responsive>div>div:last-child {
+        .pricing-grid-responsive .pricing-card > div:last-child {
             overflow: hidden;
+            margin-top: auto;
         }
 
         [id^="paypal-button-"] {
             overflow: hidden;
+            border-radius: 4px;
+            min-height: 45px;
         }
 
-        .pricing-grid-responsive .pricing-card ul,
-        .pricing-grid-responsive>div ul {
-            flex: 1;
-        }
-
-        @media (max-width: 800px) {
-            .pricing-grid-responsive {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        @media (max-width: 900px) {
+            .pricing-grid-responsive { grid-template-columns: repeat(2, 1fr); padding-top: 16px; gap: 24px; }
         }
 
         @media (max-width: 500px) {
-            .pricing-grid-responsive {
-                grid-template-columns: 1fr;
-                grid-auto-rows: auto;
-            }
-
-            .pricing-grid-responsive .pricing-card,
-            .pricing-grid-responsive>div {
-                height: auto;
-            }
+            .pricing-grid-responsive { grid-template-columns: 1fr; grid-auto-rows: auto; gap: 24px; }
+            .pricing-grid-responsive .pricing-card { height: auto; }
         }
 
         .scan-packs-grid {
@@ -1790,54 +1899,11 @@
         }
     </style>
 
-    <!-- Music Link Modal -->
-    <div id="musicModal" class="modal-overlay" style="display: none;">
-        <div class="modal-container" style="max-width: 500px; width: 90%;">
-            <div class="modal-header">
-                <h3 style="display: flex; align-items: center; gap: 10px;">
-                    <svg viewBox="0 0 24 24" fill="var(--primary)" width="24" height="24">
-                        <path
-                            d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                    </svg>
-                    Add Music Link
-                </h3>
-                <button class="modal-close" onclick="closeMusicModal()">&times;</button>
-            </div>
-            <div class="modal-body" style="padding: 24px;">
-                <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">
-                    Paste any music link (YouTube, Spotify, Apple Music, SoundCloud, or any URL)
-                </p>
-                <input type="text" id="musicUrlInput"
-                    placeholder="https://youtube.com/... or https://open.spotify.com/..."
-                    style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem; box-sizing: border-box;">
-                <p id="musicUrlError" style="color: var(--text); font-size: 0.85rem; margin-top: 8px; display: none;">
-                    Please enter a valid URL
-                </p>
-                <div id="detectedPlatform"
-                    style="display: none; margin-top: 12px; padding: 10px; background: var(--surface); border: 1px solid var(--border);">
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">Detected: </span>
-                    <span id="detectedPlatformName" style="font-weight: 600; color: var(--primary);"></span>
-                </div>
-                <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button onclick="closeMusicModal()"
-                        style="flex: 1; padding: 12px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; font-weight: 500;">
-                        Cancel
-                    </button>
-                    <button id="addMusicBtn" onclick="saveMusicLink()"
-                        style="flex: 1; padding: 12px; border: none; background: var(--text); color: var(--bg); cursor: pointer; font-weight: 600;">
-                        Add Link
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div id="subscriptionModal" class="modal-overlay">
         <div class="modal-container" style="max-width: 1100px; width: 95%; background: var(--bg);">
             <div class="modal-header" style="background: transparent; border-bottom: 1px solid var(--border);">
                 <h3 data-i18n="modal.plan.title" style="color: var(--text); font-weight: 700; font-size: 20px;">Choose
-                    Your
-                    Plan</h3>
+                    Your Plan</h3>
                 <button class="modal-close" id="subscriptionModalClose">&times;</button>
             </div>
             <div class="modal-body" style="padding: 24px;">
@@ -1847,106 +1913,70 @@
                     <p id="usageText" style="margin: 0; color: var(--text); font-size: 14px;"></p>
                 </div>
 
-                <!-- Pricing Tiers - 4 columns on desktop, 2 on tablet, 1 on mobile -->
+                <!-- Pricing Tiers Grid -->
                 <div class="pricing-grid-responsive" style="margin-bottom: 20px;">
                     <!-- Free Tier -->
-                    <div id="pricing-card-free" class="pricing-card"
-                        style="border: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column;">
-                        <h3 data-i18n="modal.plan.free"
-                            style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Free</h3>
-                        <div style="font-size: 36px; font-weight: 700; color: var(--text);">$0</div>
-                        <div data-i18n="modal.plan.no_card"
-                            style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">No credit card</div>
-                        <ul
-                            style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
-                            <li>✓ <span data-i18n="modal.plan.scans3">3 scans/month</span></li>
-                            <li>✓ <span data-i18n="modal.plan.transpose">Transpose</span></li>
-                            <li>✓ <span data-i18n="modal.plan.print">Print/Export</span></li>
-                            <li style="opacity: 0.5;">✗ <span data-i18n="modal.plan.save">Save to Library</span></li>
-                            <li style="opacity: 0.5;">✗ <span data-i18n="modal.plan.nashville">Nashville Numbers</span>
-                            </li>
+                    <div id="pricing-card-free" class="pricing-card">
+                        <div class="tier-name" data-i18n="modal.plan.free">Free</div>
+                        <div class="price">$0</div>
+                        <div class="price-sub" data-i18n="modal.plan.no_card">No credit card</div>
+                        <ul>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.scans3">3 scans/month</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.transpose">Transpose</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.print">Print/Export</span></li>
+                            <li><span class="cross">✗</span> <span data-i18n="modal.plan.save">Save to Library</span></li>
+                            <li><span class="cross">✗</span> <span data-i18n="modal.plan.nashville">Nashville Numbers</span></li>
                         </ul>
-                        <div id="pricing-free-action" style="margin-top: auto; padding-top: 16px;"></div>
+                        <div id="pricing-free-action"></div>
                     </div>
 
                     <!-- Basic Tier -->
-                    <div id="pricing-card-basic" class="pricing-card"
-                        style="border: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column;">
-                        <h3 data-i18n="modal.plan.basic"
-                            style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Basic</h3>
-                        <div style="font-size: 36px; font-weight: 700; color: var(--text);">$0.99<span
-                                style="font-size: 16px; font-weight: 400; color: var(--text-muted);"
-                                data-i18n="pricing.per_month">/mo</span></div>
-                        <div data-i18n="modal.plan.trial"
-                            style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-                            3-day free trial</div>
-                        <ul
-                            style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
-                            <li>✓ <span data-i18n="modal.plan.scans20">20 scans/month</span></li>
-                            <li>✓ <span data-i18n="modal.plan.save">Save to Library</span></li>
-                            <li>✓ <span data-i18n="modal.plan.transpose">Transpose</span></li>
-                            <li>✓ <span data-i18n="modal.plan.print">Print/Export</span></li>
-                            <li style="opacity: 0.5; color: var(--text-muted);">✗ <span
-                                    data-i18n="modal.plan.nashville">Nashville
-                                    Numbers</span></li>
+                    <div id="pricing-card-basic" class="pricing-card">
+                        <div class="tier-name" data-i18n="modal.plan.basic">Basic</div>
+                        <div class="price">$0.99<span style="font-size: 16px; font-weight: 400; color: var(--text-muted);" data-i18n="pricing.per_month">/mo</span></div>
+                        <div class="price-sub" data-i18n="modal.plan.trial">3-day free trial</div>
+                        <ul>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.scans20">20 scans/month</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.save">Save to Library</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.transpose">Transpose</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.print">Print/Export</span></li>
+                            <li><span class="cross">✗</span> <span data-i18n="modal.plan.nashville">Nashville Numbers</span></li>
                         </ul>
-                        <div id="pricing-basic-action" style="margin-top: auto; padding-top: 16px;">
+                        <div id="pricing-basic-action">
                             <div id="paypal-basic-button"></div>
                         </div>
                     </div>
 
                     <!-- Pro Tier -->
-                    <div id="pricing-card-pro" class="pricing-card"
-                        style="border: 2px solid var(--text); padding: 20px; background: var(--bg); position: relative; display: flex; flex-direction: column;">
-                        <div data-i18n="pricing.badge.popular"
-                            style="position: absolute; top: -10px; right: 12px; background: var(--text); color: var(--bg); padding: 4px 12px; font-size: 11px; font-weight: 600;">
-                            POPULAR</div>
-                        <h3 data-i18n="modal.plan.pro"
-                            style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Pro</h3>
-                        <div style="font-size: 36px; font-weight: 700; color: var(--text);">$1.99<span
-                                style="font-size: 16px; font-weight: 400; color: var(--text-muted);"
-                                data-i18n="pricing.per_month">/mo</span></div>
-                        <div data-i18n="modal.plan.trial"
-                            style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
-                            3-day free trial</div>
-                        <ul
-                            style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
-                            <li>✓ <span data-i18n="modal.plan.scans50">50 scans/month</span></li>
-                            <li>✓ <span data-i18n="modal.plan.save">Save to Library</span></li>
-                            <li>✓ <span data-i18n="modal.plan.nashville">Nashville Numbers</span></li>
-                            <li>✓ <span data-i18n="modal.plan.live">Live Sessions</span></li>
-                            <li>✓ <span data-i18n="modal.plan.transpose_export">Transpose & Export</span></li>
+                    <div id="pricing-card-pro" class="pricing-card popular" data-label="Most Popular">
+                        <div class="tier-name" data-i18n="modal.plan.pro">Pro</div>
+                        <div class="price">$1.99<span style="font-size: 16px; font-weight: 400; color: var(--text-muted);" data-i18n="pricing.per_month">/mo</span></div>
+                        <div class="price-sub" data-i18n="modal.plan.trial">3-day free trial</div>
+                        <ul>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.scans50">50 scans/month</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.save">Save to Library</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.nashville">Nashville Numbers</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.live">Live Sessions</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.transpose_export">Transpose & Export</span></li>
                         </ul>
-                        <div id="pricing-pro-action" style="margin-top: auto; padding-top: 16px;">
+                        <div id="pricing-pro-action">
                             <div id="paypal-pro-button"></div>
                         </div>
                     </div>
 
                     <!-- Book Tier (One-time purchase) -->
-                    <div id="pricing-card-book" class="pricing-card"
-                        style="border: 1px solid var(--border); padding: 20px; background: var(--bg); position: relative; display: flex; flex-direction: column;">
-                        <div data-i18n="pricing.badge.onetime"
-                            style="position: absolute; top: -10px; right: 12px; background: var(--text); color: var(--bg); padding: 4px 12px; font-size: 11px; font-weight: 600;">
-                            ONE-TIME</div>
-                        <h3 data-i18n="modal.plan.book"
-                            style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Book</h3>
-                        <div style="font-size: 36px; font-weight: 700; color: var(--text);">$9.99<span
-                                style="font-size: 16px; font-weight: 400; color: var(--text-muted);"
-                                data-i18n="pricing.once">
-                                once</span></div>
-                        <div data-i18n="modal.plan.lifetime"
-                            style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Lifetime + 20 scans
-                        </div>
-                        <ul
-                            style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
-                            <li>✓ <span data-i18n="modal.plan.scans20_included">20 scans included</span></li>
-                            <li>✓ <span data-i18n="modal.plan.buy_packs">Buy more scan packs</span></li>
-                            <li>✓ <span data-i18n="modal.plan.save_nashville">Save & Nashville</span></li>
-                            <li>✓ <span data-i18n="modal.plan.transpose_export">Transpose & Export</span></li>
-                            <li style="opacity: 0.5; color: var(--text-muted);">✗ <span data-i18n="modal.plan.live">Live
-                                    Sessions</span></li>
+                    <div id="pricing-card-book" class="pricing-card">
+                        <div class="tier-name" data-i18n="modal.plan.book">Book</div>
+                        <div class="price">$9.99<span style="font-size: 16px; font-weight: 400; color: var(--text-muted);" data-i18n="pricing.once"> once</span></div>
+                        <div class="price-sub" data-i18n="modal.plan.lifetime">Lifetime + 20 scans</div>
+                        <ul>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.scans20_included">20 scans included</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.buy_packs">Buy more scan packs</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.save_nashville">Save & Nashville</span></li>
+                            <li><span class="check">✓</span> <span data-i18n="modal.plan.transpose_export">Transpose & Export</span></li>
+                            <li><span class="cross">✗</span> <span data-i18n="modal.plan.live">Live Sessions</span></li>
                         </ul>
-                        <div id="pricing-book-action" style="margin-top: auto; padding-top: 16px;">
+                        <div id="pricing-book-action">
                             <div id="paypal-book-button"></div>
                         </div>
                     </div>
@@ -2017,8 +2047,7 @@
 
                 <div style="text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 20px;">
                     <p data-i18n="modal.footer.note" style="margin: 0;">Subscriptions include 3-day free trial. Cancel
-                        anytime. Secure payment via
-                        PayPal.</p>
+                        anytime. Secure payment via PayPal.</p>
                     <p id="subscriptionSignInLink" style="display: none; margin-top: 12px;">
                         <span style="font-size: 13px; color: var(--text-muted);">Already have an account? </span>
                         <a href="#" id="subscriptionLoginLink"
@@ -2039,95 +2068,73 @@
                 <button class="modal-close" id="registrationPromptClose">&times;</button>
             </div>
             <div class="modal-body" style="padding: 24px;">
-                <!-- Pricing Tiers Grid - 4 columns on desktop, 2 on tablet, 1 on mobile -->
+                <!-- Pricing Tiers Grid -->
+                <!-- Reuse the same grid classes but with simple register buttons -->
                 <div class="pricing-grid-responsive" style="margin-bottom: 20px;">
                     <!-- Free Tier -->
-                    <div
-                        style="border: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column;">
-                        <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Free</h3>
-                        <div style="font-size: 36px; font-weight: 700; color: var(--text);">$0</div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">No credit card
-                        </div>
-                        <ul
-                            style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
-                            <li>✓ 3 scans/month</li>
-                            <li>✓ Transpose</li>
-                            <li>✓ Print/Export</li>
-                            <li style="opacity: 0.5;">✗ Save to Library</li>
-                            <li style="opacity: 0.5;">✗ Nashville Numbers</li>
+                    <div class="pricing-card">
+                        <div class="tier-name">Free</div>
+                        <div class="price">$0</div>
+                        <div class="price-sub">No credit card</div>
+                        <ul>
+                            <li><span class="check">✓</span> 3 scans/month</li>
+                            <li><span class="check">✓</span> Transpose</li>
+                            <li><span class="check">✓</span> Print/Export</li>
+                            <li><span class="cross">✗</span> Save to Library</li>
+                            <li><span class="cross">✗</span> Nashville Numbers</li>
                         </ul>
-                        <button id="registerFreeBtn"
-                            style="width: 100%; padding: 12px; margin-top: auto; background: var(--text); color: var(--bg); border: none; font-size: 14px; font-weight: 600; cursor: pointer;">
+                        <button id="registerFreeBtn" class="ghost-button register-btn-ghost">
                             Start Free
                         </button>
                     </div>
 
                     <!-- Basic Tier -->
-                    <div
-                        style="border: 1px solid var(--border); padding: 20px; background: var(--bg); display: flex; flex-direction: column;">
-                        <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Basic</h3>
-                        <div style="font-size: 36px; font-weight: 700; color: var(--text);">$0.99<span
-                                style="font-size: 16px; font-weight: 400; color: var(--text-muted);">/mo</span></div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">3-day free trial
-                        </div>
-                        <ul
-                            style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
-                            <li>✓ 20 scans/month</li>
-                            <li>✓ Save to Library</li>
-                            <li>✓ Transpose</li>
-                            <li>✓ Print/Export</li>
-                            <li style="opacity: 0.5; color: var(--text-muted);">✗ Nashville Numbers</li>
+                    <div class="pricing-card">
+                        <div class="tier-name">Basic</div>
+                        <div class="price">$0.99<span style="font-size: 16px; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+                        <div class="price-sub">3-day free trial</div>
+                        <ul>
+                            <li><span class="check">✓</span> 20 scans/month</li>
+                            <li><span class="check">✓</span> Save to Library</li>
+                            <li><span class="check">✓</span> Transpose</li>
+                            <li><span class="check">✓</span> Print/Export</li>
+                            <li><span class="cross">✗</span> Nashville Numbers</li>
                         </ul>
-                        <button class="register-basic-btn"
-                            style="width: 100%; padding: 12px; margin-top: auto; background: var(--text); color: var(--bg); border: none; font-size: 14px; font-weight: 600; cursor: pointer;">
+                        <button class="ghost-button register-btn-ghost register-basic-btn">
                             Start Basic
                         </button>
                     </div>
 
                     <!-- Pro Tier -->
-                    <div
-                        style="border: 2px solid var(--text); padding: 20px; background: var(--bg); position: relative; display: flex; flex-direction: column;">
-                        <span
-                            style="position: absolute; top: -10px; right: 12px; background: var(--text); color: var(--bg); font-size: 11px; font-weight: 600; padding: 4px 12px;">POPULAR</span>
-                        <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Pro</h3>
-                        <div style="font-size: 36px; font-weight: 700; color: var(--text);">$1.99<span
-                                style="font-size: 16px; font-weight: 400; color: var(--text-muted);">/mo</span></div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">3-day free trial
-                        </div>
-                        <ul
-                            style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
-                            <li>✓ 50 scans/month</li>
-                            <li>✓ Save to Library</li>
-                            <li>✓ Nashville Numbers</li>
-                            <li>✓ Live Sessions</li>
-                            <li>✓ Transpose & Export</li>
+                    <div class="pricing-card popular" data-label="Most Popular">
+                        <div class="tier-name">Pro</div>
+                        <div class="price">$1.99<span style="font-size: 16px; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+                        <div class="price-sub">3-day free trial</div>
+                        <ul>
+                            <li><span class="check">✓</span> 50 scans/month</li>
+                            <li><span class="check">✓</span> Save to Library</li>
+                            <li><span class="check">✓</span> Nashville Numbers</li>
+                            <li><span class="check">✓</span> Live Sessions</li>
+                            <li><span class="check">✓</span> Transpose & Export</li>
                         </ul>
-                        <button class="register-pro-btn"
-                            style="width: 100%; padding: 12px; margin-top: auto; background: var(--text); color: var(--bg); border: none; font-size: 14px; font-weight: 600; cursor: pointer;">
+                        <button class="ghost-button register-btn-ghost primary register-pro-btn">
                             Start Pro
                         </button>
                     </div>
 
                     <!-- Book Tier (One-time) -->
-                    <div
-                        style="border: 1px solid var(--border); padding: 20px; background: var(--bg); position: relative; display: flex; flex-direction: column;">
-                        <span
-                            style="position: absolute; top: -10px; right: 12px; background: var(--text); color: var(--bg); font-size: 11px; font-weight: 600; padding: 4px 12px;">ONE-TIME</span>
-                        <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px; font-weight: 600;">Book</h3>
-                        <div style="font-size: 36px; font-weight: 700; color: var(--text);">$9.99<span
-                                style="font-size: 16px; font-weight: 400; color: var(--text-muted);"> once</span></div>
-                        <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Lifetime + 20 scans
-                        </div>
-                        <ul
-                            style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 2; flex: 1; color: var(--text);">
-                            <li>✓ 20 scans included</li>
-                            <li>✓ Buy more scan packs</li>
-                            <li>✓ Save & Nashville</li>
-                            <li>✓ Transpose & Export</li>
-                            <li style="opacity: 0.5; color: var(--text-muted);">✗ Live Sessions</li>
+                    <div class="pricing-card">
+                        <div class="tier-name">Book</div>
+                        <div class="price">$9.99<span style="font-size: 16px; font-weight: 400; color: var(--text-muted);"> once</span></div>
+                        <div class="price-sub">Lifetime + 20 scans</div>
+                        <ul>
+                            <li><span class="check">✓</span> 20 scans included</li>
+                            <li><span class="check">✓</span> Buy more scan packs</li>
+                            <li><span class="check">✓</span> Save & Nashville</li>
+                            <li><span class="check">✓</span> Transpose & Export</li>
+                            <li><span class="cross">✗</span> Live Sessions</li>
                         </ul>
-                        <button class="register-book-btn"
-                            style="width: 100%; padding: 12px; margin-top: auto; background: var(--text); color: var(--bg); border: none; font-size: 14px; font-weight: 600; cursor: pointer;">
+                        <button class="ghost-button register-btn-ghost register-book-btn">
                             Get Book
                         </button>
                     </div>
@@ -2136,8 +2143,7 @@
                 <!-- Footer -->
                 <div style="text-align: center; padding-top: 16px; border-top: 1px solid var(--border);">
                     <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--text-muted);">Subscriptions include 3-day
-                        free
-                        trial. Cancel anytime.</p>
+                        free trial. Cancel anytime.</p>
                     <span style="font-size: 13px; color: var(--text-muted);">Already have an account? </span>
                     <a href="#" id="loginFromPrompt"
                         style="font-size: 13px; color: var(--text); font-weight: 600; text-decoration: none;">Sign
@@ -3487,7 +3493,7 @@
 
     <!-- Firebase Configuration and Auth -->
     <script src="firebase-config.js"></script>
-    <script src="auth.js?v=87"></script>
+    <script src="auth.js?v=92"></script>
 
     <!-- Subscription System -->
     <script src="subscription.js"></script>
@@ -3505,7 +3511,7 @@
     <script src="session-ui.js?v=2"></script>
 
     <!-- Live Mode (full-screen performance view) -->
-    <script src="live-mode.js?v=87"></script>
+    <script src="live-mode.js?v=92"></script>
 
     <!-- MIDI Controller (hands-free control for Live Mode) -->
     <script src="midi-controller.js"></script>
@@ -3672,7 +3678,7 @@
     <!-- Chords App Format Parser (ChordPro-like format v4) -->
     <script src="chordpro-parser.js"></script>
 
-    <script src="app.js?v=87"></script>
+    <script src="app.js?v=92"></script>
 
     <style>
         /* Auth message states - B&W */

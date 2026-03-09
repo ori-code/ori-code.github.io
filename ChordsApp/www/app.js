@@ -3450,6 +3450,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const lines = cleanContent.split('\n');
         let currentSection = null;
         let sectionContent = [];
+        let currentSectionLineIndex = null;
 
         const finishSection = () => {
             if (currentSection) {
@@ -3473,7 +3474,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 formatted.push(blockStart);
                 // Render comment INLINE as span inside header
                 const commentSpan = sectionComment ? `<span class="section-comment">${sectionComment}</span>` : '';
-                formatted.push(`<div class="section-header">${headerText}${commentSpan}</div>`);
+                const lineIndexAttr = currentSectionLineIndex !== null ? ` data-line-index="${currentSectionLineIndex}"` : '';
+                formatted.push(`<div class="section-header"${lineIndexAttr}>${headerText}${commentSpan}</div>`);
                 if (sectionContent.length > 0) {
                     formatted.push(...sectionContent);
                 }
@@ -3492,7 +3494,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
         };
 
-        for (const line of lines) {
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+            const line = lines[lineIndex];
             const trimmedLine = line.trim();
 
             // Skip empty lines
@@ -3578,6 +3581,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
                     );
                 }
+                currentSectionLineIndex = lineIndex;
                 continue;
             }
 
@@ -3595,6 +3599,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
                 );
                 currentSection = commentPart ? `${titleCased} ${commentPart}` : titleCased;
+                currentSectionLineIndex = lineIndex;
                 continue;
             }
 
@@ -3819,6 +3824,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             return `<div class="section-badges-row">${badges}</div>`;
         };
 
+        let currentSectionLineIndex = null;
+
         const finishSection = () => {
             if (currentSection) {
                 const sectionId = `section-${sectionCounter++}`;
@@ -3836,7 +3843,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 // Render comment INLINE as span inside header
                 const commentSpan = sectionComment ? `<span class="section-comment">${sectionComment}</span>` : '';
                 const translatedName = translateSectionName(sectionName);
-                formatted.push(`<div class="section-header">${translatedName}${commentSpan}</div>`);
+                const lineIndexAttr = currentSectionLineIndex !== null ? ` data-line-index="${currentSectionLineIndex}"` : '';
+                formatted.push(`<div class="section-header"${lineIndexAttr}>${translatedName}${commentSpan}</div>`);
                 if (sectionContent.length > 0) {
                     formatted.push(...sectionContent);
                 }
@@ -3993,6 +4001,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
                 );
                 currentSection = comment ? `${titleCased} ${comment}` : titleCased;
+                currentSectionLineIndex = i;
                 continue;
             }
 
@@ -7159,10 +7168,10 @@ Our [Em7]hearts will cry, these bones will [D]sing
     let currentEditingLineNumber = null;
 
     // Function to show section editor
-    function showSectionEditor(lineText, lineNumber, clickX, clickY) {
+    function showSectionEditor(lineText, lineNumber, clickX, clickY, forceShow = false) {
         const sectionMatch = lineText.match(/^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|TURN|BREAK|CHOURS)[\s\d]*:?/i);
 
-        if (sectionMatch) {
+        if (sectionMatch || forceShow) {
             currentEditingLine = lineText.trim();
             currentEditingLineNumber = lineNumber;
 
@@ -7258,13 +7267,35 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const lines = textarea.value.split('\n');
             const currentLine = lines[lineNumber];
 
-            // Check if this line is a section header
-            const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|TURN|BREAK|CHOURS)[\s\d]*:?/i.test(currentLine.trim());
+            // Check if this line is a section header (English keywords, {c: ...} format, or any string ending with colon)
+            const isSectionHeader = /^(INTRO|VERSE|PRE-CHORUS|CHORUS|BRIDGE|INTERLUDE|TAG|CODA|OUTRO|TURN|BREAK|CHOURS)[\s\d]*:?/i.test(currentLine.trim()) ||
+                                    /^\{c:\s*[^}]+\}$/i.test(currentLine.trim()) ||
+                                    /^.+?:\s*(?:\([^)]+\))?$/.test(currentLine.trim());
 
             if (isSectionHeader) {
                 // Show editor at click position
                 const rect = textarea.getBoundingClientRect();
                 showSectionEditor(currentLine, lineNumber, e.clientX, e.clientY);
+            }
+        });
+    }
+
+    // Click on livePreview to edit section headers
+    if (livePreview) {
+        livePreview.addEventListener('click', (e) => {
+            const sectionHeader = e.target.closest('.section-header');
+            if (sectionHeader) {
+                const lineIndexStr = sectionHeader.getAttribute('data-line-index');
+                if (lineIndexStr !== null) {
+                    const lineNumber = parseInt(lineIndexStr, 10);
+                    if (!isNaN(lineNumber) && visualEditor && visualEditor.value) {
+                        const lines = visualEditor.value.split('\n');
+                        if (lines[lineNumber] !== undefined) {
+                            e.stopPropagation();
+                            showSectionEditor(lines[lineNumber], lineNumber, e.clientX, e.clientY, true);
+                        }
+                    }
+                }
             }
         });
     }
@@ -7962,6 +7993,43 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         showArrangementEditor(match[0], lineIndex, i, e.clientX, e.clientY);
                         break;
                     }
+                }
+            }
+        });
+    }
+
+    // Click on livePreview to edit arrangement badges
+    if (livePreview) {
+        livePreview.addEventListener('click', (e) => {
+            const badge = e.target.closest('.section-badge');
+            if (!badge) return;
+
+            // Get badge label text (e.g., "V1", "C", "PC2") — strip repeat suffix like "2x"
+            const badgeLabel = badge.textContent.replace(/\d+x$/, '').trim();
+
+            // Find the arrangement line in the editor
+            if (!visualEditor || !visualEditor.value) return;
+            const lines = visualEditor.value.split('\n');
+            let lineIndex = -1;
+
+            for (let i = 0; i < lines.length; i++) {
+                const tags = lines[i].match(/\([A-Z]+\d*\)/g);
+                if (tags && tags.length > 1) {
+                    lineIndex = i;
+                    break;
+                }
+            }
+
+            if (lineIndex === -1) return;
+
+            // Match by LABEL TEXT (not index) to handle RTL reversal correctly
+            // Editor line may be reversed for RTL, so find the tag whose label matches
+            const tagMatches = [...lines[lineIndex].matchAll(/\(([A-Z]+\d*)\)(\d+x)?/g)];
+            for (let i = 0; i < tagMatches.length; i++) {
+                if (tagMatches[i][1] === badgeLabel) {
+                    e.stopPropagation();
+                    showArrangementEditor(tagMatches[i][0], lineIndex, i, e.clientX, e.clientY);
+                    break;
                 }
             }
         });
