@@ -4215,3 +4215,14 @@ body.view-only-mode .preview-scale-wrapper {
 body.view-only-mode .container {
     padding-top: 10px;
 }
+
+/* Pricing Ad Banners */
+.pricing-ad-tier {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.pricing-ad-tier:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    border-color: var(--text) !important;
+}
