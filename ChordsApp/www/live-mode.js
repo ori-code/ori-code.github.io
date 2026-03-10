@@ -819,10 +819,8 @@ const liveMode = {
                                 return `<span class="section-badge ${colorClass}">${label}${repeatSup}</span>`;
                             });
 
-                        // Reverse badges array for RTL content so V1 appears on right
-                        if (isRTLContent) {
-                            badgeItems = badgeItems.reverse();
-                        }
+                        // @@@RTL: NO JS reversal — dir="rtl" on badgesRow handles RTL order natively.
+                        // JS reversal + dir="rtl" would double-reverse, showing badges in LTR order.
                         const badges = badgeItems.join('');
 
                         const badgesRow = document.createElement('div');

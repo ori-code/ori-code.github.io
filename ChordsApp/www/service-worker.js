@@ -58,9 +58,9 @@ self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Cache-first for pad audio (large MP3 files, never change)
+  // Cache-first for pad audio (MP3 + WAV files, never change)
   // Uses separate cache so pads survive app version bumps
-  if (url.pathname.includes('/pads/') && url.pathname.endsWith('.mp3')) {
+  if (url.pathname.includes('/pads/') && (url.pathname.endsWith('.mp3') || url.pathname.endsWith('.wav'))) {
     event.respondWith(
       caches.open(PADS_CACHE).then(cache =>
         cache.match(event.request).then(cached => {

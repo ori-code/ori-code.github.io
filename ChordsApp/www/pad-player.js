@@ -1,6 +1,7 @@
 /**
  * aChordim Pad Player
  * Plays looping ambient pad sounds for each musical key
+ * Supports MP3 (default) and HD WAV mode
  */
 
 const padPlayer = {
@@ -41,6 +42,9 @@ const padPlayer = {
     // Stop All fade duration (longer for smooth ending)
     stopAllFadeDuration: 6,
 
+    // HD mode (WAV instead of MP3)
+    hdMode: false,
+
     // All 12 keys
     keys: ['C', 'Csharp', 'D', 'Dsharp', 'E', 'F', 'Fsharp', 'G', 'Gsharp', 'A', 'Asharp', 'B'],
 
@@ -60,86 +64,22 @@ const padPlayer = {
         'B': 'B'
     },
 
-    // Local pad sound files (served from same host)
-    soundUrls: {
-        'C': './pads/C.mp3',
-        'Csharp': './pads/Csharp.mp3',
-        'D': './pads/D.mp3',
-        'Dsharp': './pads/Dsharp.mp3',
-        'E': './pads/E.mp3',
-        'F': './pads/F.mp3',
-        'Fsharp': './pads/Fsharp.mp3',
-        'G': './pads/G.mp3',
-        'Gsharp': './pads/Gsharp.mp3',
-        'A': './pads/A.mp3',
-        'Asharp': './pads/Asharp.mp3',
-        'B': './pads/B.mp3'
+    /**
+     * Get URL for a pad key based on current quality mode
+     */
+    getUrl(key) {
+        if (this.hdMode) {
+            return `./pads/hd/${key}.wav`;
+        }
+        return `./pads/${key}.mp3`;
     },
 
     // Loading state
     isLoading: false,
     loadedCount: 0,
 
-    // Preloaded raw audio data (before AudioContext is available)
-    rawAudioCache: {},
-    isPreloading: false,
-    preloadedCount: 0,
-
     /**
-     * Preload audio files as raw data (can be called without user interaction)
-     * Files are fetched and cached, decoded later when AudioContext is available
-     */
-    async preloadFiles(onProgress = null) {
-        if (this.isPreloading || Object.keys(this.rawAudioCache).length === this.keys.length) return;
-
-        this.isPreloading = true;
-        this.preloadedCount = 0;
-
-        const loadPromises = this.keys.map(async (key) => {
-            try {
-                // Skip if already cached or already decoded
-                if (this.rawAudioCache[key] || this.buffers[key]) {
-                    this.preloadedCount++;
-                    if (onProgress) onProgress(this.preloadedCount, this.keys.length);
-                    return;
-                }
-
-                const url = this.soundUrls[key];
-                if (!url) {
-                    console.warn(`No URL configured for pad: ${key}`);
-                    return;
-                }
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    console.warn(`Pad sound not found: ${url}`);
-                    return;
-                }
-
-                // Store raw ArrayBuffer (no AudioContext needed)
-                this.rawAudioCache[key] = await response.arrayBuffer();
-                this.preloadedCount++;
-
-                if (onProgress) {
-                    onProgress(this.preloadedCount, this.keys.length);
-                }
-
-                console.log(`Preloaded pad: ${key}`);
-            } catch (error) {
-                console.error(`Error preloading pad ${key}:`, error);
-            }
-        });
-
-        await Promise.all(loadPromises);
-
-        this.isPreloading = false;
-        console.log(`Preloaded ${this.preloadedCount}/${this.keys.length} pad files`);
-
-        return this.preloadedCount;
-    },
-
-    /**
-     * Initialize the pad player
+     * Initialize the pad player (creates AudioContext and effect chain)
      */
     async init() {
         // Create audio context on user interaction (required by browsers)
@@ -226,74 +166,6 @@ const padPlayer = {
     },
 
     /**
-     * Load all pad sounds (decodes preloaded files or fetches if not preloaded)
-     */
-    async loadSounds(onProgress = null) {
-        if (this.isLoading) return;
-
-        this.isLoading = true;
-        this.loadedCount = 0;
-
-        await this.init();
-
-        const loadPromises = this.keys.map(async (key) => {
-            try {
-                // Skip if already decoded
-                if (this.buffers[key]) {
-                    this.loadedCount++;
-                    if (onProgress) onProgress(this.loadedCount, this.keys.length);
-                    return;
-                }
-
-                let arrayBuffer;
-
-                // Use preloaded cache if available (much faster)
-                if (this.rawAudioCache[key]) {
-                    arrayBuffer = this.rawAudioCache[key];
-                    console.log(`Using preloaded cache for: ${key}`);
-                } else {
-                    // Fetch if not preloaded
-                    const url = this.soundUrls[key];
-                    if (!url) {
-                        console.warn(`No URL configured for pad: ${key}`);
-                        return;
-                    }
-                    const response = await fetch(url);
-
-                    if (!response.ok) {
-                        console.warn(`Pad sound not found: ${url}`);
-                        return;
-                    }
-
-                    arrayBuffer = await response.arrayBuffer();
-                }
-
-                // Decode audio (requires AudioContext)
-                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-
-                this.buffers[key] = audioBuffer;
-                delete this.rawAudioCache[key]; // Free memory
-                this.loadedCount++;
-
-                if (onProgress) {
-                    onProgress(this.loadedCount, this.keys.length);
-                }
-
-                console.log(`Decoded pad: ${key}`);
-            } catch (error) {
-                console.error(`Error loading pad ${key}:`, error);
-            }
-        });
-
-        await Promise.all(loadPromises);
-
-        this.isLoading = false;
-        console.log(`Loaded ${this.loadedCount}/${this.keys.length} pad sounds`);
-
-        return this.loadedCount;
-    },
-
-    /**
      * Check if a key is currently playing
      */
     isPlaying(key) {
@@ -320,25 +192,20 @@ const padPlayer = {
         await this.init();
 
         try {
-            let arrayBuffer;
-
-            if (this.rawAudioCache[key]) {
-                arrayBuffer = this.rawAudioCache[key];
-            } else {
-                const url = this.soundUrls[key];
-                if (!url) return false;
-
-                if (onProgress) onProgress('fetching');
-                const response = await fetch(url);
-                if (!response.ok) return false;
-                arrayBuffer = await response.arrayBuffer();
+            const url = this.getUrl(key);
+            if (onProgress) onProgress('fetching');
+            console.log(`Fetching pad: ${url}`);
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.warn(`Pad sound not found: ${url}`);
+                return false;
             }
+            const arrayBuffer = await response.arrayBuffer();
 
             if (onProgress) onProgress('decoding');
             const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
             this.buffers[key] = audioBuffer;
-            delete this.rawAudioCache[key];
-            console.log(`Loaded pad on demand: ${key}`);
+            console.log(`Loaded pad on demand: ${key} (${this.hdMode ? 'HD WAV' : 'MP3'})`);
             return true;
         } catch (error) {
             console.error(`Error loading pad ${key}:`, error);
@@ -348,7 +215,7 @@ const padPlayer = {
 
     /**
      * Play a pad sound (looped) - crossfades from any currently playing pad
-     * Auto-loads the pad on demand if not yet loaded
+     * Lazy-loads the pad on demand if not yet loaded
      */
     async play(key) {
         await this.init();
@@ -480,6 +347,33 @@ const padPlayer = {
         this.updateKeyUI(key, false);
 
         console.log(`Stopped pad: ${key} (fade: ${fadeTime}s)`);
+    },
+
+    /**
+     * Toggle HD mode (WAV) vs standard (MP3)
+     * Clears cached buffers for non-playing keys so next play loads in new format
+     */
+    setHDMode(enabled) {
+        if (this.hdMode === enabled) return;
+        this.hdMode = enabled;
+
+        // Clear cached buffers for keys that aren't currently playing
+        // so they reload in the new format on next play
+        const playingKeys = Object.keys(this.activeSources);
+        this.keys.forEach(key => {
+            if (!playingKeys.includes(key)) {
+                delete this.buffers[key];
+            }
+        });
+
+        // Update HD toggle UI
+        const hdBtn = document.getElementById('padsHDToggle');
+        if (hdBtn) {
+            hdBtn.classList.toggle('active', enabled);
+            hdBtn.textContent = enabled ? 'HD (WAV)' : 'HD';
+        }
+
+        console.log(`Pad quality: ${enabled ? 'HD (WAV)' : 'Standard (MP3)'}`);
     },
 
     /**
