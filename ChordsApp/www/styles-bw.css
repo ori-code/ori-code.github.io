@@ -1449,6 +1449,7 @@ input[type="checkbox"]:checked::after {
 }
 
 
+
 /* Preview page */
 .preview-page {
     position: relative;
@@ -2100,8 +2101,13 @@ input[type="checkbox"]:checked::after {
 #livePreview .inline-chord b,
 #livePreview .chord-grid b,
 #livePreview .section-header,
-#livePreview .section-badge {
+#livePreview .section-badge,
+#livePreview .meta-editable {
     cursor: pointer;
+}
+
+.meta-editable:hover {
+    text-decoration: underline;
 }
 
 /* Styled prompt modal z-index */
@@ -2942,6 +2948,11 @@ input[type="checkbox"]:checked::after {
 }
 
 .mini-pad-key.playing {
+    background: var(--text);
+    color: var(--bg);
+}
+
+#padsHDToggle.active {
     background: var(--text);
     color: var(--bg);
 }

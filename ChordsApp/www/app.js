@@ -3404,23 +3404,21 @@ Our [Em7]hearts will cry, these bones will [D]sing
             formatted.push(`<div class="song-title"><b>${metadata.title}</b></div>`);
         }
 
-        // Row 2: Subtitle, Key, Tempo, Time (comma-separated)
+        // Row 2: Subtitle, Key, Tempo, Time (comma-separated, each clickable)
         const metaParts = [];
         if (metadata.artist && metadata.artist.toLowerCase() !== 'unknown') {
             metaParts.push(metadata.artist);
         }
         if (metadata.key) {
-            metaParts.push(`Key: ${metadata.key}`);
+            metaParts.push(`<span class="meta-editable" data-meta="key" data-value="${metadata.key}">Key: ${metadata.key}</span>`);
         }
-        if (metadata.tempo) {
-            metaParts.push(`${metadata.tempo} BPM`);
-        } else if (bpmInput && bpmInput.value) {
-            metaParts.push(`${bpmInput.value} BPM`);
+        const tempoVal = metadata.tempo || (bpmInput && bpmInput.value) || '';
+        if (tempoVal) {
+            metaParts.push(`<span class="meta-editable" data-meta="bpm" data-value="${tempoVal}">${tempoVal} BPM</span>`);
         }
-        if (metadata.time) {
-            metaParts.push(metadata.time);
-        } else if (timeSignature && timeSignature.value) {
-            metaParts.push(timeSignature.value);
+        const timeVal = metadata.time || (timeSignature && timeSignature.value) || '';
+        if (timeVal) {
+            metaParts.push(`<span class="meta-editable" data-meta="time" data-value="${timeVal}">${timeVal}</span>`);
         }
         if (metaParts.length > 0) {
             formatted.push(`<div class="song-meta">${metaParts.join(', ')}</div>`);
@@ -3437,9 +3435,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     const repeatSup = item.repeat > 1 ? `<sup class="repeat-count">${item.repeat}x</sup>` : '';
                     return `<span class="section-badge ${colorClass}">${item.label}${repeatSup}</span>`;
                 });
-            console.log(`@@@RTL   → badges (no JS reverse, CSS direction:rtl handles RTL): [${badgeItems.map(b => b.match(/>([^<]+)</)?.[1] || '?').join(', ')}]`);
-            // @@@RTL: NO JS reversal here — the badge row inherits direction:rtl from preview-page[dir="rtl"],
-            // which naturally reverses flex item order. JS reversal would double-reverse.
+
             const badges = badgeItems.join('');
             formatted.push(`<div class="section-badges-row">${badges}</div>`);
         }
@@ -3586,9 +3582,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             }
 
             // Clean section marker: Intro:, Verse 1:, Chorus:, etc. (optionally with comment)
-            // Matches: "Verse 1:", "Chorus:", "Bridge: (A cappella)", etc.
+            // Matches: "Verse 1:", "Chorus", "Bridge: (A cappella)", "Verse 1 (Quiet)", etc.
             const sectionKeywords = /^(Intro|Verse|Pre-?Chorus|Chorus|Bridge|Outro|Interlude|Tag|Coda|Turn|Turnaround|Break|Instrumental|Solo|Ending|Vamp)/i;
-            const cleanSectionMatch = trimmedLine.match(/^(.+?):\s*(\([^)]+\))?$/);
+            const cleanSectionMatch = trimmedLine.match(/^(.+?):?\s*(?:\([^)]+\))?$/);
             if (sectionKeywords.test(trimmedLine) && cleanSectionMatch) {
                 finishSection();
                 // Extract section name and optional comment
@@ -5384,29 +5380,42 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const newKey = e.target.value;
             if (!newKey || !visualEditor) return;
 
-            // Update the key in the visual editor content
-            let content = visualEditor.value;
+            // Update key in visual editor content (v4 directive → normalized line → insert)
+            const lines = visualEditor.value.split('\n');
+            let updated = false;
 
-            // Replace existing "Key: ..." line with new key
-            const keyLineRegex = /^(.*Key:\s*)([^\n\r|]+)/m;
-            if (keyLineRegex.test(content)) {
-                content = content.replace(keyLineRegex, `$1${newKey}`);
-            } else {
-                // If no key line exists, add it at the top
-                const lines = content.split('\n');
-                // Find if there's a title line
-                const titleIndex = lines.findIndex(line => line.match(/^.*\|/));
-                if (titleIndex >= 0) {
-                    // Insert key into the title line
-                    lines[titleIndex] = lines[titleIndex].replace(/\|.*$/, `| Key: ${newKey}`);
-                } else {
-                    // Add key as first line
-                    lines.unshift(`Key: ${newKey}`);
+            // Step 1: Try v4 directive {key: ...}
+            for (let i = 0; i < lines.length; i++) {
+                if (/^\{key:/i.test(lines[i].trim())) {
+                    lines[i] = `{key: ${newKey}}`;
+                    updated = true;
+                    break;
                 }
-                content = lines.join('\n');
             }
 
-            visualEditor.value = content;
+            // Step 2: Try normalized metadata line (e.g. "Artist, Key: E, 120 BPM, 4/4")
+            if (!updated) {
+                for (let i = 0; i < Math.min(lines.length, 5); i++) {
+                    if (/,/.test(lines[i]) && /Key:/i.test(lines[i])) {
+                        lines[i] = lines[i].replace(/Key:\s*[A-G][#b]?\s*(?:Major|Minor|m)?/i, `Key: ${newKey}`);
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+
+            // Step 3: Try old format "Key: X | BPM: ..."
+            if (!updated) {
+                for (let i = 0; i < Math.min(lines.length, 5); i++) {
+                    if (/Key:/i.test(lines[i])) {
+                        lines[i] = lines[i].replace(/Key:\s*[A-G][#b]?\s*(?:Major|Minor|m)?/i, `Key: ${newKey}`);
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+
+            visualEditor.value = lines.join('\n');
             detectedKeySpan.textContent = newKey;
             currentKey = newKey;
             updateSongBookFromVisual();
@@ -5443,33 +5452,46 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const newTimeSig = timeSignature.value;
             if (!newTimeSig || !visualEditor) return;
 
-            // Update the time signature in the visual editor content
-            let content = visualEditor.value;
+            // Update time signature in visual editor (v4 directive → normalized line → old format → insert)
+            const lines = visualEditor.value.split('\n');
+            let updated = false;
 
-            // Replace existing "Time: ..." pattern
-            const timeSigRegex = /^(.*Time:\s*)([^\n\r|]+)/m;
-            if (timeSigRegex.test(content)) {
-                content = content.replace(timeSigRegex, `$1${newTimeSig}`);
-            } else {
-                // If no time signature line exists, add it after BPM or Key
-                const lines = content.split('\n');
-                const bpmIndex = lines.findIndex(line => line.match(/BPM:/i));
-                const keyIndex = lines.findIndex(line => line.match(/Key:/i));
-
-                if (bpmIndex >= 0) {
-                    // Insert after BPM line
-                    lines[bpmIndex] = lines[bpmIndex] + ` | Time: ${newTimeSig}`;
-                } else if (keyIndex >= 0) {
-                    // Insert into key line
-                    lines[keyIndex] = lines[keyIndex] + ` | Time: ${newTimeSig}`;
-                } else {
-                    // Add as first line
-                    lines.unshift(`Time: ${newTimeSig}`);
+            // Step 1: Try v4 directive {time: ...}
+            for (let i = 0; i < lines.length; i++) {
+                if (/^\{time:/i.test(lines[i].trim())) {
+                    lines[i] = `{time: ${newTimeSig}}`;
+                    updated = true;
+                    break;
                 }
-                content = lines.join('\n');
             }
 
-            visualEditor.value = content;
+            // Step 2: Try normalized metadata line (e.g. "Artist, Key: E, 120 BPM, 4/4")
+            if (!updated) {
+                for (let i = 0; i < Math.min(lines.length, 5); i++) {
+                    if (/,/.test(lines[i]) && /Key:/i.test(lines[i])) {
+                        if (/,\s*\d+\/\d+/.test(lines[i])) {
+                            lines[i] = lines[i].replace(/,\s*\d+\/\d+/, `, ${newTimeSig}`);
+                        } else {
+                            lines[i] += `, ${newTimeSig}`;
+                        }
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+
+            // Step 3: Try old format "Time: X/Y"
+            if (!updated) {
+                for (let i = 0; i < Math.min(lines.length, 5); i++) {
+                    if (/Time:/i.test(lines[i])) {
+                        lines[i] = lines[i].replace(/Time:\s*\d+\/\d+/i, `Time: ${newTimeSig}`);
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+
+            visualEditor.value = lines.join('\n');
             updateSongBookFromVisual();
             updateLivePreview();
         });
@@ -5481,29 +5503,47 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const newBPM = bpmInput.value;
             if (!newBPM || !visualEditor) return;
 
-            // Update the BPM in the visual editor content
-            let content = visualEditor.value;
+            // Update BPM in visual editor (v4 directive → normalized line → old format)
+            const lines = visualEditor.value.split('\n');
+            let updated = false;
 
-            // Replace existing "BPM: ..." pattern
-            const bpmRegex = /^(.*BPM:\s*)(\d+)/mi;
-            if (bpmRegex.test(content)) {
-                content = content.replace(bpmRegex, `$1${newBPM}`);
-            } else {
-                // If no BPM line exists, add it after Key
-                const lines = content.split('\n');
-                const keyIndex = lines.findIndex(line => line.match(/Key:/i));
-
-                if (keyIndex >= 0) {
-                    // Insert into key line
-                    lines[keyIndex] = lines[keyIndex] + ` | BPM: ${newBPM}`;
-                } else {
-                    // Add as first line
-                    lines.unshift(`BPM: ${newBPM}`);
+            // Step 1: Try v4 directive {tempo: ...}
+            for (let i = 0; i < lines.length; i++) {
+                if (/^\{tempo:/i.test(lines[i].trim())) {
+                    lines[i] = `{tempo: ${newBPM}}`;
+                    updated = true;
+                    break;
                 }
-                content = lines.join('\n');
             }
 
-            visualEditor.value = content;
+            // Step 2: Try normalized metadata line (e.g. "Artist, Key: E, 120 BPM, 4/4")
+            if (!updated) {
+                for (let i = 0; i < Math.min(lines.length, 5); i++) {
+                    if (/,/.test(lines[i]) && /Key:/i.test(lines[i])) {
+                        if (/\d+\s*BPM/i.test(lines[i])) {
+                            lines[i] = lines[i].replace(/\d+\s*BPM/i, `${newBPM} BPM`);
+                        } else {
+                            // No BPM yet — insert after Key value
+                            lines[i] = lines[i].replace(/(Key:\s*[A-G][#b]?\s*(?:Major|Minor|m)?)/, `$1, ${newBPM} BPM`);
+                        }
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+
+            // Step 3: Try old format "BPM: N"
+            if (!updated) {
+                for (let i = 0; i < Math.min(lines.length, 5); i++) {
+                    if (/BPM:/i.test(lines[i])) {
+                        lines[i] = lines[i].replace(/BPM:\s*\d+/i, `BPM: ${newBPM}`);
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+
+            visualEditor.value = lines.join('\n');
             updateSongBookFromVisual();
             updateLivePreview();
         });
@@ -8045,6 +8085,240 @@ Our [Em7]hearts will cry, these bones will [D]sing
     });
 
     // ============= END ARRANGEMENT TAG EDITOR =============
+
+    // ============= METADATA EDITOR (Key, BPM, Time) =============
+    const metaEditorOverlay = document.createElement('div');
+    metaEditorOverlay.id = 'metaEditorOverlay';
+    metaEditorOverlay.style.cssText = `
+        position: fixed; display: none; background: var(--bg);
+        border: 2px solid var(--text); padding: 0; z-index: 10000; min-width: 220px;
+    `;
+    document.body.appendChild(metaEditorOverlay);
+
+    function showMetaEditor(metaType, currentValue, clickX, clickY) {
+        metaEditorOverlay.innerHTML = '';
+        const container = document.createElement('div');
+        container.style.cssText = 'padding: 12px; font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;';
+
+        const label = document.createElement('div');
+        label.style.cssText = 'font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.5; margin-bottom: 8px;';
+        label.textContent = metaType === 'key' ? 'KEY' : metaType === 'bpm' ? 'BPM' : 'TIME SIGNATURE';
+        container.appendChild(label);
+
+        let inputEl;
+
+        if (metaType === 'key') {
+            // Circle of Fifths for key selection (outer major + inner minor)
+            const circleWrap = document.createElement('div');
+            circleWrap.style.cssText = 'position: relative; width: 240px; height: 240px; margin: 0 auto 8px;';
+            const centerX = 120, centerY = 120, outerR = 95, innerR = 55;
+            const normalizedVal = normalizeRoot(currentValue.replace(/\s*(Major|Minor|maj|min|m)$/i, ''));
+            const isMinor = /minor|min|m$/i.test(currentValue);
+
+            CIRCLE_OF_FIFTHS.forEach((root, i) => {
+                const angle = (i * 30 - 90) * (Math.PI / 180);
+                const note = document.createElement('div');
+                note.className = 'chord-circle-note';
+                if (!isMinor && normalizeRoot(root) === normalizedVal) note.classList.add('active');
+                note.textContent = root;
+                note.style.left = (centerX + outerR * Math.cos(angle)) + 'px';
+                note.style.top = (centerY + outerR * Math.sin(angle)) + 'px';
+                note.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    applyMetaChange('key', root + ' Major');
+                });
+                circleWrap.appendChild(note);
+            });
+
+            CIRCLE_OF_FIFTHS_MINOR.forEach((minorLabel, i) => {
+                const angle = (i * 30 - 90) * (Math.PI / 180);
+                const minorRoot = minorLabel.slice(0, -1);
+                const note = document.createElement('div');
+                note.className = 'chord-circle-note chord-circle-minor';
+                if (isMinor && normalizeRoot(minorRoot) === normalizedVal) note.classList.add('active');
+                note.textContent = minorLabel;
+                note.style.left = (centerX + innerR * Math.cos(angle)) + 'px';
+                note.style.top = (centerY + innerR * Math.sin(angle)) + 'px';
+                note.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    applyMetaChange('key', minorRoot + ' Minor');
+                });
+                circleWrap.appendChild(note);
+            });
+
+            container.appendChild(circleWrap);
+        } else if (metaType === 'bpm') {
+            inputEl = document.createElement('input');
+            inputEl.type = 'number';
+            inputEl.min = '40';
+            inputEl.max = '240';
+            inputEl.value = currentValue || '120';
+            inputEl.style.cssText = 'width: 100%; padding: 8px; font-size: 16px; font-weight: 700; text-align: center; border: 1px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 8px;';
+            container.appendChild(inputEl);
+
+            const applyBtn = document.createElement('button');
+            applyBtn.textContent = 'Apply';
+            applyBtn.style.cssText = 'width: 100%; padding: 8px; background: var(--text); color: var(--bg); border: none; font-weight: 700; font-size: 13px; cursor: pointer;';
+            applyBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                applyMetaChange('bpm', inputEl.value);
+            });
+            container.appendChild(applyBtn);
+            setTimeout(() => { inputEl.focus(); inputEl.select(); }, 50);
+        } else if (metaType === 'time') {
+            const timeOptions = ['4/4', '3/4', '6/8', '2/4', '2/2', '3/8', '5/4', '7/8', '12/8'];
+            const grid = document.createElement('div');
+            grid.style.cssText = 'display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;';
+            timeOptions.forEach(ts => {
+                const btn = document.createElement('div');
+                btn.textContent = ts;
+                btn.style.cssText = `padding: 10px; text-align: center; font-weight: 700; font-size: 14px; cursor: pointer; border: 1px solid var(--border); background: ${ts === currentValue ? 'var(--text)' : 'var(--bg)'}; color: ${ts === currentValue ? 'var(--bg)' : 'var(--text)'};`;
+                btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    applyMetaChange('time', ts);
+                });
+                grid.appendChild(btn);
+            });
+            container.appendChild(grid);
+        }
+
+        metaEditorOverlay.appendChild(container);
+        metaEditorOverlay.style.display = 'block';
+
+        // Position near click, clamped to viewport
+        const rect = metaEditorOverlay.getBoundingClientRect();
+        let leftPos = Math.min(clickX + 5, window.innerWidth - rect.width - 10);
+        let topPos = Math.min(clickY + 5, window.innerHeight - rect.height - 10);
+        if (leftPos < 5) leftPos = 5;
+        if (topPos < 5) topPos = 5;
+        metaEditorOverlay.style.left = leftPos + 'px';
+        metaEditorOverlay.style.top = topPos + 'px';
+    }
+
+    function hideMetaEditor() {
+        metaEditorOverlay.style.display = 'none';
+    }
+
+    function applyMetaChange(metaType, newValue) {
+        if (!visualEditor || !visualEditor.value) return;
+        const lines = visualEditor.value.split('\n');
+        let changed = false;
+
+        // Convert key display value (e.g. "A Minor") to directive format (e.g. "Am")
+        const toKeyStr = (val) => val.replace(/ (Major|Minor)/, (_, q) => q === 'Minor' ? 'm' : '');
+
+        // Directive regex patterns
+        const directivePattern = metaType === 'key' ? /^\{key:/i :
+                                 metaType === 'bpm' ? /^\{tempo:/i : /^\{time:/i;
+
+        // Step 1: Try to update existing v4 directive
+        for (let i = 0; i < lines.length; i++) {
+            if (directivePattern.test(lines[i].trim())) {
+                if (metaType === 'key') lines[i] = `{key: ${toKeyStr(newValue)}}`;
+                else if (metaType === 'bpm') lines[i] = `{tempo: ${newValue}}`;
+                else lines[i] = `{time: ${newValue}}`;
+                changed = true;
+                break;
+            }
+        }
+
+        // Step 2: If no directive found, try to update normalized metadata line
+        // (format: "Artist, Key: G, 76 BPM, 3/4")
+        if (!changed) {
+            for (let i = 0; i < Math.min(lines.length, 5); i++) {
+                const trimmed = lines[i].trim();
+                if (/,/.test(trimmed) && /Key:/i.test(trimmed)) {
+                    if (metaType === 'key') {
+                        lines[i] = lines[i].replace(/Key:\s*[A-G][#b]?\s*(?:Major|Minor|m)?/i, `Key: ${toKeyStr(newValue)}`);
+                    } else if (metaType === 'bpm') {
+                        if (/\d+\s*BPM/i.test(lines[i])) {
+                            lines[i] = lines[i].replace(/\d+\s*BPM/i, `${newValue} BPM`);
+                        } else {
+                            // No BPM in line — append before time signature or at end
+                            lines[i] = lines[i].replace(/(Key:\s*[A-G][#b]?\s*(?:Major|Minor|m)?)/, `$1, ${newValue} BPM`);
+                        }
+                    } else if (metaType === 'time') {
+                        if (/,\s*\d+\/\d+/.test(lines[i])) {
+                            lines[i] = lines[i].replace(/,\s*\d+\/\d+/, `, ${newValue}`);
+                        } else {
+                            lines[i] += `, ${newValue}`;
+                        }
+                    }
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        // Step 3: If still not found, insert v4 directive after existing directive block
+        if (!changed) {
+            let insertIdx = 0;
+            for (let i = 0; i < lines.length; i++) {
+                if (/^\{(title|artist|key|tempo|time|capo):/i.test(lines[i].trim())) {
+                    insertIdx = i + 1;
+                } else if (insertIdx > 0) {
+                    break;
+                }
+            }
+            // If no directives found (plain text format), skip past title/metadata lines
+            if (insertIdx === 0) {
+                for (let i = 0; i < Math.min(lines.length, 3); i++) {
+                    const trimmed = lines[i].trim();
+                    if (trimmed && !trimmed.startsWith('(') && !trimmed.startsWith('{c:') && !/^\S+.*:$/.test(trimmed)) {
+                        insertIdx = i + 1;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            const directive = metaType === 'key' ? `{key: ${toKeyStr(newValue)}}` :
+                              metaType === 'bpm' ? `{tempo: ${newValue}}` : `{time: ${newValue}}`;
+            lines.splice(insertIdx, 0, directive);
+            changed = true;
+        }
+
+        // Always sync form fields
+        if (metaType === 'key') {
+            const keySelector = document.getElementById('keySelector');
+            if (keySelector) keySelector.value = newValue;
+        } else if (metaType === 'bpm') {
+            const bpm = document.getElementById('bpmInput');
+            if (bpm) bpm.value = newValue;
+        } else if (metaType === 'time') {
+            const ts = document.getElementById('timeSignature');
+            if (ts) ts.value = newValue;
+        }
+
+        // Always update content and preview
+        visualEditor.value = lines.join('\n');
+        if (typeof updateSongBookFromVisual === 'function') updateSongBookFromVisual();
+        if (typeof updateLivePreview === 'function') updateLivePreview();
+        hideMetaEditor();
+    }
+
+    // Click handler for metadata in livePreview
+    if (livePreview) {
+        livePreview.addEventListener('click', (e) => {
+            const metaEl = e.target.closest('.meta-editable');
+            if (!metaEl) return;
+            const metaType = metaEl.dataset.meta;
+            const currentValue = metaEl.dataset.value;
+            if (metaType) {
+                e.stopPropagation();
+                showMetaEditor(metaType, currentValue, e.clientX, e.clientY);
+            }
+        });
+    }
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (metaEditorOverlay.style.display === 'block' &&
+            !metaEditorOverlay.contains(e.target)) {
+            hideMetaEditor();
+        }
+    });
+
+    // ============= END METADATA EDITOR =============
 
     // Initialize subscription UI
     initSubscriptionUI();
