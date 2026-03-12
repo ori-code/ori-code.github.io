@@ -2283,6 +2283,70 @@ input[type="checkbox"]:checked::after {
     background: transparent;
 }
 
+/* Drag handle for section reordering */
+.section-drag-handle {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    opacity: 0.35;
+    font-size: 14px;
+    color: var(--text);
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 1;
+}
+
+[dir="rtl"] .section-drag-handle {
+    right: auto;
+    left: 4px;
+}
+
+.section-drag-handle:hover {
+    opacity: 1;
+}
+
+.section-drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Reorder mode: blocks need position:relative for handle */
+.reorder-active .song-section-block {
+    position: relative;
+}
+
+/* Dragging state */
+.song-section-block.dragging {
+    opacity: 0.4;
+}
+
+/* Drop target indicators */
+.song-section-block.drag-over-top {
+    border-top: 2px solid var(--text) !important;
+}
+
+.song-section-block.drag-over-bottom {
+    border-bottom: 2px solid var(--text) !important;
+}
+
+/* Flex-based columns for reorder mode (replaces CSS columns) */
+.reorder-columns-wrapper {
+    display: flex;
+    gap: 20px;
+}
+
+.reorder-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100px;
+}
+
 .row-space {
     height: 1.2em;
     min-height: 1.2em;

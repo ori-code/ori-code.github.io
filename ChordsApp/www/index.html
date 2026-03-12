@@ -58,7 +58,7 @@
                     <span class="header-brand-name"
                         style="font-weight: 700; font-size: 1.2rem; color: var(--text); display: flex; align-items: baseline; gap: 4px;"><b
                             dir="ltr">אChordim</b> <span id="appVersion"
-                            style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v99</span></span>
+                            style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v100</span></span>
                     <span class="header-brand-url"
                         style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
@@ -3331,11 +3331,11 @@
                             <option value="numbers">Nashville</option>
                             <option value="lyrics">Lyrics</option>
                         </select>
-                        <div style="display: flex; gap: 1px; border: 1px solid var(--border); overflow: hidden;">
+                        <div style="display: flex; gap: 0; overflow: hidden;">
                             <button id="liveModeLayout1" onclick="liveMode.setColumnLayout(1)"
-                                style="padding: 5px 10px; background: transparent; border: none; color: var(--text); cursor: pointer; font-size: 12px; opacity: 0.5;">☰</button>
+                                style="padding: 6px 12px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600; opacity: 0.5;" title="1 Column">▌</button>
                             <button id="liveModeLayout2" onclick="liveMode.setColumnLayout(2)"
-                                style="padding: 5px 10px; background: var(--text); border: none; color: var(--bg); cursor: pointer; font-size: 12px;">❘❘</button>
+                                style="padding: 6px 12px; background: var(--text); border: 1px solid var(--border); color: var(--bg); cursor: pointer; font-size: 11px; font-weight: 600;" title="2 Columns">▌▌</button>
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -3359,6 +3359,24 @@
                                 onchange="liveMode.toggleTimeline(this.checked)"
                                 style="cursor: pointer; width: 14px; height: 14px;">
                             <span>Timeline</span>
+                        </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
+                            <input type="checkbox" id="liveModeReorder"
+                                onchange="liveMode.toggleReorderMode(this.checked)"
+                                style="cursor: pointer; width: 14px; height: 14px;">
+                            <span>Reorder</span>
+                        </label>
+                        <button id="liveModeResetOrder" onclick="liveMode.resetSectionOrder()"
+                            style="display: none; padding: 2px 8px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px;">
+                            Reset Order
+                        </button>
+                        <label id="followLeaderLayoutLabel"
+                            style="display: none; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
+                            <input type="checkbox" id="followLeaderLayout"
+                                onchange="liveMode.toggleFollowLeaderLayout(this.checked)"
+                                style="cursor: pointer; width: 14px; height: 14px;">
+                            <span>Follow Leader</span>
                         </label>
                     </div>
                     <div style="margin-top: 8px;">

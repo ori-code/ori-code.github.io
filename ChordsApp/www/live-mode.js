@@ -30,6 +30,9 @@ const liveMode = {
     songAutoScrollEnabled: {}, // Track which songs have auto-scroll enabled { songId: true/false }
     playlistLocked: false, // When true, songs can only be changed via playlist clicks
     miniAudioSyncInterval: null, // Interval for syncing mini audio controls
+    reorderMode: false, // When true, drag handles shown for section reordering
+    customColumnLayout: null, // { col1: [...ids], col2: [...ids] } or null for default
+    followLeaderLayout: false, // When true, player uses leader's column layout
 
     // Auto-scroll state
     autoScrollEnabled: false,
@@ -839,13 +842,28 @@ const liveMode = {
                 if (window.sessionManager && window.sessionManager.isLeader) {
                     this.attachSectionClickHandlers();
                 }
+
             } else {
                 // Fallback to plain text
                 chartDisplay.textContent = this.currentSongContent;
             }
 
-            // Apply saved user preferences to Live Mode display
+            // Apply saved user preferences to Live Mode display (sets CSS columns)
             this.applySavedPreferences(chartDisplay);
+
+            // Apply saved column layout — replaces CSS columns with flex if saved layout exists
+            this.applyColumnLayout(chartDisplay);
+
+            // Update reset button visibility
+            const resetBtn = document.getElementById('liveModeResetOrder');
+            if (resetBtn) {
+                resetBtn.style.display = this.customColumnLayout ? 'inline-block' : 'none';
+            }
+
+            // Re-attach drag handles if reorder mode is active
+            if (this.reorderMode) {
+                this.enableDragReorder();
+            }
 
             // Apply badges visibility
             if (this.showBadges) {
@@ -1521,6 +1539,12 @@ const liveMode = {
             // Sync checkbox with session manager state
             if (followLeaderCheckbox && !window.sessionManager.isLeader) {
                 followLeaderCheckbox.checked = window.sessionManager.inLiveMode;
+            }
+
+            // Show "Follow Leader Layout" only for players in a session
+            const followLayoutLabel = document.getElementById('followLeaderLayoutLabel');
+            if (followLayoutLabel) {
+                followLayoutLabel.style.display = window.sessionManager.isLeader ? 'none' : 'flex';
             }
         } else {
             if (sessionControls) sessionControls.style.display = 'none';
@@ -3357,6 +3381,7 @@ const liveMode = {
             this.currentSongName = `${title}${author}${bpmInfo}${timeInfo}`;
 
             // Load per-song preferences from session (or use song defaults for first load)
+            this.customColumnLayout = null; // Reset before loading new song's prefs
             const savedPrefs = await this.loadSongPreferences(songId);
             if (savedPrefs) {
                 console.log(`📺 Loaded session preferences for ${songId}:`, savedPrefs);
@@ -3383,6 +3408,20 @@ const liveMode = {
                     this.showBorders = savedPrefs.showBorders;
                     const bordersCheckbox = document.getElementById('liveModeBorders');
                     if (bordersCheckbox) bordersCheckbox.checked = savedPrefs.showBorders;
+                }
+
+                // Apply column layout preference (explicit column assignments)
+                if (savedPrefs.columnLayout && typeof savedPrefs.columnLayout === 'object') {
+                    // Normalize Firebase data: arrays may come back as objects
+                    const col1 = savedPrefs.columnLayout.col1;
+                    const col2 = savedPrefs.columnLayout.col2;
+                    this.customColumnLayout = {
+                        col1: Array.isArray(col1) ? col1 : (col1 ? Object.values(col1) : []),
+                        col2: Array.isArray(col2) ? col2 : (col2 ? Object.values(col2) : [])
+                    };
+                    console.log('📐 Loaded column layout for', songId, ':', this.customColumnLayout);
+                } else {
+                    this.customColumnLayout = null;
                 }
 
                 // Apply metronome preference
@@ -3540,6 +3579,7 @@ const liveMode = {
         console.log('📺 Content length:', this.currentSongContent.length);
 
         // Load player's per-song session preferences
+        this.customColumnLayout = null; // Reset before loading new song's prefs
         const savedPrefs = await this.loadSongPreferences(songData.songId);
         if (savedPrefs) {
             console.log(`📺 Loaded session preferences for ${songData.songId}:`, savedPrefs);
@@ -3568,6 +3608,18 @@ const liveMode = {
                 this.showBorders = savedPrefs.showBorders;
                 const bordersCheckbox = document.getElementById('liveModeBorders');
                 if (bordersCheckbox) bordersCheckbox.checked = savedPrefs.showBorders;
+            }
+
+            // Apply column layout preference
+            if (savedPrefs.columnLayout && typeof savedPrefs.columnLayout === 'object') {
+                const col1 = savedPrefs.columnLayout.col1;
+                const col2 = savedPrefs.columnLayout.col2;
+                this.customColumnLayout = {
+                    col1: Array.isArray(col1) ? col1 : (col1 ? Object.values(col1) : []),
+                    col2: Array.isArray(col2) ? col2 : (col2 ? Object.values(col2) : [])
+                };
+            } else {
+                this.customColumnLayout = null;
             }
 
             // Apply metronome preference
@@ -3690,6 +3742,8 @@ const liveMode = {
             // Add click handler to the new node
             newBlock.style.cursor = 'pointer';
             newBlock.addEventListener('click', (e) => {
+                // Don't trigger section select when clicking drag handle
+                if (e.target.closest('.section-drag-handle')) return;
                 e.stopPropagation();
                 const sectionId = newBlock.dataset.sectionId;
                 const sectionName = newBlock.dataset.sectionName;
@@ -3697,6 +3751,537 @@ const liveMode = {
                 this.selectSection(sectionId, sectionName);
             });
         });
+    },
+
+    // ============== Section Drag-and-Drop Reorder ==============
+
+    /**
+     * Toggle "Follow Leader Layout" mode
+     */
+    toggleFollowLeaderLayout(enabled) {
+        this.followLeaderLayout = enabled;
+        console.log(`📐 Follow Leader Layout: ${enabled}`);
+
+        if (enabled) {
+            // Disable personal reorder mode when following leader
+            const reorderCheckbox = document.getElementById('liveModeReorder');
+            if (reorderCheckbox && reorderCheckbox.checked) {
+                reorderCheckbox.checked = false;
+                this.toggleReorderMode(false);
+            }
+        }
+    },
+
+    /**
+     * Apply layout received from leader (called via onLeaderLayoutUpdate callback)
+     */
+    applyLeaderLayout(layoutData) {
+        if (!this.followLeaderLayout) return;
+        if (!layoutData || !layoutData.columnLayout) return;
+        // Only apply if it's for the current song
+        if (layoutData.songId && layoutData.songId !== this.currentSongId) return;
+
+        console.log('📐 Applying leader layout:', layoutData.columnLayout);
+
+        // Normalize Firebase data
+        const col1 = layoutData.columnLayout.col1;
+        const col2 = layoutData.columnLayout.col2;
+        this.customColumnLayout = {
+            col1: Array.isArray(col1) ? col1 : (col1 ? Object.values(col1) : []),
+            col2: Array.isArray(col2) ? col2 : (col2 ? Object.values(col2) : [])
+        };
+
+        // Re-render with leader's layout
+        this.updateDisplay();
+    },
+
+    /**
+     * Toggle reorder mode on/off
+     */
+    toggleReorderMode(enabled) {
+        this.reorderMode = enabled;
+        if (enabled) {
+            this.enableDragReorder();
+        } else {
+            this.disableDragReorder();
+        }
+    },
+
+    /**
+     * Enable drag-and-drop reordering: inject handles and attach event listeners
+     * For 2-column mode, replaces CSS columns with flex layout for reliable cross-column drag
+     */
+    enableDragReorder() {
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (!chartDisplay) return;
+
+        // Clean up any previous reorder state
+        this.disableDragReorder();
+        chartDisplay.classList.add('reorder-active');
+
+        // For 2-column mode: replace CSS columns with flex-based columns
+        if (this.currentColumnLayout === 2) {
+            this._setupFlexColumns(chartDisplay);
+        }
+
+        const self = this;
+        let dragFromId = null;
+        let dragBlock = null;
+        let mouseClone = null;
+        let mouseActive = false;
+
+        const getBlockAtPoint = (x, y) => {
+            // Hide clone to see through it
+            if (mouseClone) mouseClone.style.visibility = 'hidden';
+            const elements = document.elementsFromPoint(x, y);
+            if (mouseClone) mouseClone.style.visibility = '';
+            for (const el of elements) {
+                const block = el.closest('.song-section-block');
+                if (block && !block.classList.contains('dragging') && chartDisplay.contains(block)) {
+                    return block;
+                }
+            }
+            return null;
+        };
+
+        const getColumnAtPoint = (x, y) => {
+            if (mouseClone) mouseClone.style.visibility = 'hidden';
+            const elements = document.elementsFromPoint(x, y);
+            if (mouseClone) mouseClone.style.visibility = '';
+            for (const el of elements) {
+                const col = el.closest('.reorder-column');
+                if (col && chartDisplay.contains(col)) return col;
+            }
+            return null;
+        };
+
+        const clearIndicators = () => {
+            chartDisplay.querySelectorAll('.song-section-block').forEach(el => {
+                el.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+        };
+
+        const performDrop = (clientX, clientY) => {
+            const target = getBlockAtPoint(clientX, clientY);
+            const fromBlock = dragFromId ? chartDisplay.querySelector(`[data-section-id="${dragFromId}"]`) : null;
+            if (!fromBlock) return;
+
+            if (target && target.dataset.sectionId !== dragFromId) {
+                // Drop on a specific block
+                const rect = target.getBoundingClientRect();
+                const midY = rect.top + rect.height / 2;
+                if (clientY < midY) {
+                    target.before(fromBlock);
+                } else {
+                    target.after(fromBlock);
+                }
+                self.captureCurrentOrder();
+            } else if (!target) {
+                // Dropped on empty area — check if on a column (2-col flex mode)
+                const col = getColumnAtPoint(clientX, clientY);
+                if (col) {
+                    col.appendChild(fromBlock);
+                    self.captureCurrentOrder();
+                }
+            }
+        };
+
+        const cleanup = () => {
+            if (mouseClone) { mouseClone.remove(); mouseClone = null; }
+            if (dragBlock) { dragBlock.classList.remove('dragging'); }
+            clearIndicators();
+            dragFromId = null;
+            dragBlock = null;
+            mouseActive = false;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        const onMouseMove = (e) => {
+            if (!mouseActive) return;
+            e.preventDefault();
+
+            if (mouseClone) {
+                mouseClone.style.top = (e.clientY - 20) + 'px';
+            }
+
+            clearIndicators();
+            const target = getBlockAtPoint(e.clientX, e.clientY);
+            if (target && target.dataset.sectionId !== dragFromId) {
+                const rect = target.getBoundingClientRect();
+                const midY = rect.top + rect.height / 2;
+                if (e.clientY < midY) {
+                    target.classList.add('drag-over-top');
+                } else {
+                    target.classList.add('drag-over-bottom');
+                }
+            }
+        };
+
+        const onMouseUp = (e) => {
+            if (!mouseActive) { cleanup(); return; }
+            performDrop(e.clientX, e.clientY);
+            cleanup();
+        };
+
+        const sectionBlocks = chartDisplay.querySelectorAll('.song-section-block');
+
+        sectionBlocks.forEach(block => {
+            // Inject drag handle if not already present
+            if (!block.querySelector('.section-drag-handle')) {
+                const handle = document.createElement('div');
+                handle.className = 'section-drag-handle';
+                handle.textContent = '\u2807'; // ⠇ braille dots
+                handle.setAttribute('title', 'Drag to reorder');
+                block.insertBefore(handle, block.firstChild);
+            }
+
+            const handle = block.querySelector('.section-drag-handle');
+
+            // --- Desktop: mousedown on handle starts drag ---
+            handle._mousedownHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                dragFromId = block.dataset.sectionId;
+                dragBlock = block;
+                mouseActive = true;
+                block.classList.add('dragging');
+
+                // Create floating clone
+                mouseClone = block.cloneNode(true);
+                mouseClone.style.position = 'fixed';
+                mouseClone.style.width = block.offsetWidth + 'px';
+                mouseClone.style.top = (e.clientY - 20) + 'px';
+                mouseClone.style.left = block.getBoundingClientRect().left + 'px';
+                mouseClone.style.opacity = '0.85';
+                mouseClone.style.zIndex = '9999';
+                mouseClone.style.pointerEvents = 'none';
+                mouseClone.style.border = '2px solid var(--text)';
+                mouseClone.style.background = 'var(--bg)';
+                mouseClone.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)';
+                document.body.appendChild(mouseClone);
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            };
+            handle.addEventListener('mousedown', handle._mousedownHandler);
+
+            // --- Mobile: touch with long-press on handle ---
+            let longPressTimer = null;
+            let touchActive = false;
+
+            handle._touchstartHandler = (e) => {
+                const touch = e.touches[0];
+                longPressTimer = setTimeout(() => {
+                    touchActive = true;
+                    dragFromId = block.dataset.sectionId;
+                    dragBlock = block;
+                    block.classList.add('dragging');
+
+                    mouseClone = block.cloneNode(true);
+                    mouseClone.style.position = 'fixed';
+                    mouseClone.style.width = block.offsetWidth + 'px';
+                    mouseClone.style.top = (touch.clientY - 20) + 'px';
+                    mouseClone.style.left = block.getBoundingClientRect().left + 'px';
+                    mouseClone.style.opacity = '0.85';
+                    mouseClone.style.zIndex = '9999';
+                    mouseClone.style.pointerEvents = 'none';
+                    mouseClone.style.border = '2px solid var(--text)';
+                    mouseClone.style.background = 'var(--bg)';
+                    mouseClone.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)';
+                    document.body.appendChild(mouseClone);
+                }, 300);
+            };
+
+            handle._touchmoveHandler = (e) => {
+                if (!touchActive) {
+                    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                    return;
+                }
+                e.preventDefault();
+                const touch = e.touches[0];
+
+                if (mouseClone) mouseClone.style.top = (touch.clientY - 20) + 'px';
+
+                clearIndicators();
+                const target = getBlockAtPoint(touch.clientX, touch.clientY);
+                if (target && target.dataset.sectionId !== dragFromId) {
+                    const rect = target.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    if (touch.clientY < midY) {
+                        target.classList.add('drag-over-top');
+                    } else {
+                        target.classList.add('drag-over-bottom');
+                    }
+                }
+            };
+
+            handle._touchendHandler = (e) => {
+                if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                if (!touchActive) return;
+
+                const touch = e.changedTouches[0];
+                performDrop(touch.clientX, touch.clientY);
+
+                if (mouseClone) { mouseClone.remove(); mouseClone = null; }
+                if (dragBlock) { dragBlock.classList.remove('dragging'); }
+                clearIndicators();
+                dragFromId = null;
+                dragBlock = null;
+                touchActive = false;
+            };
+
+            handle._touchcancelHandler = () => {
+                if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+                if (mouseClone) { mouseClone.remove(); mouseClone = null; }
+                if (dragBlock) { dragBlock.classList.remove('dragging'); }
+                clearIndicators();
+                dragFromId = null;
+                dragBlock = null;
+                touchActive = false;
+            };
+
+            handle.addEventListener('touchstart', handle._touchstartHandler, { passive: true });
+            handle.addEventListener('touchmove', handle._touchmoveHandler, { passive: false });
+            handle.addEventListener('touchend', handle._touchendHandler, { passive: true });
+            handle.addEventListener('touchcancel', handle._touchcancelHandler, { passive: true });
+        });
+
+        // Store cleanup ref for disableDragReorder
+        chartDisplay._reorderCleanup = cleanup;
+    },
+
+    /**
+     * Set up flex-based 2-column layout (replaces CSS columns for reliable drag-and-drop)
+     */
+    _setupFlexColumns(chartDisplay) {
+        // Remove any existing flex wrapper first
+        const existingWrapper = chartDisplay.querySelector('.reorder-columns-wrapper');
+        if (existingWrapper) {
+            this._teardownFlexColumns(chartDisplay);
+        }
+
+        // Remove CSS columns
+        chartDisplay.style.columns = '';
+        chartDisplay.style.columnFill = '';
+        chartDisplay.style.columnGap = '';
+        chartDisplay.style.columnRule = '';
+
+        // Collect section blocks (leave header elements in place)
+        const allBlocks = [...chartDisplay.querySelectorAll('.song-section-block')];
+        if (allBlocks.length === 0) return;
+
+        // Build a lookup of blocks by section ID
+        const blockMap = {};
+        allBlocks.forEach(b => { blockMap[b.dataset.sectionId] = b; });
+
+        let col1Blocks, col2Blocks;
+
+        if (this.customColumnLayout) {
+            // Use saved column assignments (explicit — survives font size changes)
+            col1Blocks = [];
+            col2Blocks = [];
+            const placed = new Set();
+
+            for (const id of (this.customColumnLayout.col1 || [])) {
+                if (blockMap[id]) { col1Blocks.push(blockMap[id]); placed.add(id); }
+            }
+            for (const id of (this.customColumnLayout.col2 || [])) {
+                if (blockMap[id]) { col2Blocks.push(blockMap[id]); placed.add(id); }
+            }
+            // Any new sections not in saved layout go to col1
+            allBlocks.forEach(b => {
+                if (!placed.has(b.dataset.sectionId)) col1Blocks.push(b);
+            });
+        } else {
+            // Auto-calculate best split by cumulative height (starting point)
+            const containerHeight = parseInt(chartDisplay.style.height) || 1123;
+            let cumHeight = 0;
+            col1Blocks = [];
+            col2Blocks = [];
+
+            for (const block of allBlocks) {
+                const h = block.offsetHeight + 4; // include margin
+                if (cumHeight + h <= containerHeight && col2Blocks.length === 0) {
+                    col1Blocks.push(block);
+                    cumHeight += h;
+                } else {
+                    col2Blocks.push(block);
+                }
+            }
+        }
+
+        // Create flex wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'reorder-columns-wrapper';
+
+        const col1 = document.createElement('div');
+        col1.className = 'reorder-column';
+
+        const col2 = document.createElement('div');
+        col2.className = 'reorder-column';
+
+        col1Blocks.forEach(b => col1.appendChild(b));
+        col2Blocks.forEach(b => col2.appendChild(b));
+
+        wrapper.appendChild(col1);
+        wrapper.appendChild(col2);
+        chartDisplay.appendChild(wrapper);
+    },
+
+    /**
+     * Tear down flex columns and restore blocks to chartDisplay
+     */
+    _teardownFlexColumns(chartDisplay) {
+        const wrapper = chartDisplay.querySelector('.reorder-columns-wrapper');
+        if (!wrapper) return;
+
+        // Collect blocks in order: col1 then col2
+        const blocks = [];
+        wrapper.querySelectorAll('.reorder-column').forEach(col => {
+            col.querySelectorAll('.song-section-block').forEach(b => blocks.push(b));
+        });
+
+        // Move blocks back to chartDisplay before the wrapper
+        blocks.forEach(b => chartDisplay.insertBefore(b, wrapper));
+        wrapper.remove();
+    },
+
+    /**
+     * Disable drag-and-drop reordering: remove handles and listeners
+     */
+    disableDragReorder() {
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (!chartDisplay) return;
+
+        chartDisplay.classList.remove('reorder-active');
+
+        // Run stored cleanup (removes document-level mousemove/mouseup if active)
+        if (chartDisplay._reorderCleanup) {
+            chartDisplay._reorderCleanup();
+            chartDisplay._reorderCleanup = null;
+        }
+
+        // Remove block-level handles and listeners
+        chartDisplay.querySelectorAll('.song-section-block').forEach(block => {
+            block.classList.remove('dragging');
+            const handle = block.querySelector('.section-drag-handle');
+            if (handle) {
+                if (handle._mousedownHandler) handle.removeEventListener('mousedown', handle._mousedownHandler);
+                if (handle._touchstartHandler) handle.removeEventListener('touchstart', handle._touchstartHandler);
+                if (handle._touchmoveHandler) handle.removeEventListener('touchmove', handle._touchmoveHandler);
+                if (handle._touchendHandler) handle.removeEventListener('touchend', handle._touchendHandler);
+                if (handle._touchcancelHandler) handle.removeEventListener('touchcancel', handle._touchcancelHandler);
+                handle.remove();
+            }
+        });
+
+        // If customColumnLayout exists, keep flex layout (sections stay in assigned columns)
+        // Only tear down if no custom layout (user hasn't reordered)
+        if (!this.customColumnLayout) {
+            this._teardownFlexColumns(chartDisplay);
+            if (this.currentColumnLayout === 2) {
+                this.applySavedPreferences(chartDisplay);
+            }
+        }
+    },
+
+    /**
+     * Apply saved column layout — creates flex columns with explicit block assignments.
+     * Called AFTER applySavedPreferences() so it can replace CSS columns with flex.
+     */
+    applyColumnLayout(chartDisplay) {
+        if (!this.customColumnLayout) return;
+
+        const container = chartDisplay || document.getElementById('liveModeChartDisplay');
+        if (!container) return;
+
+        if (this.customColumnLayout.col2 && this.customColumnLayout.col2.length > 0) {
+            // 2-column explicit layout — use flex columns
+            this._setupFlexColumns(container);
+            console.log('📐 applyColumnLayout: 2-col flex applied', this.customColumnLayout);
+        } else if (this.customColumnLayout.col1) {
+            // 1-column reorder — just reorder DOM nodes
+            const blocks = {};
+            container.querySelectorAll('.song-section-block').forEach(b => {
+                blocks[b.dataset.sectionId] = b;
+            });
+            for (const id of this.customColumnLayout.col1) {
+                if (blocks[id]) {
+                    container.appendChild(blocks[id]);
+                    delete blocks[id];
+                }
+            }
+            Object.values(blocks).forEach(b => container.appendChild(b));
+            console.log('📐 applyColumnLayout: 1-col reorder applied');
+        }
+
+        // Show reset button
+        const resetBtn = document.getElementById('liveModeResetOrder');
+        if (resetBtn) resetBtn.style.display = 'inline-block';
+    },
+
+    /**
+     * Capture current layout and save to Firebase as per-column assignments
+     */
+    captureCurrentOrder() {
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (!chartDisplay) return;
+
+        const wrapper = chartDisplay.querySelector('.reorder-columns-wrapper');
+        if (wrapper) {
+            // 2-column flex mode — save per-column
+            const cols = wrapper.querySelectorAll('.reorder-column');
+            const col1Ids = [];
+            const col2Ids = [];
+            if (cols[0]) cols[0].querySelectorAll('.song-section-block').forEach(b => col1Ids.push(b.dataset.sectionId));
+            if (cols[1]) cols[1].querySelectorAll('.song-section-block').forEach(b => col2Ids.push(b.dataset.sectionId));
+            this.customColumnLayout = { col1: col1Ids, col2: col2Ids };
+        } else {
+            // 1-column mode — save flat order
+            const blocks = [...chartDisplay.querySelectorAll('.song-section-block')];
+            this.customColumnLayout = { col1: blocks.map(b => b.dataset.sectionId), col2: [] };
+        }
+
+        // Save to Firebase (player preferences)
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, {
+                columnLayout: this.customColumnLayout
+            });
+
+            // If leader, broadcast to players with "Follow Leader Layout" enabled
+            if (window.sessionManager && window.sessionManager.isLeader) {
+                window.sessionManager.updateLeaderLayout(this.currentSongId, this.customColumnLayout);
+            }
+        }
+
+        // Show reset button
+        const resetBtn = document.getElementById('liveModeResetOrder');
+        if (resetBtn) resetBtn.style.display = 'inline-block';
+
+        console.log('📐 Column layout saved:', this.customColumnLayout);
+    },
+
+    /**
+     * Reset column layout to default (auto-distributed)
+     */
+    resetSectionOrder() {
+        this.customColumnLayout = null;
+
+        // Clear from Firebase
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { columnLayout: null, sectionOrder: null });
+        }
+
+        // Hide reset button
+        const resetBtn = document.getElementById('liveModeResetOrder');
+        if (resetBtn) resetBtn.style.display = 'none';
+
+        // Re-render to restore default layout
+        this.updateDisplay();
+
+        console.log('📐 Column layout reset to default');
     },
 
     /**

@@ -425,6 +425,16 @@ class SessionManager {
         });
 
         this.listeners.push({ ref: selectedSectionRef, type: 'value' });
+
+        // Listen to leader layout changes (for "Follow Leader Layout" feature)
+        const leaderLayoutRef = this.database.ref(`sessions/${sessionId}/leaderLayout`);
+        const leaderLayoutListener = leaderLayoutRef.on('value', (snapshot) => {
+            const layoutData = snapshot.val();
+            if (layoutData && !this.isLeader) {
+                this.onLeaderLayoutUpdate(layoutData);
+            }
+        });
+        this.listeners.push({ ref: leaderLayoutRef, type: 'value' });
     }
 
     /**
@@ -481,6 +491,21 @@ class SessionManager {
 
         await this.database.ref(`sessions/${this.activeSession}/selectedSection`).set(selectionData);
         console.log(`📍 Broadcasting selected section: ${sectionName}`);
+    }
+
+    /**
+     * Broadcast leader's column layout to all participants (LEADER only)
+     * Players with "Follow Leader Layout" enabled will apply this layout
+     */
+    async updateLeaderLayout(songId, columnLayout) {
+        if (!this.isLeader || !this.activeSession) return;
+
+        await this.database.ref(`sessions/${this.activeSession}/leaderLayout`).set({
+            songId: songId,
+            columnLayout: columnLayout,
+            timestamp: Date.now()
+        });
+        console.log(`📐 Broadcasting leader layout for ${songId}`);
     }
 
     /**
@@ -775,6 +800,16 @@ class SessionManager {
         // Highlight the selected section in Live Mode
         if (window.liveMode && window.liveMode.isActive) {
             window.liveMode.highlightSection(sectionId);
+        }
+    }
+
+    /**
+     * Callback when leader broadcasts layout (override in live-mode.js)
+     */
+    onLeaderLayoutUpdate(layoutData) {
+        console.log('📐 Leader layout update received:', layoutData);
+        if (window.liveMode && window.liveMode.isActive) {
+            window.liveMode.applyLeaderLayout(layoutData);
         }
     }
 }
