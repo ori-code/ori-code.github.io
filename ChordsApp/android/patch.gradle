@@ -1,0 +1,44 @@
+task patchFiles {
+    doLast {
+        def htmlFile = new File('/Volumes/1TB_EXFAT/Development www.TheFaithSound.com/ori-code.github.io/ChordsApp/www/index.html')
+        def html = htmlFile.text
+        
+        def target1 = '<input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">\n                    <div id="uploadBtnRow" style="display: flex; gap: 8px; width: 100%;">\n                        <label class="primary-action" for="chartFileInput" style="flex: 1; text-align: center;"\n                            data-i18n="step1.btn">Upload</label>'
+        def replacement1 = '<input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">\n                    <input id="cameraFileInput" class="sr-only" type="file" accept="image/*" capture="environment">\n                    <div id="uploadBtnRow" style="display: flex; gap: 8px; width: 100%;">\n                        <label class="primary-action" for="cameraFileInput" style="flex: 1; text-align: center; background: var(--text); color: var(--bg);"\n                            data-i18n="step1.camera">Take Photo</label>\n                        <label class="primary-action" for="chartFileInput" style="flex: 1; text-align: center;"\n                            data-i18n="step1.btn">Upload Stash Photo</label>'
+                            
+        html = html.replace(target1, replacement1)
+
+        def target2 = "const chartFileInput = document.getElementById('chartFileInput');"
+        def replacement2 = "const chartFileInput = document.getElementById('chartFileInput');\n            const cameraFileInput = document.getElementById('cameraFileInput');"
+        html = html.replace(target2, replacement2)
+        
+        def target3 = "// File input change — show preview for images\n            chartFileInput.addEventListener('change', (e) => {"
+        def replacement3 = """// Camera input change
+            if (cameraFileInput) {
+                cameraFileInput.addEventListener('change', (e) => {
+                    const file = e.target.files?.[0];
+                    if (file && file.type?.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            previewImage.src = ev.target.result;
+                            previewImage.style.display = 'block';
+                            if (placeholder) placeholder.style.display = 'none';
+                        };
+                        reader.readAsDataURL(file);
+                        
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        chartFileInput.files = dt.files;
+                        chartFileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            }
+
+            // File input change — show preview for images
+            chartFileInput.addEventListener('change', (e) => {"""
+            
+        html = html.replace(target3, replacement3)
+        htmlFile.write(html)
+        println "Patch applied successfully"
+    }
+}

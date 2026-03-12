@@ -58,7 +58,7 @@
                     <span class="header-brand-name"
                         style="font-weight: 700; font-size: 1.2rem; color: var(--text); display: flex; align-items: baseline; gap: 4px;"><b
                             dir="ltr">אChordim</b> <span id="appVersion"
-                            style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v96</span></span>
+                            style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v99</span></span>
                     <span class="header-brand-url"
                         style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
@@ -155,9 +155,12 @@
                         best recognition
                         results.</p>
                     <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
+                    <input id="cameraFileInput" class="sr-only" type="file" accept="image/*" capture="environment">
                     <div id="uploadBtnRow" style="display: flex; gap: 8px; width: 100%;">
+                        <label class="primary-action" for="cameraFileInput" style="flex: 1; text-align: center; background: var(--text); color: var(--bg);"
+                            data-i18n="step1.camera">Take Photo</label>
                         <label class="primary-action" for="chartFileInput" style="flex: 1; text-align: center;"
-                            data-i18n="step1.btn">Upload</label>
+                            data-i18n="step1.btn">Upload Stash Photo</label>
                         <button class="primary-action" id="pasteImageBtn" style="flex: 1; display: none;">Paste</button>
                     </div>
                     <div style="display: flex; gap: 6px; width: 100%; margin-top: 8px; align-items: flex-start;">
@@ -3759,10 +3762,17 @@
             background: #ffffff !important;
         }
 
-        /* Hide song title/meta in live mode (shown in top bar) but keep badges row visible */
+        /* Song header and badges span all columns so they stay above both columns */
+        #liveModeChartDisplay .song-header,
+        #liveModeChartDisplay > .section-badges-row {
+            column-span: all;
+            -webkit-column-span: all;
+        }
+
+        /* Show song title/meta in live mode */
         #liveModeChartDisplay .song-header .song-title,
         #liveModeChartDisplay .song-header .song-meta {
-            display: none;
+            display: block;
         }
 
 
@@ -3770,6 +3780,12 @@
         #liveModeChartDisplay .section-badges-row {
             display: flex;
             margin-bottom: 12px;
+        }
+
+        /* RTL badges: V1 rightmost, V2 middle, V3 leftmost */
+        #liveModeChartDisplay[dir="rtl"] .section-badges-row {
+            flex-direction: row-reverse;
+            justify-content: flex-end;
         }
 
         #liveModeChartDisplay.hide-badges .section-badges-row {
@@ -5332,6 +5348,7 @@
             const uploadPreview = document.getElementById('uploadPreview');
             const previewImage = document.getElementById('previewImage');
             const chartFileInput = document.getElementById('chartFileInput');
+            const cameraFileInput = document.getElementById('cameraFileInput');
             const placeholder = uploadPreview ? uploadPreview.querySelector('.preview-placeholder') : null;
 
             if (!uploadPreview || !previewImage) return;
@@ -5427,6 +5444,27 @@
                 const file = e.dataTransfer?.files?.[0];
                 if (file) handleImageFile(file);
             });
+
+            // Camera input change
+            if (cameraFileInput) {
+                cameraFileInput.addEventListener('change', (e) => {
+                    const file = e.target.files?[0];
+                    if (file && file.type?.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            previewImage.src = ev.target.result;
+                            previewImage.style.display = 'block';
+                            if (placeholder) placeholder.style.display = 'none';
+                        };
+                        reader.readAsDataURL(file);
+                        
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        chartFileInput.files = dt.files;
+                        chartFileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            }
 
             // File input change — show preview for images
             chartFileInput.addEventListener('change', (e) => {

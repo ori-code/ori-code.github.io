@@ -36,7 +36,7 @@ const translations = {
         "step1.number": "1",
         "step1.title": "Upload your chart",
         "step1.desc": "Accepts images (JPG, PNG, HEIC) and PDFs. High contrast photos deliver the best recognition results.",
-        "step1.btn": "Upload",
+        "step1.btn": "Upload / Photo",
         "step1.placeholder": "No file selected yet. Supported: JPG, PNG, HEIC, PDF.",
 
         "step2.number": "2",
@@ -386,7 +386,7 @@ const translations = {
         "step1.number": "1",
         "step1.title": "העלה את הצ׳ארט",
         "step1.desc": "תומך בתמונות (JPG, PNG, HEIC) ובקבצי PDF. לקבלת התוצאות הטובות ביותר מומלץ להשתמש בצילום ברור וקונטרסטי.",
-        "step1.btn": "העלאה",
+        "step1.btn": "העלאה / צילום",
         "step1.placeholder": "לא נבחר קובץ. נתמך: JPG, PNG, HEIC, PDF.",
 
         "step2.number": "2",

@@ -1,0 +1,36 @@
+--- ChordsApp/www/index.html
++++ ChordsApp/www/index.html
+@@ -155,8 +155,11 @@
+                     <p data-i18n="step1.desc">Accepts images (JPG, PNG, HEIC) and PDFs. High contrast photos deliver the
+                         best recognition
+                         results.</p>
+                     <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
++                    <input id="cameraFileInput" class="sr-only" type="file" accept="image/*" capture="environment">
+                     <div id="uploadBtnRow" style="display: flex; gap: 8px; width: 100%;">
++                        <label class="primary-action" for="cameraFileInput" style="flex: 1; text-align: center;"
++                            data-i18n="step1.camera">Take Photo</label>
+                         <label class="primary-action" for="chartFileInput" style="flex: 1; text-align: center;"
+                             data-i18n="step1.btn">Upload</label>
+                         <button class="primary-action" id="pasteImageBtn" style="flex: 1; display: none;">Paste</button>
+@@ -5331,6 +5334,7 @@
+             const uploadPreview = document.getElementById('uploadPreview');
+             const previewImage = document.getElementById('previewImage');
+             const chartFileInput = document.getElementById('chartFileInput');
++            const cameraFileInput = document.getElementById('cameraFileInput');
+             const placeholder = uploadPreview ? uploadPreview.querySelector('.preview-placeholder') : null;
+
+             if (!uploadPreview || !previewImage) return;
+@@ -5435,6 +5439,14 @@
+                     }
+                 }
+             });
++
++            if (cameraFileInput) {
++                cameraFileInput.addEventListener('change', (e) => {
++                    const file = e.target.files?.[0];
++                    if (file) handleImageFile(file);
++                });
++            }
+
+             // Content input: handles URLs (fetch + AI) or plain text (AI convert to v4)
+             const fetchUrlBtn = document.getElementById('fetchUrlBtn');
