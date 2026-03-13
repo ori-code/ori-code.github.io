@@ -3913,10 +3913,16 @@
                     try {
                         // Get song title for filename
                         const titleEl = livePreview.querySelector('.song-title');
-                        const songTitle = titleEl ? titleEl.textContent.trim().replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_') : 'chord_sheet';
+                        const songTitle = titleEl ? titleEl.textContent.trim().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, '_') : 'chord_sheet';
 
                         // Capture the full preview page (content + footer with user branding)
                         const captureTarget = document.querySelector('.preview-page[data-page="1"]');
+
+                        // Temporarily force light theme so text is black on white
+                        // (in dark mode, var(--text) is white which becomes invisible on white bg)
+                        const htmlEl = document.documentElement;
+                        const originalTheme = htmlEl.getAttribute('data-theme');
+                        htmlEl.setAttribute('data-theme', 'light');
 
                         // Capture the preview
                         const canvas = await html2canvas(captureTarget, {
@@ -3929,6 +3935,13 @@
                             windowWidth: captureTarget.scrollWidth,
                             windowHeight: captureTarget.scrollHeight
                         });
+
+                        // Restore original theme
+                        if (originalTheme) {
+                            htmlEl.setAttribute('data-theme', originalTheme);
+                        } else {
+                            htmlEl.removeAttribute('data-theme');
+                        }
 
                         // Convert to image
                         const imageData = canvas.toDataURL('image/png', 1.0);
