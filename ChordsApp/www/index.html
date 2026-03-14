@@ -3165,15 +3165,30 @@
                 <div
                     style="font-size: 10px; font-weight: 700; color: var(--text); opacity: 0.5; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
                     Key</div>
-                <div id="liveModeTransposeRow"
-                    style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; border: 1px solid var(--border);">
-                    <button onclick="liveMode.transpose(-1)"
-                        style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; font-weight: 600; padding: 0;">−</button>
-                    <div id="liveModeCurrentKey"
-                        style="padding: 3px 8px; background: var(--text); color: var(--bg); font-weight: 700; font-size: 13px; min-width: 32px; text-align: center;">
-                        C</div>
-                    <button onclick="liveMode.transpose(1)"
-                        style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; font-weight: 600; padding: 0;">+</button>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <div id="liveModeTransposeRow"
+                        style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; border: 1px solid var(--border); flex: 1;">
+                        <button onclick="liveMode.transpose(-1)"
+                            style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; font-weight: 600; padding: 0;">−</button>
+                        <div id="liveModeCurrentKey"
+                            style="padding: 3px 8px; background: var(--text); color: var(--bg); font-weight: 700; font-size: 13px; min-width: 32px; text-align: center;">
+                            C</div>
+                        <button onclick="liveMode.transpose(1)"
+                            style="width: 28px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; font-weight: 600; padding: 0;">+</button>
+                    </div>
+                    <div id="liveModeCapoRow"
+                        style="display: flex; align-items: center; gap: 2px; padding: 3px 6px; border: 1px solid var(--border);">
+                        <span style="font-size: 9px; font-weight: 600; color: var(--text); opacity: 0.6;">CAPO</span>
+                        <button onclick="liveMode.setCapo(liveMode.currentCapo - 1)"
+                            style="width: 24px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; font-weight: 600; padding: 0;">−</button>
+                        <div id="liveModeCapoValue"
+                            style="padding: 3px 4px; font-weight: 700; font-size: 13px; min-width: 18px; text-align: center; color: var(--text);">
+                            0</div>
+                        <button onclick="liveMode.setCapo(liveMode.currentCapo + 1)"
+                            style="width: 24px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; font-weight: 600; padding: 0;">+</button>
+                        <button onclick="liveMode.setCapo(0)"
+                            style="width: 24px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px; font-weight: 600; padding: 0; opacity: 0.6;">R</button>
+                    </div>
                 </div>
             </div>
 

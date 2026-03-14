@@ -7,7 +7,9 @@ const liveMode = {
     sidebarVisible: false,
     currentSongContent: '',
     currentKey: 'C Major',
+    originalSongKey: 'C Major', // Key before capo (for display: "Key: E (Capo 1 → D#)")
     currentTransposeSteps: 0,
+    currentCapo: 0, // Capo fret number (capo N = transpose chords -N)
     currentSongId: null,
     currentSongName: '',
     hideControlsTimeout: null,
@@ -898,19 +900,45 @@ const liveMode = {
         }
 
         if (songKeyEl) {
-            const transposeInfo = this.currentTransposeSteps !== 0
-                ? ` (${this.currentTransposeSteps > 0 ? '+' : ''}${this.currentTransposeSteps})`
-                : '';
-            songKeyEl.textContent = `Key: ${this.currentKey}${transposeInfo}`;
+            if (this.currentCapo > 0) {
+                // Show: Key: E (Capo 1 → D#)
+                const origKeyShort = this._formatKeyShort(this.originalSongKey);
+                const capoKeyShort = this._formatKeyShort(this.currentKey);
+                songKeyEl.textContent = `Key: ${origKeyShort} (Capo ${this.currentCapo} → ${capoKeyShort})`;
+            } else {
+                const transposeInfo = this.currentTransposeSteps !== 0
+                    ? ` (${this.currentTransposeSteps > 0 ? '+' : ''}${this.currentTransposeSteps})`
+                    : '';
+                songKeyEl.textContent = `Key: ${this.currentKey}${transposeInfo}`;
+            }
         }
 
         if (currentKeyEl) {
             // Extract the note and show "m" suffix for minor keys (e.g., "A Minor" -> "Am", "C Major" -> "C")
-            const keyParts = this.currentKey.split(' ');
-            const keyNote = keyParts[0];
-            const isMinor = keyParts[1] && keyParts[1].toLowerCase() === 'minor';
-            currentKeyEl.textContent = isMinor ? `${keyNote}m` : keyNote;
+            currentKeyEl.textContent = this._formatKeyShort(this.currentKey);
         }
+
+        // Update capo info in the song header metadata line (.song-meta)
+        if (chartDisplay && this.currentCapo > 0) {
+            // Find the key span by data-meta attribute (safe DOM manipulation, not regex on HTML)
+            const keySpan = chartDisplay.querySelector('.meta-editable[data-meta="key"]');
+            if (keySpan) {
+                const origKeyShort = this._formatKeyShort(this.originalSongKey);
+                const capoKeyShort = this._formatKeyShort(this.currentKey);
+                keySpan.textContent = `Key: ${origKeyShort} (Capo ${this.currentCapo} → ${capoKeyShort})`;
+            }
+        }
+    },
+
+    /**
+     * Format key for short display: "A Minor" → "Am", "C Major" → "C", "D#" → "D#"
+     */
+    _formatKeyShort(key) {
+        if (!key) return '';
+        const parts = key.split(' ');
+        const note = parts[0];
+        const isMinor = parts[1] && parts[1].toLowerCase() === 'minor';
+        return isMinor ? `${note}m` : note;
     },
 
     /**
@@ -1079,6 +1107,39 @@ const liveMode = {
         } else {
             console.warn('transposeChart function not available');
         }
+    },
+
+    /**
+     * Set capo fret number. Capo N = transpose displayed chords by -N
+     * so the player plays simpler shapes but the sound matches the original key.
+     */
+    setCapo(newCapo) {
+        newCapo = Math.max(0, Math.min(12, newCapo)); // Clamp 0-12
+        const oldCapo = this.currentCapo;
+        if (newCapo === oldCapo) return;
+
+        // Save original key before first capo application
+        if (oldCapo === 0) {
+            this.originalSongKey = this.currentKey;
+        }
+
+        // Capo up = transpose chords down, capo down = transpose chords up
+        const diff = oldCapo - newCapo; // e.g., old=0 new=1 → diff=-1 → transpose(-1)
+        this.currentCapo = newCapo;
+
+        // Update capo display
+        const capoEl = document.getElementById('liveModeCapoValue');
+        if (capoEl) capoEl.textContent = newCapo;
+
+        // If capo back to 0, restore original key reference
+        if (newCapo === 0) {
+            this.originalSongKey = this.currentKey;
+        }
+
+        // Transpose the chords (this calls updateDisplay which updates the header)
+        this.transpose(diff);
+
+        console.log(`🎸 Capo set to ${newCapo} (transposed ${diff > 0 ? '+' : ''}${diff})`);
     },
 
     /**
@@ -3369,8 +3430,12 @@ const liveMode = {
             // ✅ UPDATE LIVE MODE STATE WITH NEW STRUCTURED FIELDS
             this.currentSongContent = songData.content || '';
             this.currentKey = window.normalizeKey ? window.normalizeKey(songData.key || songData.originalKey) : (songData.key || songData.originalKey || 'C Major');
+            this.originalSongKey = this.currentKey;
             this.currentSongId = songId;
             this.currentTransposeSteps = 0;
+            this.currentCapo = 0;
+            const capoEl = document.getElementById('liveModeCapoValue');
+            if (capoEl) capoEl.textContent = '0';
             this.resetSectionIndex(); // Reset MIDI section navigation
 
             // Build display name from structured fields
@@ -3566,8 +3631,12 @@ const liveMode = {
         // ✅ USE NEW STRUCTURED METADATA FIELDS
         this.currentSongContent = songData.content || '';
         this.currentKey = window.normalizeKey ? window.normalizeKey(songData.key || songData.originalKey) : (songData.key || songData.originalKey || 'C Major');
+        this.originalSongKey = this.currentKey;
         this.currentSongId = songData.songId;
         this.currentTransposeSteps = 0;
+        this.currentCapo = 0;
+        const capoEl2 = document.getElementById('liveModeCapoValue');
+        if (capoEl2) capoEl2.textContent = '0';
 
         // Build display name from structured fields
         const title = songData.title || songData.name || 'Untitled';

@@ -2218,7 +2218,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const isMetadataLine = /\|\s*Key:\s*[^|]+\|\s*BPM:/i.test(line) ||
                     /^(Key|Title|Artists?|Authors?|BPM|Tempo|Capo):/i.test(line) ||
                     /\|\s*Key:/i.test(line) ||
-                    /^Key:\s*[A-G].*\|.*BPM:/i.test(line);
+                    /^Key:\s*[A-G].*\|.*BPM:/i.test(line) ||
+                    /\bBPM\b/.test(line) ||
+                    /Key:.*,.*\d/.test(line);
                 if (isMetadataLine) {
                     console.log(`  ⏭️ Line ${index} is metadata, skipping:`, line.substring(0, 60));
                     return line;
