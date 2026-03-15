@@ -3557,12 +3557,9 @@ input[type="checkbox"]:checked::after {
         border: 1px solid var(--border);
     }
 
-    /* Hide editor workspace on mobile (user toggles it via button) */
-    .editor-preview-wrapper>.editor {
-        display: none !important;
-    }
-
-    #editor {
+    /* Hide editor on mobile by default; user toggles via Edit Workspace button.
+       Adding .editor-shown class (via JS) makes :not() no longer match → editor shows. */
+    #editor:not(.editor-shown) {
         display: none !important;
     }
 
@@ -3574,11 +3571,6 @@ input[type="checkbox"]:checked::after {
 
     .preview-section-content>* {
         flex-shrink: 0;
-    }
-
-    /* Force editor hidden on mobile */
-    #editor {
-        display: none !important;
     }
 }
 
@@ -3679,6 +3671,7 @@ input[type="checkbox"]:checked::after {
 @media (max-width: 1024px) {
     .editor-preview-wrapper {
         flex-direction: column;
+        gap: 0;
     }
 
     .editor-preview-wrapper>.preview-scale-wrapper,
