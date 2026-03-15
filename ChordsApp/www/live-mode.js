@@ -603,7 +603,9 @@ const liveMode = {
         // Hide controls that presenters shouldn't see
         const controlsToHide = [
             'liveModeDisplayMode',       // No display mode dropdown for presenters
-            'liveModeTransposeRow'       // Hide entire transpose row (-1, key, +1)
+            'liveModeKeySection',        // Hide entire KEY section (transpose + capo)
+            'liveModeTransposeRow',      // Fallback: hide transpose row individually
+            'liveModeCapoRow'            // Fallback: hide capo row individually
         ];
 
         controlsToHide.forEach(id => {
@@ -1512,7 +1514,9 @@ const liveMode = {
         chartDisplay.style.columnCount = '';
         chartDisplay.style.columnWidth = '';
 
-        // Apply column layout
+        // Tear down any existing flex wrapper before applying new column layout
+        this._teardownFlexColumns(chartDisplay);
+
         // Apply column layout
         const A4_HEIGHT_PX = 1123;
         chartDisplay.style.columns = columns.toString();
@@ -1520,7 +1524,7 @@ const liveMode = {
         chartDisplay.style.height = A4_HEIGHT_PX + 'px';
 
         if (columns > 1) {
-            chartDisplay.style.columnGap = '20px';
+            chartDisplay.style.columnGap = '4px';
             chartDisplay.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
         } else {
             chartDisplay.style.columnGap = '0px';
@@ -1655,7 +1659,7 @@ const liveMode = {
                 chartDisplay.style.columns = this.savedDisplaySettings.columns || '';
                 chartDisplay.style.columnFill = this.savedDisplaySettings.columnFill || '';
                 chartDisplay.style.height = this.savedDisplaySettings.height || '';
-                chartDisplay.style.columnGap = this.savedDisplaySettings.columnGap || '';
+                chartDisplay.style.columnGap = '4px';
                 chartDisplay.style.columnRule = this.savedDisplaySettings.columnRule || '';
                 chartDisplay.style.maxWidth = this.savedDisplaySettings.maxWidth || '800px';
                 content.style.padding = this.savedDisplaySettings.padding || '0 20px 140px 20px';
@@ -2140,7 +2144,7 @@ const liveMode = {
 
                 pagesHTML += `
                     <div class="print-page" ${dirAttr} style="page-break-after: always; position: relative; height: 297mm; max-height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box;">
-                        <div style="column-count: 2; column-gap: 40px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: 12pt;">
+                        <div style="column-count: 2; column-gap: 4px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: 12pt;">
                             ${formattedHTML}
                         </div>
                         <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 20px; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
@@ -3960,7 +3964,7 @@ const liveMode = {
             // Apply column layout
             if (this.currentColumnLayout) {
                 chartDisplay.style.columnCount = this.currentColumnLayout;
-                chartDisplay.style.columnGap = '2em';
+                chartDisplay.style.columnGap = '4px';
             }
             // Apply borders preference
             if (this.showBorders) {
@@ -4111,16 +4115,15 @@ const liveMode = {
         this.disableDragReorder();
         chartDisplay.classList.add('reorder-active');
 
-        // For 2-column mode: replace CSS columns with flex-based columns
-        if (this.currentColumnLayout === 2) {
-            this._setupFlexColumns(chartDisplay);
-        }
+        // Always set up 2-column flex layout in reorder mode (shows grid with placeholder slots)
+        this._setupFlexColumns(chartDisplay);
 
         const self = this;
         let dragFromId = null;
         let dragBlock = null;
         let mouseClone = null;
         let mouseActive = false;
+        let hasMoved = false;
 
         const getBlockAtPoint = (x, y) => {
             // Hide clone to see through it
@@ -4147,14 +4150,30 @@ const liveMode = {
             return null;
         };
 
+        const getPlaceholderAtPoint = (x, y) => {
+            if (mouseClone) mouseClone.style.visibility = 'hidden';
+            const elements = document.elementsFromPoint(x, y);
+            if (mouseClone) mouseClone.style.visibility = '';
+            for (const el of elements) {
+                if (el.classList.contains('reorder-placeholder') && chartDisplay.contains(el)) {
+                    return el;
+                }
+            }
+            return null;
+        };
+
         const clearIndicators = () => {
             chartDisplay.querySelectorAll('.song-section-block').forEach(el => {
                 el.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+            chartDisplay.querySelectorAll('.reorder-placeholder').forEach(el => {
+                el.classList.remove('drag-over');
             });
         };
 
         const performDrop = (clientX, clientY) => {
             const target = getBlockAtPoint(clientX, clientY);
+            const placeholder = getPlaceholderAtPoint(clientX, clientY);
             const fromBlock = dragFromId ? chartDisplay.querySelector(`[data-section-id="${dragFromId}"]`) : null;
             if (!fromBlock) return;
 
@@ -4168,12 +4187,24 @@ const liveMode = {
                     target.after(fromBlock);
                 }
                 self.captureCurrentOrder();
+                self._syncPlaceholders();
+            } else if (placeholder) {
+                // Drop on a placeholder slot — take its position
+                placeholder.before(fromBlock);
+                self.captureCurrentOrder();
+                self._syncPlaceholders();
             } else if (!target) {
                 // Dropped on empty area — check if on a column (2-col flex mode)
                 const col = getColumnAtPoint(clientX, clientY);
                 if (col) {
-                    col.appendChild(fromBlock);
+                    const firstPlaceholder = col.querySelector('.reorder-placeholder');
+                    if (firstPlaceholder) {
+                        col.insertBefore(fromBlock, firstPlaceholder);
+                    } else {
+                        col.appendChild(fromBlock);
+                    }
                     self.captureCurrentOrder();
+                    self._syncPlaceholders();
                 }
             }
         };
@@ -4185,6 +4216,7 @@ const liveMode = {
             dragFromId = null;
             dragBlock = null;
             mouseActive = false;
+            hasMoved = false;
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
         };
@@ -4192,6 +4224,7 @@ const liveMode = {
         const onMouseMove = (e) => {
             if (!mouseActive) return;
             e.preventDefault();
+            hasMoved = true;
 
             if (mouseClone) {
                 mouseClone.style.top = (e.clientY - 20) + 'px';
@@ -4207,11 +4240,14 @@ const liveMode = {
                 } else {
                     target.classList.add('drag-over-bottom');
                 }
+            } else {
+                const ph = getPlaceholderAtPoint(e.clientX, e.clientY);
+                if (ph) ph.classList.add('drag-over');
             }
         };
 
         const onMouseUp = (e) => {
-            if (!mouseActive) { cleanup(); return; }
+            if (!mouseActive || !hasMoved) { cleanup(); return; }
             performDrop(e.clientX, e.clientY);
             cleanup();
         };
@@ -4292,6 +4328,7 @@ const liveMode = {
                     return;
                 }
                 e.preventDefault();
+                hasMoved = true;
                 const touch = e.touches[0];
 
                 if (mouseClone) mouseClone.style.top = (touch.clientY - 20) + 'px';
@@ -4306,6 +4343,9 @@ const liveMode = {
                     } else {
                         target.classList.add('drag-over-bottom');
                     }
+                } else {
+                    const ph = getPlaceholderAtPoint(touch.clientX, touch.clientY);
+                    if (ph) ph.classList.add('drag-over');
                 }
             };
 
@@ -4313,8 +4353,10 @@ const liveMode = {
                 if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
                 if (!touchActive) return;
 
-                const touch = e.changedTouches[0];
-                performDrop(touch.clientX, touch.clientY);
+                if (hasMoved) {
+                    const touch = e.changedTouches[0];
+                    performDrop(touch.clientX, touch.clientY);
+                }
 
                 if (mouseClone) { mouseClone.remove(); mouseClone = null; }
                 if (dragBlock) { dragBlock.classList.remove('dragging'); }
@@ -4322,6 +4364,7 @@ const liveMode = {
                 dragFromId = null;
                 dragBlock = null;
                 touchActive = false;
+                hasMoved = false;
             };
 
             handle._touchcancelHandler = () => {
@@ -4420,6 +4463,45 @@ const liveMode = {
         wrapper.appendChild(col1);
         wrapper.appendChild(col2);
         chartDisplay.appendChild(wrapper);
+
+        // Add placeholder slots when in reorder mode
+        if (this.reorderMode) {
+            this._syncPlaceholders();
+        }
+    },
+
+    /**
+     * Sync placeholder slots so both columns have equal rows with 1 extra empty slot at bottom.
+     */
+    _syncPlaceholders() {
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (!chartDisplay) return;
+        const wrapper = chartDisplay.querySelector('.reorder-columns-wrapper');
+        if (!wrapper) return;
+
+        const cols = wrapper.querySelectorAll('.reorder-column');
+        if (cols.length < 2) return;
+
+        // Remove existing placeholders
+        wrapper.querySelectorAll('.reorder-placeholder').forEach(p => p.remove());
+
+        // Count real blocks in each column
+        const col1Count = cols[0].querySelectorAll('.song-section-block').length;
+        const col2Count = cols[1].querySelectorAll('.song-section-block').length;
+
+        // Both columns should have maxRows rows (max + 1 extra empty slot)
+        const maxRows = Math.max(col1Count, col2Count) + 1;
+
+        for (let i = col1Count; i < maxRows; i++) {
+            const ph = document.createElement('div');
+            ph.className = 'reorder-placeholder';
+            cols[0].appendChild(ph);
+        }
+        for (let i = col2Count; i < maxRows; i++) {
+            const ph = document.createElement('div');
+            ph.className = 'reorder-placeholder';
+            cols[1].appendChild(ph);
+        }
     },
 
     /**
@@ -4449,6 +4531,9 @@ const liveMode = {
 
         chartDisplay.classList.remove('reorder-active');
 
+        // Remove placeholder slots (only visible during reorder)
+        chartDisplay.querySelectorAll('.reorder-placeholder').forEach(p => p.remove());
+
         // Run stored cleanup (removes document-level mousemove/mouseup if active)
         if (chartDisplay._reorderCleanup) {
             chartDisplay._reorderCleanup();
@@ -4469,12 +4554,15 @@ const liveMode = {
             }
         });
 
-        // If customColumnLayout exists, keep flex layout (sections stay in assigned columns)
-        // Only tear down if no custom layout (user hasn't reordered)
-        if (!this.customColumnLayout) {
-            this._teardownFlexColumns(chartDisplay);
-            if (this.currentColumnLayout === 2) {
-                this.applySavedPreferences(chartDisplay);
+        // Always tear down flex columns when exiting reorder mode
+        this._teardownFlexColumns(chartDisplay);
+
+        // Restore original column layout (CSS columns if 2-col, or single column)
+        if (this.currentColumnLayout === 2) {
+            this.applySavedPreferences(chartDisplay);
+            // Re-apply custom column layout if user has reordered
+            if (this.customColumnLayout) {
+                this.applyColumnLayout(chartDisplay);
             }
         }
     },
@@ -4489,8 +4577,8 @@ const liveMode = {
         const container = chartDisplay || document.getElementById('liveModeChartDisplay');
         if (!container) return;
 
-        if (this.customColumnLayout.col2 && this.customColumnLayout.col2.length > 0) {
-            // 2-column explicit layout — use flex columns
+        if (this.customColumnLayout.col2 && this.customColumnLayout.col2.length > 0 && (this.currentColumnLayout === 2 || this.reorderMode)) {
+            // 2-column explicit layout — use flex columns (only when in 2-col mode or reorder mode)
             this._setupFlexColumns(container);
             console.log('📐 applyColumnLayout: 2-col flex applied', this.customColumnLayout);
         } else if (this.customColumnLayout.col1) {
@@ -4671,7 +4759,7 @@ const liveMode = {
         chartDisplay.style.height = A4_HEIGHT_PX + 'px';
 
         if (columns > 1) {
-            chartDisplay.style.columnGap = '20px';
+            chartDisplay.style.columnGap = '4px';
             chartDisplay.style.columnRule = '1px solid rgba(0, 0, 0, 0.2)';
         } else {
             chartDisplay.style.columnGap = '0px';

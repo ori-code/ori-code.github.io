@@ -1378,9 +1378,9 @@ input[type="checkbox"]:checked::after {
     color: var(--text);
     white-space: pre-wrap;
     word-wrap: break-word;
-    padding: 8px 20px 20px 20px;
+    padding: 8px 4px 20px 4px;
     columns: 2;
-    column-gap: 40px;
+    column-gap: 2px;
     column-fill: auto;
     margin: 0 auto;
     position: relative;
@@ -1862,16 +1862,6 @@ input[type="checkbox"]:checked::after {
     display: none !important;
 }
 
-.hide-badges .section-header {
-    display: none !important;
-}
-
-.hide-badges .song-section-block {
-    margin: 0 !important;
-    padding: 1px 4px !important;
-    border: none !important;
-}
-
 /* Live Mode */
 #liveModeChartDisplay {
     margin-top: 0 !important;
@@ -2337,7 +2327,7 @@ input[type="checkbox"]:checked::after {
 /* Flex-based columns for reorder mode (replaces CSS columns) */
 .reorder-columns-wrapper {
     display: flex;
-    gap: 20px;
+    gap: 2px;
 }
 
 .reorder-column {
@@ -2345,6 +2335,22 @@ input[type="checkbox"]:checked::after {
     display: flex;
     flex-direction: column;
     min-height: 100px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.reorder-placeholder {
+    margin: 1px 0;
+    min-height: 50px;
+    border: 1px dashed var(--text);
+    opacity: 0.25;
+    box-sizing: border-box;
+}
+
+.reorder-placeholder.drag-over {
+    opacity: 0.7;
+    border-color: var(--text);
+    border-width: 2px;
 }
 
 .row-space {
