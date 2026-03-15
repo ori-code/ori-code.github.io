@@ -157,17 +157,20 @@
                     <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
                     <input id="cameraFileInput" class="sr-only" type="file" accept="image/*" capture="environment">
                     <div id="uploadBtnRow" style="display: flex; gap: 8px; width: 100%;">
-                        <label class="primary-action" for="cameraFileInput" style="flex: 1; text-align: center; background: var(--text); color: var(--bg);"
-                            data-i18n="step1.camera">Take Photo</label>
-                        <label class="primary-action" for="chartFileInput" style="flex: 1; text-align: center;"
-                            data-i18n="step1.btn">Upload Stash Photo</label>
-                        <button class="primary-action" id="pasteImageBtn" style="flex: 1; display: none;">Paste</button>
+                        <label class="primary-action" for="cameraFileInput" style="flex: 1; text-align: center; background: var(--text); color: var(--bg); cursor: pointer;"
+                            data-i18n="step1.camera">Camera</label>
+                        <label class="primary-action" for="chartFileInput" style="flex: 1; text-align: center; cursor: pointer;"
+                            data-i18n="step1.btn">Upload</label>
+                        <button class="primary-action" id="pasteBtn" style="flex: 1;"
+                            data-i18n="step1.paste">Paste</button>
                     </div>
-                    <div style="display: flex; gap: 6px; width: 100%; margin-top: 8px; align-items: flex-start;">
-                        <textarea id="contentInput" rows="1" placeholder="Paste URL or chord text..."
-                            style="flex: 1; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); outline: none; font-family: inherit; resize: vertical; min-height: 36px; max-height: 200px;"></textarea>
-                        <button class="primary-action" id="fetchUrlBtn"
-                            style="white-space: nowrap; margin-top: 1px;">Go</button>
+                    <div id="pasteArea" style="display: none; width: 100%; margin-top: 8px;">
+                        <div style="display: flex; gap: 6px; width: 100%; align-items: flex-start;">
+                            <textarea id="contentInput" rows="1" placeholder="Paste URL or chord text..."
+                                style="flex: 1; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); outline: none; font-family: inherit; resize: vertical; min-height: 36px; max-height: 200px;"></textarea>
+                            <button class="primary-action" id="fetchUrlBtn"
+                                style="white-space: nowrap; margin-top: 1px;">Go</button>
+                        </div>
                     </div>
                     <div class="preview-panel" id="uploadPreview" tabindex="0">
                         <img id="previewImage" alt="Uploaded chart preview">
@@ -5527,6 +5530,20 @@
                     }
                 }
             });
+
+            // Paste button toggles the paste area
+            const pasteBtn = document.getElementById('pasteBtn');
+            const pasteArea = document.getElementById('pasteArea');
+            if (pasteBtn && pasteArea) {
+                pasteBtn.addEventListener('click', () => {
+                    const isVisible = pasteArea.style.display !== 'none';
+                    pasteArea.style.display = isVisible ? 'none' : 'block';
+                    if (!isVisible) {
+                        const input = document.getElementById('contentInput');
+                        if (input) input.focus();
+                    }
+                });
+            }
 
             // Content input: handles URLs (fetch + AI) or plain text (AI convert to v4)
             const fetchUrlBtn = document.getElementById('fetchUrlBtn');
