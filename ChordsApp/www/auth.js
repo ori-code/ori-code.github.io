@@ -1,5 +1,10 @@
 // Firebase Authentication for aChordimClaude
 
+// Detect if running inside Capacitor native app (Android/iOS)
+const isCapacitorNative = typeof window !== 'undefined'
+    && window.Capacitor
+    && window.Capacitor.isNativePlatform();
+
 class ChordsAuthManager {
     constructor() {
         this.currentUser = null;
@@ -17,6 +22,12 @@ class ChordsAuthManager {
             console.log('Auth state changed:', user ? user.email : 'Not logged in');
 
             if (user) {
+                // Force token refresh to ensure database SDK uses a valid token
+                try {
+                    await user.getIdToken(true);
+                } catch (e) {
+                    console.warn('Token refresh failed:', e);
+                }
                 // Respect user's saved display preferences (don't force-hide on every auth change)
 
                 // Check if this is a returning user (page refresh) with no local session
@@ -234,18 +245,43 @@ class ChordsAuthManager {
     // Sign in with Google
     async signInWithGoogle() {
         try {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            // Use popup for GitHub Pages hosting (redirect requires Firebase Hosting)
-            const result = await auth.signInWithPopup(provider);
-            if (result && result.user) {
-                // Register session for single-device login (kicks out other devices)
-                await this.registerSession(result.user.uid);
+            if (isCapacitorNative) {
+                // Native flow: use Capacitor Firebase Authentication plugin
+                const { FirebaseAuthentication } = Capacitor.Plugins;
+                const result = await FirebaseAuthentication.signInWithGoogle();
 
-                this.showMessage('Signed in with Google successfully!', 'success');
-                this.closeAuthModal();
-                console.log('Google sign-in successful:', result.user.email);
+                // Get the ID token from the native result
+                const idToken = result?.credential?.idToken;
+                if (!idToken) {
+                    throw new Error('No ID token received from Google Sign-In');
+                }
+
+                // Create a Firebase credential and sign in to Firebase web SDK
+                const credential = firebase.auth.GoogleAuthProvider.credential(idToken);
+                const userCredential = await auth.signInWithCredential(credential);
+
+                if (userCredential && userCredential.user) {
+                    await this.registerSession(userCredential.user.uid);
+                    this.showMessage('Signed in with Google successfully!', 'success');
+                    this.closeAuthModal();
+                    console.log('Google sign-in successful (native):', userCredential.user.email);
+                }
+            } else {
+                // Web flow: use popup (unchanged)
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                if (result && result.user) {
+                    await this.registerSession(result.user.uid);
+                    this.showMessage('Signed in with Google successfully!', 'success');
+                    this.closeAuthModal();
+                    console.log('Google sign-in successful:', result.user.email);
+                }
             }
         } catch (error) {
+            if (error.message?.includes('canceled') || error.message?.includes('cancelled')) {
+                console.log('Google sign-in cancelled by user');
+                return;
+            }
             this.showMessage(this.getErrorMessage(error.code), 'error');
             throw error;
         }
@@ -343,7 +379,7 @@ class ChordsAuthManager {
 
         if (this.currentUser) {
             // User is signed in
-            const displayName = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+            const displayName = this.currentUser.displayName || (this.currentUser.email ? this.currentUser.email.split('@')[0] : 'User');
             // Get initials (e.g., "Ori Dobosh" -> "OD")
             const initials = displayName.split(' ').map(n => n.charAt(0).toUpperCase()).join('');
 

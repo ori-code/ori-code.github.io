@@ -6,6 +6,8 @@
     },
     "users": {
       "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid",
         "subscription": {
           ".read": "$uid === auth.uid",
           ".write": "$uid === auth.uid"
@@ -51,6 +53,10 @@
           ".write": false
         },
         "purchasedScans": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        },
+        "branding": {
           ".read": "$uid === auth.uid",
           ".write": "$uid === auth.uid"
         }
