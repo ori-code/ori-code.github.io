@@ -4145,6 +4145,14 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     };
 
+    // Expose content pipeline functions for live-mode original key change
+    window.convertToAboveLineFormat = convertToAboveLineFormat;
+    window.autoInsertArrangementLine = autoInsertArrangementLine;
+    window.ensureMetadata = ensureMetadata;
+    window.normalizeMetadataSpacing = normalizeMetadataSpacing;
+    window.reverseArrangementLineForRTL = reverseArrangementLineForRTL;
+    window.updateLivePreview = updateLivePreview;
+
     // --- Chord Selector v5 (Circle of Fifths + Quality Grid) ---
     const CHORD_DROPDOWN_VERSION = 'v5';
     console.log(`[ChordSelector ${CHORD_DROPDOWN_VERSION}] initialized`);
@@ -6704,6 +6712,9 @@ Our [Em7]hearts will cry, these bones will [D]sing
             console.error('Error broadcasting song:', error);
         }
     }
+
+    // Expose for live-mode original key change
+    window.broadcastCurrentSong = broadcastCurrentSong;
 
     /**
      * Handle incoming song updates from leader (PLAYER only)

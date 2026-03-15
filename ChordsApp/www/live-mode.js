@@ -7,7 +7,7 @@ const liveMode = {
     sidebarVisible: false,
     currentSongContent: '',
     currentKey: 'C Major',
-    originalSongKey: 'C Major', // Key before capo (for display: "Key: E (Capo 1 → D#)")
+    originalSongKey: 'C Major', // True original key of the song (never changes with transpose/capo)
     currentTransposeSteps: 0,
     currentCapo: 0, // Capo fret number (capo N = transpose chords -N)
     currentSongId: null,
@@ -900,16 +900,14 @@ const liveMode = {
         }
 
         if (songKeyEl) {
+            const origKeyShort = this._formatKeyShort(this.originalSongKey);
+            const currentKeyShort = this._formatKeyShort(this.currentKey);
             if (this.currentCapo > 0) {
-                // Show: Key: E (Capo 1 → D#)
-                const origKeyShort = this._formatKeyShort(this.originalSongKey);
-                const capoKeyShort = this._formatKeyShort(this.currentKey);
-                songKeyEl.textContent = `Key: ${origKeyShort} (Capo ${this.currentCapo} → ${capoKeyShort})`;
+                songKeyEl.textContent = `Key: ${origKeyShort} (Capo ${this.currentCapo} → ${currentKeyShort})`;
+            } else if (origKeyShort !== currentKeyShort) {
+                songKeyEl.textContent = `Key: ${origKeyShort} → ${currentKeyShort}`;
             } else {
-                const transposeInfo = this.currentTransposeSteps !== 0
-                    ? ` (${this.currentTransposeSteps > 0 ? '+' : ''}${this.currentTransposeSteps})`
-                    : '';
-                songKeyEl.textContent = `Key: ${this.currentKey}${transposeInfo}`;
+                songKeyEl.textContent = `Key: ${origKeyShort}`;
             }
         }
 
@@ -918,14 +916,43 @@ const liveMode = {
             currentKeyEl.textContent = this._formatKeyShort(this.currentKey);
         }
 
-        // Update capo info in the song header metadata line (.song-meta)
-        if (chartDisplay && this.currentCapo > 0) {
-            // Find the key span by data-meta attribute (safe DOM manipulation, not regex on HTML)
+        // Add clickable key badge next to the song title
+        if (chartDisplay) {
+            const titleEl = chartDisplay.querySelector('.song-title');
+            if (titleEl) {
+                // Remove old key badge if exists
+                const oldBadge = titleEl.querySelector('.live-key-badge');
+                if (oldBadge) oldBadge.remove();
+
+                const origShort = this._formatKeyShort(this.originalSongKey);
+
+                const badge = document.createElement('span');
+                badge.className = 'live-key-badge';
+                badge.textContent = origShort;
+                const inSession = window.sessionManager && window.sessionManager.activeSession;
+                const canChangeKey = !inSession || (window.sessionManager && window.sessionManager.isLeader);
+                badge.style.cssText = `display:inline-block; margin-inline-start:8px; padding:2px 8px; border:1px solid var(--text); font-size:13px; font-weight:700; cursor:${canChangeKey ? 'pointer' : 'default'}; vertical-align:middle; opacity:0.8;`;
+                if (canChangeKey) {
+                    badge.onclick = (e) => {
+                        e.stopPropagation();
+                        this._showOriginalKeyPicker(badge);
+                    };
+                }
+                titleEl.appendChild(badge);
+            }
+
+            // Also update the metadata line key text with transpose/capo info
             const keySpan = chartDisplay.querySelector('.meta-editable[data-meta="key"]');
             if (keySpan) {
-                const origKeyShort = this._formatKeyShort(this.originalSongKey);
-                const capoKeyShort = this._formatKeyShort(this.currentKey);
-                keySpan.textContent = `Key: ${origKeyShort} (Capo ${this.currentCapo} → ${capoKeyShort})`;
+                const origS = this._formatKeyShort(this.originalSongKey);
+                const curS = this._formatKeyShort(this.currentKey);
+                if (this.currentCapo > 0) {
+                    keySpan.textContent = `Key: ${origS} (Capo ${this.currentCapo} → ${curS})`;
+                } else if (origS !== curS) {
+                    keySpan.textContent = `Key: ${origS} → ${curS}`;
+                } else {
+                    keySpan.textContent = `Key: ${origS}`;
+                }
             }
         }
     },
@@ -939,6 +966,201 @@ const liveMode = {
         const note = parts[0];
         const isMinor = parts[1] && parts[1].toLowerCase() === 'minor';
         return isMinor ? `${note}m` : note;
+    },
+
+    /**
+     * Show Circle of Fifths key picker for changing the ORIGINAL key (leader only).
+     * Changes the song's original key for all session participants and broadcasts.
+     */
+    _showOriginalKeyPicker(anchorEl) {
+        // Remove existing picker if open
+        const existing = document.getElementById('liveKeyPicker');
+        if (existing) { existing.remove(); return; }
+
+        const fifthsOrder = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'];
+
+        const origShort = this._formatKeyShort(this.originalSongKey).replace('m', '');
+
+        const picker = document.createElement('div');
+        picker.id = 'liveKeyPicker';
+        picker.style.cssText = 'position:fixed; z-index:20000; background:var(--bg); border:2px solid var(--text); padding:12px; display:flex; flex-wrap:wrap; gap:6px; max-width:260px; box-shadow:0 8px 24px rgba(0,0,0,0.5);';
+
+        const rect = anchorEl.getBoundingClientRect();
+        picker.style.top = (rect.bottom + 8) + 'px';
+        picker.style.left = Math.max(8, rect.left - 60) + 'px';
+
+        const title = document.createElement('div');
+        title.style.cssText = 'width:100%; font-size:10px; font-weight:700; opacity:0.5; text-transform:uppercase; letter-spacing:0.5px; color:var(--text); margin-bottom:4px;';
+        title.textContent = 'Change Original Key';
+        picker.appendChild(title);
+
+        fifthsOrder.forEach(key => {
+            const btn = document.createElement('button');
+            const isActive = key === origShort;
+            btn.textContent = key;
+            btn.style.cssText = `width:42px; height:34px; font-size:13px; font-weight:700; cursor:pointer; border:1px solid var(--text); color:${isActive ? 'var(--bg)' : 'var(--text)'}; background:${isActive ? 'var(--text)' : 'transparent'};`;
+            btn.onclick = () => {
+                picker.remove();
+                if (key === origShort) return;
+                this._changeOriginalKey(key);
+            };
+            picker.appendChild(btn);
+        });
+
+        document.body.appendChild(picker);
+
+        const closeHandler = (e) => {
+            if (!picker.contains(e.target) && e.target !== anchorEl) {
+                picker.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 100);
+    },
+
+    /**
+     * Change the original key for the session (leader only).
+     * Transposes content to new key, resets personal transpose, broadcasts to all followers.
+     */
+    _changeOriginalKey(targetKeyShort) {
+        const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const origShort = this._formatKeyShort(this.originalSongKey).replace('m', '');
+        const isMinor = this.originalSongKey.toLowerCase().includes('minor') || this.originalSongKey.endsWith('m');
+        const newKeyFull = isMinor ? `${targetKeyShort} Minor` : `${targetKeyShort} Major`;
+
+        // Calculate steps from current original to target
+        const origIndex = chromaticScale.indexOf(origShort);
+        const targetIndex = chromaticScale.indexOf(targetKeyShort);
+        if (origIndex === -1 || targetIndex === -1) return;
+
+        let steps = targetIndex - origIndex;
+        if (steps > 6) steps -= 12;
+        if (steps < -6) steps += 12;
+        if (steps === 0) return;
+
+        // Transpose the content from baseline (steps from original key to target, ignoring personal transpose)
+        const visualEditor = document.getElementById('visualEditor');
+        const keySelector = document.getElementById('keySelector');
+        if (!visualEditor) return;
+
+        // Get the baseline chart — fall back to currentSongContent or editor value
+        const baseline = (window.getBaselineChart && window.getBaselineChart()) || this.currentSongContent || visualEditor.value;
+        if (typeof window.transposeChart === 'function' && baseline) {
+            const transposedContent = window.transposeChart(baseline, steps);
+
+            // Update the baseline to the new transposed content
+            const normalizedContent = window.normalizeContent ? window.normalizeContent(transposedContent) : transposedContent;
+            if (window.setBaselineChart) window.setBaselineChart(normalizedContent);
+            if (window.setBaselineVisualContent) window.setBaselineVisualContent(normalizedContent);
+
+            // Update the editor content
+            let visualContent = normalizedContent;
+            if (window.convertToAboveLineFormat) {
+                visualContent = window.convertToAboveLineFormat(normalizedContent, true);
+                if (window.autoInsertArrangementLine) visualContent = window.autoInsertArrangementLine(visualContent);
+                if (window.ensureMetadata) visualContent = window.ensureMetadata(visualContent);
+                if (window.normalizeMetadataSpacing) visualContent = window.normalizeMetadataSpacing(visualContent);
+                if (window.reverseArrangementLineForRTL) visualContent = window.reverseArrangementLineForRTL(visualContent);
+            }
+            visualEditor.value = visualContent;
+
+            // Update app.js globals
+            if (window.setOriginalKey) window.setOriginalKey(newKeyFull);
+            if (keySelector) keySelector.value = newKeyFull;
+
+            // Update live mode state — new original key, reset personal transpose
+            this.currentSongContent = normalizedContent;
+            this.originalSongKey = newKeyFull;
+            this.currentKey = newKeyFull;
+            this.currentTransposeSteps = 0;
+            this.currentCapo = 0;
+            const capoEl = document.getElementById('liveModeCapoValue');
+            if (capoEl) capoEl.textContent = '0';
+
+            // Update songbook output
+            const songbookOutput = document.getElementById('songbookOutput');
+            if (songbookOutput) songbookOutput.value = normalizedContent;
+
+            // Refresh the live preview
+            if (window.updateLivePreview) window.updateLivePreview();
+            this.updateDisplay();
+
+            // Broadcast to all followers
+            if (window.broadcastCurrentSong) {
+                window.broadcastCurrentSong();
+            }
+
+            console.log(`🔑 Original key changed to ${newKeyFull} (${steps > 0 ? '+' : ''}${steps} from ${origShort}), broadcast to session`);
+        }
+    },
+
+    /**
+     * Show Circle of Fifths key picker for personal transpose.
+     * Used from the sidebar key control — does NOT change original key.
+     */
+    _showKeyTransposePicker(anchorEl) {
+        // Remove existing picker if open
+        const existing = document.getElementById('liveKeyPicker');
+        if (existing) { existing.remove(); return; }
+
+        const chromaticScale = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const fifthsOrder = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#', 'G#', 'D#', 'A#', 'F'];
+
+        const currentShort = this._formatKeyShort(this.currentKey).replace('m', '');
+        const origShort = this._formatKeyShort(this.originalSongKey).replace('m', '');
+
+        const picker = document.createElement('div');
+        picker.id = 'liveKeyPicker';
+        picker.style.cssText = 'position:fixed; z-index:20000; background:var(--bg); border:2px solid var(--text); padding:12px; display:flex; flex-wrap:wrap; gap:6px; max-width:260px; box-shadow:0 8px 24px rgba(0,0,0,0.5);';
+
+        const rect = anchorEl.getBoundingClientRect();
+        picker.style.top = (rect.bottom + 8) + 'px';
+        picker.style.left = Math.max(8, rect.left - 60) + 'px';
+
+        const title = document.createElement('div');
+        title.style.cssText = 'width:100%; font-size:10px; font-weight:700; opacity:0.5; text-transform:uppercase; letter-spacing:0.5px; color:var(--text); margin-bottom:4px;';
+        title.textContent = `Transpose to Key (Original: ${origShort})`;
+        picker.appendChild(title);
+
+        fifthsOrder.forEach(key => {
+            const btn = document.createElement('button');
+            const isActive = key === currentShort;
+            const isOriginal = key === origShort;
+            btn.textContent = key;
+            btn.style.cssText = `width:42px; height:34px; font-size:13px; font-weight:700; cursor:pointer; border:1px solid var(--text); color:${isActive ? 'var(--bg)' : 'var(--text)'}; background:${isActive ? 'var(--text)' : 'transparent'}; opacity:${isOriginal && !isActive ? '0.7' : '1'};`;
+            if (isOriginal && !isActive) {
+                btn.style.borderWidth = '2px';
+                btn.style.borderStyle = 'dashed';
+            }
+            btn.onclick = () => {
+                picker.remove();
+                if (key === currentShort) return;
+
+                const origIndex = chromaticScale.indexOf(origShort);
+                const targetIndex = chromaticScale.indexOf(key);
+                if (origIndex === -1 || targetIndex === -1) return;
+
+                let targetSteps = targetIndex - origIndex;
+                if (targetSteps > 6) targetSteps -= 12;
+                if (targetSteps < -6) targetSteps += 12;
+
+                const delta = targetSteps - this.currentTransposeSteps;
+                if (delta !== 0) {
+                    this.transpose(delta);
+                }
+            };
+            picker.appendChild(btn);
+        });
+
+        document.body.appendChild(picker);
+
+        const closeHandler = (e) => {
+            if (!picker.contains(e.target) && e.target !== anchorEl) {
+                picker.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 100);
     },
 
     /**
@@ -1118,11 +1340,6 @@ const liveMode = {
         const oldCapo = this.currentCapo;
         if (newCapo === oldCapo) return;
 
-        // Save original key before first capo application
-        if (oldCapo === 0) {
-            this.originalSongKey = this.currentKey;
-        }
-
         // Capo up = transpose chords down, capo down = transpose chords up
         const diff = oldCapo - newCapo; // e.g., old=0 new=1 → diff=-1 → transpose(-1)
         this.currentCapo = newCapo;
@@ -1130,11 +1347,6 @@ const liveMode = {
         // Update capo display
         const capoEl = document.getElementById('liveModeCapoValue');
         if (capoEl) capoEl.textContent = newCapo;
-
-        // If capo back to 0, restore original key reference
-        if (newCapo === 0) {
-            this.originalSongKey = this.currentKey;
-        }
 
         // Transpose the chords (this calls updateDisplay which updates the header)
         this.transpose(diff);
@@ -1775,7 +1987,18 @@ const liveMode = {
                     ` : '';
 
                     // Song info (key, bpm, time signature)
-                    const displayKey = song.originalKey || song.key || '--';
+                    const originalKey = song.originalKey || song.key || '--';
+                    // If this is the currently loaded song and it's been transposed, show both keys
+                    let displayKey = originalKey;
+                    if (isCurrent && liveMode.currentTransposeSteps !== 0) {
+                        const transposedKey = liveMode._formatKeyShort(liveMode.currentKey);
+                        const origShort = liveMode._formatKeyShort(originalKey);
+                        displayKey = `${origShort} → ${transposedKey}`;
+                    } else if (isCurrent && liveMode.currentCapo > 0) {
+                        const capoKey = liveMode._formatKeyShort(liveMode.currentKey);
+                        const origShort = liveMode._formatKeyShort(originalKey);
+                        displayKey = `${origShort} (C${liveMode.currentCapo} → ${capoKey})`;
+                    }
                     const displayTimeSig = song.timeSignature || '4/4';
 
                     // Info row when locked (display only), controls row when unlocked
@@ -1834,7 +2057,7 @@ const liveMode = {
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span style="color: ${numberColor}; font-weight: 600; min-width: 20px; font-size: 13px;">${index + 1}</span>
                                 <div style="flex: 1; min-width: 0;">
-                                    <div style="color: var(--text); font-weight: ${fontWeight}; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${song.name}</div>
+                                    <div style="color: var(--text); font-weight: ${fontWeight}; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${song.name} <span style="opacity:0.5; font-size:11px;">${liveMode._formatKeyShort(originalKey)}</span></div>
                                     ${controlsRow}
                                 </div>
                                 ${removeBtn}
