@@ -270,7 +270,6 @@
                         <button class="header-btn" id="headerLoadSong" data-i18n="preview.btn.load">Load</button>
                         <button class="header-btn" id="headerSaveAsImage" data-i18n="preview.btn.image">Image</button>
                         <button class="header-btn" id="printButton" data-i18n="preview.btn.print">Print</button>
-                        <button class="header-btn" id="headerAutoFit" data-i18n="preview.btn.autofit">Auto Fit</button>
                     </div>
 
                     <!-- Hidden buttons (accessible from side menu) -->
@@ -5454,12 +5453,12 @@
             });
 
             // Paste button — desktop only (clipboard API not supported on iOS)
-            const pasteBtn = document.getElementById('pasteImageBtn');
-            if (pasteBtn) {
+            const pasteImageBtn = document.getElementById('pasteImageBtn');
+            if (pasteImageBtn) {
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 if (!isMobile) {
-                    pasteBtn.style.display = 'block';
-                    pasteBtn.addEventListener('click', async () => {
+                    pasteImageBtn.style.display = 'block';
+                    pasteImageBtn.addEventListener('click', async () => {
                         try {
                             const clipboardItems = await navigator.clipboard.read();
                             for (const item of clipboardItems) {
@@ -5500,7 +5499,7 @@
             // Camera input change
             if (cameraFileInput) {
                 cameraFileInput.addEventListener('change', (e) => {
-                    const file = e.target.files?[0];
+                    const file = e.target.files?.[0];
                     if (file && file.type?.startsWith('image/')) {
                         const reader = new FileReader();
                         reader.onload = (ev) => {
