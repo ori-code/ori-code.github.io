@@ -5452,31 +5452,7 @@
                 }
             });
 
-            // Paste button — desktop only (clipboard API not supported on iOS)
-            const pasteImageBtn = document.getElementById('pasteImageBtn');
-            if (pasteImageBtn) {
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (!isMobile) {
-                    pasteImageBtn.style.display = 'block';
-                    pasteImageBtn.addEventListener('click', async () => {
-                        try {
-                            const clipboardItems = await navigator.clipboard.read();
-                            for (const item of clipboardItems) {
-                                const imageType = item.types.find(t => t.startsWith('image/'));
-                                if (imageType) {
-                                    const blob = await item.getType(imageType);
-                                    const file = new File([blob], 'pasted-image.png', { type: imageType });
-                                    handleImageFile(file);
-                                    return;
-                                }
-                            }
-                            window.showAlert && showAlert('No image found in clipboard. Copy an image first, then click Paste.');
-                        } catch (err) {
-                            window.showAlert && showAlert('Paste not available. Use Ctrl+V (or Cmd+V) to paste an image.');
-                        }
-                    });
-                }
-            }
+            // (pasteImageBtn removed — clipboard paste now handled by unified pasteBtn below)
 
             // Drag & drop onto preview panel
             uploadPreview.addEventListener('dragover', (e) => {
@@ -5533,11 +5509,44 @@
                 }
             });
 
-            // Paste button toggles the paste area
+            // Paste button: try clipboard first (image/text/URL), fall back to toggle text area
             const pasteBtn = document.getElementById('pasteBtn');
             const pasteArea = document.getElementById('pasteArea');
             if (pasteBtn && pasteArea) {
-                pasteBtn.addEventListener('click', () => {
+                pasteBtn.addEventListener('click', async () => {
+                    // Try reading clipboard first
+                    try {
+                        const clipboardItems = await navigator.clipboard.read();
+                        for (const item of clipboardItems) {
+                            // Check for image in clipboard
+                            const imageType = item.types.find(t => t.startsWith('image/'));
+                            if (imageType) {
+                                const blob = await item.getType(imageType);
+                                const file = new File([blob], 'pasted-image.png', { type: imageType });
+                                handleImageFile(file);
+                                return;
+                            }
+                        }
+                        // No image — try text
+                        const text = await navigator.clipboard.readText();
+                        if (text && text.trim()) {
+                            const input = document.getElementById('contentInput');
+                            if (input) {
+                                pasteArea.style.display = 'block';
+                                input.value = text.trim();
+                                input.focus();
+                                // Auto-submit if it looks like a URL
+                                if (/^https?:\/\//i.test(text.trim())) {
+                                    const goBtn = document.getElementById('fetchUrlBtn');
+                                    if (goBtn) goBtn.click();
+                                }
+                            }
+                            return;
+                        }
+                    } catch (e) {
+                        // Clipboard API not available or denied — fall back to toggle
+                    }
+                    // Fallback: toggle paste area for manual input
                     const isVisible = pasteArea.style.display !== 'none';
                     pasteArea.style.display = isVisible ? 'none' : 'block';
                     if (!isVisible) {
