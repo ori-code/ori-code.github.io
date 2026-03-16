@@ -3935,16 +3935,27 @@
                         // Capture the full preview page (content + footer with user branding)
                         const captureTarget = document.querySelector('.preview-page[data-page="1"]');
 
+                        // Temporarily remove mobile scaling so html2canvas captures at full A4 size
+                        const previewContainer = document.querySelector('.preview-container');
+                        const scaleWrapper = document.querySelector('.preview-scale-wrapper');
+                        const savedTransform = previewContainer ? previewContainer.style.transform : '';
+                        const savedContainerWidth = previewContainer ? previewContainer.style.width : '';
+                        const savedWrapperHeight = scaleWrapper ? scaleWrapper.style.height : '';
+                        if (previewContainer) {
+                            previewContainer.style.transform = 'none';
+                            previewContainer.style.width = '';
+                        }
+                        if (scaleWrapper) scaleWrapper.style.height = '';
+
                         // Temporarily force light theme so text is black on white
-                        // (in dark mode, var(--text) is white which becomes invisible on white bg)
                         const htmlEl = document.documentElement;
                         const originalTheme = htmlEl.getAttribute('data-theme');
                         htmlEl.setAttribute('data-theme', 'light');
 
-                        // Capture the preview
+                        // Capture the preview at full A4 dimensions
                         const canvas = await html2canvas(captureTarget, {
                             backgroundColor: '#ffffff',
-                            scale: 2, // Higher resolution for better quality
+                            scale: 2,
                             useCORS: true,
                             logging: false,
                             width: captureTarget.scrollWidth,
@@ -3959,6 +3970,13 @@
                         } else {
                             htmlEl.removeAttribute('data-theme');
                         }
+
+                        // Restore mobile scaling
+                        if (previewContainer) {
+                            previewContainer.style.transform = savedTransform;
+                            previewContainer.style.width = savedContainerWidth;
+                        }
+                        if (scaleWrapper) scaleWrapper.style.height = savedWrapperHeight;
 
                         // Convert to image
                         const imageData = canvas.toDataURL('image/png', 1.0);
