@@ -3676,7 +3676,7 @@ input[type="checkbox"]:checked::after {
 
     .editor-preview-wrapper>.preview-scale-wrapper,
     .editor-preview-wrapper>.editor {
-        flex: 0 0 100%;
+        flex: 0 0 auto;
         width: 100%;
     }
 
