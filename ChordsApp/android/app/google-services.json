@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "313148138831",
+    "firebase_url": "https://chordsapp-e10e7-default-rtdb.firebaseio.com",
+    "project_id": "chordsapp-e10e7",
+    "storage_bucket": "chordsapp-e10e7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:313148138831:android:a0b4e55d17678ef35f913a",
+        "android_client_info": {
+          "package_name": "com.thefaithsound.achordim"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "313148138831-ojmgbn6ap1no1r1lpi905ioefvubeagr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.thefaithsound.achordim",
+            "certificate_hash": "5ae09b36470aef13cae8f1161502a7cd60b47053"
+          }
+        },
+        {
+          "client_id": "313148138831-sd6pum3qb2afjf04h7r8v01g9pgkgu9o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDAFwc3DLSzyrjNGylu2HIY1NZz2-SkWeg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "313148138831-sd6pum3qb2afjf04h7r8v01g9pgkgu9o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

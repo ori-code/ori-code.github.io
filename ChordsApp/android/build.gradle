@@ -7,7 +7,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.13.0'
+        classpath 'com.android.tools.build:gradle:9.1.0'
         classpath 'com.google.gms:google-services:4.4.4'
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -26,4 +26,70 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+task patchFiles {
+    doLast {
+        def htmlFile = new File('/Volumes/1TB_EXFAT/Development www.TheFaithSound.com/ori-code.github.io/ChordsApp/www/index.html')
+        def html = htmlFile.text
+        
+        // Let's just fix the messed up target2 replacement first:
+        html = html.replace("const chartFileInput = document.getElementById('chartFileInput');\\n            const cameraFileInput = document.getElementById('cameraFileInput');\\n            const cameraFileInput = document.getElementById('cameraFileInput');",
+            "const chartFileInput = document.getElementById('chartFileInput');\n            const cameraFileInput = document.getElementById('cameraFileInput');")
+            
+        html = html.replace("const chartFileInput = document.getElementById('chartFileInput');\\n            const cameraFileInput = document.getElementById('cameraFileInput');",
+            "const chartFileInput = document.getElementById('chartFileInput');\n            const cameraFileInput = document.getElementById('cameraFileInput');")
+            
+        // Now find the row and replace it entirely using regex
+        html = html.replaceAll(
+            /(?s)<input id="chartFileInput" class="sr-only" type="file" accept="image\/\*,\.pdf">\s*<div id="uploadBtnRow".*?data-i18n="step1.btn">.*?<\/label>/,
+            '''<input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
+                    <input id="cameraFileInput" class="sr-only" type="file" accept="image/*" capture="environment">
+                    <div id="uploadBtnRow" style="display: flex; gap: 8px; width: 100%;">
+                        <label class="primary-action" for="cameraFileInput" style="flex: 1; text-align: center; background: var(--text); color: var(--bg);"
+                            data-i18n="step1.camera">Take Photo</label>
+                        <label class="primary-action" for="chartFileInput" style="flex: 1; text-align: center;"
+                            data-i18n="step1.btn">Upload Stash Photo</label>'''
+        )
+
+        // Make sure we have the cameraFileInput variable if not already there
+        if (!html.contains("const cameraFileInput = document.getElementById('cameraFileInput');")) {
+            html = html.replace(
+                "const chartFileInput = document.getElementById('chartFileInput');",
+                "const chartFileInput = document.getElementById('chartFileInput');\n            const cameraFileInput = document.getElementById('cameraFileInput');"
+            )
+        }
+        
+        if (!html.contains("// Camera input change")) {
+            html = html.replace(
+                "// File input change — show preview for images\n            chartFileInput.addEventListener('change', (e) => {",
+                """// Camera input change
+            if (cameraFileInput) {
+                cameraFileInput.addEventListener('change', (e) => {
+                    const file = e.target.files?[0];
+                    if (file && file.type?.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            previewImage.src = ev.target.result;
+                            previewImage.style.display = 'block';
+                            if (placeholder) placeholder.style.display = 'none';
+                        };
+                        reader.readAsDataURL(file);
+                        
+                        const dt = new DataTransfer();
+                        dt.items.add(file);
+                        chartFileInput.files = dt.files;
+                        chartFileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            }
+
+            // File input change — show preview for images
+            chartFileInput.addEventListener('change', (e) => {"""
+            )
+        }
+
+        htmlFile.write(html)
+        println "Patch applied successfully"
+    }
 }
