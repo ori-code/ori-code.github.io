@@ -6461,6 +6461,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 await window.subscriptionManager.refreshUserUsage();
                 updateUsageDisplay();
             }
+            document.body.style.overflow = 'hidden';
             modal.style.display = 'flex';
             await updateSubscriptionModal();
         }
@@ -6577,7 +6578,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const intenseScanOption = document.getElementById('intenseScanOption');
         if (intenseScanOption && window.subscriptionManager) {
             const isPro = window.subscriptionManager.getCurrentTier() === 'PRO';
-            intenseScanOption.style.display = isPro ? 'block' : 'none';
+            intenseScanOption.style.display = isPro ? '' : 'none';
         }
     }
 
@@ -6601,7 +6602,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 const intenseScanOption = document.getElementById('intenseScanOption');
                 if (intenseScanOption) {
                     const isPro = window.subscriptionManager.getCurrentTier() === 'PRO';
-                    intenseScanOption.style.display = isPro ? 'block' : 'none';
+                    intenseScanOption.style.display = isPro ? '' : 'none';
                 }
 
                 // Initialize PayPal buttons

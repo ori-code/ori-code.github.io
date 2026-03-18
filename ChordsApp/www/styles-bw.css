@@ -113,6 +113,13 @@ a {
     line-height: 1;
 }
 
+/* Remove borders from header action buttons (Sign In, Lang, Theme) */
+.header-actions .ghost-button,
+.header-actions #langToggle,
+.header-actions #themeToggle {
+    border: none !important;
+}
+
 .nav-logo {
     font-size: 1.5rem;
     font-weight: 600;
@@ -195,34 +202,84 @@ a {
     padding: 40px 32px 80px;
 }
 
-/* --- Hero --- */
+/* --- Hero (merged upload flow) --- */
 .hero {
-    display: grid;
-    gap: 32px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    margin-bottom: 40px;
+    text-align: center;
+    max-width: 420px;
+    margin: 0 auto 20px;
+    gap: 10px;
 }
 
-.hero-text h1 {
-    font-size: clamp(1.8rem, 3vw, 2.4rem);
+.hero h1 {
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
     font-weight: 600;
-    margin-bottom: 12px;
-    line-height: 1.2;
+    line-height: 1.25;
+    margin: 0;
 }
 
-.hero-text p {
+.hero-subtitle {
     color: var(--text);
-    max-width: 520px;
-    margin-bottom: 18px;
-    font-size: 0.95rem;
+    font-size: 0.75rem;
+    opacity: 0.4;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.upload-actions {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+
+.upload-btn {
+    flex: 1;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 0.75rem;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-btn:first-child {
+    background: var(--text);
+    color: var(--bg);
+}
+
+.analyze-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.analyze-check {
+    flex: 1;
+    font-size: 0.8rem;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     opacity: 0.6;
 }
 
-.hero-actions {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
+.analyze-check input {
+    cursor: pointer;
+}
+
+.analyze-row .upload-btn {
+    flex: 1;
 }
 
 /* --- Buttons --- */
@@ -432,33 +489,34 @@ input[type="checkbox"]:checked::after {
 /* --- Display Toggle Buttons --- */
 .display-toggle {
     background: transparent !important;
-    border: 1px solid var(--border) !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
     color: var(--text) !important;
-    opacity: 1;
-    transition: all 0.2s ease !important;
+    opacity: 0.5;
+    transition: opacity 0.15s ease, border-color 0.15s ease !important;
 }
 
 .display-toggle:hover {
-    opacity: 1;
+    opacity: 0.8;
 }
 
 .display-toggle.active {
-    background: var(--text) !important;
-    border-color: var(--text) !important;
-    color: var(--bg) !important;
-    opacity: 1;
+    opacity: 1 !important;
+    border-bottom-color: var(--text) !important;
+    font-weight: 600;
 }
 
 [data-theme="light"] .display-toggle {
     background: transparent !important;
-    border: 1px solid #000 !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
     color: #000 !important;
 }
 
 [data-theme="light"] .display-toggle.active {
-    background: #000 !important;
-    border-color: #000 !important;
-    color: #fff !important;
+    opacity: 1 !important;
+    border-bottom-color: #000 !important;
+    font-weight: 600 !important;
 }
 
 /* --- Preview Header Row --- */
@@ -483,33 +541,28 @@ input[type="checkbox"]:checked::after {
     display: none;
 }
 
-/* --- Header Buttons --- */
+/* --- Header Buttons (nav-tab style) --- */
 .header-btn {
-    font-size: 13px;
-    padding: 8px 14px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 10px 12px;
     background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 0;
+    border: none;
+    border-bottom: 2px solid transparent;
     color: var(--text);
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.2s ease, color 0.2s ease;
+    opacity: 0.5;
+    transition: opacity 0.15s ease, border-color 0.15s ease;
 }
 
 .header-btn:hover {
-    background: var(--text);
-    color: var(--bg);
-}
-
-[data-theme="light"] .header-btn {
-    background: transparent;
-    border-color: #000;
-    color: #000;
-}
-
-[data-theme="light"] .header-btn:hover {
-    background: #000;
-    color: #fff;
+    opacity: 0.8;
 }
 
 /* Header Button Groups */
@@ -518,61 +571,22 @@ input[type="checkbox"]:checked::after {
     gap: 0;
     padding: 0;
     background: transparent;
-    border-radius: 0;
     border: none;
-    flex-shrink: 0;
-}
-
-[data-theme="light"] .header-btn-group {
-    background: transparent;
-    border: none;
-}
-
-.header-btn-group .header-btn {
-    border-radius: 0;
-    margin-left: -1px;
-    /* collapse adjacent borders */
-}
-
-.header-btn-group .header-btn:first-child {
-    margin-left: 0;
-}
-
-/* All header buttons uniform style */
-.header-btn.pads-btn,
-.header-btn.metro-btn,
-.header-btn.go-live-btn,
-.header-btn.live-preview-btn,
-.header-btn.display-toggle {
-    background: transparent;
-    border-color: var(--border);
-    color: var(--text);
-    font-weight: normal;
-    text-shadow: none;
-}
-
-.header-btn.pads-btn:hover,
-.header-btn.metro-btn:hover,
-.header-btn.go-live-btn:hover,
-.header-btn.live-preview-btn:hover,
-.header-btn.display-toggle:hover {
-    background: var(--text);
-    color: var(--bg);
-    box-shadow: none;
-    transform: none;
+    border-bottom: 1px solid var(--border);
+    width: 100%;
 }
 
 /* Active states for display toggles */
 .header-btn.display-toggle.active {
-    background: var(--text);
-    border-color: var(--text);
-    color: var(--bg);
+    opacity: 1;
+    border-bottom-color: var(--text);
+    font-weight: 600;
 }
 
 /* Live group — only Preview button visible */
 .header-btn-group.live-group {
     background: transparent;
-    border: none;
+    border-bottom: none;
     padding: 0;
     margin: 0;
 }
@@ -682,11 +696,13 @@ input[type="checkbox"]:checked::after {
     border: 1px solid var(--border);
     border-radius: 0;
     padding: 8px;
-    min-height: 80px;
+    min-height: 50px;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .preview-panel img {
@@ -750,11 +766,11 @@ input[type="checkbox"]:checked::after {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 8px;
     background: transparent;
     border: 1px solid var(--border);
     border-radius: 0;
-    padding: 16px;
+    padding: 10px;
     position: relative;
     overflow: hidden;
     width: 100%;
@@ -1575,7 +1591,7 @@ input[type="checkbox"]:checked::after {
     max-width: 480px;
     width: 100%;
     box-sizing: border-box;
-    overflow-x: hidden;
+    overflow: hidden;
     animation: modalSlideIn 0.2s ease-out;
 }
 
@@ -3088,162 +3104,25 @@ input[type="checkbox"]:checked::after {
 }
 
 /* --- Mobile Header Responsive --- */
-@media (max-width: 1024px) {
-    .preview-header-row {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .header-btn-group {
-        flex-shrink: 1;
-    }
-}
-
 @media (max-width: 768px) {
-    .preview-header-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        padding: 0 8px;
-        justify-content: center;
-    }
-
     .preview-header-row h2 {
-        flex: 0 0 100%;
-        text-align: center;
-        margin: 0 0 8px 0;
         font-size: 1.2rem;
     }
 
-    .header-spacer {
-        display: none;
-    }
-
     .header-btn {
-        font-size: 11px;
-        padding: 10px 12px;
-        border-radius: 0;
-    }
-
-    .header-btn-group {
-        background: transparent;
-        border-radius: 0;
-        padding: 5px;
-        gap: 4px;
-        justify-content: center;
-        border: 1px solid var(--border);
-        flex-wrap: wrap;
-        width: 100%;
-    }
-
-    .header-btn-group.view-toggles {
-        flex: 0 0 100%;
-        justify-content: center;
-    }
-
-    .header-btn-group.music-tools {
-        flex: 1 1 45%;
-        min-width: 130px;
-    }
-
-    .header-btn-group.live-group {
-        flex: 1 1 45%;
-        min-width: 130px;
-    }
-
-    .header-btn-group.file-actions {
-        flex: 0 0 100%;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .header-btn-group.music-tools .header-btn,
-    .header-btn-group.live-group .header-btn {
-        flex: 1;
-        text-align: center;
-        justify-content: center;
-    }
-
-    /* All header buttons uniform B&W on mobile */
-    .header-btn.pads-btn,
-    .header-btn.metro-btn,
-    .header-btn.go-live-btn,
-    .header-btn.live-preview-btn {
-        background: transparent;
-        border-color: var(--border);
-        color: var(--text);
-    }
-
-    .header-btn.display-toggle.active {
-        background: var(--text);
-        border-color: var(--text);
-        color: var(--bg);
+        font-size: 0.75rem;
+        padding: 8px 6px;
     }
 }
 
 @media (max-width: 480px) {
-    .preview-header-row {
-        gap: 5px;
-        padding: 0 4px;
-    }
-
     .preview-header-row h2 {
         font-size: 1.1rem;
-        margin-bottom: 6px;
     }
 
     .header-btn {
-        font-size: 10px;
-        padding: 8px 10px;
-    }
-
-    .header-btn-group {
-        padding: 4px;
-        gap: 3px;
-        border-radius: 0;
-    }
-
-    .header-btn-group.file-actions .header-btn {
-        padding: 8px 6px;
-        font-size: 10px;
-    }
-
-    .header-btn-group.music-tools .header-btn,
-    .header-btn-group.live-group .header-btn {
-        padding: 10px 10px;
-        font-size: 10px;
-        font-weight: 600;
-    }
-}
-
-@media (max-width: 380px) {
-    .preview-header-row {
-        gap: 4px;
-        padding: 0 2px;
-    }
-
-    .preview-header-row h2 {
-        font-size: 1rem;
-    }
-
-    .header-btn {
-        font-size: 9px;
-        padding: 7px 6px;
-    }
-
-    .header-btn-group {
-        padding: 3px;
-    }
-
-    .header-btn-group.file-actions .header-btn {
-        padding: 7px 5px;
-        font-size: 9px;
-    }
-
-    .header-btn-group.music-tools .header-btn,
-    .header-btn-group.live-group .header-btn {
-        padding: 9px 8px;
-        font-size: 9px;
+        font-size: 0.7rem;
+        padding: 8px 4px;
     }
 }
 
@@ -3894,20 +3773,147 @@ input[type="checkbox"]:checked::after {
     background: transparent !important;
 }
 
-/* Selected song items in bulk mode — must appear AFTER safety-net rules to win cascade */
+/* --- Song List (minimal style) --- */
+.sl-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s ease;
+}
+
+.sl-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 14px;
+    right: 14px;
+    height: 1px;
+    background: var(--text);
+    opacity: 0.1;
+}
+
+.sl-item:last-child::after {
+    display: none;
+}
+
+.sl-letter {
+    padding: 18px 14px 4px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+    opacity: 0.25;
+    border-bottom: 1px solid var(--text);
+    border-bottom-color: color-mix(in srgb, var(--text) 10%, transparent);
+}
+
+.sl-item:hover {
+    background: color-mix(in srgb, var(--text) 5%, transparent);
+}
+
+.sl-num {
+    color: var(--text);
+    opacity: 0.3;
+    min-width: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.sl-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sl-title {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sl-meta {
+    font-size: 12px;
+    color: var(--text);
+    opacity: 0.4;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sl-actions {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.sl-btn {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.3;
+    flex-shrink: 0;
+    padding: 0;
+    transition: opacity 0.15s ease;
+}
+
+.sl-btn:hover {
+    opacity: 1;
+}
+
+.sl-btn--public-on {
+    opacity: 1;
+}
+
+.sl-btn--play {
+    border: 1px solid var(--text);
+    opacity: 0.7;
+}
+
+.sl-btn--play:hover {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .sl-btn {
+        opacity: 0.5;
+    }
+    .sl-btn--public-on {
+        opacity: 1;
+    }
+}
+
+/* Song item selected state (bulk mode) */
 #loadSongModal .song-item-selected {
     background: var(--text) !important;
-    color: var(--bg) !important;
-    border-color: var(--border) !important;
 }
 
-#loadSongModal .song-item-selected * {
+#loadSongModal .song-item-selected .sl-title,
+#loadSongModal .song-item-selected .sl-meta,
+#loadSongModal .song-item-selected .sl-num,
+#loadSongModal .song-item-selected .sl-btn {
     color: var(--bg) !important;
 }
 
-#loadSongModal .song-item-selected span[style*="border"] {
-    border-color: var(--bg) !important;
-    background: transparent !important;
+#loadSongModal .song-item-selected::after {
+    display: none;
 }
 
 #loadSongModal .song-item-selected input[type="checkbox"] {
@@ -3925,6 +3931,14 @@ input[type="checkbox"]:checked::after {
     overflow-x: hidden;
 }
 
+/* Hide scrollbar but keep scrollable */
+#songList {
+    scrollbar-width: none; /* Firefox */
+}
+#songList::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
 /* Mobile: full-screen modals with 10px side padding */
 @media (max-width: 720px) {
     .modal-overlay .modal-container {
@@ -3933,7 +3947,9 @@ input[type="checkbox"]:checked::after {
         height: 100%;
         margin: 0;
         border: none;
-        overflow-y: auto;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     .modal-overlay .modal-body {

@@ -92,8 +92,20 @@
         // Apply sorting
         filtered.sort((a, b) => {
             switch (sortBy) {
-                case 'name':
+                case 'name': {
+                    // Group by script: Latin (0) → Hebrew (1) → Arabic (2) → other (3)
+                    const scriptOrder = (name) => {
+                        const ch = (name || '').trim().charAt(0);
+                        if (/[A-Za-z]/.test(ch)) return 0;
+                        if (/[\u0590-\u05FF]/.test(ch)) return 1;
+                        if (/[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ch)) return 2;
+                        return 3;
+                    };
+                    const sa = scriptOrder(a.name);
+                    const sb = scriptOrder(b.name);
+                    if (sa !== sb) return sa - sb;
                     return a.name.localeCompare(b.name);
+                }
                 case 'bpm':
                     const bpmA = window.extractBPM(a.content) || 0;
                     const bpmB = window.extractBPM(b.content) || 0;

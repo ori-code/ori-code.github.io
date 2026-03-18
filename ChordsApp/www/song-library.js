@@ -42,7 +42,7 @@
                 toggleBtn.style.background = 'rgba(239, 68, 68, 0.2)';
                 toggleBtn.style.borderColor = '#ef4444';
             } else {
-                toggleBtn.textContent = '☑️ Select';
+                toggleBtn.textContent = 'Select';
                 toggleBtn.style.background = '';
                 toggleBtn.style.borderColor = '';
             }
@@ -69,7 +69,7 @@
         const actionBar = document.getElementById('bulkActionBar');
 
         if (toggleBtn) {
-            toggleBtn.textContent = '☑️ Select';
+            toggleBtn.textContent = 'Select';
             toggleBtn.style.background = '';
             toggleBtn.style.borderColor = '';
         }
@@ -130,12 +130,12 @@
         const savedSelection = window.selectedBookId || currentBookFilter || 'all';
 
         // Clear existing options except "All Songs"
-        bookFilter.innerHTML = '<option value="all">📚 All Songs</option>';
+        bookFilter.innerHTML = '<option value="all">All Songs</option>';
 
         // Add Public Songs option (special global book)
         const publicOption = document.createElement('option');
         publicOption.value = '__PUBLIC__';
-        publicOption.textContent = '🌐 Public Songs';
+        publicOption.textContent = 'Public Songs';
         publicOption.style.cssText = 'font-weight: bold;';
         if (savedSelection === '__PUBLIC__') {
             publicOption.selected = true;
@@ -963,7 +963,7 @@
         function createSongItem(song, user, database, index = 0) {
             const songItem = document.createElement('div');
             const isSelected = selectedSongIds.has(song.id);
-            songItem.style.cssText = 'padding: 12px 14px; margin-bottom: 6px; background: var(--bg); color: var(--text); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 10px;';
+            songItem.className = 'sl-item';
             if (isSelected) songItem.classList.add('song-item-selected');
             songItem.dataset.songId = song.id;
 
@@ -980,38 +980,28 @@
                     } else {
                         selectedSongIds.delete(song.id);
                     }
-                    // Update the item's visual style
                     songItem.classList.toggle('song-item-selected', checkbox.checked);
                     updateBulkActionBar();
                 });
                 songItem.appendChild(checkbox);
             } else {
-                // Row number (like Live Session playlist)
                 const numEl = document.createElement('span');
                 numEl.textContent = index + 1;
-                numEl.style.cssText = 'color: var(--text); opacity: 0.4; min-width: 20px; font-size: 12px; font-weight: 600; flex-shrink: 0; text-align: right;';
+                numEl.className = 'sl-num';
                 songItem.appendChild(numEl);
             }
 
             const songInfo = document.createElement('div');
-            songInfo.style.cssText = 'flex: 1; min-width: 0;';
+            songInfo.className = 'sl-info';
 
-            // ✅ DISPLAY TITLE FROM STRUCTURED FIELD
             const songTitle = document.createElement('div');
             songTitle.textContent = song.title || song.name;
-            songTitle.style.cssText = 'font-weight: 600; color: var(--text); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+            songTitle.className = 'sl-title';
             songInfo.appendChild(songTitle);
 
-            // ✅ DISPLAY AUTHOR IF AVAILABLE
-            if (song.author) {
-                const songAuthor = document.createElement('div');
-                songAuthor.textContent = song.author;
-                songAuthor.style.cssText = 'font-size: 11px; color: var(--text); opacity: 0.5; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
-                songInfo.appendChild(songAuthor);
-            }
-
-            // ✅ COMPACT METADATA (Key · BPM · Time — inline, no badges)
+            // Combined metadata line: author, key, BPM, time sig
             const metaParts = [];
+            if (song.author) metaParts.push(song.author);
             if (song.key || song.originalKey) {
                 let keyText = song.key || song.originalKey;
                 if (song.transposeSteps && song.transposeSteps !== 0) {
@@ -1024,19 +1014,19 @@
 
             if (metaParts.length > 0) {
                 const metaEl = document.createElement('div');
-                metaEl.textContent = metaParts.join(' · ');
-                metaEl.style.cssText = 'font-size: 11px; color: var(--text); opacity: 0.5; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;';
+                metaEl.textContent = metaParts.join(', ');
+                metaEl.className = 'sl-meta';
                 songInfo.appendChild(metaEl);
             }
 
             // Action buttons container
             const actionsEl = document.createElement('div');
-            actionsEl.style.cssText = 'display: flex; gap: 2px; flex-shrink: 0; align-items: center;';
+            actionsEl.className = 'sl-actions';
 
             // Add to Session button
             const addToSessionBtn = document.createElement('button');
             addToSessionBtn.textContent = '+';
-            addToSessionBtn.style.cssText = 'background: transparent; border: 1px solid var(--border); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: 0.5; flex-shrink: 0;';
+            addToSessionBtn.className = 'sl-btn';
             addToSessionBtn.title = 'Add to session playlist';
 
             addToSessionBtn.addEventListener('click', async (e) => {
@@ -1106,17 +1096,9 @@
                 }
             });
 
-            addToSessionBtn.addEventListener('mouseenter', () => {
-                addToSessionBtn.style.opacity = '1';
-            });
-
-            addToSessionBtn.addEventListener('mouseleave', () => {
-                addToSessionBtn.style.opacity = '0.5';
-            });
-
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = '×';
-            deleteBtn.style.cssText = 'background: transparent; border: 1px solid var(--border); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: 0.5; flex-shrink: 0;';
+            deleteBtn.className = 'sl-btn';
             deleteBtn.title = 'Delete song';
 
             deleteBtn.addEventListener('click', async (e) => {
@@ -1144,19 +1126,11 @@
                 }
             });
 
-            deleteBtn.addEventListener('mouseenter', () => {
-                deleteBtn.style.opacity = '1';
-            });
-
-            deleteBtn.addEventListener('mouseleave', () => {
-                deleteBtn.style.opacity = '0.5';
-            });
-
             // Public toggle button (globe icon)
             const publicBtn = document.createElement('button');
             const isPublic = song.isPublic === true;
             publicBtn.textContent = '⊕';
-            publicBtn.style.cssText = `background: transparent; color: var(--text); border: ${isPublic ? '2px' : '1px'} solid var(--${isPublic ? 'text' : 'border'}); font-size: 13px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: ${isPublic ? '1' : '0.5'}; flex-shrink: 0;`;
+            publicBtn.className = isPublic ? 'sl-btn sl-btn--public-on' : 'sl-btn';
             publicBtn.title = isPublic ? 'Make private (click to unpublish)' : 'Make public (share with everyone)';
 
             publicBtn.addEventListener('click', async (e) => {
@@ -1164,31 +1138,15 @@
                 await togglePublicSong(song, user, !isPublic);
             });
 
-            publicBtn.addEventListener('mouseenter', () => {
-                publicBtn.style.opacity = '1';
-            });
-
-            publicBtn.addEventListener('mouseleave', () => {
-                publicBtn.style.opacity = isPublic ? '1' : '0.5';
-            });
-
             // Share button
             const shareBtn = document.createElement('button');
             shareBtn.textContent = '↗';
-            shareBtn.style.cssText = 'background: transparent; border: 1px solid var(--border); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: 0.5; flex-shrink: 0;';
+            shareBtn.className = 'sl-btn';
             shareBtn.title = 'Share song link';
 
             shareBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 await shareSong(song, user);
-            });
-
-            shareBtn.addEventListener('mouseenter', () => {
-                shareBtn.style.opacity = '1';
-            });
-
-            shareBtn.addEventListener('mouseleave', () => {
-                shareBtn.style.opacity = '0.5';
             });
 
             songItem.appendChild(songInfo);
@@ -1198,7 +1156,7 @@
                 // Public songs: show only "Open in Live Mode" button
                 const openBtn = document.createElement('button');
                 openBtn.textContent = '▶';
-                openBtn.style.cssText = 'background: transparent; border: 2px solid var(--text); color: var(--text); font-size: 12px; cursor: pointer; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: 600;';
+                openBtn.className = 'sl-btn sl-btn--play';
                 openBtn.title = 'Open in Live Mode';
 
                 openBtn.addEventListener('click', async (e) => {
@@ -1210,14 +1168,6 @@
                     } else {
                         console.error('Live Mode not available');
                     }
-                });
-
-                openBtn.addEventListener('mouseenter', () => {
-                    openBtn.style.opacity = '0.7';
-                });
-
-                openBtn.addEventListener('mouseleave', () => {
-                    openBtn.style.opacity = '1';
                 });
 
                 actionsEl.appendChild(openBtn);
@@ -1371,16 +1321,6 @@
                 loadSongModal.style.display = 'none';
             });
 
-            songItem.addEventListener('mouseenter', () => {
-                songItem.style.background = 'var(--primary-soft)';
-                songItem.style.borderColor = 'var(--primary)';
-            });
-
-            songItem.addEventListener('mouseleave', () => {
-                songItem.style.background = 'var(--bg-soft)';
-                songItem.style.borderColor = 'var(--border)';
-            });
-
             return songItem;
         }
 
@@ -1402,7 +1342,24 @@
                     songList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px 20px;">No songs saved yet. Save your first song to start building your library!</p>';
                 }
             } else {
+                // Check if A-Z sort is active for letter headers
+                const sortSelect = document.getElementById('songSortBy');
+                const isAZ = sortSelect && sortSelect.value === 'name';
+                let lastLetter = '';
+
                 displaySongs.forEach((song, i) => {
+                    // Insert letter header when first letter changes (A-Z mode only)
+                    if (isAZ) {
+                        const firstChar = (song.name || '').trim().charAt(0).toUpperCase();
+                        if (firstChar && firstChar !== lastLetter) {
+                            lastLetter = firstChar;
+                            const header = document.createElement('div');
+                            header.className = 'sl-letter';
+                            header.textContent = firstChar;
+                            songList.appendChild(header);
+                        }
+                    }
+
                     const songItem = createSongItem(song, user, database, i);
                     songList.appendChild(songItem);
                 });
