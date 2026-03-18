@@ -3216,6 +3216,23 @@
                 </div>
             </div>
 
+            <!-- Filled tags toggle -->
+            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="filledTagsToggle" onchange="liveMode.toggleFilledTags(this.checked)"
+                    style="cursor: pointer; accent-color: var(--text);">
+                <span style="font-size: 11px; color: var(--text); opacity: 0.6;">Filled Tags</span>
+            </label>
+
+            <!-- Section language toggle (EN/HE) -->
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                <select id="liveModeLanguage"
+                    style="padding: 3px 6px; background: var(--surface); color: var(--text); border: 1px solid var(--text); font-size: 11px; cursor: pointer; opacity: 0.6;">
+                    <option value="en" selected>EN</option>
+                    <option value="he">עב</option>
+                </select>
+                <span style="font-size: 11px; color: var(--text); opacity: 0.6;">Tag Language</span>
+            </div>
+
             <!-- AUTO-SCROLL -->
             <div style="margin-bottom: 10px;">
                 <div
@@ -4563,20 +4580,33 @@
                 });
             }
 
-            // Layout: Section Language sync
+            // Layout: Section Language sync (side menu + live mode + main toolbar)
             const sideMenuLanguage = document.getElementById('sideMenuLanguage');
             const mainLanguage = document.getElementById('sectionLanguage');
+            const liveModeLanguage = document.getElementById('liveModeLanguage');
             if (sideMenuLanguage && mainLanguage) {
                 sideMenuLanguage.value = mainLanguage.value;
+                if (liveModeLanguage) liveModeLanguage.value = mainLanguage.value;
 
                 sideMenuLanguage.addEventListener('change', () => {
                     mainLanguage.value = sideMenuLanguage.value;
+                    if (liveModeLanguage) liveModeLanguage.value = sideMenuLanguage.value;
                     mainLanguage.dispatchEvent(new Event('change'));
                 });
 
                 mainLanguage.addEventListener('change', () => {
                     sideMenuLanguage.value = mainLanguage.value;
+                    if (liveModeLanguage) liveModeLanguage.value = mainLanguage.value;
                 });
+
+                if (liveModeLanguage) {
+                    liveModeLanguage.addEventListener('change', () => {
+                        mainLanguage.value = liveModeLanguage.value;
+                        sideMenuLanguage.value = liveModeLanguage.value;
+                        mainLanguage.dispatchEvent(new Event('change'));
+                        if (window.liveMode) liveMode.updateDisplay();
+                    });
+                }
             }
 
             // Layout: Auto-fit

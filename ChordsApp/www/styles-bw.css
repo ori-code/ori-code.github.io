@@ -1893,6 +1893,27 @@ input[type="checkbox"]:checked::after {
     padding-top: 0 !important;
 }
 
+#liveModeChartDisplay .section-header {
+    margin: 0 0 0 0;
+}
+
+/* Filled tags: marker-style section headers */
+#liveModeChartDisplay.filled-tags .section-header {
+    width: fit-content;
+    background: var(--text);
+    color: var(--bg);
+    padding: 0 8px;
+    text-decoration: none;
+    margin-top: -4px;
+    margin-bottom: -2px;
+}
+
+/* @@@RTL filled-tags: push fit-content header to the right */
+.live-preview.rtl-content #liveModeChartDisplay.filled-tags .section-header,
+[dir="rtl"] #liveModeChartDisplay.filled-tags .section-header {
+    margin-left: auto;
+}
+
 .hide-borders .song-section-block,
 #liveModeChartDisplay.hide-borders .song-section-block {
     border: none !important;
