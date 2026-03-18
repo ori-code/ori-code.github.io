@@ -63,6 +63,7 @@ const liveMode = {
             showBorders: this.showBorders,
             showTimeline: this.showTimeline,
             autoHidePlaylist: this.autoHidePlaylist,
+            filledTags: this.filledTags || false,
             savedAt: Date.now()
         };
 
@@ -248,6 +249,15 @@ const liveMode = {
         console.log(`📺 Tag font size set to ${size}pt`);
     },
 
+    toggleFilledTags(enabled) {
+        this.filledTags = enabled;
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            chartDisplay.classList.toggle('filled-tags', enabled);
+        }
+        this.saveLiveModePreferences();
+    },
+
     /**
      * Enter live mode with current song
      */
@@ -348,6 +358,15 @@ const liveMode = {
             if (tagSizeValue) tagSizeValue.textContent = (this.currentTagFontSize || 14) + 'pt';
             const tagSlider = document.getElementById('liveModeTagFontSlider');
             if (tagSlider) tagSlider.value = this.currentTagFontSize || 14;
+            if (savedPrefs.filledTags !== undefined) {
+                this.filledTags = savedPrefs.filledTags;
+                const filledToggle = document.getElementById('filledTagsToggle');
+                if (filledToggle) filledToggle.checked = savedPrefs.filledTags;
+                const chartDisplay = document.getElementById('liveModeChartDisplay');
+                if (chartDisplay && savedPrefs.filledTags) {
+                    chartDisplay.classList.add('filled-tags');
+                }
+            }
         }
 
         // Setup font size slider
@@ -933,7 +952,7 @@ const liveMode = {
                 badge.textContent = origShort;
                 const inSession = window.sessionManager && window.sessionManager.activeSession;
                 const canChangeKey = !inSession || (window.sessionManager && window.sessionManager.isLeader);
-                badge.style.cssText = `display:inline-block; margin-inline-start:8px; padding:2px 8px; border:1px solid var(--text); font-size:13px; font-weight:700; cursor:${canChangeKey ? 'pointer' : 'default'}; vertical-align:middle; opacity:0.8;`;
+                badge.style.cssText = `display:inline-block; margin-inline-start:8px; padding:2px 8px; font-size:13px; font-weight:700; cursor:${canChangeKey ? 'pointer' : 'default'}; vertical-align:middle; opacity:0.5;`;
                 if (canChangeKey) {
                     badge.onclick = (e) => {
                         e.stopPropagation();
@@ -1920,7 +1939,7 @@ const liveMode = {
 
                 if (playlist.length === 0) {
                     const addButton = isLeader ? `
-                        <button onclick="liveMode.showAddSongModal()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 12px;">
+                        <button onclick="liveMode.showAddSongModal()" style="width: 100%; padding: 12px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 12px;">
                             + Add Song
                         </button>
                     ` : '';
@@ -1947,23 +1966,23 @@ const liveMode = {
                     let indicator = '';
 
                     if (isCurrent && isLeaderPlaying) {
-                        bgColor = 'rgba(139, 92, 246, 0.3)';
-                        borderColor = 'rgba(139, 92, 246, 0.5)';
-                        numberColor = '#8b5cf6';
+                        bgColor = 'rgba(128, 128, 128, 0.15)';
+                        borderColor = 'var(--text)';
+                        numberColor = 'var(--text)';
                         fontWeight = '600';
-                        indicator = '<span style="color: #10b981; font-size: 12px; margin-right: 4px;">👑</span><span style="color: #8b5cf6; font-size: 14px;">▶</span>';
+                        indicator = '<span style="color: var(--text); font-size: 12px; margin-right: 4px;">👑</span><span style="color: var(--text); font-size: 14px;">▶</span>';
                     } else if (isCurrent) {
-                        bgColor = 'rgba(139, 92, 246, 0.3)';
-                        borderColor = 'rgba(139, 92, 246, 0.5)';
-                        numberColor = '#8b5cf6';
+                        bgColor = 'rgba(128, 128, 128, 0.15)';
+                        borderColor = 'var(--text)';
+                        numberColor = 'var(--text)';
                         fontWeight = '600';
-                        indicator = '<span style="color: #8b5cf6; font-size: 14px;">▶</span>';
+                        indicator = '<span style="color: var(--text); font-size: 14px;">▶</span>';
                     } else if (isLeaderPlaying) {
-                        bgColor = 'rgba(16, 185, 129, 0.2)';
-                        borderColor = 'rgba(16, 185, 129, 0.4)';
-                        numberColor = '#10b981';
+                        bgColor = 'rgba(128, 128, 128, 0.08)';
+                        borderColor = 'var(--text)';
+                        numberColor = 'var(--text)';
                         fontWeight = '500';
-                        indicator = '<span style="color: #10b981; font-size: 12px;">👑 Leader</span>';
+                        indicator = '<span style="color: var(--text); font-size: 12px;">👑 Leader</span>';
                     }
 
                     const metroChecked = liveMode.songMetronomeEnabled[song.id] ? 'checked' : '';
@@ -1986,7 +2005,7 @@ const liveMode = {
                     // Remove button for leaders (hidden when locked)
                     const removeBtn = (isLeader && !isLocked) ? `
                         <button onclick="event.stopPropagation(); liveMode.removeSongFromPlaylist('${song.id}')"
-                                style="width: 22px; height: 22px; border-radius: 50%; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
+                                style="width: 22px; height: 22px; background: transparent; border: 1px solid var(--text); color: var(--text); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: 0.6;"
                                 title="Remove from playlist">×</button>
                     ` : '';
 
@@ -2006,9 +2025,9 @@ const liveMode = {
                     const displayTimeSig = song.timeSignature || '4/4';
 
                     // Info row when locked (display only), controls row when unlocked
-                    const metroIndicator = liveMode.songMetronomeEnabled[song.id] ? '<span style="color: #10b981; font-weight: bold;"> ✓</span>' : '';
-                    const padIndicator = padEnabled ? '<span style="color: #10b981; font-weight: bold;"> ✓</span>' : '';
-                    const autoScrollIndicator = liveMode.songAutoScrollEnabled[song.id] ? '<span style="color: #10b981; font-weight: bold;"> ✓</span>' : '';
+                    const metroIndicator = liveMode.songMetronomeEnabled[song.id] ? '<span style="color: var(--text); font-weight: bold;"> ✓</span>' : '';
+                    const padIndicator = padEnabled ? '<span style="color: var(--text); font-weight: bold;"> ✓</span>' : '';
+                    const autoScrollIndicator = liveMode.songAutoScrollEnabled[song.id] ? '<span style="color: var(--text); font-weight: bold;"> ✓</span>' : '';
                     const autoScrollChecked = liveMode.songAutoScrollEnabled[song.id] ? 'checked' : '';
                     const controlsRow = isLocked ? `
                                     <div style="display: flex; gap: 10px; margin-top: 3px; font-size: 11px; color: var(--text-muted);">
@@ -2024,7 +2043,7 @@ const liveMode = {
                                         <div onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted);">
                                             <input type="checkbox" ${padEnabled ? 'checked' : ''} ${controlsDisabled} onchange="liveMode.toggleSongPad('${song.id}', this.checked)" style="cursor: ${controlsCursor};" />
                                             <span>🎹</span>
-                                            <select ${controlsDisabled} onchange="liveMode.changeSongPadKey('${song.id}', this.value)" style="font-size: 10px; padding: 2px 4px; border-radius: 4px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
+                                            <select ${controlsDisabled} onchange="liveMode.changeSongPadKey('${song.id}', this.value)" style="font-size: 10px; padding: 2px 4px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
                                                 ${padKeyOptions}
                                             </select>
                                         </div>
@@ -2057,7 +2076,8 @@ const liveMode = {
 
                     return `
                         <div onclick="liveMode.loadSongFromPlaylist('${song.id}')"
-                             style="padding: 8px 12px; background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 6px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s ease;">
+                             class="${isCurrent ? 'playlist-song-selected' : ''}"
+                             style="padding: 8px 12px; background: ${bgColor}; border: ${isCurrent ? '2px' : '1px'} solid ${borderColor}; margin-bottom: 6px; cursor: pointer;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span style="color: ${numberColor}; font-weight: 600; min-width: 20px; font-size: 13px;">${index + 1}</span>
                                 <div style="flex: 1; min-width: 0;">

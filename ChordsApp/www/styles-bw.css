@@ -2288,7 +2288,7 @@ input[type="checkbox"]:checked::after {
     border-color: var(--text);
     border-width: 2px;
     border-style: solid;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(128, 128, 128, 0.15);
     animation: sectionBlink 1s ease-in-out 2;
 }
 
@@ -2296,11 +2296,11 @@ input[type="checkbox"]:checked::after {
 
     0%,
     100% {
-        background: rgba(255, 255, 255, 0.06);
+        background: rgba(128, 128, 128, 0.1);
     }
 
     50% {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(128, 128, 128, 0.3);
     }
 }
 
@@ -2308,6 +2308,16 @@ input[type="checkbox"]:checked::after {
     border-color: var(--text);
     border-width: 2px;
     background: transparent;
+}
+
+/* Playlist song selected (current song in live mode) */
+.playlist-song-selected {
+    animation: playlistBlink 1s ease-in-out 2;
+}
+
+@keyframes playlistBlink {
+    0%, 100% { background: rgba(128, 128, 128, 0.1); }
+    50% { background: rgba(128, 128, 128, 0.3); }
 }
 
 /* Drag handle for section reordering */
