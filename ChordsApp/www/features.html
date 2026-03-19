@@ -24,9 +24,13 @@
     <!-- ═══ NAV ═══ -->
     <nav>
         <div class="nav-inner">
-            <a href="index.html" class="nav-logo" style="display: flex; align-items: baseline; gap: 8px;"><b dir="ltr"
-                    style="font-size: 1.25rem;">אChordim</b> <span
-                    style="font-weight: 400; font-size: 14px; color: var(--text-muted);">by The Faith Sound</span></a>
+            <a href="index.html" class="nav-logo" style="text-decoration: none; display: flex; flex-direction: column; line-height: 1.15; justify-content: center;">
+                    <span style="font-weight: 700; font-size: 1.2rem; color: var(--text); display: flex; align-items: baseline; gap: 4px;">
+                        <b dir="ltr">אChordim</b>
+                        <span style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v107</span>
+                    </span>
+                    <span style="font-size: 0.6rem; color: var(--text); opacity: 0.7;">www.thefaith<span style="opacity: 1;">sound</span>.com</span>
+            </a>
             <div class="nav-links">
                 <a href="#features" data-i18n="nav.features">Features</a>
                 <a href="#how-it-works" data-i18n="nav.how">How It Works</a>
@@ -68,8 +72,7 @@
 
     <!-- ═══ HERO ═══ -->
     <section class="hero">
-        <div class="hero-badge"><span class="dot"></span> <span data-i18n="hero.badge">AI-Powered Chord Sheet
-                Manager</span></div>
+        <div class="hero-badge"><span data-i18n="hero.badge">AI-Powered Chord Sheet Manager</span></div>
         <h1 data-i18n="hero.title">Turn any chord sheet into a clean, printable chart</h1>
         <p data-i18n="hero.subtitle">Upload a handwritten sheet or photo — AI detects chords, lyrics, key and sections.
             Transpose, format, print, and play live with your band. All in one app.</p>
@@ -87,194 +90,257 @@
             <p data-i18n="feat.sub">From scanning a handwritten chart to performing live on stage — aChordim covers
                 every step.</p>
         </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2a2 2 0 0 1 2 2c-.11.88-.98 1.5-1.9 1.48A2 2 0 0 1 12 2Z" />
-                        <path d="M19 19h2" />
-                        <path d="M3 19h2" />
-                        <path d="M12 21v2" />
-                        <rect x="5" y="6" width="14" height="14" rx="2" ry="2" />
-                        <path d="M9 11v2" />
-                        <path d="M15 11v2" />
-                    </svg>
+        <div class="features-list">
+
+            <!-- Row 1: text left, video right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f1.title">Smart Scanner</h3>
+                    <p data-i18n="f1.desc">Upload a photo or PDF of any chord chart. It automatically detects chords, lyrics, key signature, sections, and layout direction — in any language.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f1.t1">JPG / PNG / HEIC</span>
+                        <span class="tag" data-i18n="f1.t2">PDF</span>
+                        <span class="tag" data-i18n="f1.t3">Multi-language</span>
+                        <span class="tag" data-i18n="f1.t4">RTL Support</span>
+                    </div>
                 </div>
-                <h3 data-i18n="f1.title">Smart Scanner</h3>
-                <p data-i18n="f1.desc">Upload a photo or PDF of any chord chart. It automatically detects chords,
-                    lyrics, key signature, sections, and layout direction — in any language.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f1.t1">JPG / PNG / HEIC</span>
-                    <span class="tag" data-i18n="f1.t2">PDF</span>
-                    <span class="tag" data-i18n="f1.t3">Multi-language</span>
-                    <span class="tag" data-i18n="f1.t4">RTL Support</span>
-                </div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                    </svg>
-                </div>
-                <h3 data-i18n="f2.title">Smart Visual Editor</h3>
-                <p data-i18n="f2.desc">Edit chords inline with ChordPro notation. Auto key detection, section markers
-                    (Verse, Chorus, Bridge), and smart formatting — all visually in real time.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f2.t1">ChordPro Format</span>
-                    <span class="tag" data-i18n="f2.t2">Auto Key Detection</span>
-                    <span class="tag" data-i18n="f2.t3">Section Markers</span>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature01Scanner.mp4" type="video/mp4">
+                    </video>
                 </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                        <path d="M3 3v5h5" />
-                    </svg>
+
+            <!-- Row 2: video left, text right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f2.title">Smart Visual Editor</h3>
+                    <p data-i18n="f2.desc">Edit chords inline with ChordPro notation. Auto key detection, section markers (Verse, Chorus, Bridge), and smart formatting — all visually in real time.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f2.t1">ChordPro Format</span>
+                        <span class="tag" data-i18n="f2.t2">Auto Key Detection</span>
+                        <span class="tag" data-i18n="f2.t3">Section Markers</span>
+                    </div>
                 </div>
-                <h3 data-i18n="f3.title">Smart Transposition</h3>
-                <p data-i18n="f3.desc">Transpose by semitones or jump to any key instantly. Original baseline is
-                    preserved for accurate re-transposition. Handles bass notes correctly.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f3.t1">All 12 Keys</span>
-                    <span class="tag" data-i18n="f3.t2">Bass Notes</span>
-                    <span class="tag" data-i18n="f3.t3">Baseline Preserved</span>
-                </div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                        <path d="M3 9h18" />
-                        <path d="M9 21V9" />
-                    </svg>
-                </div>
-                <h3 data-i18n="f4.title">Display Modes</h3>
-                <p data-i18n="f4.desc">Switch between Chords, Nashville Numbers, Both, or Lyrics Only. Perfect for
-                    worship leaders, session musicians, and singers who each need different views.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f4.t1">Chords</span>
-                    <span class="tag" data-i18n="f4.t2">Nashville</span>
-                    <span class="tag" data-i18n="f4.t3">Both</span>
-                    <span class="tag" data-i18n="f4.t4">Lyrics Only</span>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature02Editor.mp4" type="video/mp4">
+                    </video>
                 </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 6 2 18 2 18 9" />
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                        <rect x="6" y="14" width="12" height="8" />
-                    </svg>
+
+            <!-- Row 3: text left, video right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f3.title">Smart Transposition</h3>
+                    <p data-i18n="f3.desc">Transpose by semitones or jump to any key instantly. Original baseline is preserved for accurate re-transposition. Handles bass notes correctly.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f3.t1">All 12 Keys</span>
+                        <span class="tag" data-i18n="f3.t2">Bass Notes</span>
+                        <span class="tag" data-i18n="f3.t3">Baseline Preserved</span>
+                    </div>
                 </div>
-                <h3 data-i18n="f5.title">Print & Export</h3>
-                <p data-i18n="f5.desc">A4 preview with adjustable font size, columns, line spacing, and character
-                    spacing. Print to paper or save as PNG image. Every print looks professional.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f5.t1">A4 Preview</span>
-                    <span class="tag" data-i18n="f5.t2">1–4 Columns</span>
-                    <span class="tag" data-i18n="f5.t3">PNG Export</span>
-                    <span class="tag" data-i18n="f5.t4">Clean Print</span>
-                </div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 18V5l12-2v13" />
-                        <circle cx="6" cy="18" r="3" />
-                        <circle cx="18" cy="16" r="3" />
-                    </svg>
-                </div>
-                <h3 data-i18n="f6.title">Metronome & Worship Pads</h3>
-                <p data-i18n="f6.desc">Built-in metronome with tap tempo, 7 time signatures, and sound types. Worship
-                    pads in all 12 keys with low-pass, high-pass, reverb, and panning effects.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f6.t1">Tap Tempo</span>
-                    <span class="tag" data-i18n="f6.t2">7 Time Signatures</span>
-                    <span class="tag" data-i18n="f6.t3">12-Key Pads</span>
-                    <span class="tag" data-i18n="f6.t4">Audio FX</span>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature03Transpose.mp4" type="video/mp4">
+                    </video>
                 </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                    </svg>
+
+            <!-- Row 4: video left, text right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                            <path d="M3 9h18" /><path d="M9 21V9" />
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f4.title">Display Modes</h3>
+                    <p data-i18n="f4.desc">Switch between Chords, Nashville Numbers, Both, or Lyrics Only. Perfect for worship leaders, session musicians, and singers who each need different views.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f4.t1">Chords</span>
+                        <span class="tag" data-i18n="f4.t2">Nashville</span>
+                        <span class="tag" data-i18n="f4.t3">Both</span>
+                        <span class="tag" data-i18n="f4.t4">Lyrics Only</span>
+                    </div>
                 </div>
-                <h3 data-i18n="f7.title">Song Library & Books</h3>
-                <p data-i18n="f7.desc">Save songs with full metadata. Search, filter, organize into collections (Books).
-                    Bulk import from .txt, .cho, or .chordpro files. Share songs publicly.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f7.t1">Cloud Save</span>
-                    <span class="tag" data-i18n="f7.t2">Search & Filter</span>
-                    <span class="tag" data-i18n="f7.t3">Bulk Import</span>
-                    <span class="tag" data-i18n="f7.t4">Public Sharing</span>
-                </div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                </div>
-                <h3 data-i18n="f8.title">Live Sessions</h3>
-                <p data-i18n="f8.desc">Create a session, share a 6-character code or QR. Leader controls song selection
-                    in real time — players follow automatically. Singer mode for lyrics-only views.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f8.t1">Real-time Sync</span>
-                    <span class="tag" data-i18n="f8.t2">QR Code Join</span>
-                    <span class="tag" data-i18n="f8.t3">Singer Mode</span>
-                    <span class="tag" data-i18n="f8.t4">Playlist</span>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature04DisplayModes.mp4" type="video/mp4">
+                    </video>
                 </div>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                        <line x1="12" y1="18" x2="12.01" y2="18" />
-                    </svg>
+
+            <!-- Row 5: text left, video right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 6 2 18 2 18 9" />
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                            <rect x="6" y="14" width="12" height="8" />
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f5.title">Print & Export</h3>
+                    <p data-i18n="f5.desc">A4 preview with adjustable font size, columns, line spacing, and character spacing. Print to paper or save as PNG image. Every print looks professional.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f5.t1">A4 Preview</span>
+                        <span class="tag" data-i18n="f5.t2">1–4 Columns</span>
+                        <span class="tag" data-i18n="f5.t3">PNG Export</span>
+                        <span class="tag" data-i18n="f5.t4">Clean Print</span>
+                    </div>
                 </div>
-                <h3 data-i18n="f9.title">Live Performance Mode</h3>
-                <p data-i18n="f9.desc">Full-screen distraction-free view with auto-hiding controls. Section highlighting
-                    keeps the whole band in sync. MIDI controller support for hands-free navigation.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f9.t1">Full Screen</span>
-                    <span class="tag" data-i18n="f9.t2">Section Highlight</span>
-                    <span class="tag" data-i18n="f9.t3">MIDI Support</span>
-                    <span class="tag" data-i18n="f9.t4">Dark / Light</span>
-                </div>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                    </svg>
-                </div>
-                <h3 data-i18n="f10.title">Shareable Playlists</h3>
-                <p data-i18n="f10.desc">Share your session playlist with anyone via a simple link. Recipients see all
-                    songs as printable A4 pages — no login required. Print the whole set in one go.</p>
-                <div class="tag-list">
-                    <span class="tag" data-i18n="f10.t1">One-Click Share</span>
-                    <span class="tag" data-i18n="f10.t2">No Login Needed</span>
-                    <span class="tag" data-i18n="f10.t3">Print All</span>
-                    <span class="tag" data-i18n="f1.t4">RTL Support</span>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature05Print.mp4" type="video/mp4">
+                    </video>
                 </div>
             </div>
+
+            <!-- Row 6: video left, text right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18V5l12-2v13" />
+                            <circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f6.title">Metronome & Worship Pads</h3>
+                    <p data-i18n="f6.desc">Built-in metronome with tap tempo, 7 time signatures, and sound types. Worship pads in all 12 keys with low-pass, high-pass, reverb, and panning effects.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f6.t1">Tap Tempo</span>
+                        <span class="tag" data-i18n="f6.t2">7 Time Signatures</span>
+                        <span class="tag" data-i18n="f6.t3">12-Key Pads</span>
+                        <span class="tag" data-i18n="f6.t4">Audio FX</span>
+                    </div>
+                </div>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature06Metronome.mp4" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+
+            <!-- Row 7: text left, video right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f7.title">Song Library & Books</h3>
+                    <p data-i18n="f7.desc">Save songs with full metadata. Search, filter, organize into collections (Books). Bulk import from .txt, .cho, or .chordpro files. Share songs publicly.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f7.t1">Cloud Save</span>
+                        <span class="tag" data-i18n="f7.t2">Search & Filter</span>
+                        <span class="tag" data-i18n="f7.t3">Bulk Import</span>
+                        <span class="tag" data-i18n="f7.t4">Public Sharing</span>
+                    </div>
+                </div>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature07Library.mp4" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+
+            <!-- Row 8: video left, text right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f8.title">Live Sessions</h3>
+                    <p data-i18n="f8.desc">Create a session, share a 6-character code or QR. Leader controls song selection in real time — players follow automatically. Singer mode for lyrics-only views.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f8.t1">Real-time Sync</span>
+                        <span class="tag" data-i18n="f8.t2">QR Code Join</span>
+                        <span class="tag" data-i18n="f8.t3">Singer Mode</span>
+                        <span class="tag" data-i18n="f8.t4">Playlist</span>
+                    </div>
+                </div>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature08LiveSessions.mp4" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+            <!-- Row 9: text left, video right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                            <line x1="12" y1="18" x2="12.01" y2="18" />
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f9.title">Live Performance Mode</h3>
+                    <p data-i18n="f9.desc">Full-screen distraction-free view with auto-hiding controls. Section highlighting keeps the whole band in sync. MIDI controller support for hands-free navigation.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f9.t1">Full Screen</span>
+                        <span class="tag" data-i18n="f9.t2">Section Highlight</span>
+                        <span class="tag" data-i18n="f9.t3">MIDI Support</span>
+                        <span class="tag" data-i18n="f9.t4">Dark / Light</span>
+                    </div>
+                </div>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature09Performance.mp4" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+
+            <!-- Row 10: video left, text right -->
+            <div class="feature-row">
+                <div class="feature-content">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        </svg>
+                    </div>
+                    <h3 data-i18n="f10.title">Shareable Playlists</h3>
+                    <p data-i18n="f10.desc">Share your session playlist with anyone via a simple link. Recipients see all songs as printable A4 pages — no login required. Print the whole set in one go.</p>
+                    <div class="tag-list">
+                        <span class="tag" data-i18n="f10.t1">One-Click Share</span>
+                        <span class="tag" data-i18n="f10.t2">No Login Needed</span>
+                        <span class="tag" data-i18n="f10.t3">Print All</span>
+                        <span class="tag" data-i18n="f1.t4">RTL Support</span>
+                    </div>
+                </div>
+                <div class="feature-video-panel">
+                    <video autoplay muted loop playsinline>
+                        <source src="videos/features/Feature10Playlists.mp4" type="video/mp4">
+                    </video>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -478,6 +544,13 @@
         </div>
     </section>
 
+    <!-- ═══ LOGO ANIMATION ═══ -->
+    <section style="background: #000; display: flex; align-items: center; justify-content: center; padding: 60px 24px;">
+        <video autoplay muted loop playsinline style="width: 100%; max-width: 1400px; display: block;">
+            <source src="videos/features/LogoAnimation.mp4" type="video/mp4">
+        </video>
+    </section>
+
     <!-- ═══ CTA ═══ -->
     <section class="hero" style="min-height: auto; padding: 100px 24px;">
         <h2 data-i18n="cta.title"
@@ -491,9 +564,9 @@
     </section>
 
     <!-- ═══ FOOTER ═══ -->
-    <footer>
-        <div class="brand">www.thefaith<b>sound</b>.com · <b dir="ltr">אChordim</b></div>
-        <div class="links">
+    <footer style="text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: 13px; opacity: 0.6;">
+        <div class="brand" style="margin-bottom: 8px;">www.thefaith<b>sound</b>.com · <b dir="ltr">אChordim</b></div>
+        <div class="links" style="display: flex; justify-content: center; gap: 16px;">
             <a href="index.html" data-i18n="ft.app">App</a>
             <a href="privacy.html" data-i18n="ft.privacy">Privacy</a>
             <a href="terms.html" data-i18n="ft.terms">Terms</a>
@@ -555,6 +628,30 @@
                 });
             }, { threshold: 0.1 });
             gridObserver.observe(grid);
+        });
+
+        // Click video to open fullscreen overlay
+        document.querySelectorAll('.feature-video-panel video').forEach(video => {
+            video.addEventListener('click', () => {
+                const overlay = document.createElement('div');
+                overlay.className = 'video-fullscreen-overlay';
+                const fullVideo = document.createElement('video');
+                fullVideo.src = video.querySelector('source').src;
+                fullVideo.autoplay = true;
+                fullVideo.loop = true;
+                fullVideo.muted = true;
+                fullVideo.playsInline = true;
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'video-fullscreen-close';
+                closeBtn.textContent = '×';
+                const close = () => { overlay.remove(); };
+                closeBtn.addEventListener('click', close);
+                overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+                document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } });
+                overlay.appendChild(fullVideo);
+                overlay.appendChild(closeBtn);
+                document.body.appendChild(overlay);
+            });
         });
     </script>
 

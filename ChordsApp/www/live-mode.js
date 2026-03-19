@@ -64,6 +64,8 @@ const liveMode = {
             showTimeline: this.showTimeline,
             autoHidePlaylist: this.autoHidePlaylist,
             filledTags: this.filledTags || false,
+            filledChords: this.filledChords || false,
+            chordFillOpacity: this.chordFillOpacity !== undefined ? this.chordFillOpacity : 1,
             savedAt: Date.now()
         };
 
@@ -258,6 +260,24 @@ const liveMode = {
         this.saveLiveModePreferences();
     },
 
+    toggleFilledChords(enabled) {
+        this.filledChords = enabled;
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            chartDisplay.classList.toggle('filled-chords', enabled);
+        }
+        this.saveLiveModePreferences();
+    },
+
+    setChordFillOpacity(value) {
+        this.chordFillOpacity = parseFloat(value);
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            chartDisplay.style.setProperty('--chord-fill-opacity', value);
+        }
+        this.saveLiveModePreferences();
+    },
+
     /**
      * Enter live mode with current song
      */
@@ -299,9 +319,9 @@ const liveMode = {
         } else {
             // No editor content but in session - show empty state, user will tap to see playlist
             this.currentSongContent = '\n\n\n        Tap to view playlist\n        and select a song';
-            this.currentKey = 'C Major';
+            this.currentKey = '';
             this.currentTransposeSteps = 0;
-            this.currentSongName = 'Select a Song';
+            this.currentSongName = '';
             this.currentSongId = null;
         }
 
@@ -366,6 +386,22 @@ const liveMode = {
                 if (chartDisplay && savedPrefs.filledTags) {
                     chartDisplay.classList.add('filled-tags');
                 }
+            }
+            if (savedPrefs.filledChords !== undefined) {
+                this.filledChords = savedPrefs.filledChords;
+                const filledChordsToggle = document.getElementById('filledChordsToggle');
+                if (filledChordsToggle) filledChordsToggle.checked = savedPrefs.filledChords;
+                const chartDisplay2 = document.getElementById('liveModeChartDisplay');
+                if (chartDisplay2 && savedPrefs.filledChords) {
+                    chartDisplay2.classList.add('filled-chords');
+                }
+            }
+            if (savedPrefs.chordFillOpacity !== undefined) {
+                this.chordFillOpacity = savedPrefs.chordFillOpacity;
+                const chordSlider = document.getElementById('chordFillSlider');
+                if (chordSlider) chordSlider.value = savedPrefs.chordFillOpacity;
+                const chartDisplay3 = document.getElementById('liveModeChartDisplay');
+                if (chartDisplay3) chartDisplay3.style.setProperty('--chord-fill-opacity', savedPrefs.chordFillOpacity);
             }
         }
 
@@ -921,20 +957,28 @@ const liveMode = {
         }
 
         if (songKeyEl) {
-            const origKeyShort = this._formatKeyShort(this.originalSongKey);
-            const currentKeyShort = this._formatKeyShort(this.currentKey);
-            if (this.currentCapo > 0) {
-                songKeyEl.textContent = `Key: ${origKeyShort} (Capo ${this.currentCapo} → ${currentKeyShort})`;
-            } else if (origKeyShort !== currentKeyShort) {
-                songKeyEl.textContent = `Key: ${origKeyShort} → ${currentKeyShort}`;
+            if (!this.currentSongId) {
+                songKeyEl.textContent = '';
             } else {
-                songKeyEl.textContent = `Key: ${origKeyShort}`;
+                const origKeyShort = this._formatKeyShort(this.originalSongKey);
+                const currentKeyShort = this._formatKeyShort(this.currentKey);
+                if (this.currentCapo > 0) {
+                    songKeyEl.textContent = `Key: ${origKeyShort} (Capo ${this.currentCapo} → ${currentKeyShort})`;
+                } else if (origKeyShort !== currentKeyShort) {
+                    songKeyEl.textContent = `Key: ${origKeyShort} → ${currentKeyShort}`;
+                } else {
+                    songKeyEl.textContent = `Key: ${origKeyShort}`;
+                }
             }
         }
 
         if (currentKeyEl) {
-            // Extract the note and show "m" suffix for minor keys (e.g., "A Minor" -> "Am", "C Major" -> "C")
-            currentKeyEl.textContent = this._formatKeyShort(this.currentKey);
+            // Hide key when no song is loaded
+            if (!this.currentSongId) {
+                currentKeyEl.textContent = '';
+            } else {
+                currentKeyEl.textContent = this._formatKeyShort(this.currentKey);
+            }
         }
 
         // Add clickable key badge next to the song title
@@ -1234,8 +1278,16 @@ const liveMode = {
     _updateFloatButtons() {
         const playlistBtn = document.getElementById('liveFloatPlaylist');
         const controlsBtn = document.getElementById('liveFloatControls');
-        if (playlistBtn) playlistBtn.style.opacity = this.sidebarVisible ? '1' : '0.5';
-        if (controlsBtn) controlsBtn.style.opacity = this.controlsVisible ? '1' : '0.5';
+        const anyOpen = this.sidebarVisible || this.controlsVisible;
+        // Hide both buttons when any panel is open; keep them as invisible touch targets to close panels
+        if (playlistBtn) {
+            playlistBtn.style.opacity = anyOpen ? '0' : '0.5';
+            playlistBtn.style.pointerEvents = 'auto';
+        }
+        if (controlsBtn) {
+            controlsBtn.style.opacity = anyOpen ? '0' : '0.5';
+            controlsBtn.style.pointerEvents = 'auto';
+        }
     },
 
     /**
@@ -1550,18 +1602,13 @@ const liveMode = {
             chartDisplay.style.columnRule = 'none';
         }
 
-        // Update button styles
-        const btn1 = document.getElementById('liveModeLayout1');
-        const btn2 = document.getElementById('liveModeLayout2');
+        // Re-apply custom column layout if it exists (reorder overrides CSS columns)
+        if (this.customColumnLayout) {
+            this.applyColumnLayout(chartDisplay);
+        }
 
-        if (btn1) {
-            btn1.style.background = columns === 1 ? 'var(--primary)' : 'transparent';
-            btn1.style.color = columns === 1 ? 'white' : 'var(--text-muted)';
-        }
-        if (btn2) {
-            btn2.style.background = columns === 2 ? 'var(--primary)' : 'transparent';
-            btn2.style.color = columns === 2 ? 'white' : 'var(--text-muted)';
-        }
+        // Update button styles
+        this.updateLayoutButtons();
 
         // Save per-song column layout if we have a current song, otherwise save global
         if (this.currentSongId) {
@@ -1582,12 +1629,14 @@ const liveMode = {
         const columns = this.currentColumnLayout;
 
         if (btn1) {
-            btn1.style.background = columns === 1 ? 'var(--primary)' : 'transparent';
-            btn1.style.color = columns === 1 ? 'white' : 'var(--text-muted)';
+            btn1.style.background = columns === 1 ? 'var(--text)' : 'transparent';
+            btn1.style.color = columns === 1 ? 'var(--bg)' : 'var(--text)';
+            btn1.style.opacity = columns === 1 ? '1' : '0.5';
         }
         if (btn2) {
-            btn2.style.background = columns === 2 ? 'var(--primary)' : 'transparent';
-            btn2.style.color = columns === 2 ? 'white' : 'var(--text-muted)';
+            btn2.style.background = columns === 2 ? 'var(--text)' : 'transparent';
+            btn2.style.color = columns === 2 ? 'var(--bg)' : 'var(--text)';
+            btn2.style.opacity = columns === 2 ? '1' : '0.5';
         }
     },
 
@@ -2031,25 +2080,25 @@ const liveMode = {
                     const autoScrollChecked = liveMode.songAutoScrollEnabled[song.id] ? 'checked' : '';
                     const controlsRow = isLocked ? `
                                     <div style="display: flex; gap: 10px; margin-top: 3px; font-size: 11px; color: var(--text-muted);">
-                                        <span>🎵 ${displayBpm}${metroIndicator}</span>
-                                        <span>🎹 ${displayKey}${padIndicator}</span>
-                                        <span>📜${autoScrollIndicator}</span>
+                                        <span>${displayBpm}${metroIndicator}</span>
+                                        <span>${displayKey}${padIndicator}</span>
+                                        <span>Scroll${autoScrollIndicator}</span>
                                     </div>` : `
                                     <div style="display: flex; gap: 8px; margin-top: 4px; align-items: center; flex-wrap: wrap;">
                                         <label onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
                                             <input type="checkbox" ${metroChecked} ${controlsDisabled} onchange="liveMode.toggleSongMetronome('${song.id}', this.checked)" style="cursor: ${controlsCursor};" />
-                                            <span>🎵 ${displayBpm}</span>
+                                            <span>${displayBpm}</span>
                                         </label>
                                         <div onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted);">
                                             <input type="checkbox" ${padEnabled ? 'checked' : ''} ${controlsDisabled} onchange="liveMode.toggleSongPad('${song.id}', this.checked)" style="cursor: ${controlsCursor};" />
-                                            <span>🎹</span>
+                                            <span>Pad</span>
                                             <select ${controlsDisabled} onchange="liveMode.changeSongPadKey('${song.id}', this.value)" style="font-size: 10px; padding: 2px 4px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
                                                 ${padKeyOptions}
                                             </select>
                                         </div>
                                         <label onclick="event.stopPropagation()" style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: ${controlsCursor}; opacity: ${controlsOpacity};">
                                             <input type="checkbox" ${autoScrollChecked} ${controlsDisabled} onchange="liveMode.toggleSongAutoScroll('${song.id}', this.checked)" style="cursor: ${controlsCursor};" />
-                                            <span>📜</span>
+                                            <span>Scroll</span>
                                         </label>
                                     </div>`;
 
@@ -2104,11 +2153,11 @@ const liveMode = {
                 // Add "Print All" and "Share" buttons for everyone
                 playlistContent.innerHTML += `
                     <div style="display: flex; gap: 8px; margin-top: 8px;">
-                        <button onclick="liveMode.printAllPlaylist()" style="flex: 1; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
-                            🖨 Print All
+                        <button onclick="event.stopPropagation(); liveMode.printAllPlaylist();" style="flex: 1; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border); cursor: pointer; font-size: 13px; font-weight: 600; -webkit-tap-highlight-color: rgba(0,0,0,0.1);">
+                            Print All
                         </button>
-                        <button onclick="liveMode.sharePlaylistLink()" style="flex: 1; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
-                            🔗 Share
+                        <button onclick="event.stopPropagation(); liveMode.sharePlaylistLink();" style="flex: 1; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border); cursor: pointer; font-size: 13px; font-weight: 600; -webkit-tap-highlight-color: rgba(0,0,0,0.1);">
+                            Share
                         </button>
                     </div>
                 `;
@@ -2130,9 +2179,18 @@ const liveMode = {
             return;
         }
 
+        // Open window IMMEDIATELY (before any await) to avoid mobile popup blockers
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            if (window.sessionUI) window.sessionUI.showToast('Please allow popups to print');
+            return;
+        }
+        printWindow.document.write('<html><body><p style="font-family:sans-serif;text-align:center;margin-top:40px;">Loading playlist...</p></body></html>');
+
         try {
             const playlist = await window.sessionManager.getPlaylist();
             if (playlist.length === 0) {
+                printWindow.close();
                 if (window.sessionUI) window.sessionUI.showToast('No songs in playlist');
                 return;
             }
@@ -2162,12 +2220,29 @@ const liveMode = {
                 const isRTL = rtlChars.test(song.content || '');
                 const dirAttr = isRTL ? 'dir="rtl"' : '';
 
+                // Extract song-header from formattedHTML so it stays above columns
+                let headerHTML = '';
+                let bodyHTML = formattedHTML;
+                const hdrTag = '<div class="song-header">';
+                const hdrIdx = formattedHTML.indexOf(hdrTag);
+                if (hdrIdx !== -1) {
+                    let depth = 1, pos = hdrIdx + hdrTag.length;
+                    while (depth > 0 && pos < formattedHTML.length) {
+                        const nO = formattedHTML.indexOf('<div', pos);
+                        const nC = formattedHTML.indexOf('</div>', pos);
+                        if (nC === -1) break;
+                        if (nO !== -1 && nO < nC) { depth++; pos = nO + 4; }
+                        else { depth--; if (depth === 0) { headerHTML = formattedHTML.substring(hdrIdx, nC + 6); bodyHTML = formattedHTML.substring(0, hdrIdx) + formattedHTML.substring(nC + 6); } pos = nC + 6; }
+                    }
+                }
+
                 pagesHTML += `
-                    <div class="print-page" ${dirAttr} style="page-break-after: always; position: relative; height: 297mm; max-height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box;">
-                        <div style="column-count: 2; column-gap: 4px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: 12pt;">
-                            ${formattedHTML}
+                    <div class="print-page" ${dirAttr} style="page-break-after: always; width: 210mm; height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; display: flex; flex-direction: column;">
+                        ${headerHTML}
+                        <div class="print-columns" style="flex: 1; column-count: 2; column-gap: 4px; column-fill: auto; overflow: hidden; font-size: 12pt;">
+                            ${bodyHTML}
                         </div>
-                        <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 20px; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
+                        <div style="margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
                             <span>www.thefaith<b>sound</b>.com</span>
                             <span style="font-weight: 700;">א/aChordim</span>
                         </div>
@@ -2175,13 +2250,8 @@ const liveMode = {
                 `;
             }
 
-            // Open print window
-            const printWindow = window.open('', '_blank');
-            if (!printWindow) {
-                if (window.sessionUI) window.sessionUI.showToast('Please allow popups to print');
-                return;
-            }
-
+            // Write print content to already-opened window
+            printWindow.document.open();
             printWindow.document.write(`
                 <!DOCTYPE html>
                 <html data-theme="light">
@@ -2190,7 +2260,7 @@ const liveMode = {
                     <title>Playlist Print</title>
                     <link rel="stylesheet" href="styles-bw.css">
                     <style>
-                        @page { margin: 0; }
+                        @page { size: A4; margin: 0; }
                         * { box-sizing: border-box; color: #000 !important; }
                         body {
                             margin: 0; padding: 0;
@@ -2204,20 +2274,66 @@ const liveMode = {
                         .section-badge { color: #000 !important; border-color: #000 !important; background: transparent !important; }
                         .section-badges-row { margin-bottom: 8px; }
                         .song-title, .song-meta, .song-header { color: #000 !important; }
+                        .chord-line { break-after: avoid; }
+                        .section-header { break-after: avoid; }
+                        .print-toolbar { position: sticky; top: 0; z-index: 100; background: #000; padding: 10px 16px; display: flex; gap: 10px; align-items: center; }
+                        .print-toolbar button { padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; background: transparent !important; color: #fff !important; border: 1px solid #fff !important; }
                         @media print {
                             body { background: #fff !important; color: #000 !important; }
                             * { color: #000 !important; }
+                            .print-toolbar { display: none !important; }
                             .print-page { break-after: page; }
                             .print-page:last-child { break-after: avoid; }
                         }
                     </style>
                 </head>
                 <body>
+                    <div class="print-toolbar">
+                        <button onclick="window.close()">← Back to App</button>
+                        <button onclick="optimizePrintLayout(this)">Optimize</button>
+                        <button onclick="window.print()">Print</button>
+                    </div>
                     ${pagesHTML}
                     <script>
-                        window.onload = function() {
-                            setTimeout(function() { window.print(); }, 500);
-                        };
+                        function optimizePrintLayout(btn) {
+                            if (btn) { btn.textContent = 'Optimizing...'; btn.disabled = true; }
+                            setTimeout(function() {
+                                var pages = document.querySelectorAll('.print-page');
+                                pages.forEach(function(page) {
+                                    var contentDiv = page.querySelector('.print-columns');
+                                    if (!contentDiv) return;
+                                    var headerDiv = page.querySelector('.song-header');
+                                    var headerH = headerDiv ? headerDiv.offsetHeight : 0;
+                                    var maxH = page.offsetHeight - 70 - headerH;
+                                    contentDiv.style.overflow = 'visible';
+                                    contentDiv.style.height = 'auto';
+                                    contentDiv.style.flex = 'none';
+                                    var bestFont = 8, bestCols = 1;
+                                    for (var cols = 1; cols <= 2; cols++) {
+                                        contentDiv.style.columnCount = cols;
+                                        contentDiv.style.columnGap = cols > 1 ? '30px' : '0px';
+                                        var lo = 8, hi = 30;
+                                        while (hi - lo > 0.5) {
+                                            var mid = (lo + hi) / 2;
+                                            contentDiv.style.fontSize = mid + 'pt';
+                                            void contentDiv.offsetHeight;
+                                            if (contentDiv.scrollHeight <= maxH) lo = mid;
+                                            else hi = mid;
+                                        }
+                                        if (lo > bestFont) { bestFont = lo; bestCols = cols; }
+                                    }
+                                    contentDiv.style.columnCount = bestCols;
+                                    contentDiv.style.columnGap = bestCols > 1 ? '30px' : '0px';
+                                    contentDiv.style.fontSize = Math.floor(bestFont * 2) / 2 + 'pt';
+                                    contentDiv.style.overflow = 'hidden';
+                                    var remainH = 'calc(297mm - 70px' + (headerH ? ' - ' + headerH + 'px' : '') + ')';
+                                    contentDiv.style.height = remainH;
+                                    contentDiv.style.flex = 'none';
+                                    contentDiv.style.columnFill = 'auto';
+                                });
+                                if (btn) { btn.textContent = 'Optimized'; }
+                            }, 100);
+                        }
                     <\/script>
                 </body>
                 </html>
@@ -2234,26 +2350,54 @@ const liveMode = {
      * Share playlist link — copies a ?playlist=SESSION_CODE URL
      */
     sharePlaylistLink() {
-        const sessionCode = window.sessionManager?.activeSessionCode;
+        // Try activeSessionCode first, then read from the sidebar DOM as fallback
+        let sessionCode = window.sessionManager?.activeSessionCode;
         if (!sessionCode) {
-            if (window.sessionUI) window.sessionUI.showToast('No active session');
+            const codeEl = document.getElementById('liveModeSessionCode');
+            sessionCode = codeEl ? codeEl.textContent.trim() : null;
+        }
+        if (!sessionCode) {
+            alert('No active session — cannot share');
             return;
         }
 
         const baseUrl = window.location.origin + window.location.pathname;
         const shareUrl = `${baseUrl}?playlist=${sessionCode}`;
 
-        // Try Web Share API first (mobile), then clipboard
-        if (navigator.share) {
-            navigator.share({
-                title: 'Playlist — aChordim',
-                url: shareUrl
-            }).catch(() => { });
-        } else {
-            navigator.clipboard.writeText(shareUrl);
-        }
+        // Helper: copy to clipboard via hidden textarea
+        const copyToClipboard = (text) => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            ta.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            document.body.removeChild(ta);
 
-        if (window.sessionUI) window.sessionUI.showToast('📋 Playlist link copied!');
+            // Show styled confirmation overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:99999;display:flex;align-items:center;justify-content:center;';
+            overlay.innerHTML = `
+                <div style="background:#000;border:1px solid #fff;padding:28px 32px;max-width:340px;width:90%;text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+                    <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;">Link Copied</div>
+                    <div style="font-size:12px;color:#aaa;word-break:break-all;margin-bottom:20px;">${text}</div>
+                    <button style="padding:8px 24px;background:transparent;color:#fff;border:1px solid #fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;">OK</button>
+                </div>`;
+            overlay.querySelector('button').addEventListener('click', () => overlay.remove());
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+            document.body.appendChild(overlay);
+        };
+
+        // Try Web Share API (HTTPS only), fallback to clipboard
+        if (navigator.share && location.protocol === 'https:') {
+            navigator.share({ title: 'Playlist — aChordim', url: shareUrl })
+                .catch(() => copyToClipboard(shareUrl));
+        } else {
+            copyToClipboard(shareUrl);
+        }
     },
 
     /**
@@ -2438,8 +2582,8 @@ const liveMode = {
         try {
             // Keep the first two options (My Songs, Public Songs)
             const defaultOptions = `
-                <option value="my-songs">📁 My Songs</option>
-                <option value="public">🌐 Public Songs</option>
+                <option value="my-songs">My Songs</option>
+                <option value="public">Public Songs</option>
             `;
 
             // Get user's books
@@ -4135,8 +4279,10 @@ const liveMode = {
         this.disableDragReorder();
         chartDisplay.classList.add('reorder-active');
 
-        // Always set up 2-column flex layout in reorder mode (shows grid with placeholder slots)
-        this._setupFlexColumns(chartDisplay);
+        // Only set up 2-column flex layout if user is in 2-column mode
+        if (this.currentColumnLayout === 2) {
+            this._setupFlexColumns(chartDisplay);
+        }
 
         const self = this;
         let dragFromId = null;
@@ -4577,13 +4723,14 @@ const liveMode = {
         // Always tear down flex columns when exiting reorder mode
         this._teardownFlexColumns(chartDisplay);
 
-        // Restore original column layout (CSS columns if 2-col, or single column)
+        // Restore CSS column layout if in 2-col mode
         if (this.currentColumnLayout === 2) {
             this.applySavedPreferences(chartDisplay);
-            // Re-apply custom column layout if user has reordered
-            if (this.customColumnLayout) {
-                this.applyColumnLayout(chartDisplay);
-            }
+        }
+
+        // Re-apply custom column layout for ANY column mode (1-col or 2-col)
+        if (this.customColumnLayout) {
+            this.applyColumnLayout(chartDisplay);
         }
     },
 

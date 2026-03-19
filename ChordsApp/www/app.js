@@ -440,12 +440,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isRTL = rtlChars.test(song.content || '');
                 const dirAttr = isRTL ? 'dir="rtl"' : '';
 
+                // Extract song-header from formatted HTML so it stays above columns
+                let headerHTML = '';
+                let bodyHTML = formatted;
+                const hdrTag = '<div class="song-header">';
+                const hdrIdx = formatted.indexOf(hdrTag);
+                if (hdrIdx !== -1) {
+                    let depth = 1, pos = hdrIdx + hdrTag.length;
+                    while (depth > 0 && pos < formatted.length) {
+                        const nO = formatted.indexOf('<div', pos);
+                        const nC = formatted.indexOf('</div>', pos);
+                        if (nC === -1) break;
+                        if (nO !== -1 && nO < nC) { depth++; pos = nO + 4; }
+                        else { depth--; if (depth === 0) { headerHTML = formatted.substring(hdrIdx, nC + 6); bodyHTML = formatted.substring(0, hdrIdx) + formatted.substring(nC + 6); } pos = nC + 6; }
+                    }
+                }
+
                 pagesHTML += `
-                    <div class="print-page" ${dirAttr} style="page-break-after: always; position: relative; width: 210mm; height: 297mm; max-height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; background: #fff;">
-                        <div style="column-count: 2; column-gap: 40px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: 12pt;">
-                            ${formatted}
+                    <div class="print-page" ${dirAttr} style="page-break-after: always; width: 210mm; height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; background: #fff; display: flex; flex-direction: column;">
+                        ${headerHTML}
+                        <div class="print-columns" style="flex: 1; column-count: 2; column-gap: 4px; column-fill: auto; overflow: hidden; font-size: 12pt;">
+                            ${bodyHTML}
                         </div>
-                        <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 20px; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
+                        <div style="margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
                             <span>www.thefaith<b>sound</b>.com</span>
                             <span style="font-weight: 700;">א/aChordim</span>
                         </div>
@@ -462,16 +479,18 @@ document.addEventListener('DOMContentLoaded', () => {
             style.textContent = `
                 @page { margin: 0; size: A4; }
                 * { box-sizing: border-box; color: #000 !important; }
-                body { margin: 0; padding: 0; background: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+                html, body { margin: 0; padding: 0; background: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; width: 100%; }
                 .song-section-block { border-color: #ccc !important; background: transparent !important; }
                 .section-header { color: #000 !important; }
                 .chord { color: #000 !important; font-weight: bold; }
                 .section-badge { color: #000 !important; border-color: #000 !important; background: transparent !important; }
                 .song-title, .song-meta, .song-header { color: #000 !important; }
+                .chord-line { break-after: avoid; }
+                .section-header { break-after: avoid; }
                 .print-page { box-shadow: 0 2px 8px rgba(0,0,0,0.15); margin-bottom: 20px; }
-                .print-toolbar { position: sticky; top: 0; z-index: 100; background: #222; color: #fff !important; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+                .print-toolbar { position: sticky; top: 0; z-index: 100; background: #000; padding: 10px 16px; display: flex; align-items: center; gap: 10px; width: 100%; }
                 .print-toolbar * { color: #fff !important; }
-                .print-toolbar button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; color: #222 !important; }
+                .print-toolbar button { padding: 8px 16px; border: 1px solid #fff !important; background: transparent !important; cursor: pointer; font-size: 14px; font-weight: 600; color: #fff !important; font-family: inherit; flex-shrink: 0; }
                 @media print {
                     body { background: #fff !important; }
                     * { color: #000 !important; }
@@ -484,13 +503,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.body.innerHTML = `
                 <div class="print-toolbar">
-                    <div style="font-size: 16px; font-weight: 600;">${sessionTitle} <span style="opacity: 0.6; font-size: 13px;">(${playlist.length} songs)</span></div>
-                    <button style="background: #fff; color: #222;" onclick="window.print()">🖨 Print</button>
+                    <span style="font-size: 14px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${sessionTitle} <span style="opacity: 0.6; font-size: 12px;">(${playlist.length} songs)</span></span>
+                    <button id="optimizeBtn">Optimize</button>
+                    <button onclick="window.print()">Print</button>
                 </div>
                 <div style="padding: 20px 0;">
                     ${pagesHTML}
                 </div>
             `;
+
+            // Define optimize function (script tags inside innerHTML don't execute)
+            window.optimizePrintLayout = function(btn) {
+                if (btn) { btn.textContent = 'Optimizing...'; btn.disabled = true; }
+                setTimeout(function() {
+                    var pages = document.querySelectorAll('.print-page');
+                    pages.forEach(function(page) {
+                        var contentDiv = page.querySelector('.print-columns');
+                        if (!contentDiv) return;
+                        var headerDiv = page.querySelector('.song-header');
+                        var headerH = headerDiv ? headerDiv.offsetHeight : 0;
+                        var maxH = page.offsetHeight - 70 - headerH;
+                        contentDiv.style.overflow = 'visible';
+                        contentDiv.style.height = 'auto';
+                        contentDiv.style.flex = 'none';
+                        var bestFont = 8, bestCols = 1;
+                        for (var cols = 1; cols <= 2; cols++) {
+                            contentDiv.style.columnCount = cols;
+                            contentDiv.style.columnGap = cols > 1 ? '30px' : '0px';
+                            var lo = 8, hi = 30;
+                            while (hi - lo > 0.5) {
+                                var mid = (lo + hi) / 2;
+                                contentDiv.style.fontSize = mid + 'pt';
+                                void contentDiv.offsetHeight;
+                                if (contentDiv.scrollHeight <= maxH) lo = mid;
+                                else hi = mid;
+                            }
+                            if (lo > bestFont) { bestFont = lo; bestCols = cols; }
+                        }
+                        contentDiv.style.columnCount = bestCols;
+                        contentDiv.style.columnGap = bestCols > 1 ? '30px' : '0px';
+                        contentDiv.style.fontSize = Math.floor(bestFont * 2) / 2 + 'pt';
+                        contentDiv.style.overflow = 'hidden';
+                        var remainH = 'calc(297mm - 70px' + (headerH ? ' - ' + headerH + 'px' : '') + ')';
+                        contentDiv.style.height = remainH;
+                        contentDiv.style.flex = 'none';
+                        contentDiv.style.columnFill = 'auto';
+                    });
+                    if (btn) { btn.textContent = 'Optimized'; }
+                }, 100);
+            };
+            document.getElementById('optimizeBtn').addEventListener('click', function() {
+                window.optimizePrintLayout(this);
+            });
 
             console.log(`📋 Shared playlist loaded: ${sessionTitle} (${playlist.length} songs)`);
 
