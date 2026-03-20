@@ -4716,6 +4716,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Auto-fit content to selected layout
     function autoFitContent(pages) {
+        console.log('📐 Auto-fit called with pages:', pages, 'livePreview:', !!livePreview, 'fontSizeSlider:', !!fontSizeSlider);
         if (!livePreview || !fontSizeSlider) return;
 
         const A4_HEIGHT_PX = 1123;
@@ -4767,6 +4768,8 @@ Our [Em7]hearts will cry, these bones will [D]sing
             console.log('📐 Auto-fit: Increased font to', currentSize, 'pt to better fill space');
         }
     }
+
+    window.autoFitContent = autoFitContent;
 
     // Auto-adjust layout to maintain target page count (used after transpose)
     function autoAdjustLayoutAfterTranspose(targetPages) {
@@ -6403,10 +6406,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         const subscriptionModalClose = document.getElementById('subscriptionModalClose');
         if (subscriptionModalClose) {
             subscriptionModalClose.addEventListener('click', () => {
-                const modal = document.getElementById('subscriptionModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
+                window.hideSubscriptionModal();
             });
         }
 
@@ -6415,7 +6415,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
         if (subscriptionModal) {
             subscriptionModal.addEventListener('click', (e) => {
                 if (e.target === subscriptionModal) {
-                    subscriptionModal.style.display = 'none';
+                    window.hideSubscriptionModal();
                 }
             });
         }
@@ -6594,7 +6594,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (loginLink) {
                 loginLink.onclick = (e) => {
                     e.preventDefault();
-                    document.getElementById('subscriptionModal').style.display = 'none';
+                    window.hideSubscriptionModal();
                     if (window.chordsAuth) window.chordsAuth.showAuthModal('login');
                 };
             }
@@ -6603,28 +6603,28 @@ Our [Em7]hearts will cry, these bones will [D]sing
             if (!isLoggedIn) {
                 document.querySelectorAll('.signup-free-btn').forEach(btn => {
                     btn.onclick = () => {
-                        document.getElementById('subscriptionModal').style.display = 'none';
+                        window.hideSubscriptionModal();
                         window.pendingPlanAfterSignup = null;
                         if (window.chordsAuth) window.chordsAuth.showAuthModal('signup');
                     };
                 });
                 document.querySelectorAll('.signup-basic-btn').forEach(btn => {
                     btn.onclick = () => {
-                        document.getElementById('subscriptionModal').style.display = 'none';
+                        window.hideSubscriptionModal();
                         window.pendingPlanAfterSignup = 'BASIC';
                         if (window.chordsAuth) window.chordsAuth.showAuthModal('signup');
                     };
                 });
                 document.querySelectorAll('.signup-pro-btn').forEach(btn => {
                     btn.onclick = () => {
-                        document.getElementById('subscriptionModal').style.display = 'none';
+                        window.hideSubscriptionModal();
                         window.pendingPlanAfterSignup = 'PRO';
                         if (window.chordsAuth) window.chordsAuth.showAuthModal('signup');
                     };
                 });
                 document.querySelectorAll('.signup-book-btn').forEach(btn => {
                     btn.onclick = () => {
-                        document.getElementById('subscriptionModal').style.display = 'none';
+                        window.hideSubscriptionModal();
                         window.pendingPlanAfterSignup = 'BOOK';
                         if (window.chordsAuth) window.chordsAuth.showAuthModal('signup');
                     };
@@ -6637,6 +6637,13 @@ Our [Em7]hearts will cry, these bones will [D]sing
 
     // Make updateSubscriptionModal globally accessible
     window.updateSubscriptionModal = updateSubscriptionModal;
+
+    // Global function to hide subscription modal and restore scroll
+    window.hideSubscriptionModal = function () {
+        const modal = document.getElementById('subscriptionModal');
+        if (modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
+    };
 
     // Global function to show subscription modal
     window.showSubscriptionModal = async function () {
@@ -7285,6 +7292,25 @@ Our [Em7]hearts will cry, these bones will [D]sing
             // Update live preview
             updateLivePreview();
             updateEditorBadges();
+
+            // Re-apply saved transposition if any
+            const savedSteps = parseInt(detail.transposeSteps) || 0;
+            if (savedSteps !== 0) {
+                setTimeout(() => {
+                    // The saved originalKey is the TRANSPOSED key (e.g., G Major after -5 from C).
+                    // But originalDetectedKey should be the BASELINE key (C Major).
+                    // Calculate: baseline key = savedKey transposed by NEGATIVE savedSteps
+                    if (detail.originalKey && typeof transposeKey === 'function') {
+                        const baselineKey = transposeKey(detail.originalKey, -savedSteps);
+                        originalDetectedKey = baselineKey;
+                        currentKey = baselineKey;
+                        console.log('🎼 Corrected baseline key:', baselineKey, '(saved key was', detail.originalKey, ')');
+                    }
+                    transposeStepInput.value = savedSteps;
+                    applyTranspose(savedSteps);
+                    console.log('🎼 Re-applied saved transpose:', savedSteps, 'steps');
+                }, 200);
+            }
 
             console.log('Visual format loaded, length:', visualFormat.length);
         }

@@ -28,7 +28,7 @@ const translations = {
         "nav.menu.library": "Library",
 
         // Hero
-        "hero.title": "Turn any chord sheet into a clean, printable chart!",
+        "hero.title": "Turn any chord sheet into a printable, shareable, and presentable live-ready.",
         "hero.subtitle": "Upload a handwritten sheet or photo, extract the music, refine the result, transpose to any key, then print with confidence.",
 
         // Workflow Steps
@@ -350,7 +350,7 @@ const translations = {
         "branding.show_footer": "Show aChordim footer",
 
         // Footer
-        "footer.tagline": "Built with love for worship leaders and musicians.",
+        "footer.tagline": "Built with love for people.",
         "footer.privacy": "Privacy Policy",
         "footer.terms": "Terms of Service",
     },
@@ -378,7 +378,7 @@ const translations = {
         "nav.menu.library": "ספרייה",
 
         // Hero
-        "hero.title": "הפוך כל דף אקורדים לתרשים נקי, מקצועי ומוכן להדפסה!",
+        "hero.title": "הפוך כל דף אקורדים להדפסה, שיתוף והצגה חיה.",
         "hero.subtitle": "העלה צילום או קובץ, חלץ את המוזיקה אוטומטית, ערוך בקלות, שנה סולם, והדפס בביטחון.",
 
         // Workflow Steps
@@ -703,7 +703,7 @@ const translations = {
         "branding.show_footer": "הצג aChordim",
 
         // Footer
-        "footer.tagline": "נבנה באהבה עבור מהללים ומוזיקאים.",
+        "footer.tagline": "נבנה באהבה עבור אנשים.",
         "footer.privacy": "מדיניות פרטיות",
         "footer.terms": "תנאי שימוש",
     }

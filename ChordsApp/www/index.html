@@ -86,7 +86,7 @@
                     <span class="header-brand-name"
                         style="font-weight: 700; font-size: 1.2rem; color: var(--text); display: flex; align-items: baseline; gap: 4px;"><b
                             dir="ltr">אChordim</b> <span id="appVersion"
-                            style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v111</span></span>
+                            style="font-size: 0.65rem; font-weight: 400; opacity: 0.6;">v112</span></span>
                     <span class="header-brand-url"
                         style="font-size: 0.6rem; color: var(--text-muted); opacity: 0.7;">www.thefaith<span
                             style="color: var(--text); opacity: 1;">sound</span>.com</span>
@@ -163,8 +163,8 @@
 
     <main class="container">
         <section class="hero" id="top">
-            <h1 data-i18n="hero.title">Turn any chord sheet into a clean, printable chart!</h1>
-            <p class="hero-subtitle">Upload a photo, paste a URL or text — AI does the rest.</p>
+            <h1 data-i18n="hero.title">Turn any chord sheet into a printable, shareable, and presentable live-ready.</h1>
+            <p class="hero-subtitle">Upload a photo, paste a URL or text — the app does the rest.</p>
 
             <!-- Hidden file inputs -->
             <input id="chartFileInput" class="sr-only" type="file" accept="image/*,.pdf">
@@ -403,8 +403,6 @@
                             <option value="he">עברית</option>
                         </select>
                     </div>
-                    <button class="side-menu-btn purple full-width" id="sideMenuAutoFit"
-                        data-i18n="menu.btn.autofit_full">Auto-fit to 1 Page</button>
                 </div>
 
                 <!-- Transpose -->
@@ -728,21 +726,21 @@
                         <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 6px;"
                             data-i18n="adv.label.quick">Quick
                             Transpose to Key:</label>
-                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
                             <button class="ghost-button quick-key-transpose" data-target-key="C"
-                                style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: transparent;">C</button>
+                                style="padding: 8px 4px; font-weight: 600; background: transparent;">C</button>
                             <button class="ghost-button quick-key-transpose" data-target-key="D"
-                                style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: transparent;">D</button>
+                                style="padding: 8px 4px; font-weight: 600; background: transparent;">D</button>
                             <button class="ghost-button quick-key-transpose" data-target-key="E"
-                                style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: transparent;">E</button>
+                                style="padding: 8px 4px; font-weight: 600; background: transparent;">E</button>
                             <button class="ghost-button quick-key-transpose" data-target-key="F"
-                                style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: transparent;">F</button>
+                                style="padding: 8px 4px; font-weight: 600; background: transparent;">F</button>
                             <button class="ghost-button quick-key-transpose" data-target-key="G"
-                                style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: transparent;">G</button>
+                                style="padding: 8px 4px; font-weight: 600; background: transparent;">G</button>
                             <button class="ghost-button quick-key-transpose" data-target-key="A"
-                                style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: transparent;">A</button>
+                                style="padding: 8px 4px; font-weight: 600; background: transparent;">A</button>
                             <button class="ghost-button quick-key-transpose" data-target-key="B"
-                                style="flex: 1; min-width: 50px; padding: 8px; font-weight: 600; background: transparent;">B</button>
+                                style="padding: 8px 4px; font-weight: 600; background: transparent;">B</button>
                         </div>
                     </div>
 
@@ -1204,8 +1202,7 @@
     </main>
 
     <footer class="app-footer">
-        <p>&copy; <span id="year"></span> The Faith Sound. <span data-i18n="footer.tagline">Built with love for worship
-                leaders and musicians.</span> <span style="opacity: 0.7;">| v3.1 - 28/01/2026</span></p>
+        <p>&copy; <span id="year"></span> The Faith Sound. <span data-i18n="footer.tagline">Built with love for people.</span></p>
         <p style="margin-top: 8px; font-size: 0.85rem;">
             <a href="privacy.html" style="color: var(--text-muted);" data-i18n="footer.privacy">Privacy Policy</a> ·
             <a href="terms.html" style="color: var(--text-muted);" data-i18n="footer.terms">Terms of Service</a>
@@ -4038,10 +4035,9 @@
 
             // Layout section Auto Fit button
             const layoutAutoFitButton = document.getElementById('layoutAutoFitButton');
-            const headerAutoFitBtn = document.getElementById('headerAutoFit');
-            if (layoutAutoFitButton && headerAutoFitBtn) {
+            if (layoutAutoFitButton) {
                 layoutAutoFitButton.addEventListener('click', () => {
-                    headerAutoFitBtn.click();
+                    if (window.autoFitContent) window.autoFitContent(1);
                 });
             }
 
@@ -4068,6 +4064,12 @@
                 let editorWasVisible = true;
 
                 headerLoadSong.addEventListener('click', () => {
+                    // If not signed in, just trigger normal load (shows sign-in message)
+                    if (!firebase.auth().currentUser) {
+                        mainLoadSongBtn.click();
+                        return;
+                    }
+
                     const loadModal = document.getElementById('loadSongModal');
                     const editorSection = document.getElementById('editor');
                     if (!loadModal || !editorSection) {
@@ -4747,10 +4749,9 @@
 
             // Layout: Auto-fit
             const sideMenuAutoFit = document.getElementById('sideMenuAutoFit');
-            const mainAutoFit = document.getElementById('autoFitButton');
-            if (sideMenuAutoFit && mainAutoFit) {
+            if (sideMenuAutoFit) {
                 sideMenuAutoFit.addEventListener('click', () => {
-                    mainAutoFit.click();
+                    if (window.autoFitContent) window.autoFitContent(1);
                 });
             }
 
@@ -4772,17 +4773,35 @@
                 });
             }
 
-            // Transpose: Key grid buttons
+            // Transpose: Key grid buttons (both side menu .key-btn and advanced .quick-key-transpose)
             const keyBtns = document.querySelectorAll('.key-btn');
+            const quickKeyBtns = document.querySelectorAll('.quick-key-transpose');
             function updateKeyGrid(keyValue) {
-                const keyLetter = keyValue.split(' ')[0];
+                if (!keyValue) return;
+                const keyLetter = keyValue.split(' ')[0].replace(/\s*(Major|Minor|major|minor)/, '');
                 keyBtns.forEach(btn => {
-                    if (btn.dataset.key === keyLetter) {
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                    }
+                    btn.classList.toggle('active', btn.dataset.key === keyLetter);
                 });
+                quickKeyBtns.forEach(btn => {
+                    const isActive = btn.dataset.targetKey === keyLetter;
+                    btn.style.background = isActive ? 'var(--text)' : 'transparent';
+                    btn.style.color = isActive ? 'var(--bg)' : 'var(--text)';
+                });
+            }
+            window.updateKeyGrid = updateKeyGrid;
+
+            // Watch keySelector for value changes (set by app.js without dispatching change)
+            if (mainKey) {
+                let lastKeyValue = mainKey.value;
+                setInterval(() => {
+                    if (mainKey.value !== lastKeyValue) {
+                        lastKeyValue = mainKey.value;
+                        if (sideMenuKey) sideMenuKey.value = mainKey.value;
+                        updateKeyGrid(mainKey.value);
+                    }
+                }, 500);
+                // Initial sync
+                updateKeyGrid(mainKey.value);
             }
 
             keyBtns.forEach(btn => {

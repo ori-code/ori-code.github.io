@@ -591,7 +591,7 @@
             const printPreviewText = livePreview ? livePreview.textContent : content;
 
             // Get transpose information
-            const transposeStepsInput = document.getElementById('transposeSteps');
+            const transposeStepsInput = document.getElementById('transposeStepInput');
             const currentTransposeSteps = transposeStepsInput ? parseInt(transposeStepsInput.value) || 0 : 0;
 
             // Get key from keySelector (required field)
@@ -799,7 +799,7 @@
             const printPreviewText = livePreview ? livePreview.textContent : content;
 
             // Get transpose information
-            const transposeStepsInput = document.getElementById('transposeSteps');
+            const transposeStepsInput = document.getElementById('transposeStepInput');
             const currentTransposeSteps = transposeStepsInput ? parseInt(transposeStepsInput.value) || 0 : 0;
 
             // Get key from keySelector (required field)
@@ -1255,6 +1255,7 @@
                         detail: {
                             baselineChart: baseline,
                             originalKey: song.originalKey || '',
+                            transposeSteps: song.transposeSteps || 0,
                             bpm: song.bpm || null,
                             timeSignature: song.timeSignature || '4/4',
                             songName: song.name,
@@ -1304,11 +1305,7 @@
                     }
                 }
 
-                // Reset transpose input to 0 (same as after analyze)
-                const transposeStepsInput = document.getElementById('transposeStepInput');
-                if (transposeStepsInput) {
-                    transposeStepsInput.value = 0;
-                }
+                // Transpose reset handled by app.js songLoaded handler
 
                 // Show loaded message with key info
                 let message = `"${song.name}" loaded!`;

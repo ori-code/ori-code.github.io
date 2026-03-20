@@ -11,7 +11,7 @@ const PAYPAL_ENV = (() => {
                        hostname.startsWith('192.168.') ||
                        hostname.startsWith('10.') ||
                        hostname.startsWith('172.');
-    return isLocalDev ? 'sandbox' : 'production';
+    return 'production'; // Always use production (sandbox plans not configured)
 })();
 
 console.log(`PayPal Environment: ${PAYPAL_ENV}`);
@@ -247,6 +247,7 @@ class PayPalSubscriptionManager {
         const modal = document.getElementById('subscriptionModal');
         if (modal) {
             modal.style.display = 'none';
+            document.body.style.overflow = '';
         }
     }
 
