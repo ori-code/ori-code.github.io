@@ -517,9 +517,9 @@ html[dir="rtl"] .highlight-row:not(.reverse)>* {
     background: transparent;
     border: 1px solid var(--border);
     color: var(--text);
-    font-size: 13px;
+    font-size: 11px;
     font-family: inherit;
-    padding: 6px 12px;
+    padding: 4px 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: none;
@@ -639,10 +639,10 @@ nav {
 .nav-cta {
     background: var(--text) !important;
     color: var(--bg) !important;
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: 0;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     border: 1px solid var(--text);
     transition: background 0.2s, color 0.2s;
 }

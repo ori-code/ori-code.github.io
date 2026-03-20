@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
     <script>
-        const savedTheme = localStorage.getItem('theme') || 'dark';
+        const savedTheme = localStorage.getItem('chordsapp-theme') || localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
     <link rel="stylesheet" href="styles-bw.css?v=87">
@@ -46,6 +46,7 @@
                         <button class="lang-option" data-lang="pt">Português</button>
                     </div>
                 </div>
+                <a href="index.html" class="nav-cta" data-i18n="nav.cta">App</a>
                 <button class="theme-toggle" id="featuresThemeToggle" aria-label="Toggle Theme"
                     style="background: none; border: 1px solid transparent; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 0; transition: all 0.2s; padding: 0;">
                     <svg id="moonIcon" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -65,7 +66,6 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
-                <a href="index.html" class="nav-cta" data-i18n="nav.cta">Open App →</a>
             </div>
         </div>
     </nav>
@@ -73,9 +73,10 @@
     <!-- ═══ HERO ═══ -->
     <section class="hero">
         <div class="hero-badge"><span data-i18n="hero.badge">AI-Powered Chord Sheet Manager</span></div>
-        <h1 data-i18n="hero.title">Turn any chord sheet into a clean, printable chart</h1>
+        <h1 data-i18n="hero.title">Turn any chord sheet into a printable, shareable, presentable live-ready chart</h1>
         <p data-i18n="hero.subtitle">Upload a handwritten sheet or photo — AI detects chords, lyrics, key and sections.
-            Transpose, format, print, and play live with your band. All in one app.</p>
+            Transpose, format, print, and play live with your band.</p>
+        <p style="font-size: clamp(18px, 2.5vw, 28px); font-weight: 800; letter-spacing: -0.5px; margin-top: 16px; opacity: 0.9;">All in one app — aChordim.</p>
         <div class="hero-actions">
             <a href="index.html" class="primary-action" data-i18n="hero.cta">Get Started — It's Free</a>
             <a href="#pricing" class="ghost-button" data-i18n="hero.pricing">See Pricing</a>
@@ -598,6 +599,7 @@
                 const newTheme = currentTheme === 'light' ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-theme', newTheme);
                 localStorage.setItem('theme', newTheme);
+                localStorage.setItem('chordsapp-theme', newTheme);
                 updateThemeIcon();
             });
         }

@@ -1020,6 +1020,9 @@ const liveMode = {
                 }
             }
         }
+
+        // Update song navigation arrows visibility
+        this._updateNavArrows();
     },
 
     /**
@@ -1288,6 +1291,7 @@ const liveMode = {
             controlsBtn.style.opacity = anyOpen ? '0' : '0.5';
             controlsBtn.style.pointerEvents = 'auto';
         }
+        this._updateNavArrows();
     },
 
     /**
@@ -1299,6 +1303,22 @@ const liveMode = {
         if (playlistBtn) playlistBtn.style.display = visible ? 'block' : 'none';
         if (controlsBtn) controlsBtn.style.display = visible ? 'block' : 'none';
         if (visible) this._updateFloatButtons();
+        this._updateNavArrows();
+    },
+
+    /**
+     * Show/hide song navigation arrows (leader only, when in a session with 2+ songs)
+     */
+    _updateNavArrows() {
+        const prevBtn = document.getElementById('liveModeNavPrev');
+        const nextBtn = document.getElementById('liveModeNavNext');
+        if (!prevBtn || !nextBtn) return;
+        const isLeader = window.sessionManager && window.sessionManager.isLeader;
+        const hasSession = window.sessionManager && window.sessionManager.activeSession;
+        const anyPanelOpen = this.sidebarVisible || this.controlsVisible;
+        const show = isLeader && hasSession && !this.playlistLocked && !anyPanelOpen;
+        prevBtn.style.display = show ? 'block' : 'none';
+        nextBtn.style.display = show ? 'block' : 'none';
     },
 
     /**

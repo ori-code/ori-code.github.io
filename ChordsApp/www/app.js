@@ -1005,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', () => {
             badgesBtn.style.opacity = badgesVisible ? '1' : '0.4';
         });
 
-        // Print button — opens clean print window (same approach as shared playlist)
+        // Print button — opens clean print window with toolbar & optimize
         const printBtn = makeBtn('Print', 'Print', () => {
             const preview = document.getElementById('livePreview');
             if (!preview) return;
@@ -1017,9 +1017,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const isRTL = rtlChars.test(preview.textContent || '');
             const dirAttr = isRTL ? 'dir="rtl"' : '';
 
-            // Get current font size and column count
-            const fontSize = preview.style.fontSize || '12pt';
-            const colCount = preview.style.columnCount || '2';
+            // Extract song-header so it stays above columns
+            let headerHTML = '';
+            let bodyHTML = previewHTML;
+            const hdrTag = '<div class="song-header">';
+            const hdrIdx = previewHTML.indexOf(hdrTag);
+            if (hdrIdx !== -1) {
+                let depth = 1, pos = hdrIdx + hdrTag.length;
+                while (depth > 0 && pos < previewHTML.length) {
+                    const nO = previewHTML.indexOf('<div', pos);
+                    const nC = previewHTML.indexOf('</div>', pos);
+                    if (nC === -1) break;
+                    if (nO !== -1 && nO < nC) { depth++; pos = nO + 4; }
+                    else { depth--; if (depth === 0) { headerHTML = previewHTML.substring(hdrIdx, nC + 6); bodyHTML = previewHTML.substring(0, hdrIdx) + previewHTML.substring(nC + 6); } pos = nC + 6; }
+                }
+            }
 
             const printWindow = window.open('', '_blank');
             if (!printWindow) return;
@@ -1035,32 +1047,81 @@ document.addEventListener('DOMContentLoaded', () => {
                         @page { margin: 0; size: A4; }
                         * { box-sizing: border-box; color: #000 !important; }
                         body { margin: 0; padding: 0; background: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-                        .print-page { position: relative; width: 210mm; height: 297mm; max-height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; background: #fff; }
-                        .print-content { column-count: ${colCount}; column-gap: 40px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: ${fontSize}; }
-                        .print-footer { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 20px; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr; }
+                        .print-page:last-child { page-break-after: avoid; }
                         .song-section-block { border-color: #ccc !important; background: transparent !important; }
-                        .section-header { color: #000 !important; }
+                        .section-header { color: #000 !important; break-after: avoid; }
                         .chord { color: #000 !important; font-weight: bold; }
+                        .chord-line { break-after: avoid; }
                         .section-badge { color: #000 !important; border-color: #000 !important; background: transparent !important; }
+                        .section-badges-row { margin-bottom: 8px; }
                         .song-title, .song-meta, .song-header { color: #000 !important; }
+                        .print-toolbar { position: sticky; top: 0; z-index: 100; background: #000; padding: 10px 16px; display: flex; gap: 10px; align-items: center; }
+                        .print-toolbar button { padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; background: transparent !important; color: #fff !important; border: 1px solid #fff !important; }
                         @media print {
                             body { background: #fff !important; }
                             * { color: #000 !important; }
+                            .print-toolbar { display: none !important; }
+                            .print-page { break-after: page; }
+                            .print-page:last-child { break-after: avoid; }
                         }
                     </style>
                 </head>
                 <body>
-                    <div class="print-page" ${dirAttr}>
-                        <div class="print-content">
-                            ${previewHTML}
+                    <div class="print-toolbar">
+                        <button onclick="window.close()">← Back to App</button>
+                        <button onclick="optimizePrintLayout(this)">Optimize</button>
+                        <button onclick="window.print()">Print</button>
+                    </div>
+                    <div class="print-page" ${dirAttr} style="page-break-after: always; width: 210mm; height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; display: flex; flex-direction: column;">
+                        ${headerHTML}
+                        <div class="print-columns" style="flex: 1; column-count: 2; column-gap: 4px; column-fill: auto; overflow: hidden; font-size: 12pt;">
+                            ${bodyHTML}
                         </div>
-                        <div class="print-footer">
+                        <div style="margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
                             <span>www.thefaith<b>sound</b>.com</span>
                             <span style="font-weight: 700;">א/aChordim</span>
                         </div>
                     </div>
                     <script>
-                        window.onload = function() { setTimeout(function() { window.print(); }, 500); };
+                        function optimizePrintLayout(btn) {
+                            if (btn) { btn.textContent = 'Optimizing...'; btn.disabled = true; }
+                            setTimeout(function() {
+                                var pages = document.querySelectorAll('.print-page');
+                                pages.forEach(function(page) {
+                                    var contentDiv = page.querySelector('.print-columns');
+                                    if (!contentDiv) return;
+                                    var headerDiv = page.querySelector('.song-header');
+                                    var headerH = headerDiv ? headerDiv.offsetHeight : 0;
+                                    var maxH = page.offsetHeight - 70 - headerH;
+                                    contentDiv.style.overflow = 'visible';
+                                    contentDiv.style.height = 'auto';
+                                    contentDiv.style.flex = 'none';
+                                    var bestFont = 8, bestCols = 1;
+                                    for (var cols = 1; cols <= 2; cols++) {
+                                        contentDiv.style.columnCount = cols;
+                                        contentDiv.style.columnGap = cols > 1 ? '30px' : '0px';
+                                        var lo = 8, hi = 30;
+                                        while (hi - lo > 0.5) {
+                                            var mid = (lo + hi) / 2;
+                                            contentDiv.style.fontSize = mid + 'pt';
+                                            void contentDiv.offsetHeight;
+                                            if (contentDiv.scrollHeight <= maxH) lo = mid;
+                                            else hi = mid;
+                                        }
+                                        if (lo > bestFont) { bestFont = lo; bestCols = cols; }
+                                    }
+                                    contentDiv.style.columnCount = bestCols;
+                                    contentDiv.style.columnGap = bestCols > 1 ? '30px' : '0px';
+                                    contentDiv.style.fontSize = Math.floor(bestFont * 2) / 2 + 'pt';
+                                    contentDiv.style.overflow = 'hidden';
+                                    var remainH = 'calc(297mm - 70px' + (headerH ? ' - ' + headerH + 'px' : '') + ')';
+                                    contentDiv.style.height = remainH;
+                                    contentDiv.style.flex = 'none';
+                                    contentDiv.style.columnFill = 'auto';
+                                });
+                                if (btn) { btn.textContent = 'Optimized'; }
+                            }, 100);
+                        }
                     <\/script>
                 </body>
                 </html>
@@ -5767,9 +5828,21 @@ Our [Em7]hearts will cry, these bones will [D]sing
             const isRTL = rtlChars.test(preview.textContent || '');
             const dirAttr = isRTL ? 'dir="rtl"' : '';
 
-            // Get current font size and column count
-            const fontSize = preview.style.fontSize || (livePreview ? livePreview.style.fontSize : null) || '12pt';
-            const colCount = preview.style.columnCount || '2';
+            // Extract song-header from content so it stays above columns
+            let headerHTML = '';
+            let bodyHTML = content;
+            const hdrTag = '<div class="song-header">';
+            const hdrIdx = content.indexOf(hdrTag);
+            if (hdrIdx !== -1) {
+                let depth = 1, pos = hdrIdx + hdrTag.length;
+                while (depth > 0 && pos < content.length) {
+                    const nO = content.indexOf('<div', pos);
+                    const nC = content.indexOf('</div>', pos);
+                    if (nC === -1) break;
+                    if (nO !== -1 && nO < nC) { depth++; pos = nO + 4; }
+                    else { depth--; if (depth === 0) { headerHTML = content.substring(hdrIdx, nC + 6); bodyHTML = content.substring(0, hdrIdx) + content.substring(nC + 6); } pos = nC + 6; }
+                }
+            }
 
             const printWindow = window.open('', '_blank');
             if (!printWindow) return;
@@ -5785,32 +5858,81 @@ Our [Em7]hearts will cry, these bones will [D]sing
                         @page { margin: 0; size: A4; }
                         * { box-sizing: border-box; color: #000 !important; }
                         body { margin: 0; padding: 0; background: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-                        .print-page { position: relative; width: 210mm; height: 297mm; max-height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; background: #fff; }
-                        .print-content { column-count: ${colCount}; column-gap: 40px; column-fill: auto; height: calc(297mm - 70px); overflow: hidden; font-size: ${fontSize}; }
-                        .print-footer { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 20px; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr; }
+                        .print-page:last-child { page-break-after: avoid; }
                         .song-section-block { border-color: #ccc !important; background: transparent !important; }
-                        .section-header { color: #000 !important; }
+                        .section-header { color: #000 !important; break-after: avoid; }
                         .chord { color: #000 !important; font-weight: bold; }
+                        .chord-line { break-after: avoid; }
                         .section-badge { color: #000 !important; border-color: #000 !important; background: transparent !important; }
+                        .section-badges-row { margin-bottom: 8px; }
                         .song-title, .song-meta, .song-header { color: #000 !important; }
+                        .print-toolbar { position: sticky; top: 0; z-index: 100; background: #000; padding: 10px 16px; display: flex; gap: 10px; align-items: center; }
+                        .print-toolbar button { padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; background: transparent !important; color: #fff !important; border: 1px solid #fff !important; }
                         @media print {
                             body { background: #fff !important; }
                             * { color: #000 !important; }
+                            .print-toolbar { display: none !important; }
+                            .print-page { break-after: page; }
+                            .print-page:last-child { break-after: avoid; }
                         }
                     </style>
                 </head>
                 <body>
-                    <div class="print-page" ${dirAttr}>
-                        <div class="print-content">
-                            ${content}
+                    <div class="print-toolbar">
+                        <button onclick="window.close()">← Back to App</button>
+                        <button onclick="optimizePrintLayout(this)">Optimize</button>
+                        <button onclick="window.print()">Print</button>
+                    </div>
+                    <div class="print-page" ${dirAttr} style="page-break-after: always; width: 210mm; height: 297mm; overflow: hidden; padding: 20px; box-sizing: border-box; margin: 0 auto; display: flex; flex-direction: column;">
+                        ${headerHTML}
+                        <div class="print-columns" style="flex: 1; column-count: 2; column-gap: 4px; column-fill: auto; overflow: hidden; font-size: 12pt;">
+                            ${bodyHTML}
                         </div>
-                        <div class="print-footer">
+                        <div style="margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
                             <span>www.thefaith<b>sound</b>.com</span>
                             <span style="font-weight: 700;">א/aChordim</span>
                         </div>
                     </div>
                     <script>
-                        window.onload = function() { setTimeout(function() { window.print(); }, 500); };
+                        function optimizePrintLayout(btn) {
+                            if (btn) { btn.textContent = 'Optimizing...'; btn.disabled = true; }
+                            setTimeout(function() {
+                                var pages = document.querySelectorAll('.print-page');
+                                pages.forEach(function(page) {
+                                    var contentDiv = page.querySelector('.print-columns');
+                                    if (!contentDiv) return;
+                                    var headerDiv = page.querySelector('.song-header');
+                                    var headerH = headerDiv ? headerDiv.offsetHeight : 0;
+                                    var maxH = page.offsetHeight - 70 - headerH;
+                                    contentDiv.style.overflow = 'visible';
+                                    contentDiv.style.height = 'auto';
+                                    contentDiv.style.flex = 'none';
+                                    var bestFont = 8, bestCols = 1;
+                                    for (var cols = 1; cols <= 2; cols++) {
+                                        contentDiv.style.columnCount = cols;
+                                        contentDiv.style.columnGap = cols > 1 ? '30px' : '0px';
+                                        var lo = 8, hi = 30;
+                                        while (hi - lo > 0.5) {
+                                            var mid = (lo + hi) / 2;
+                                            contentDiv.style.fontSize = mid + 'pt';
+                                            void contentDiv.offsetHeight;
+                                            if (contentDiv.scrollHeight <= maxH) lo = mid;
+                                            else hi = mid;
+                                        }
+                                        if (lo > bestFont) { bestFont = lo; bestCols = cols; }
+                                    }
+                                    contentDiv.style.columnCount = bestCols;
+                                    contentDiv.style.columnGap = bestCols > 1 ? '30px' : '0px';
+                                    contentDiv.style.fontSize = Math.floor(bestFont * 2) / 2 + 'pt';
+                                    contentDiv.style.overflow = 'hidden';
+                                    var remainH = 'calc(297mm - 70px' + (headerH ? ' - ' + headerH + 'px' : '') + ')';
+                                    contentDiv.style.height = remainH;
+                                    contentDiv.style.flex = 'none';
+                                    contentDiv.style.columnFill = 'auto';
+                                });
+                                if (btn) { btn.textContent = 'Optimized'; }
+                            }, 100);
+                        }
                     <\/script>
                 </body>
                 </html>
@@ -6062,7 +6184,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 if (pageCounter) pageCounter.style.display = 'block';
 
                 // Restore header
-                if (previewHeaderTitle) previewHeaderTitle.textContent = 'Print Preview & Transpose';
+                if (previewHeaderTitle) previewHeaderTitle.textContent = 'Song Preview';
 
                 // Restore preview layout
                 if (livePreview) {

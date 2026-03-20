@@ -44,6 +44,34 @@
 </head>
 
 <body>
+    <!-- Splash Screen Overlay -->
+    <div id="splashOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease;">
+        <video id="splashVideo" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;">
+            <source src="videos/features/LogoAnimation.mp4" type="video/mp4">
+        </video>
+    </div>
+    <script>
+    (function() {
+        var overlay = document.getElementById('splashOverlay');
+        var video = document.getElementById('splashVideo');
+        if (!overlay || !video) return;
+        // Show splash only once per session
+        if (sessionStorage.getItem('splashShown')) { overlay.remove(); return; }
+        sessionStorage.setItem('splashShown', '1');
+        // Tap to skip
+        overlay.addEventListener('click', dismiss);
+        // Auto-dismiss when video ends
+        video.addEventListener('ended', dismiss);
+        // Fallback: dismiss after 17s max
+        setTimeout(dismiss, 17000);
+        function dismiss() {
+            if (!overlay.parentNode) return;
+            overlay.style.opacity = '0';
+            setTimeout(function() { overlay.remove(); }, 500);
+        }
+    })();
+    </script>
+
     <header class="app-header">
         <div class="header-container">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -211,7 +239,7 @@
         <section class="preview-section" id="previewSection">
             <div class="preview-header">
                 <div class="preview-header-row">
-                    <h2 id="previewHeaderTitle" data-i18n="preview.title">Print Preview</h2>
+                    <h2 id="previewHeaderTitle" data-i18n="preview.title">Song Preview</h2>
 
                     <!-- All toolbar buttons in one clean row -->
                     <div class="header-btn-group">
@@ -3021,6 +3049,14 @@
                 </div>
             </div>
 
+            <!-- Song Navigation Arrows (leader only, centered on edges) -->
+            <button id="liveModeNavPrev" onclick="liveMode.previousSong()"
+                style="display: none; position: absolute; left: 4px; top: 50%; transform: translateY(-50%); z-index: 10001; width: 36px; height: 60px; background: var(--bg); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 18px; opacity: 0.4; padding: 0;"
+                title="Previous Song">&#9664;</button>
+            <button id="liveModeNavNext" onclick="liveMode.nextSong()"
+                style="display: none; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); z-index: 10001; width: 36px; height: 60px; background: var(--bg); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 18px; opacity: 0.4; padding: 0;"
+                title="Next Song">&#9654;</button>
+
             <!-- Playlist Sidebar (slide in from right) -->
             <div id="liveModePlaylistSidebar"
                 style="position: absolute; top: 0; right: -300px; width: 300px; height: 100%; background: var(--card-bg); border-left: 1px solid var(--border); overflow-y: auto; padding: 10px 12px 140px 12px; box-sizing: border-box; transition: right 0.3s ease; z-index: 10002;">
@@ -4024,12 +4060,96 @@
                 });
             }
 
-            // Header Load Song button
+            // Header Load Song button — opens library as inline side panel in editor area
             const headerLoadSong = document.getElementById('headerLoadSong');
             const mainLoadSongBtn = document.getElementById('loadSongButton');
             if (headerLoadSong && mainLoadSongBtn) {
+                let loadPanelOrigParent = null;
+                let editorWasVisible = true;
+
                 headerLoadSong.addEventListener('click', () => {
+                    const loadModal = document.getElementById('loadSongModal');
+                    const editorSection = document.getElementById('editor');
+                    if (!loadModal || !editorSection) {
+                        mainLoadSongBtn.click();
+                        return;
+                    }
+
+                    // If already open as side panel, close it and restore
+                    if (loadModal.classList.contains('side-panel-mode')) {
+                        loadModal.style.display = 'none';
+                        loadModal.classList.remove('side-panel-mode');
+                        headerLoadSong.classList.remove('active');
+                        if (loadPanelOrigParent) loadPanelOrigParent.appendChild(loadModal);
+                        const editorContent = document.getElementById('chordWorkspaceContent');
+                        if (editorContent) editorContent.style.display = '';
+                        // Restore editor visibility to what it was before
+                        if (!editorWasVisible) {
+                            editorSection.style.display = 'none';
+                            editorSection.classList.remove('editor-shown');
+                        }
+                        return;
+                    }
+
+                    // Remember original state
+                    loadPanelOrigParent = loadModal.parentElement;
+                    editorWasVisible = editorSection.style.display !== 'none';
+                    const editorContent = document.getElementById('chordWorkspaceContent');
+                    const isMobile = window.innerWidth <= 768;
+                    const previewWrapper = document.querySelector('.preview-scale-wrapper');
+
+                    if (isMobile && previewWrapper) {
+                        // Mobile: insert above preview so it's visible without scrolling
+                        previewWrapper.parentElement.insertBefore(loadModal, previewWrapper);
+                    } else {
+                        // Desktop: place in editor section as side panel
+                        editorSection.style.display = 'block';
+                        editorSection.classList.add('editor-shown');
+                        if (editorContent) editorContent.style.display = 'none';
+                        editorSection.appendChild(loadModal);
+                    }
+
+                    loadModal.classList.add('side-panel-mode');
+                    headerLoadSong.classList.add('active');
+
+                    // Trigger load (populates song list) — modal opens inside panel, no flash
                     mainLoadSongBtn.click();
+
+                    // Scroll to library on mobile
+                    if (isMobile) {
+                        setTimeout(() => loadModal.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                    }
+
+                    // Set up restore handlers
+                    setTimeout(() => {
+                        // When closing/loading, restore
+                        const restoreEditor = () => {
+                            loadModal.classList.remove('side-panel-mode');
+                            headerLoadSong.classList.remove('active');
+                            loadModal.style.display = 'none';
+                            if (loadPanelOrigParent) loadPanelOrigParent.appendChild(loadModal);
+                            if (!isMobile && editorContent) editorContent.style.display = '';
+                            // Restore editor visibility to original state
+                            if (!isMobile && !editorWasVisible) {
+                                editorSection.style.display = 'none';
+                                editorSection.classList.remove('editor-shown');
+                            }
+                        };
+
+                        const closeBtn = document.getElementById('loadSongClose');
+                        const cancelBtn = document.getElementById('loadSongCancel');
+                        if (closeBtn) closeBtn.addEventListener('click', restoreEditor, { once: true });
+                        if (cancelBtn) cancelBtn.addEventListener('click', restoreEditor, { once: true });
+
+                        // Also restore when a song is loaded (modal closes)
+                        const observer = new MutationObserver(() => {
+                            if (loadModal.style.display === 'none' || !loadModal.classList.contains('side-panel-mode')) {
+                                restoreEditor();
+                                observer.disconnect();
+                            }
+                        });
+                        observer.observe(loadModal, { attributes: true, attributeFilter: ['style', 'class'] });
+                    }, 50);
                 });
             }
 

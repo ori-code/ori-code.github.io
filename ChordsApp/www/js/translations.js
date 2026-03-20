@@ -58,8 +58,8 @@ const translations = {
         "step3.btn.raw": "👁️ Raw",
         "step3.raw.title": "Raw Output (v4 Format)",
 
-        // Print Preview Header
-        "preview.title": "Print Preview",
+        // Song Preview Header
+        "preview.title": "Song Preview",
         "preview.btn.controls": "🎛️ Controls",
         "preview.btn.editor": "✏️ Editor",
         "preview.btn.pads": "🎹 Pads",
@@ -408,8 +408,8 @@ const translations = {
         "step3.btn.raw": "👁️ טקסט גולמי",
         "step3.raw.title": "פלט גולמי (פורמט v4)",
 
-        // Print Preview Header
-        "preview.title": "תצוגה מקדימה",
+        // Song Preview Header
+        "preview.title": "תצוגת שיר",
         "preview.btn.controls": "🎛️ הגדרות",
         "preview.btn.editor": "✏️ עורך",
         "preview.btn.pads": "🎹 פדים",
