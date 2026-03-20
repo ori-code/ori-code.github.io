@@ -44,34 +44,6 @@
 </head>
 
 <body>
-    <!-- Splash Screen Overlay -->
-    <div id="splashOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease;">
-        <video id="splashVideo" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: contain;">
-            <source src="videos/features/LogoAnimation.mp4" type="video/mp4">
-        </video>
-    </div>
-    <script>
-    (function() {
-        var overlay = document.getElementById('splashOverlay');
-        var video = document.getElementById('splashVideo');
-        if (!overlay || !video) return;
-        // Show splash only once per session
-        if (sessionStorage.getItem('splashShown')) { overlay.remove(); return; }
-        sessionStorage.setItem('splashShown', '1');
-        // Tap to skip
-        overlay.addEventListener('click', dismiss);
-        // Auto-dismiss when video ends
-        video.addEventListener('ended', dismiss);
-        // Fallback: dismiss after 17s max
-        setTimeout(dismiss, 17000);
-        function dismiss() {
-            if (!overlay.parentNode) return;
-            overlay.style.opacity = '0';
-            setTimeout(function() { overlay.remove(); }, 500);
-        }
-    })();
-    </script>
-
     <header class="app-header">
         <div class="header-container">
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -633,7 +605,7 @@
                             </button>
                             <button id="toggleAchordimBrandingBtn" data-i18n="branding.hide_footer"
                                 style="display: none; font-size: 10px; padding: 2px 6px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; margin-top: 4px;">
-                                Hide aChordim footer
+                                Hide www.thefaithsound.com
                             </button>
                         </div>
                     </div>
@@ -975,8 +947,6 @@
                                     </div>
                                     <!-- aChordim branding (right, toggleable) -->
                                     <span id="achordimBranding" style="display: flex; align-items: center; gap: 6px;">
-                                        <img src="achordim-icon-app.svg" alt="" class="footer-icon">
-                                        <span class="footer-brand"><b dir="ltr">אChordim</b></span>
                                         <span class="footer-url">www.thefaith<span
                                                 class="footer-highlight">sound</span>.com</span>
                                     </span>
@@ -1202,7 +1172,8 @@
     </main>
 
     <footer class="app-footer">
-        <p>&copy; <span id="year"></span> The Faith Sound. <span data-i18n="footer.tagline">Built with love for people.</span></p>
+        <p>&copy; <span id="year"></span> The Faith Sound.</p>
+        <p><span data-i18n="footer.tagline">Built with love for people.</span></p>
         <p style="margin-top: 8px; font-size: 0.85rem;">
             <a href="privacy.html" style="color: var(--text-muted);" data-i18n="footer.privacy">Privacy Policy</a> ·
             <a href="terms.html" style="color: var(--text-muted);" data-i18n="footer.terms">Terms of Service</a>
@@ -3523,6 +3494,19 @@
 
     <!-- Firebase Configuration and Auth -->
     <script src="firebase-config.js"></script>
+    <script>
+    // Redirect non-signed-in users to features page (skip if ?playlist= or returning from auth)
+    (function() {
+        var params = new URLSearchParams(window.location.search);
+        if (params.has('playlist') || params.has('session') || params.has('noredirect')) return;
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (!user && !window._authRedirectDone) {
+                window._authRedirectDone = true;
+                window.location.href = 'features.html';
+            }
+        });
+    })();
+    </script>
     <script src="auth.js?v=92"></script>
 
     <!-- Subscription System -->
@@ -4354,7 +4338,7 @@
                 if (toggleBrandingBtn) {
                     const showKey = 'branding.show_footer';
                     const hideKey = 'branding.hide_footer';
-                    toggleBrandingBtn.textContent = window.t ? window.t(hidden ? showKey : hideKey) : (hidden ? 'Show aChordim footer' : 'Hide aChordim footer');
+                    toggleBrandingBtn.textContent = window.t ? window.t(hidden ? showKey : hideKey) : (hidden ? 'Show www.thefaithsound.com' : 'Hide www.thefaithsound.com');
                     toggleBrandingBtn.setAttribute('data-i18n', hidden ? showKey : hideKey);
                     toggleBrandingBtn.style.background = hidden ? 'var(--text)' : 'transparent';
                     toggleBrandingBtn.style.color = hidden ? 'var(--bg)' : 'var(--text)';

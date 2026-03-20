@@ -2264,7 +2264,6 @@ const liveMode = {
                         </div>
                         <div style="margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0; border-top: 1px solid #000; font-size: 11px; color: #000; direction: ltr;">
                             <span>www.thefaith<b>sound</b>.com</span>
-                            <span style="font-weight: 700;">א/aChordim</span>
                         </div>
                     </div>
                 `;

@@ -28,7 +28,7 @@ const translations = {
         "nav.menu.library": "Library",
 
         // Hero
-        "hero.title": "Turn any chord sheet into a printable, shareable, and presentable live-ready.",
+        "hero.title": "Turn any chord sheet into a printable, shareable and presentable live-ready for event.",
         "hero.subtitle": "Upload a handwritten sheet or photo, extract the music, refine the result, transpose to any key, then print with confidence.",
 
         // Workflow Steps
@@ -346,8 +346,8 @@ const translations = {
         // Branding
         "branding.placeholder": "Band / Church name...",
         "branding.remove_logo": "✕ Remove Logo",
-        "branding.hide_footer": "Hide aChordim footer",
-        "branding.show_footer": "Show aChordim footer",
+        "branding.hide_footer": "Hide www.thefaithsound.com",
+        "branding.show_footer": "Show www.thefaithsound.com",
 
         // Footer
         "footer.tagline": "Built with love for people.",
@@ -378,7 +378,7 @@ const translations = {
         "nav.menu.library": "ספרייה",
 
         // Hero
-        "hero.title": "הפוך כל דף אקורדים להדפסה, שיתוף והצגה חיה.",
+        "hero.title": "הפוך כל דף אקורדים למוכן להדפסה, שיתוף והצגה חיה לאירוע.",
         "hero.subtitle": "העלה צילום או קובץ, חלץ את המוזיקה אוטומטית, ערוך בקלות, שנה סולם, והדפס בביטחון.",
 
         // Workflow Steps
@@ -699,8 +699,8 @@ const translations = {
         // Branding
         "branding.placeholder": "שם הלהקה / קהילה...",
         "branding.remove_logo": "✕ הסר לוגו",
-        "branding.hide_footer": "הסתר aChordim",
-        "branding.show_footer": "הצג aChordim",
+        "branding.hide_footer": "הסתר www.thefaithsound.com",
+        "branding.show_footer": "הצג www.thefaithsound.com",
 
         // Footer
         "footer.tagline": "נבנה באהבה עבור אנשים.",

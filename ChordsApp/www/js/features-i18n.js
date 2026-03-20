@@ -5,7 +5,7 @@
         en: {
             'nav.features': 'Features', 'nav.how': 'How It Works', 'nav.pricing': 'Pricing', 'nav.cta': 'App',
             'hero.badge': 'Smart Chord Sheet Manager',
-            'hero.title': 'Turn any chord sheet into a printable, shareable, presentable live-ready chart',
+            'hero.title': 'Turn any chord sheet into a printable, shareable and presentable live-ready for event.',
             'hero.subtitle': 'Upload a handwritten sheet or photo — the system detects chords, lyrics, key and sections. Transpose, format, print, and play live with your band.',
             'hero.tagline': 'All in one app — aChordim.',
             'hero.cta': "Get Started — It's Free", 'hero.pricing': 'See Pricing',
@@ -39,7 +39,7 @@
         he: {
             'nav.features': 'תכונות', 'nav.how': 'איך זה עובד', 'nav.pricing': 'מחירים', 'nav.cta': 'אפליקציה',
             'hero.badge': 'מנהל דפי אקורדים חכם',
-            'hero.title': 'הפוך כל דף אקורדים לתרשים מוכן להדפסה, שיתוף, הצגה והופעה חיה',
+            'hero.title': 'הפוך כל דף אקורדים למוכן להדפסה, שיתוף והצגה חיה לאירוע.',
             'hero.subtitle': 'העלה דף בכתב יד או צילום — המערכת מזהה אוטומטית אקורדים, מילים, סולם ומקטעים. טרנספוז, עיצוב, הדפסה ונגינה חיה עם הלהקה.',
             'hero.tagline': '.aChordim — הכל באפליקציה אחת',
             'hero.cta': 'התחל בחינם', 'hero.pricing': 'ראה מחירים',
@@ -73,7 +73,7 @@
         ru: {
             'nav.features': 'Возможности', 'nav.how': 'Как это работает', 'nav.pricing': 'Цены', 'nav.cta': 'Приложение',
             'hero.badge': 'Умный менеджер аккордовых листов',
-            'hero.title': 'Превратите любой лист аккордов в готовую к печати, презентации и живому исполнению таблицу',
+            'hero.title': 'Превратите любой лист аккордов в готовый к печати, отправке и презентации для мероприятия.',
             'hero.subtitle': 'Загрузите рукописный лист или фото — система определит аккорды, слова, тональность и разделы. Транспонируйте, форматируйте, печатайте и играйте вживую.',
             'hero.tagline': 'Всё в одном приложении — aChordim.',
             'hero.cta': 'Начать бесплатно', 'hero.pricing': 'Цены',
@@ -107,7 +107,7 @@
         es: {
             'nav.features': 'Funciones', 'nav.how': 'Cómo funciona', 'nav.pricing': 'Precios', 'nav.cta': 'App',
             'hero.badge': 'Gestor inteligente de hojas de acordes',
-            'hero.title': 'Convierte cualquier hoja de acordes en un gráfico imprimible, compartible y listo para el escenario',
+            'hero.title': 'Convierte cualquier hoja de acordes en imprimible, compartible y presentable, lista para el evento.',
             'hero.subtitle': 'Sube una hoja manuscrita o una foto — el sistema detecta acordes, letras, tonalidad y secciones. Transpón, formatea, imprime y toca en vivo con tu banda.',
             'hero.tagline': 'Todo en una sola app — aChordim.',
             'hero.cta': 'Empezar gratis', 'hero.pricing': 'Ver precios',
@@ -141,7 +141,7 @@
         fr: {
             'nav.features': 'Fonctionnalités', 'nav.how': 'Comment ça marche', 'nav.pricing': 'Tarifs', 'nav.cta': 'App',
             'hero.badge': 'Gestionnaire intelligent de feuilles d\'accords',
-            'hero.title': 'Transformez toute feuille d\'accords en un tableau imprimable, partageable et prêt pour la scène',
+            'hero.title': 'Transformez toute feuille d\'accords en imprimable, partageable et présentable, prête pour l\'événement.',
             'hero.subtitle': 'Téléchargez une feuille manuscrite ou une photo — le système détecte les accords, paroles, tonalité et sections. Transposez, formatez, imprimez et jouez en live.',
             'hero.tagline': 'Tout en une seule app — aChordim.',
             'hero.cta': 'Commencer gratuitement', 'hero.pricing': 'Voir les tarifs',
@@ -175,7 +175,7 @@
         pt: {
             'nav.features': 'Recursos', 'nav.how': 'Como funciona', 'nav.pricing': 'Preços', 'nav.cta': 'App',
             'hero.badge': 'Gerenciador inteligente de cifras',
-            'hero.title': 'Transforme qualquer cifra em um gráfico imprimível, compartilhável e pronto para o palco',
+            'hero.title': 'Transforme qualquer cifra em imprimível, compartilhável e apresentável, pronta para o evento.',
             'hero.subtitle': 'Envie uma folha manuscrita ou foto — o sistema detecta acordes, letras, tom e seções. Transponha, formate, imprima e toque ao vivo com sua banda.',
             'hero.tagline': 'Tudo em um único app — aChordim.',
             'hero.cta': 'Começar grátis', 'hero.pricing': 'Ver preços',
