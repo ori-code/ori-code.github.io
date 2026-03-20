@@ -2579,14 +2579,14 @@
 
     <!-- Session Manager Modal (higher z-index for Live Mode) -->
     <div id="sessionManagerModal" class="modal-overlay" style="z-index: 100000;">
-        <div class="modal-container" style="max-width: 500px;">
-            <div class="modal-header" style="background: var(--bg); border-bottom: 1px solid var(--border);">
+        <div class="modal-container" style="max-width: 500px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0;">
                 <h3 style="display: flex; align-items: center; gap: 8px;">
                     <span></span> Manage Session
                 </h3>
                 <button class="modal-close" onclick="liveMode.closeSessionManager()">&times;</button>
             </div>
-            <div class="modal-body" style="padding: 16px;">
+            <div class="modal-body" style="padding: 16px; overflow-y: auto; flex: 1;">
                 <!-- Session Info -->
                 <div
                     style="text-align: center; padding: 12px; background: var(--bg); border: 1px solid var(--border); margin-bottom: 16px;">
@@ -2663,15 +2663,20 @@
                     <div id="singerLinkSection" style="display: none;">
                         <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Lyrics only, no
                             account needed</div>
-                        <div style="display: flex; gap: 8px;">
+                        <div id="singerQRCode" style="display: flex; justify-content: center; margin-bottom: 12px; background: #fff; padding: 12px; border: 1px solid var(--border);"></div>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                             <input type="text" id="sessionManagerSingerLink" readonly
                                 style="flex: 1; padding: 10px; font-size: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--text); cursor: pointer;"
                                 onclick="this.select()">
                             <button onclick="liveMode.copySingerLink()"
                                 style="padding: 10px 16px; background: transparent; color: var(--text); border: 1px solid var(--border); cursor: pointer; font-weight: 600; white-space: nowrap;">
-                                Copy
+                                Copy Link
                             </button>
                         </div>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('sessionManagerSingerLink').value); if(window.sessionUI) sessionUI.showToast('Singer code copied!')"
+                            style="width: 100%; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border); cursor: pointer; font-weight: 600;">
+                            Copy Code
+                        </button>
                     </div>
                     <div id="singerLinkDisabled"
                         style="padding: 12px; background: var(--surface); border: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 12px;">
@@ -2697,15 +2702,20 @@
                     <div id="presenterLinkSection" style="display: none;">
                         <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Lyrics only, no
                             account needed</div>
-                        <div style="display: flex; gap: 8px;">
+                        <div id="presenterQRCode" style="display: flex; justify-content: center; margin-bottom: 12px; background: #fff; padding: 12px; border: 1px solid var(--border);"></div>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                             <input type="text" id="sessionManagerPresenterLink" readonly
                                 style="flex: 1; padding: 10px; font-size: 12px; background: var(--surface); border: 1px solid var(--border); color: var(--text); cursor: pointer;"
                                 onclick="this.select()">
                             <button onclick="liveMode.copyPresenterLink()"
                                 style="padding: 10px 16px; background: transparent; color: var(--text); border: 1px solid var(--border); cursor: pointer; font-weight: 600; white-space: nowrap;">
-                                Copy
+                                Copy Link
                             </button>
                         </div>
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('sessionManagerPresenterLink').value); if(window.sessionUI) sessionUI.showToast('Presenter code copied!')"
+                            style="width: 100%; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border); cursor: pointer; font-weight: 600;">
+                            Copy Code
+                        </button>
                     </div>
                     <div id="presenterLinkDisabled"
                         style="padding: 12px; background: var(--surface); border: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 12px;">

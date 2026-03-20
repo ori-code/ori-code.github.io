@@ -962,10 +962,16 @@ const liveMode = {
             } else {
                 const origKeyShort = this._formatKeyShort(this.originalSongKey);
                 const currentKeyShort = this._formatKeyShort(this.currentKey);
-                if (this.currentCapo > 0) {
-                    songKeyEl.textContent = `Key: ${origKeyShort} (Capo ${this.currentCapo} → ${currentKeyShort})`;
-                } else if (origKeyShort !== currentKeyShort) {
-                    songKeyEl.textContent = `Key: ${origKeyShort} → ${currentKeyShort}`;
+                const isTransposed = this.currentTransposeSteps !== 0;
+                const hasCapo = this.currentCapo > 0;
+                // The "played" key = what chords are written as (transpose applied, capo NOT applied)
+                const playedKeyShort = isTransposed ? this._formatKeyShort(this._transposeKeyName(this.originalSongKey, this.currentTransposeSteps)) : origKeyShort;
+                if (isTransposed && hasCapo) {
+                    songKeyEl.textContent = `Key: ${origKeyShort} → ${playedKeyShort} (Capo ${this.currentCapo} → ${origKeyShort})`;
+                } else if (hasCapo) {
+                    songKeyEl.textContent = `Key: ${origKeyShort} (Capo ${this.currentCapo} → ${origKeyShort})`;
+                } else if (isTransposed) {
+                    songKeyEl.textContent = `Key: ${origKeyShort} → ${playedKeyShort}`;
                 } else {
                     songKeyEl.textContent = `Key: ${origKeyShort}`;
                 }
@@ -1011,10 +1017,15 @@ const liveMode = {
             if (keySpan) {
                 const origS = this._formatKeyShort(this.originalSongKey);
                 const curS = this._formatKeyShort(this.currentKey);
-                if (this.currentCapo > 0) {
-                    keySpan.textContent = `Key: ${origS} (Capo ${this.currentCapo} → ${curS})`;
-                } else if (origS !== curS) {
-                    keySpan.textContent = `Key: ${origS} → ${curS}`;
+                const isT = this.currentTransposeSteps !== 0;
+                const hasC = this.currentCapo > 0;
+                const playedS = isT ? this._formatKeyShort(this._transposeKeyName(this.originalSongKey, this.currentTransposeSteps)) : origS;
+                if (isT && hasC) {
+                    keySpan.textContent = `Key: ${origS} → ${playedS} (Capo ${this.currentCapo} → ${origS})`;
+                } else if (hasC) {
+                    keySpan.textContent = `Key: ${origS} (Capo ${this.currentCapo} → ${origS})`;
+                } else if (isT) {
+                    keySpan.textContent = `Key: ${origS} → ${playedS}`;
                 } else {
                     keySpan.textContent = `Key: ${origS}`;
                 }
@@ -1034,6 +1045,20 @@ const liveMode = {
         const note = parts[0];
         const isMinor = parts[1] && parts[1].toLowerCase() === 'minor';
         return isMinor ? `${note}m` : note;
+    },
+
+    _transposeKeyName(key, steps) {
+        if (!key || !steps) return key;
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const flatToSharp = { 'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B' };
+        const parts = key.split(' ');
+        let note = parts[0];
+        const quality = parts.slice(1).join(' ') || 'Major';
+        if (flatToSharp[note]) note = flatToSharp[note];
+        const idx = notes.indexOf(note);
+        if (idx === -1) return key;
+        const newIdx = ((idx + steps) % 12 + 12) % 12;
+        return `${notes[newIdx]} ${quality}`;
     },
 
     /**
@@ -2082,14 +2107,18 @@ const liveMode = {
                     const originalKey = song.originalKey || song.key || '--';
                     // If this is the currently loaded song and it's been transposed, show both keys
                     let displayKey = originalKey;
-                    if (isCurrent && liveMode.currentTransposeSteps !== 0) {
-                        const transposedKey = liveMode._formatKeyShort(liveMode.currentKey);
+                    if (isCurrent) {
                         const origShort = liveMode._formatKeyShort(originalKey);
-                        displayKey = `${origShort} → ${transposedKey}`;
-                    } else if (isCurrent && liveMode.currentCapo > 0) {
-                        const capoKey = liveMode._formatKeyShort(liveMode.currentKey);
-                        const origShort = liveMode._formatKeyShort(originalKey);
-                        displayKey = `${origShort} (C${liveMode.currentCapo} → ${capoKey})`;
+                        const curShort = liveMode._formatKeyShort(liveMode.currentKey);
+                        const isT = origShort !== curShort && liveMode.currentTransposeSteps !== 0;
+                        const hasC = liveMode.currentCapo > 0;
+                        if (isT && hasC) {
+                            displayKey = `${origShort} → ${curShort} (C${liveMode.currentCapo})`;
+                        } else if (hasC) {
+                            displayKey = `${origShort} (C${liveMode.currentCapo})`;
+                        } else if (isT) {
+                            displayKey = `${origShort} → ${curShort}`;
+                        }
                     }
                     const displayTimeSig = song.timeSignature || '4/4';
 
@@ -3279,6 +3308,16 @@ const liveMode = {
             if (singerLinkSection) singerLinkSection.style.display = allowSingers ? 'block' : 'none';
             if (singerLinkDisabled) singerLinkDisabled.style.display = allowSingers ? 'none' : 'block';
 
+            // Generate Singer QR code if enabled
+            if (allowSingers) {
+                const singerQR = document.getElementById('singerQRCode');
+                const singerLinkEl = document.getElementById('sessionManagerSingerLink');
+                if (singerQR && singerLinkEl && singerLinkEl.value && typeof QRCode !== 'undefined') {
+                    singerQR.innerHTML = '';
+                    new QRCode(singerQR, { text: singerLinkEl.value, width: 150, height: 150, colorDark: '#000', colorLight: '#fff' });
+                }
+            }
+
             // Update allowPresenters toggle and visibility
             const allowPresentersToggle = document.getElementById('allowPresentersToggle');
             const presenterLinkSection = document.getElementById('presenterLinkSection');
@@ -3288,6 +3327,16 @@ const liveMode = {
             if (allowPresentersToggle) allowPresentersToggle.checked = allowPresenters;
             if (presenterLinkSection) presenterLinkSection.style.display = allowPresenters ? 'block' : 'none';
             if (presenterLinkDisabled) presenterLinkDisabled.style.display = allowPresenters ? 'none' : 'block';
+
+            // Generate Presenter QR code if enabled
+            if (allowPresenters) {
+                const presenterQR = document.getElementById('presenterQRCode');
+                const presenterLinkEl = document.getElementById('sessionManagerPresenterLink');
+                if (presenterQR && presenterLinkEl && presenterLinkEl.value && typeof QRCode !== 'undefined') {
+                    presenterQR.innerHTML = '';
+                    new QRCode(presenterQR, { text: presenterLinkEl.value, width: 150, height: 150, colorDark: '#000', colorLight: '#fff' });
+                }
+            }
         } catch (err) {
             console.error('Error loading session metadata:', err);
         }
@@ -3568,7 +3617,17 @@ const liveMode = {
             if (singerLinkSection) singerLinkSection.style.display = allowed ? 'block' : 'none';
             if (singerLinkDisabled) singerLinkDisabled.style.display = allowed ? 'none' : 'block';
 
-            this.showToast(allowed ? '🎤 Singers enabled' : '🎤 Singers disabled');
+            // Generate Singer QR code
+            if (allowed) {
+                const singerQR = document.getElementById('singerQRCode');
+                const singerLink = document.getElementById('sessionManagerSingerLink');
+                if (singerQR && singerLink && singerLink.value && typeof QRCode !== 'undefined') {
+                    singerQR.innerHTML = '';
+                    new QRCode(singerQR, { text: singerLink.value, width: 150, height: 150, colorDark: '#000', colorLight: '#fff' });
+                }
+            }
+
+            this.showToast(allowed ? 'Singers enabled' : 'Singers disabled');
         } catch (err) {
             console.error('Error toggling allow singers:', err);
             this.showToast('Failed to update setting');
@@ -3591,7 +3650,17 @@ const liveMode = {
             if (presenterLinkSection) presenterLinkSection.style.display = allowed ? 'block' : 'none';
             if (presenterLinkDisabled) presenterLinkDisabled.style.display = allowed ? 'none' : 'block';
 
-            this.showToast(allowed ? '📺 Presenters enabled' : '📺 Presenters disabled');
+            // Generate Presenter QR code
+            if (allowed) {
+                const presenterQR = document.getElementById('presenterQRCode');
+                const presenterLink = document.getElementById('sessionManagerPresenterLink');
+                if (presenterQR && presenterLink && presenterLink.value && typeof QRCode !== 'undefined') {
+                    presenterQR.innerHTML = '';
+                    new QRCode(presenterQR, { text: presenterLink.value, width: 150, height: 150, colorDark: '#000', colorLight: '#fff' });
+                }
+            }
+
+            this.showToast(allowed ? 'Presenters enabled' : 'Presenters disabled');
         } catch (err) {
             console.error('Error toggling allow presenters:', err);
             this.showToast('Failed to update setting');
