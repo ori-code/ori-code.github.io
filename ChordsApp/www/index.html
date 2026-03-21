@@ -151,10 +151,10 @@
 
             <!-- Paste area (hidden by default) -->
             <div id="pasteArea" style="display: none; width: 100%;">
-                <div style="display: flex; gap: 6px; width: 100%; align-items: flex-start;">
+                <div style="display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center;">
                     <textarea id="contentInput" rows="1" placeholder="Paste URL or chord text..."
-                        style="flex: 1; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); outline: none; font-family: inherit; resize: vertical; min-height: 36px; max-height: 200px;"></textarea>
-                    <button class="upload-btn" id="fetchUrlBtn">Go</button>
+                        style="width: 100%; padding: 8px 10px; font-size: 13px; background: var(--bg); color: var(--text); border: 1px solid var(--border); outline: none; font-family: inherit; resize: vertical; min-height: 36px; max-height: 200px; box-sizing: border-box;"></textarea>
+                    <button class="upload-btn" id="fetchUrlBtn" style="width: 50%;">Go</button>
                 </div>
             </div>
 
@@ -5763,6 +5763,21 @@
                     return result.transcription;
                 }
 
+                function showScannerAnimation(show, statusMsg) {
+                    const statusPanel = document.getElementById('analysisStatus');
+                    const statusText = statusPanel?.querySelector('.status-text');
+                    const statusDot = statusPanel?.querySelector('.status-dot');
+                    if (show) {
+                        if (statusPanel) statusPanel.classList.add('analyzing');
+                        if (statusDot) { statusDot.className = 'status-dot analyzing'; }
+                        if (statusText) statusText.textContent = statusMsg || 'Analyzing...';
+                    } else {
+                        if (statusPanel) statusPanel.classList.remove('analyzing');
+                        if (statusDot) { statusDot.className = 'status-dot idle'; }
+                        if (statusText) statusText.textContent = 'Done';
+                    }
+                }
+
                 async function handleContentInput() {
                     const input = contentInput.value.trim();
                     if (!input) return;
@@ -5770,6 +5785,7 @@
                     const isUrl = /^https?:\/\//i.test(input);
                     fetchUrlBtn.textContent = '...';
                     fetchUrlBtn.disabled = true;
+                    showScannerAnimation(true, isUrl ? 'Fetching URL...' : 'Analyzing text...');
 
                     try {
                         if (!isUrl) {
@@ -5778,6 +5794,7 @@
                             processAIResult(formatted);
                             contentInput.value = '';
                             contentInput.style.height = 'auto';
+                            showScannerAnimation(false);
                             return;
                         }
 
@@ -5803,13 +5820,15 @@
                             handleImageFile(file);
                         } else {
                             // Webpage text: send through AI for v4 conversion
-                            fetchUrlBtn.textContent = 'AI...';
+                            showScannerAnimation(true, 'AI analyzing...');
                             const formatted = await analyzeTextWithAI(result.data);
                             processAIResult(formatted);
                         }
                         contentInput.value = '';
                         contentInput.style.height = 'auto';
+                        showScannerAnimation(false);
                     } catch (err) {
+                        showScannerAnimation(false);
                         window.showAlert && showAlert(err.message || 'Could not fetch URL content.');
                     } finally {
                         fetchUrlBtn.textContent = 'Go';
