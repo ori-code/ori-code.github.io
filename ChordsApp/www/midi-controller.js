@@ -16,6 +16,16 @@ const midiController = {
         prevSong: 33     // CC#33
     },
 
+    // Keyboard key mappings
+    keyMappingConfig: {
+        scrollDown: null,  // e.g. 'ArrowRight'
+        scrollUp: null,
+        nextSong: null,
+        prevSong: null
+    },
+    learningKeyAction: null,
+    lastKeyTime: 0,
+
     // Action handlers (set by live-mode.js)
     actions: {
         scrollDown: null,
@@ -199,6 +209,86 @@ const midiController = {
         }
     },
 
+    // ============== Keyboard Learn ==============
+
+    learnKey(action) {
+        this.learningKeyAction = action;
+        this.updateStatus(`Press key for: ${this.getActionLabel(action)}`);
+
+        const mappingEl = document.getElementById(`keyMapping-${action}`);
+        if (mappingEl) {
+            mappingEl.textContent = 'Press...';
+            mappingEl.style.color = '#fbbf24';
+        }
+    },
+
+    cancelKeyLearn() {
+        if (this.learningKeyAction) {
+            this.updateKeyMappingDisplay(this.learningKeyAction);
+            this.learningKeyAction = null;
+        }
+    },
+
+    setKeyMapping(action, key) {
+        this.keyMappingConfig[action] = key;
+        this.updateKeyMappingDisplay(action);
+        this.updateStatus(`${this.getActionLabel(action)} → ${this._keyLabel(key)}`);
+    },
+
+    handleKeyDown(event) {
+        // Ignore when typing in inputs
+        const tag = event.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+        // If learning, capture the key
+        if (this.learningKeyAction) {
+            event.preventDefault();
+            this.setKeyMapping(this.learningKeyAction, event.code);
+            this.learningKeyAction = null;
+            return;
+        }
+
+        // Debounce
+        const now = Date.now();
+        if (now - this.lastKeyTime < this.DEBOUNCE_MS) return;
+
+        // Check if any action is mapped to this key
+        for (const [action, key] of Object.entries(this.keyMappingConfig)) {
+            if (key === event.code && this.actions[action]) {
+                event.preventDefault();
+                this.actions[action]();
+                this.lastKeyTime = now;
+                return;
+            }
+        }
+    },
+
+    updateKeyMappingDisplay(action) {
+        const mappingEl = document.getElementById(`keyMapping-${action}`);
+        if (mappingEl) {
+            const key = this.keyMappingConfig[action];
+            mappingEl.textContent = key ? this._keyLabel(key) : '—';
+            mappingEl.style.color = key ? '#4ade80' : 'var(--text)';
+        }
+    },
+
+    _keyLabel(code) {
+        const labels = {
+            ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→',
+            Space: 'Space', Enter: 'Enter', Escape: 'Esc',
+            Backspace: '⌫', Tab: 'Tab', Delete: 'Del',
+        };
+        if (labels[code]) return labels[code];
+        // KeyA → A, Digit1 → 1, etc.
+        return code.replace('Key', '').replace('Digit', '');
+    },
+
+    refreshKeyMappingDisplays() {
+        for (const action of Object.keys(this.keyMappingConfig)) {
+            this.updateKeyMappingDisplay(action);
+        }
+    },
+
     /**
      * Set a mapping and update display
      */
@@ -261,6 +351,7 @@ const midiController = {
         if (!user) {
             console.log('User not logged in, saving to localStorage');
             localStorage.setItem('midiMappings', JSON.stringify(this.mappingConfig));
+            localStorage.setItem('keyMappings', JSON.stringify(this.keyMappingConfig));
             return;
         }
 
@@ -268,12 +359,15 @@ const midiController = {
             await firebase.database()
                 .ref(`users/${user.uid}/midiMappings`)
                 .set(this.mappingConfig);
-            console.log('MIDI mappings saved to Firebase');
+            await firebase.database()
+                .ref(`users/${user.uid}/keyMappings`)
+                .set(this.keyMappingConfig);
+            console.log('MIDI + Key mappings saved to Firebase');
             this.updateStatus('Mappings saved!');
         } catch (error) {
-            console.error('Error saving MIDI mappings:', error);
-            // Fallback to localStorage
+            console.error('Error saving mappings:', error);
             localStorage.setItem('midiMappings', JSON.stringify(this.mappingConfig));
+            localStorage.setItem('keyMappings', JSON.stringify(this.keyMappingConfig));
         }
     },
 
@@ -285,33 +379,46 @@ const midiController = {
 
         if (user) {
             try {
-                const snapshot = await firebase.database()
+                const midiSnap = await firebase.database()
                     .ref(`users/${user.uid}/midiMappings`)
                     .once('value');
-                const savedMappings = snapshot.val();
-
+                const savedMappings = midiSnap.val();
                 if (savedMappings) {
                     this.mappingConfig = { ...this.mappingConfig, ...savedMappings };
-                    console.log('MIDI mappings loaded from Firebase:', this.mappingConfig);
-                    this.refreshMappingDisplays();
-                    return;
                 }
+
+                const keySnap = await firebase.database()
+                    .ref(`users/${user.uid}/keyMappings`)
+                    .once('value');
+                const savedKeyMappings = keySnap.val();
+                if (savedKeyMappings) {
+                    this.keyMappingConfig = { ...this.keyMappingConfig, ...savedKeyMappings };
+                }
+
+                console.log('Mappings loaded from Firebase:', this.mappingConfig, this.keyMappingConfig);
+                this.refreshMappingDisplays();
+                this.refreshKeyMappingDisplays();
+                return;
             } catch (error) {
-                console.error('Error loading MIDI mappings:', error);
+                console.error('Error loading mappings:', error);
             }
         }
 
         // Fallback to localStorage
-        const localMappings = localStorage.getItem('midiMappings');
-        if (localMappings) {
+        const localMidi = localStorage.getItem('midiMappings');
+        if (localMidi) {
             try {
-                this.mappingConfig = { ...this.mappingConfig, ...JSON.parse(localMappings) };
-                console.log('MIDI mappings loaded from localStorage:', this.mappingConfig);
-                this.refreshMappingDisplays();
-            } catch (e) {
-                console.error('Error parsing localStorage MIDI mappings:', e);
-            }
+                this.mappingConfig = { ...this.mappingConfig, ...JSON.parse(localMidi) };
+            } catch (e) { /* ignore */ }
         }
+        const localKeys = localStorage.getItem('keyMappings');
+        if (localKeys) {
+            try {
+                this.keyMappingConfig = { ...this.keyMappingConfig, ...JSON.parse(localKeys) };
+            } catch (e) { /* ignore */ }
+        }
+        this.refreshMappingDisplays();
+        this.refreshKeyMappingDisplays();
     },
 
     /**
@@ -321,6 +428,7 @@ const midiController = {
         for (const action of Object.keys(this.mappingConfig)) {
             this.updateMappingDisplay(action);
         }
+        this.refreshKeyMappingDisplays();
     },
 
     /**

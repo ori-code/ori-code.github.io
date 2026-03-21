@@ -5643,24 +5643,28 @@ const liveMode = {
             return false;
         }
 
+        // Set up action handlers (used by both MIDI and keyboard)
+        midiController.actions.scrollDown = () => this.navigateSection(1);
+        midiController.actions.scrollUp = () => this.navigateSection(-1);
+        midiController.actions.nextSong = () => this.nextSong();
+        midiController.actions.prevSong = () => this.previousSong();
+
         // Initialize MIDI access
         const success = await midiController.init();
 
-        if (success) {
-            // Set up action handlers - CC30/31 navigate sections, CC32/33 navigate songs
-            midiController.actions.scrollDown = () => this.navigateSection(1);   // Next section
-            midiController.actions.scrollUp = () => this.navigateSection(-1);    // Previous section
-            midiController.actions.nextSong = () => this.nextSong();
-            midiController.actions.prevSong = () => this.previousSong();
+        // Load saved mappings (MIDI + keyboard)
+        await midiController.loadMappings();
 
-            // Load saved mappings
-            await midiController.loadMappings();
-
-            console.log('🎹 MIDI controller initialized for Live Mode');
-            return true;
+        // Register keyboard listener (works even without MIDI devices)
+        if (!midiController._keyListenerRegistered) {
+            document.addEventListener('keydown', (e) => {
+                if (this.isActive) midiController.handleKeyDown(e);
+            });
+            midiController._keyListenerRegistered = true;
         }
 
-        return false;
+        console.log('🎹 MIDI + Keyboard controller initialized for Live Mode');
+        return success;
     },
 
     // ============== Auto-Scroll Feature ==============

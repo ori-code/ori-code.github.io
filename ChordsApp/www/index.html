@@ -3482,57 +3482,61 @@
             <button onclick="closeMidiSettings()"
                 style="position: absolute; top: 12px; right: 12px; background: transparent; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
 
-            <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px;">MIDI Controller</h3>
-            <p id="midiDeviceStatus" style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Checking
+            <h3 style="margin: 0 0 8px 0; color: var(--text); font-size: 18px;">MIDI & Keys</h3>
+            <p id="midiDeviceStatus" style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Checking
                 devices...</p>
 
-            <!-- MIDI Mappings -->
-            <div style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Mappings -->
+            <div style="display: flex; flex-direction: column; gap: 8px;">
                 <!-- Next Section -->
-                <div
-                    style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border);">
-                    <span style="color: var(--text); font-size: 13px;">Next Section</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span id="midiMapping-scrollDown"
-                            style="color: var(--text); font-size: 12px; font-family: monospace;">CC#30</span>
-                        <button onclick="midiController.learn('scrollDown')"
-                            style="padding: 4px 10px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 11px;">Learn</button>
+                <div style="padding: 8px 10px; background: var(--button-bg); border: 1px solid var(--border);">
+                    <div style="color: var(--text); font-size: 13px; font-weight: 600; margin-bottom: 6px;">Next Section</div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: var(--text-muted); font-size: 10px; width: 30px;">MIDI</span>
+                        <span id="midiMapping-scrollDown" style="color: var(--text); font-size: 12px; font-family: monospace; min-width: 50px;">CC#30</span>
+                        <button onclick="midiController.learn('scrollDown')" style="padding: 3px 8px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 10px;">Learn</button>
+                        <span style="color: var(--text-muted); font-size: 10px; margin-left: 8px; width: 24px;">Key</span>
+                        <span id="keyMapping-scrollDown" style="color: var(--text); font-size: 12px; font-family: monospace; min-width: 36px;">—</span>
+                        <button onclick="midiController.learnKey('scrollDown')" style="padding: 3px 8px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 10px;">Learn</button>
                     </div>
                 </div>
 
                 <!-- Previous Section -->
-                <div
-                    style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border);">
-                    <span style="color: var(--text); font-size: 13px;">Previous Section</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span id="midiMapping-scrollUp"
-                            style="color: var(--text); font-size: 12px; font-family: monospace;">CC#31</span>
-                        <button onclick="midiController.learn('scrollUp')"
-                            style="padding: 4px 10px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 11px;">Learn</button>
+                <div style="padding: 8px 10px; background: var(--button-bg); border: 1px solid var(--border);">
+                    <div style="color: var(--text); font-size: 13px; font-weight: 600; margin-bottom: 6px;">Previous Section</div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: var(--text-muted); font-size: 10px; width: 30px;">MIDI</span>
+                        <span id="midiMapping-scrollUp" style="color: var(--text); font-size: 12px; font-family: monospace; min-width: 50px;">CC#31</span>
+                        <button onclick="midiController.learn('scrollUp')" style="padding: 3px 8px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 10px;">Learn</button>
+                        <span style="color: var(--text-muted); font-size: 10px; margin-left: 8px; width: 24px;">Key</span>
+                        <span id="keyMapping-scrollUp" style="color: var(--text); font-size: 12px; font-family: monospace; min-width: 36px;">—</span>
+                        <button onclick="midiController.learnKey('scrollUp')" style="padding: 3px 8px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 10px;">Learn</button>
                     </div>
                 </div>
 
                 <!-- Next Song -->
-                <div
-                    style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border);">
-                    <span style="color: var(--text); font-size: 13px;">Next Song</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span id="midiMapping-nextSong"
-                            style="color: var(--text); font-size: 12px; font-family: monospace;">CC#32</span>
-                        <button onclick="midiController.learn('nextSong')"
-                            style="padding: 4px 10px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 11px;">Learn</button>
+                <div style="padding: 8px 10px; background: var(--button-bg); border: 1px solid var(--border);">
+                    <div style="color: var(--text); font-size: 13px; font-weight: 600; margin-bottom: 6px;">Next Song</div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: var(--text-muted); font-size: 10px; width: 30px;">MIDI</span>
+                        <span id="midiMapping-nextSong" style="color: var(--text); font-size: 12px; font-family: monospace; min-width: 50px;">CC#32</span>
+                        <button onclick="midiController.learn('nextSong')" style="padding: 3px 8px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 10px;">Learn</button>
+                        <span style="color: var(--text-muted); font-size: 10px; margin-left: 8px; width: 24px;">Key</span>
+                        <span id="keyMapping-nextSong" style="color: var(--text); font-size: 12px; font-family: monospace; min-width: 36px;">—</span>
+                        <button onclick="midiController.learnKey('nextSong')" style="padding: 3px 8px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 10px;">Learn</button>
                     </div>
                 </div>
 
                 <!-- Previous Song -->
-                <div
-                    style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--button-bg); border: 1px solid var(--border);">
-                    <span style="color: var(--text); font-size: 13px;">Previous Song</span>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span id="midiMapping-prevSong"
-                            style="color: var(--text); font-size: 12px; font-family: monospace;">CC#33</span>
-                        <button onclick="midiController.learn('prevSong')"
-                            style="padding: 4px 10px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 11px;">Learn</button>
+                <div style="padding: 8px 10px; background: var(--button-bg); border: 1px solid var(--border);">
+                    <div style="color: var(--text); font-size: 13px; font-weight: 600; margin-bottom: 6px;">Previous Song</div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: var(--text-muted); font-size: 10px; width: 30px;">MIDI</span>
+                        <span id="midiMapping-prevSong" style="color: var(--text); font-size: 12px; font-family: monospace; min-width: 50px;">CC#33</span>
+                        <button onclick="midiController.learn('prevSong')" style="padding: 3px 8px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 10px;">Learn</button>
+                        <span style="color: var(--text-muted); font-size: 10px; margin-left: 8px; width: 24px;">Key</span>
+                        <span id="keyMapping-prevSong" style="color: var(--text); font-size: 12px; font-family: monospace; min-width: 36px;">—</span>
+                        <button onclick="midiController.learnKey('prevSong')" style="padding: 3px 8px; background: var(--text); color: var(--bg); border: none; cursor: pointer; font-size: 10px;">Learn</button>
                     </div>
                 </div>
             </div>
@@ -3719,6 +3723,7 @@
                 // Cancel learn mode if active
                 if (window.midiController) {
                     midiController.cancelLearn();
+                    midiController.cancelKeyLearn();
                 }
             }
         }
