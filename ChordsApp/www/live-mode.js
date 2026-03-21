@@ -4619,6 +4619,13 @@ const liveMode = {
         // Update display
         this.updateDisplay();
 
+        // Presenter + focus mode: hide all sections until leader selects one
+        if (this.isPresenterMode && this.focusMode) {
+            document.querySelectorAll('.song-section-block').forEach(block => {
+                block.style.display = 'none';
+            });
+        }
+
         // Apply per-song preferences after display update
         const chartDisplay = document.getElementById('liveModeChartDisplay');
         if (chartDisplay) {
