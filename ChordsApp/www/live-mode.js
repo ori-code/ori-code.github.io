@@ -635,28 +635,7 @@ const liveMode = {
         }
 
         // Hide controls that singers shouldn't see
-        const controlsToHide = [
-            'liveModeDisplayMode',       // No display mode dropdown
-            'liveModeKeySection',        // Hide entire KEY section (transpose + capo + key grid)
-            'liveModeTransposeRow',      // Fallback: hide transpose row
-            'liveModeCapoRow',           // Fallback: hide capo row
-            'liveModeKeyGrid'            // Fallback: hide key grid
-        ];
-
-        controlsToHide.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-
-        // Hide filled chords toggle and opacity slider (no chords in singer mode)
-        const filledChordsToggle = document.getElementById('filledChordsToggle');
-        if (filledChordsToggle && filledChordsToggle.parentElement) {
-            filledChordsToggle.parentElement.style.display = 'none';
-        }
-        const chordFillSlider = document.getElementById('chordFillSlider');
-        if (chordFillSlider && chordFillSlider.parentElement) {
-            chordFillSlider.parentElement.style.display = 'none';
-        }
+        this._applySingerModeRestrictions();
 
         // Update UI to show singer mode
         const songNameEl = document.getElementById('liveModeSongName');
@@ -676,6 +655,51 @@ const liveMode = {
         }
 
         console.log('🎤 Entered Singer Mode (lyrics only, no chords)');
+    },
+
+    /**
+     * Apply singer mode UI restrictions — hides controls singers shouldn't see.
+     * Called from enterSingerMode() and after every updateDisplay() to ensure
+     * controls stay hidden even if other code re-shows them.
+     */
+    _applySingerModeRestrictions() {
+        if (!this.isSingerMode) return;
+
+        // Force lyrics mode
+        this.displayMode = 'lyrics';
+        const displayDropdown = document.getElementById('liveModeDisplayMode');
+        if (displayDropdown) {
+            displayDropdown.value = 'lyrics';
+            displayDropdown.style.display = 'none';
+        }
+
+        // Hide key section and all key-related controls
+        ['liveModeKeySection', 'liveModeTransposeRow', 'liveModeCapoRow', 'liveModeKeyGrid'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+
+        // Hide filled chords toggle and opacity slider
+        const filledChordsToggle = document.getElementById('filledChordsToggle');
+        if (filledChordsToggle && filledChordsToggle.parentElement) {
+            filledChordsToggle.parentElement.style.display = 'none';
+        }
+        const chordFillSlider = document.getElementById('chordFillSlider');
+        if (chordFillSlider && chordFillSlider.parentElement) {
+            chordFillSlider.parentElement.style.display = 'none';
+        }
+    },
+
+    /**
+     * Apply presenter mode UI restrictions — hides key controls but keeps display dropdown.
+     */
+    _applyPresenterModeRestrictions() {
+        if (!this.isPresenterMode) return;
+
+        ['liveModeKeySection', 'liveModeTransposeRow', 'liveModeCapoRow'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
     },
 
     /**
@@ -1098,6 +1122,10 @@ const liveMode = {
         // Update key grid and capo suggestion
         this._updateLiveKeyGrid();
         this._updateCapoSuggestion();
+
+        // Re-apply mode restrictions after every render
+        this._applySingerModeRestrictions();
+        this._applyPresenterModeRestrictions();
     },
 
     /**
