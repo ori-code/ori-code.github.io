@@ -3122,6 +3122,18 @@
                             style="width: 24px; height: 28px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 10px; font-weight: 600; padding: 0; opacity: 0.6;">R</button>
                     </div>
                 </div>
+                <!-- Quick Key Grid -->
+                <div id="liveModeKeyGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 6px;">
+                    <button class="live-key-btn" data-key="C" onclick="liveMode.transposeToKey('C')" style="padding: 4px 0; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">C</button>
+                    <button class="live-key-btn" data-key="D" onclick="liveMode.transposeToKey('D')" style="padding: 4px 0; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">D</button>
+                    <button class="live-key-btn" data-key="E" onclick="liveMode.transposeToKey('E')" style="padding: 4px 0; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">E</button>
+                    <button class="live-key-btn" data-key="F" onclick="liveMode.transposeToKey('F')" style="padding: 4px 0; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">F</button>
+                    <button class="live-key-btn" data-key="G" onclick="liveMode.transposeToKey('G')" style="padding: 4px 0; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">G</button>
+                    <button class="live-key-btn" data-key="A" onclick="liveMode.transposeToKey('A')" style="padding: 4px 0; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">A</button>
+                    <button class="live-key-btn" data-key="B" onclick="liveMode.transposeToKey('B')" style="padding: 4px 0; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 11px; font-weight: 600;">B</button>
+                </div>
+                <!-- Smart Capo Suggestion -->
+                <div id="liveModeCapoSuggestion" style="display: none; margin-top: 4px; padding: 4px 8px; font-size: 10px; color: var(--text); opacity: 0.7; border: 1px solid var(--border); text-align: center; cursor: pointer;" onclick="liveMode.applyCapoSuggestion()"></div>
             </div>
 
             <!-- METRONOME -->
@@ -3505,17 +3517,17 @@
     <!-- Firebase Configuration and Auth -->
     <script src="firebase-config.js"></script>
     <script>
-    // Redirect non-signed-in users to features page (skip if ?playlist= or returning from auth)
-    (function() {
-        var params = new URLSearchParams(window.location.search);
-        if (params.has('playlist') || params.has('session') || params.has('noredirect')) return;
-        firebase.auth().onAuthStateChanged(function(user) {
-            if (!user && !window._authRedirectDone) {
-                window._authRedirectDone = true;
-                window.location.href = 'features.html';
-            }
-        });
-    })();
+    // Redirect to features page disabled — allow non-signed-in users to use the app
+    // (function() {
+    //     var params = new URLSearchParams(window.location.search);
+    //     if (params.has('playlist') || params.has('session') || params.has('noredirect')) return;
+    //     firebase.auth().onAuthStateChanged(function(user) {
+    //         if (!user && !window._authRedirectDone) {
+    //             window._authRedirectDone = true;
+    //             window.location.href = 'features.html';
+    //         }
+    //     });
+    // })();
     </script>
     <script src="auth.js?v=92"></script>
 
