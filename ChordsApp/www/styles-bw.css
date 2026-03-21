@@ -1900,6 +1900,11 @@ input[type="checkbox"]:checked::after {
     visibility: hidden !important;
 }
 
+/* Hide song header (title, key, BPM, author) */
+.hide-header .song-header {
+    display: none !important;
+}
+
 /* Live Mode */
 #liveModeChartDisplay {
     margin-top: 0 !important;

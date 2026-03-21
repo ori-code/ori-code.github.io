@@ -16,6 +16,7 @@ const liveMode = {
     displayMode: 'chords',
     showBadges: true,
     showTags: true,
+    showHeader: true,
     showBorders: true,
     showTimeline: false, // Hidden by default, auto-shows when auto-scroll is ON
     autoHidePlaylist: true,
@@ -62,6 +63,7 @@ const liveMode = {
             displayMode: this.displayMode,
             showBadges: this.showBadges,
             showTags: this.showTags,
+            showHeader: this.showHeader,
             showBorders: this.showBorders,
             showTimeline: this.showTimeline,
             autoHidePlaylist: this.autoHidePlaylist,
@@ -365,6 +367,15 @@ const liveMode = {
                 const chartDisplay2 = document.getElementById('liveModeChartDisplay');
                 if (chartDisplay2 && !savedPrefs.showTags) {
                     chartDisplay2.classList.add('hide-tags');
+                }
+            }
+            if (savedPrefs.showHeader !== undefined) {
+                this.showHeader = savedPrefs.showHeader;
+                const liveModeHeaderCheckbox = document.getElementById('liveModeHeader');
+                if (liveModeHeaderCheckbox) liveModeHeaderCheckbox.checked = savedPrefs.showHeader;
+                const chartDisplay3 = document.getElementById('liveModeChartDisplay');
+                if (chartDisplay3 && !savedPrefs.showHeader) {
+                    chartDisplay3.classList.add('hide-header');
                 }
             }
             if (savedPrefs.showBorders !== undefined) {
@@ -1013,6 +1024,13 @@ const liveMode = {
                 chartDisplay.classList.remove('hide-tags');
             } else {
                 chartDisplay.classList.add('hide-tags');
+            }
+
+            // Apply header visibility
+            if (this.showHeader) {
+                chartDisplay.classList.remove('hide-header');
+            } else {
+                chartDisplay.classList.add('hide-header');
             }
 
             // Apply saved Live Mode font size (overrides printPreviewPreferences)
@@ -1771,6 +1789,28 @@ const liveMode = {
     },
 
     /**
+     * Toggle song header visibility (title, key, BPM, author)
+     */
+    toggleHeader(show) {
+        this.showHeader = show;
+
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            if (show) {
+                chartDisplay.classList.remove('hide-header');
+            } else {
+                chartDisplay.classList.add('hide-header');
+            }
+        }
+
+        // Auto-save preference
+        this.saveLiveModePreferences();
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { showHeader: show });
+        }
+    },
+
+    /**
      * Toggle borders visibility
      */
     toggleBorders(show) {
@@ -1967,6 +2007,13 @@ const liveMode = {
                 chartDisplay.classList.remove('hide-tags');
             } else {
                 chartDisplay.classList.add('hide-tags');
+            }
+
+            // Respect current header setting
+            if (this.showHeader) {
+                chartDisplay.classList.remove('hide-header');
+            } else {
+                chartDisplay.classList.add('hide-header');
             }
 
             // Re-render display to apply badge visibility
@@ -4237,6 +4284,11 @@ const liveMode = {
                     const tagsCheckbox = document.getElementById('liveModeTags');
                     if (tagsCheckbox) tagsCheckbox.checked = savedPrefs.showTags;
                 }
+                if (typeof savedPrefs.showHeader === 'boolean') {
+                    this.showHeader = savedPrefs.showHeader;
+                    const headerCheckbox = document.getElementById('liveModeHeader');
+                    if (headerCheckbox) headerCheckbox.checked = savedPrefs.showHeader;
+                }
                 if (typeof savedPrefs.showTimeline === 'boolean') {
                     this.showTimeline = savedPrefs.showTimeline;
                     const timelineCheckbox = document.getElementById('liveModeTimeline');
@@ -4486,6 +4538,11 @@ const liveMode = {
                     this.showTags = savedPrefs.showTags;
                     const tagsCheckbox = document.getElementById('liveModeTags');
                     if (tagsCheckbox) tagsCheckbox.checked = savedPrefs.showTags;
+                }
+                if (typeof savedPrefs.showHeader === 'boolean') {
+                    this.showHeader = savedPrefs.showHeader;
+                    const headerCheckbox = document.getElementById('liveModeHeader');
+                    if (headerCheckbox) headerCheckbox.checked = savedPrefs.showHeader;
                 }
                 if (typeof savedPrefs.showTimeline === 'boolean') {
                     this.showTimeline = savedPrefs.showTimeline;
