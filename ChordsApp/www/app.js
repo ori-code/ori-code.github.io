@@ -2215,16 +2215,16 @@ Our [Em7]hearts will cry, these bones will [D]sing
                     updateUsageDisplay();
                 }
 
-                // Reset font size to default (12pt) for new analysis
+                // Reset font size to default (10pt) for new analysis
                 if (fontSizeSlider && fontSizeValue && livePreview) {
-                    fontSizeSlider.value = 12;
-                    fontSizeValue.textContent = '12';
-                    livePreview.style.fontSize = '12pt';
+                    fontSizeSlider.value = 10;
+                    fontSizeValue.textContent = '10';
+                    livePreview.style.fontSize = '10pt';
                     // Also sync side menu slider
                     const sideMenuFontSize = document.getElementById('sideMenuFontSize');
                     const sideMenuFontSizeVal = document.getElementById('sideMenuFontSizeVal');
-                    if (sideMenuFontSize) sideMenuFontSize.value = 12;
-                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = '12pt';
+                    if (sideMenuFontSize) sideMenuFontSize.value = 10;
+                    if (sideMenuFontSizeVal) sideMenuFontSizeVal.textContent = '10pt';
                 }
 
                 // Update the live preview
