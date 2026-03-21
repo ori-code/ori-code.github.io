@@ -1456,16 +1456,12 @@ const liveMode = {
         const hasSession = window.sessionManager && window.sessionManager.activeSession;
         const anyPanelOpen = this.sidebarVisible || this.controlsVisible;
         const show = isLeader && hasSession && !anyPanelOpen;
+        const d = show ? 'block' : 'none';
 
-        // Section arrows (middle of screen, left/right edges)
-        const prevSection = document.getElementById('liveModeNavPrevSection');
-        const nextSection = document.getElementById('liveModeNavNextSection');
-        if (prevSection) prevSection.style.display = show ? 'block' : 'none';
-        if (nextSection) nextSection.style.display = show ? 'block' : 'none';
-
-        // Song nav bar (fixed bottom)
-        const bottomNav = document.getElementById('liveModeBottomNav');
-        if (bottomNav) bottomNav.style.display = show ? 'block' : 'none';
+        ['liveModeNavPrevSection', 'liveModeNavNextSection', 'liveModeNavPrev', 'liveModeNavNext'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = d;
+        });
     },
 
     /**
