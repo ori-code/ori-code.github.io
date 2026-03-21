@@ -552,7 +552,10 @@ const liveMode = {
             this.isSingerMode = false;
             const controlsToRestore = [
                 'liveModeDisplayMode',
+                'liveModeKeySection',
                 'liveModeTransposeRow',
+                'liveModeCapoRow',
+                'liveModeKeyGrid',
                 'liveModePlaylistBtn',
                 'liveModeLayout1',
                 'liveModeLayout2',
@@ -573,6 +576,15 @@ const liveMode = {
             const tagsCheckbox = document.getElementById('liveModeTags');
             if (tagsCheckbox && tagsCheckbox.parentElement) {
                 tagsCheckbox.parentElement.style.display = '';
+            }
+            // Restore filled chords toggle and slider
+            const filledChordsToggle = document.getElementById('filledChordsToggle');
+            if (filledChordsToggle && filledChordsToggle.parentElement) {
+                filledChordsToggle.parentElement.style.display = '';
+            }
+            const chordFillSlider = document.getElementById('chordFillSlider');
+            if (chordFillSlider && chordFillSlider.parentElement) {
+                chordFillSlider.parentElement.style.display = '';
             }
         }
 
@@ -622,16 +634,29 @@ const liveMode = {
             document.body.style.overflow = 'hidden';
         }
 
-        // Hide controls that singers shouldn't see (only transpose)
+        // Hide controls that singers shouldn't see
         const controlsToHide = [
-            'liveModeDisplayMode',       // No display mode dropdown for singers
-            'liveModeTransposeRow'       // Hide entire transpose row (-1, key, +1)
+            'liveModeDisplayMode',       // No display mode dropdown
+            'liveModeKeySection',        // Hide entire KEY section (transpose + capo + key grid)
+            'liveModeTransposeRow',      // Fallback: hide transpose row
+            'liveModeCapoRow',           // Fallback: hide capo row
+            'liveModeKeyGrid'            // Fallback: hide key grid
         ];
 
         controlsToHide.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
+
+        // Hide filled chords toggle and opacity slider (no chords in singer mode)
+        const filledChordsToggle = document.getElementById('filledChordsToggle');
+        if (filledChordsToggle && filledChordsToggle.parentElement) {
+            filledChordsToggle.parentElement.style.display = 'none';
+        }
+        const chordFillSlider = document.getElementById('chordFillSlider');
+        if (chordFillSlider && chordFillSlider.parentElement) {
+            chordFillSlider.parentElement.style.display = 'none';
+        }
 
         // Update UI to show singer mode
         const songNameEl = document.getElementById('liveModeSongName');
