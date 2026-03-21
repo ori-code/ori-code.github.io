@@ -4,6 +4,11 @@
    no shadows. Pure B&W with dark/light toggle.
    ============================================ */
 
+/* Disable Android WebView blue tap highlight */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
 /* --- CSS Variables: Dark Mode (default) --- */
 :root {
     --bg: #000;
