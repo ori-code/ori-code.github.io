@@ -3027,13 +3027,28 @@
                 </div>
             </div>
 
-            <!-- Song Navigation Arrows (leader only, centered on edges) -->
-            <button id="liveModeNavPrev" onclick="liveMode.previousSong()"
-                style="display: none; position: absolute; left: 4px; top: 50%; transform: translateY(-50%); z-index: 10001; width: 36px; height: 60px; background: var(--bg); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 18px; opacity: 0.4; padding: 0;"
-                title="Previous Song">&#9664;</button>
-            <button id="liveModeNavNext" onclick="liveMode.nextSong()"
-                style="display: none; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); z-index: 10001; width: 36px; height: 60px; background: var(--bg); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 18px; opacity: 0.4; padding: 0;"
-                title="Next Song">&#9654;</button>
+            <!-- Bottom Navigation Bar (leader only) -->
+            <div id="liveModeBottomNav"
+                style="display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 10001; background: var(--bg); border-top: 1px solid var(--border); padding: 8px 12px; box-sizing: border-box;">
+                <div style="display: flex; justify-content: center; align-items: center; gap: 6px; max-width: 600px; margin: 0 auto;">
+                    <!-- Previous Song -->
+                    <button id="liveModeNavPrev" onclick="liveMode.previousSong()"
+                        style="width: 44px; height: 40px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; padding: 0; opacity: 0.6;"
+                        title="Previous Song">&#9664;&#9664;</button>
+                    <!-- Previous Section -->
+                    <button id="liveModeNavPrevSection" onclick="liveMode.navigateSection(-1)"
+                        style="flex: 1; height: 40px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 13px; padding: 0; opacity: 0.8;"
+                        title="Previous Section">&#9664; Sec</button>
+                    <!-- Next Section -->
+                    <button id="liveModeNavNextSection" onclick="liveMode.navigateSection(1)"
+                        style="flex: 1; height: 40px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 13px; padding: 0; opacity: 0.8;"
+                        title="Next Section">Sec &#9654;</button>
+                    <!-- Next Song -->
+                    <button id="liveModeNavNext" onclick="liveMode.nextSong()"
+                        style="width: 44px; height: 40px; background: transparent; border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 14px; padding: 0; opacity: 0.6;"
+                        title="Next Song">&#9654;&#9654;</button>
+                </div>
+            </div>
 
             <!-- Playlist Sidebar (slide in from right) -->
             <div id="liveModePlaylistSidebar"

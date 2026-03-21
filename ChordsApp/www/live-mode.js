@@ -1452,15 +1452,13 @@ const liveMode = {
      * Show/hide song navigation arrows (leader only, when in a session with 2+ songs)
      */
     _updateNavArrows() {
-        const prevBtn = document.getElementById('liveModeNavPrev');
-        const nextBtn = document.getElementById('liveModeNavNext');
-        if (!prevBtn || !nextBtn) return;
+        const bottomNav = document.getElementById('liveModeBottomNav');
+        if (!bottomNav) return;
         const isLeader = window.sessionManager && window.sessionManager.isLeader;
         const hasSession = window.sessionManager && window.sessionManager.activeSession;
         const anyPanelOpen = this.sidebarVisible || this.controlsVisible;
-        const show = isLeader && hasSession && !this.playlistLocked && !anyPanelOpen;
-        prevBtn.style.display = show ? 'block' : 'none';
-        nextBtn.style.display = show ? 'block' : 'none';
+        const show = isLeader && hasSession && !anyPanelOpen;
+        bottomNav.style.display = show ? 'block' : 'none';
     },
 
     /**
