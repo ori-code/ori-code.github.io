@@ -1461,6 +1461,9 @@ const liveMode = {
         this.immersiveMode = !this.immersiveMode;
 
         if (this.immersiveMode) {
+            // Close settings/playlist panels first
+            this.hideControls();
+            this.hidePlaylist();
             // Hide everything
             this._setFloatButtonsVisible(false);
             // Hide nav arrows and bottom bar

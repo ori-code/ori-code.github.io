@@ -3400,6 +3400,13 @@
                                 style="cursor: pointer; width: 14px; height: 14px;">
                             <span>Focus</span>
                         </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
+                            <input type="checkbox" id="liveModeImmersive"
+                                onchange="liveMode.toggleImmersiveMode(); this.checked = liveMode.immersiveMode;"
+                                style="cursor: pointer; width: 14px; height: 14px;">
+                            <span>Immersive</span>
+                        </label>
                     </div>
                     <div style="margin-top: 8px;">
                         <button id="liveModeThemeToggle"
