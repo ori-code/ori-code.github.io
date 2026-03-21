@@ -1442,13 +1442,16 @@ const liveMode = {
      * Show/hide floating buttons when entering/exiting live mode
      */
     _setFloatButtonsVisible(visible) {
-        // In immersive mode, force everything hidden
-        if (this.immersiveMode) visible = false;
-
         const playlistBtn = document.getElementById('liveFloatPlaylist');
         const controlsBtn = document.getElementById('liveFloatControls');
-        if (playlistBtn) playlistBtn.style.display = visible ? 'block' : 'none';
-        if (controlsBtn) controlsBtn.style.display = visible ? 'block' : 'none';
+        if (playlistBtn) {
+            playlistBtn.style.display = visible ? 'block' : 'none';
+            playlistBtn.style.opacity = (visible && this.immersiveMode) ? '0' : '';
+        }
+        if (controlsBtn) {
+            controlsBtn.style.display = visible ? 'block' : 'none';
+            controlsBtn.style.opacity = (visible && this.immersiveMode) ? '0' : '';
+        }
         if (visible) this._updateFloatButtons();
         this._updateNavArrows();
     },
@@ -1464,24 +1467,37 @@ const liveMode = {
             // Close settings/playlist panels first
             this.hideControls();
             this.hidePlaylist();
-            // Hide everything
-            this._setFloatButtonsVisible(false);
-            // Hide nav arrows and bottom bar
+            // Make float buttons invisible but keep in layout
+            const playlistBtn = document.getElementById('liveFloatPlaylist');
+            const controlsBtn = document.getElementById('liveFloatControls');
+            if (playlistBtn) playlistBtn.style.opacity = '0';
+            if (controlsBtn) controlsBtn.style.opacity = '0';
+            // Make nav arrows and bottom bar invisible but tappable
             ['liveModeNavPrevSection', 'liveModeNavNextSection'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
+                if (el) el.style.opacity = '0';
             });
             const bottomNav = document.getElementById('liveModeBottomNav');
-            if (bottomNav) bottomNav.style.display = 'none';
+            if (bottomNav) bottomNav.style.opacity = '0';
             // Hide song name bar
             const topBar = document.getElementById('liveModeTopBar');
-            if (topBar) topBar.style.display = 'none';
+            if (topBar) topBar.style.opacity = '0';
         } else {
-            // Restore everything
+            // Restore visibility
+            const playlistBtn = document.getElementById('liveFloatPlaylist');
+            const controlsBtn = document.getElementById('liveFloatControls');
+            if (playlistBtn) playlistBtn.style.opacity = '';
+            if (controlsBtn) controlsBtn.style.opacity = '';
+            ['liveModeNavPrevSection', 'liveModeNavNextSection'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.opacity = '';
+            });
+            const bottomNav = document.getElementById('liveModeBottomNav');
+            if (bottomNav) bottomNav.style.opacity = '';
+            const topBar = document.getElementById('liveModeTopBar');
+            if (topBar) topBar.style.opacity = '';
             this._setFloatButtonsVisible(true);
             this._updateNavArrows();
-            const topBar = document.getElementById('liveModeTopBar');
-            if (topBar) topBar.style.display = '';
         }
     },
 
@@ -1492,18 +1508,19 @@ const liveMode = {
         const isLeader = window.sessionManager && window.sessionManager.isLeader;
         const hasSession = window.sessionManager && window.sessionManager.activeSession;
         const anyPanelOpen = this.sidebarVisible || this.controlsVisible;
-        const show = isLeader && hasSession && !anyPanelOpen && !this.immersiveMode;
+        const show = isLeader && hasSession && !anyPanelOpen;
         const d = show ? 'block' : 'none';
+        const o = (show && this.immersiveMode) ? '0' : '';
 
         // Section arrows (mid-screen edges)
         const prevSection = document.getElementById('liveModeNavPrevSection');
         const nextSection = document.getElementById('liveModeNavNextSection');
-        if (prevSection) prevSection.style.display = d;
-        if (nextSection) nextSection.style.display = d;
+        if (prevSection) { prevSection.style.display = d; prevSection.style.opacity = o; }
+        if (nextSection) { nextSection.style.display = d; nextSection.style.opacity = o; }
 
         // Song nav bar (fixed bottom)
         const bottomNav = document.getElementById('liveModeBottomNav');
-        if (bottomNav) bottomNav.style.display = d;
+        if (bottomNav) { bottomNav.style.display = d; bottomNav.style.opacity = o; }
     },
 
     /**
