@@ -1458,10 +1458,15 @@ const liveMode = {
         const show = isLeader && hasSession && !anyPanelOpen;
         const d = show ? 'block' : 'none';
 
-        ['liveModeNavPrevSection', 'liveModeNavNextSection', 'liveModeNavPrev', 'liveModeNavNext'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = d;
-        });
+        // Section arrows (mid-screen edges)
+        const prevSection = document.getElementById('liveModeNavPrevSection');
+        const nextSection = document.getElementById('liveModeNavNextSection');
+        if (prevSection) prevSection.style.display = d;
+        if (nextSection) nextSection.style.display = d;
+
+        // Song nav bar (fixed bottom)
+        const bottomNav = document.getElementById('liveModeBottomNav');
+        if (bottomNav) bottomNav.style.display = d;
     },
 
     /**
