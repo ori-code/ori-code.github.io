@@ -5768,11 +5768,11 @@
                     const statusText = statusPanel?.querySelector('.status-text');
                     const statusDot = statusPanel?.querySelector('.status-dot');
                     if (show) {
-                        if (statusPanel) statusPanel.classList.add('analyzing');
-                        if (statusDot) { statusDot.className = 'status-dot analyzing'; }
+                        if (statusPanel) statusPanel.classList.add('processing');
+                        if (statusDot) { statusDot.className = 'status-dot processing'; }
                         if (statusText) statusText.textContent = statusMsg || 'Analyzing...';
                     } else {
-                        if (statusPanel) statusPanel.classList.remove('analyzing');
+                        if (statusPanel) statusPanel.classList.remove('processing');
                         if (statusDot) { statusDot.className = 'status-dot idle'; }
                         if (statusText) statusText.textContent = 'Done';
                     }
