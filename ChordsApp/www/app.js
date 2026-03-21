@@ -1,3 +1,6 @@
+// Editor click menus enabled by default (toggle via checkbox)
+window.editorClickEnabled = true;
+
 // ============= DISABLE PINCH-TO-ZOOM ON MOBILE =============
 document.addEventListener('gesturestart', function (e) {
     e.preventDefault();
@@ -7533,6 +7536,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Click on visualEditor to detect section headers
     if (visualEditor) {
         visualEditor.addEventListener('click', (e) => {
+            if (window.editorClickEnabled === false) return;
             const textarea = e.target;
             const cursorPos = textarea.selectionStart;
             const textBeforeCursor = textarea.value.substring(0, cursorPos);
@@ -7882,6 +7886,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // --- Editor textarea chord click handler ---
     if (visualEditor) {
         visualEditor.addEventListener('click', (e) => {
+            if (window.editorClickEnabled === false) return;
             hideChordEditor();
 
             const textarea = e.target;
@@ -8228,6 +8233,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
     // Click detection on arrangement tags in visual editor
     if (visualEditor) {
         visualEditor.addEventListener('click', (e) => {
+            if (window.editorClickEnabled === false) return;
             const textarea = e.target;
             const cursorPos = textarea.selectionStart;
             const lines = textarea.value.split('\n');

@@ -975,6 +975,12 @@
                                     <input type="range" id="editorFontSizeSlider" min="8" max="24" value="10" step="1"
                                         style="flex: 1; min-width: 120px;">
                                 </label>
+                                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap;">
+                                    <input type="checkbox" id="editorClickToggle" checked
+                                        onchange="window.editorClickEnabled = this.checked"
+                                        style="cursor: pointer; width: 14px; height: 14px;">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Click</span>
+                                </label>
                             </div>
                             <!-- KEY ANALYSIS (below font slider) -->
                             <div id="keyAnalysis"
