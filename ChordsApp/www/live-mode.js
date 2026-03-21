@@ -1452,13 +1452,20 @@ const liveMode = {
      * Show/hide song navigation arrows (leader only, when in a session with 2+ songs)
      */
     _updateNavArrows() {
-        const bottomNav = document.getElementById('liveModeBottomNav');
-        if (!bottomNav) return;
         const isLeader = window.sessionManager && window.sessionManager.isLeader;
         const hasSession = window.sessionManager && window.sessionManager.activeSession;
         const anyPanelOpen = this.sidebarVisible || this.controlsVisible;
         const show = isLeader && hasSession && !anyPanelOpen;
-        bottomNav.style.display = show ? 'block' : 'none';
+
+        // Section arrows (middle of screen, left/right edges)
+        const prevSection = document.getElementById('liveModeNavPrevSection');
+        const nextSection = document.getElementById('liveModeNavNextSection');
+        if (prevSection) prevSection.style.display = show ? 'block' : 'none';
+        if (nextSection) nextSection.style.display = show ? 'block' : 'none';
+
+        // Song nav bar (fixed bottom)
+        const bottomNav = document.getElementById('liveModeBottomNav');
+        if (bottomNav) bottomNav.style.display = show ? 'block' : 'none';
     },
 
     /**
