@@ -15,6 +15,7 @@ const liveMode = {
     hideControlsTimeout: null,
     displayMode: 'chords',
     showBadges: true,
+    showTags: true,
     showBorders: true,
     showTimeline: false, // Hidden by default, auto-shows when auto-scroll is ON
     autoHidePlaylist: true,
@@ -60,6 +61,7 @@ const liveMode = {
             tagFontSize: this.currentTagFontSize || 14,
             displayMode: this.displayMode,
             showBadges: this.showBadges,
+            showTags: this.showTags,
             showBorders: this.showBorders,
             showTimeline: this.showTimeline,
             autoHidePlaylist: this.autoHidePlaylist,
@@ -247,6 +249,9 @@ const liveMode = {
 
         // Save preference
         this.saveLiveModePreferences();
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { tagFontSize: size });
+        }
 
         console.log(`📺 Tag font size set to ${size}pt`);
     },
@@ -258,6 +263,9 @@ const liveMode = {
             chartDisplay.classList.toggle('filled-tags', enabled);
         }
         this.saveLiveModePreferences();
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { filledTags: enabled });
+        }
     },
 
     toggleFilledChords(enabled) {
@@ -267,6 +275,9 @@ const liveMode = {
             chartDisplay.classList.toggle('filled-chords', enabled);
         }
         this.saveLiveModePreferences();
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { filledChords: enabled });
+        }
     },
 
     setChordFillOpacity(value) {
@@ -276,6 +287,9 @@ const liveMode = {
             chartDisplay.style.setProperty('--chord-fill-opacity', value);
         }
         this.saveLiveModePreferences();
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { chordFillOpacity: parseFloat(value) });
+        }
     },
 
     /**
@@ -343,6 +357,15 @@ const liveMode = {
                 this.showBadges = savedPrefs.showBadges;
                 const liveModeBadgesCheckbox = document.getElementById('liveModeBadges');
                 if (liveModeBadgesCheckbox) liveModeBadgesCheckbox.checked = savedPrefs.showBadges;
+            }
+            if (savedPrefs.showTags !== undefined) {
+                this.showTags = savedPrefs.showTags;
+                const liveModeTagsCheckbox = document.getElementById('liveModeTags');
+                if (liveModeTagsCheckbox) liveModeTagsCheckbox.checked = savedPrefs.showTags;
+                const chartDisplay2 = document.getElementById('liveModeChartDisplay');
+                if (chartDisplay2 && !savedPrefs.showTags) {
+                    chartDisplay2.classList.add('hide-tags');
+                }
             }
             if (savedPrefs.showBorders !== undefined) {
                 this.showBorders = savedPrefs.showBorders;
@@ -535,16 +558,21 @@ const liveMode = {
                 'liveModeLayout2',
                 'liveModeFullOverview',
                 'liveModeBadges',
+                'liveModeTags',
                 'liveModeCurrentKey'
             ];
             controlsToRestore.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = '';
             });
-            // Also restore badges label
+            // Also restore badges and tags labels
             const badgesCheckbox = document.getElementById('liveModeBadges');
             if (badgesCheckbox && badgesCheckbox.parentElement) {
                 badgesCheckbox.parentElement.style.display = '';
+            }
+            const tagsCheckbox = document.getElementById('liveModeTags');
+            if (tagsCheckbox && tagsCheckbox.parentElement) {
+                tagsCheckbox.parentElement.style.display = '';
             }
         }
 
@@ -566,19 +594,19 @@ const liveMode = {
 
     /**
      * Enter Singer Mode - simplified view for anonymous users
-     * Shows chords and lyrics, hides transpose controls
+     * Shows lyrics only (no chords), hides transpose controls
      */
     async enterSingerMode() {
         this.isSingerMode = true;
-        this.displayMode = 'chords'; // Show chords for singers
+        this.displayMode = 'lyrics'; // Lyrics only for singers (no chords)
 
-        // Force the dropdown to chords mode so updateDisplay uses it
+        // Force the dropdown to lyrics mode so updateDisplay uses it
         const displayDropdown = document.getElementById('liveModeDisplayMode');
-        if (displayDropdown) displayDropdown.value = 'chords';
+        if (displayDropdown) displayDropdown.value = 'lyrics';
 
-        // Also sync the main editor dropdown for makeChordsBold
+        // Also sync the main editor dropdown
         const nashvilleDropdown = document.getElementById('nashvilleMode');
-        if (nashvilleDropdown) nashvilleDropdown.value = 'chords';
+        if (nashvilleDropdown) nashvilleDropdown.value = 'lyrics';
 
         // Show overlay first
         const overlay = document.getElementById('liveModeOverlay');
@@ -622,16 +650,17 @@ const liveMode = {
             if (zoomValue) zoomValue.textContent = this.currentFontSize + 'pt';
         }
 
-        console.log('🎤 Entered Singer Mode (lyrics only)');
+        console.log('🎤 Entered Singer Mode (lyrics only, no chords)');
     },
 
     /**
      * Enter Presenter Mode - simplified view for anonymous users
-     * Shows lyrics only, hides chords and transpose controls
+     * Shows lyrics by default, but can choose to show chords via dropdown
+     * Hides transpose/capo controls (can't change key)
      */
     async enterPresenterMode() {
         this.isPresenterMode = true;
-        this.displayMode = 'lyrics'; // Show lyrics only for presenters
+        this.displayMode = 'lyrics'; // Default to lyrics for presenters
 
         // Force the dropdown to lyrics mode so updateDisplay uses it
         const displayDropdown = document.getElementById('liveModeDisplayMode');
@@ -655,9 +684,8 @@ const liveMode = {
             document.body.style.overflow = 'hidden';
         }
 
-        // Hide controls that presenters shouldn't see
+        // Hide controls that presenters shouldn't see (keep display dropdown visible)
         const controlsToHide = [
-            'liveModeDisplayMode',       // No display mode dropdown for presenters
             'liveModeKeySection',        // Hide entire KEY section (transpose + capo)
             'liveModeTransposeRow',      // Fallback: hide transpose row individually
             'liveModeCapoRow'            // Fallback: hide capo row individually
@@ -784,9 +812,9 @@ const liveMode = {
         const songKeyEl = document.getElementById('liveModeSongKey');
         const currentKeyEl = document.getElementById('liveModeCurrentKey');
 
-        // Force chords mode for singers (no transpose, but they see chords)
+        // Force lyrics-only mode for singers (no chords, no transpose)
         if (this.isSingerMode) {
-            this.displayMode = 'chords';
+            this.displayMode = 'lyrics';
         }
 
         if (chartDisplay) {
@@ -931,6 +959,13 @@ const liveMode = {
                 chartDisplay.classList.add('hide-badges');
             }
 
+            // Apply tags visibility
+            if (this.showTags) {
+                chartDisplay.classList.remove('hide-tags');
+            } else {
+                chartDisplay.classList.add('hide-tags');
+            }
+
             // Apply saved Live Mode font size (overrides printPreviewPreferences)
             if (this.currentFontSize) {
                 chartDisplay.style.fontSize = this.currentFontSize + 'pt';
@@ -1034,6 +1069,10 @@ const liveMode = {
 
         // Update song navigation arrows visibility
         this._updateNavArrows();
+
+        // Update key grid and capo suggestion
+        this._updateLiveKeyGrid();
+        this._updateCapoSuggestion();
     },
 
     /**
@@ -1450,6 +1489,111 @@ const liveMode = {
     },
 
     /**
+     * Transpose to a specific target key (from key grid)
+     */
+    transposeToKey(targetNote) {
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const flatToSharp = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+
+        // Get current key note (without Major/Minor)
+        const currentKeyShort = this._formatKeyShort(this.currentKey);
+        let currentNote = currentKeyShort.replace('m', '');
+        if (flatToSharp[currentNote]) currentNote = flatToSharp[currentNote];
+
+        const currentIdx = notes.indexOf(currentNote);
+        const targetIdx = notes.indexOf(targetNote);
+        if (currentIdx === -1 || targetIdx === -1) return;
+
+        let steps = targetIdx - currentIdx;
+        if (steps === 0) return;
+
+        // Take shortest path
+        if (steps > 6) steps -= 12;
+        if (steps < -6) steps += 12;
+
+        this.transpose(steps);
+        this._updateLiveKeyGrid();
+        this._updateCapoSuggestion();
+    },
+
+    /**
+     * Update key grid active state in Live Mode
+     */
+    _updateLiveKeyGrid() {
+        const currentKeyShort = this._formatKeyShort(this.currentKey);
+        const currentNote = currentKeyShort.replace('m', '');
+        document.querySelectorAll('.live-key-btn').forEach(btn => {
+            const isActive = btn.dataset.key === currentNote;
+            btn.style.background = isActive ? 'var(--text)' : 'transparent';
+            btn.style.color = isActive ? 'var(--bg)' : 'var(--text)';
+        });
+    },
+
+    /**
+     * Show smart capo suggestion after transpose
+     * Suggests capo position for simpler open chord shapes
+     */
+    _updateCapoSuggestion() {
+        const suggestionEl = document.getElementById('liveModeCapoSuggestion');
+        if (!suggestionEl) return;
+
+        // Only suggest if transposed and no capo already set
+        if (this.currentTransposeSteps === 0 || this.currentCapo > 0) {
+            suggestionEl.style.display = 'none';
+            return;
+        }
+
+        // Open chord keys (easy shapes): C, G, D, A, E, Am, Em, Dm
+        const easyKeys = ['C', 'G', 'D', 'A', 'E'];
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const flatToSharp = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+
+        const currentKeyShort = this._formatKeyShort(this.currentKey);
+        let currentNote = currentKeyShort.replace('m', '');
+        if (flatToSharp[currentNote]) currentNote = flatToSharp[currentNote];
+        const currentIdx = notes.indexOf(currentNote);
+        if (currentIdx === -1) { suggestionEl.style.display = 'none'; return; }
+
+        // Already an easy key? No suggestion needed
+        if (easyKeys.includes(currentNote)) {
+            suggestionEl.style.display = 'none';
+            return;
+        }
+
+        // Find the best capo position that gives an easy key
+        let bestCapo = 0, bestKey = '';
+        for (let capo = 1; capo <= 7; capo++) {
+            const playIdx = ((currentIdx - capo) % 12 + 12) % 12;
+            const playNote = notes[playIdx];
+            if (easyKeys.includes(playNote)) {
+                bestCapo = capo;
+                bestKey = playNote;
+                break;
+            }
+        }
+
+        if (bestCapo > 0) {
+            const isMinor = currentKeyShort.endsWith('m');
+            suggestionEl.textContent = `Capo ${bestCapo} → play ${bestKey}${isMinor ? 'm' : ''} shapes`;
+            suggestionEl.style.display = 'block';
+            suggestionEl._suggestedCapo = bestCapo;
+        } else {
+            suggestionEl.style.display = 'none';
+        }
+    },
+
+    /**
+     * Apply the suggested capo
+     */
+    applyCapoSuggestion() {
+        const suggestionEl = document.getElementById('liveModeCapoSuggestion');
+        if (suggestionEl && suggestionEl._suggestedCapo) {
+            this.setCapo(suggestionEl._suggestedCapo);
+            suggestionEl.style.display = 'none';
+        }
+    },
+
+    /**
      * Set capo fret number. Capo N = transpose displayed chords by -N
      * so the player plays simpler shapes but the sound matches the original key.
      */
@@ -1520,6 +1664,9 @@ const liveMode = {
 
         // Auto-save preference
         this.saveLiveModePreferences();
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { displayMode: mode });
+        }
 
         console.log(`📺 Display mode set to: ${mode}`);
     },
@@ -1541,8 +1688,33 @@ const liveMode = {
 
         // Auto-save preference
         this.saveLiveModePreferences();
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { showBadges: show });
+        }
 
         console.log(`📺 Badges ${show ? 'shown' : 'hidden'}`);
+    },
+
+    /**
+     * Toggle section tags visibility (keeps spacing)
+     */
+    toggleTags(show) {
+        this.showTags = show;
+
+        const chartDisplay = document.getElementById('liveModeChartDisplay');
+        if (chartDisplay) {
+            if (show) {
+                chartDisplay.classList.remove('hide-tags');
+            } else {
+                chartDisplay.classList.add('hide-tags');
+            }
+        }
+
+        // Auto-save preference
+        this.saveLiveModePreferences();
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { showTags: show });
+        }
     },
 
     /**
@@ -1584,6 +1756,9 @@ const liveMode = {
 
         // Auto-save preference
         this.saveLiveModePreferences();
+        if (this.currentSongId) {
+            this.saveSongPreferences(this.currentSongId, { showTimeline: show });
+        }
 
         console.log(`📺 Timeline ${show ? 'shown' : 'hidden'}`);
     },
@@ -1732,6 +1907,13 @@ const liveMode = {
                 chartDisplay.classList.remove('hide-badges');
             } else {
                 chartDisplay.classList.add('hide-badges');
+            }
+
+            // Respect current tags setting
+            if (this.showTags) {
+                chartDisplay.classList.remove('hide-tags');
+            } else {
+                chartDisplay.classList.add('hide-tags');
             }
 
             // Re-render display to apply badge visibility
@@ -3985,6 +4167,54 @@ const liveMode = {
                 if (typeof savedPrefs.autoScrollEnabled === 'boolean') {
                     this.songAutoScrollEnabled[songId] = savedPrefs.autoScrollEnabled;
                 }
+
+                // Apply display preferences (per-song)
+                if (savedPrefs.displayMode && !this.isSingerMode) {
+                    this.displayMode = savedPrefs.displayMode;
+                    const liveModeDropdown = document.getElementById('liveModeDisplayMode');
+                    if (liveModeDropdown) liveModeDropdown.value = savedPrefs.displayMode;
+                }
+                if (typeof savedPrefs.showBadges === 'boolean') {
+                    this.showBadges = savedPrefs.showBadges;
+                    const badgesCheckbox = document.getElementById('liveModeBadges');
+                    if (badgesCheckbox) badgesCheckbox.checked = savedPrefs.showBadges;
+                }
+                if (typeof savedPrefs.showTags === 'boolean') {
+                    this.showTags = savedPrefs.showTags;
+                    const tagsCheckbox = document.getElementById('liveModeTags');
+                    if (tagsCheckbox) tagsCheckbox.checked = savedPrefs.showTags;
+                }
+                if (typeof savedPrefs.showTimeline === 'boolean') {
+                    this.showTimeline = savedPrefs.showTimeline;
+                    const timelineCheckbox = document.getElementById('liveModeTimeline');
+                    if (timelineCheckbox) timelineCheckbox.checked = savedPrefs.showTimeline;
+                    const timelineContainer = document.getElementById('verticalTimelineContainer');
+                    if (timelineContainer) {
+                        timelineContainer.style.display = savedPrefs.showTimeline ? 'flex' : 'none';
+                    }
+                }
+                if (savedPrefs.tagFontSize) {
+                    this.currentTagFontSize = savedPrefs.tagFontSize;
+                    const tagSizeValue = document.getElementById('liveModeTagSizeValue');
+                    if (tagSizeValue) tagSizeValue.textContent = savedPrefs.tagFontSize + 'pt';
+                    const tagSlider = document.getElementById('liveModeTagFontSlider');
+                    if (tagSlider) tagSlider.value = savedPrefs.tagFontSize;
+                }
+                if (typeof savedPrefs.filledTags === 'boolean') {
+                    this.filledTags = savedPrefs.filledTags;
+                    const filledToggle = document.getElementById('filledTagsToggle');
+                    if (filledToggle) filledToggle.checked = savedPrefs.filledTags;
+                }
+                if (typeof savedPrefs.filledChords === 'boolean') {
+                    this.filledChords = savedPrefs.filledChords;
+                    const filledChordsToggle = document.getElementById('filledChordsToggle');
+                    if (filledChordsToggle) filledChordsToggle.checked = savedPrefs.filledChords;
+                }
+                if (savedPrefs.chordFillOpacity !== undefined) {
+                    this.chordFillOpacity = savedPrefs.chordFillOpacity;
+                    const chordSlider = document.getElementById('chordFillSlider');
+                    if (chordSlider) chordSlider.value = savedPrefs.chordFillOpacity;
+                }
             } else {
                 // FIRST TIME loading this song in session - use song's own settings
                 console.log(`📺 First load for ${songId}, using song defaults`);
@@ -4187,6 +4417,54 @@ const liveMode = {
             if (typeof savedPrefs.autoScrollEnabled === 'boolean') {
                 this.songAutoScrollEnabled[songData.songId] = savedPrefs.autoScrollEnabled;
             }
+
+                // Apply display preferences (per-song)
+                if (savedPrefs.displayMode && !this.isSingerMode) {
+                    this.displayMode = savedPrefs.displayMode;
+                    const liveModeDropdown = document.getElementById('liveModeDisplayMode');
+                    if (liveModeDropdown) liveModeDropdown.value = savedPrefs.displayMode;
+                }
+                if (typeof savedPrefs.showBadges === 'boolean') {
+                    this.showBadges = savedPrefs.showBadges;
+                    const badgesCheckbox = document.getElementById('liveModeBadges');
+                    if (badgesCheckbox) badgesCheckbox.checked = savedPrefs.showBadges;
+                }
+                if (typeof savedPrefs.showTags === 'boolean') {
+                    this.showTags = savedPrefs.showTags;
+                    const tagsCheckbox = document.getElementById('liveModeTags');
+                    if (tagsCheckbox) tagsCheckbox.checked = savedPrefs.showTags;
+                }
+                if (typeof savedPrefs.showTimeline === 'boolean') {
+                    this.showTimeline = savedPrefs.showTimeline;
+                    const timelineCheckbox = document.getElementById('liveModeTimeline');
+                    if (timelineCheckbox) timelineCheckbox.checked = savedPrefs.showTimeline;
+                    const timelineContainer = document.getElementById('verticalTimelineContainer');
+                    if (timelineContainer) {
+                        timelineContainer.style.display = savedPrefs.showTimeline ? 'flex' : 'none';
+                    }
+                }
+                if (savedPrefs.tagFontSize) {
+                    this.currentTagFontSize = savedPrefs.tagFontSize;
+                    const tagSizeValue = document.getElementById('liveModeTagSizeValue');
+                    if (tagSizeValue) tagSizeValue.textContent = savedPrefs.tagFontSize + 'pt';
+                    const tagSlider = document.getElementById('liveModeTagFontSlider');
+                    if (tagSlider) tagSlider.value = savedPrefs.tagFontSize;
+                }
+                if (typeof savedPrefs.filledTags === 'boolean') {
+                    this.filledTags = savedPrefs.filledTags;
+                    const filledToggle = document.getElementById('filledTagsToggle');
+                    if (filledToggle) filledToggle.checked = savedPrefs.filledTags;
+                }
+                if (typeof savedPrefs.filledChords === 'boolean') {
+                    this.filledChords = savedPrefs.filledChords;
+                    const filledChordsToggle = document.getElementById('filledChordsToggle');
+                    if (filledChordsToggle) filledChordsToggle.checked = savedPrefs.filledChords;
+                }
+                if (savedPrefs.chordFillOpacity !== undefined) {
+                    this.chordFillOpacity = savedPrefs.chordFillOpacity;
+                    const chordSlider = document.getElementById('chordFillSlider');
+                    if (chordSlider) chordSlider.value = savedPrefs.chordFillOpacity;
+                }
         } else {
             // FIRST TIME - use defaults from song data
             if (songData.fontSize) {

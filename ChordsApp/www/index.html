@@ -3336,6 +3336,13 @@
                         </label>
                         <label
                             style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
+                            <input type="checkbox" id="liveModeTags" checked
+                                onchange="liveMode.toggleTags(this.checked)"
+                                style="cursor: pointer; width: 14px; height: 14px;">
+                            <span>Tags</span>
+                        </label>
+                        <label
+                            style="display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 11px; color: var(--text);">
                             <input type="checkbox" id="liveModeBorders" checked
                                 onchange="liveMode.toggleBorders(this.checked)"
                                 style="cursor: pointer; width: 14px; height: 14px;">

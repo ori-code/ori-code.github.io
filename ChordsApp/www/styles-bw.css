@@ -1895,6 +1895,11 @@ input[type="checkbox"]:checked::after {
     display: none !important;
 }
 
+/* Hide section tags (Verse 1, Chorus, etc.) but keep spacing */
+.hide-tags .section-header {
+    visibility: hidden !important;
+}
+
 /* Live Mode */
 #liveModeChartDisplay {
     margin-top: 0 !important;
