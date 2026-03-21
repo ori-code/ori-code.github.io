@@ -19,6 +19,7 @@ const liveMode = {
     showHeader: true,
     showBorders: true,
     focusMode: false, // When true, only show the section the leader selected
+    immersiveMode: false, // When true, hide all UI controls for maximum screen space
     showTimeline: false, // Hidden by default, auto-shows when auto-scroll is ON
     autoHidePlaylist: true,
     showPlaylistWithControls: false,
@@ -531,6 +532,7 @@ const liveMode = {
         if (overlay) {
             overlay.style.display = 'none';
             this.isActive = false;
+            this.immersiveMode = false;
 
             // Hide floating quick-access buttons
             this._setFloatButtonsVisible(false);
@@ -1440,6 +1442,9 @@ const liveMode = {
      * Show/hide floating buttons when entering/exiting live mode
      */
     _setFloatButtonsVisible(visible) {
+        // In immersive mode, force everything hidden
+        if (this.immersiveMode) visible = false;
+
         const playlistBtn = document.getElementById('liveFloatPlaylist');
         const controlsBtn = document.getElementById('liveFloatControls');
         if (playlistBtn) playlistBtn.style.display = visible ? 'block' : 'none';
@@ -1449,13 +1454,42 @@ const liveMode = {
     },
 
     /**
+     * Toggle immersive mode — hide all UI for maximum screen space.
+     * Double-tap the song content area to toggle.
+     */
+    toggleImmersiveMode() {
+        this.immersiveMode = !this.immersiveMode;
+
+        if (this.immersiveMode) {
+            // Hide everything
+            this._setFloatButtonsVisible(false);
+            // Hide nav arrows and bottom bar
+            ['liveModeNavPrevSection', 'liveModeNavNextSection'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            const bottomNav = document.getElementById('liveModeBottomNav');
+            if (bottomNav) bottomNav.style.display = 'none';
+            // Hide song name bar
+            const topBar = document.getElementById('liveModeTopBar');
+            if (topBar) topBar.style.display = 'none';
+        } else {
+            // Restore everything
+            this._setFloatButtonsVisible(true);
+            this._updateNavArrows();
+            const topBar = document.getElementById('liveModeTopBar');
+            if (topBar) topBar.style.display = '';
+        }
+    },
+
+    /**
      * Show/hide song navigation arrows (leader only, when in a session with 2+ songs)
      */
     _updateNavArrows() {
         const isLeader = window.sessionManager && window.sessionManager.isLeader;
         const hasSession = window.sessionManager && window.sessionManager.activeSession;
         const anyPanelOpen = this.sidebarVisible || this.controlsVisible;
-        const show = isLeader && hasSession && !anyPanelOpen;
+        const show = isLeader && hasSession && !anyPanelOpen && !this.immersiveMode;
         const d = show ? 'block' : 'none';
 
         // Section arrows (mid-screen edges)
@@ -6144,6 +6178,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 // Controls and playlist are toggled via floating buttons only
+            }
+        });
+
+        // Double-tap to toggle immersive mode (hide all UI)
+        let lastTapTime = 0;
+        liveModeContent.addEventListener('touchend', (e) => {
+            if (e.touches.length > 0) return; // Ignore multi-touch
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+                e.preventDefault();
+                liveMode.toggleImmersiveMode();
+                lastTapTime = 0;
+            } else {
+                lastTapTime = now;
+            }
+        });
+
+        // Double-click for desktop
+        liveModeContent.addEventListener('dblclick', (e) => {
+            if (e.target.tagName !== 'BUTTON') {
+                liveMode.toggleImmersiveMode();
             }
         });
 
