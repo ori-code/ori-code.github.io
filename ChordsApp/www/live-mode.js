@@ -6192,12 +6192,17 @@ document.addEventListener('DOMContentLoaded', () => {
         liveModeContent.addEventListener('click', (e) => {
             // Don't toggle if clicking on a button
             if (e.target.tagName !== 'BUTTON') {
+                // If any panel is open, close it
+                if (liveMode.controlsVisible || liveMode.sidebarVisible) {
+                    if (liveMode.controlsVisible) liveMode.hideControls();
+                    if (liveMode.sidebarVisible) liveMode.hidePlaylist();
+                    return;
+                }
                 // If auto-scroll is running, pause/resume it
                 if (liveMode.autoScrollEnabled) {
                     liveMode.toggleAutoScroll();
                     return;
                 }
-                // Controls and playlist are toggled via floating buttons only
             }
         });
 
