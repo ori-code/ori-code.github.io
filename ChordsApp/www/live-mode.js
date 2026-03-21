@@ -18,6 +18,7 @@ const liveMode = {
     showTags: true,
     showHeader: true,
     showBorders: true,
+    focusMode: false, // When true, only show the section the leader selected
     showTimeline: false, // Hidden by default, auto-shows when auto-scroll is ON
     autoHidePlaylist: true,
     showPlaylistWithControls: false,
@@ -65,6 +66,7 @@ const liveMode = {
             showTags: this.showTags,
             showHeader: this.showHeader,
             showBorders: this.showBorders,
+            focusMode: this.focusMode || false,
             showTimeline: this.showTimeline,
             autoHidePlaylist: this.autoHidePlaylist,
             filledTags: this.filledTags || false,
@@ -377,6 +379,11 @@ const liveMode = {
                 if (chartDisplay3 && !savedPrefs.showHeader) {
                     chartDisplay3.classList.add('hide-header');
                 }
+            }
+            if (savedPrefs.focusMode !== undefined) {
+                this.focusMode = savedPrefs.focusMode;
+                const focusCheckbox = document.getElementById('liveModeFocus');
+                if (focusCheckbox) focusCheckbox.checked = savedPrefs.focusMode;
             }
             if (savedPrefs.showBorders !== undefined) {
                 this.showBorders = savedPrefs.showBorders;
@@ -1808,6 +1815,23 @@ const liveMode = {
         if (this.currentSongId) {
             this.saveSongPreferences(this.currentSongId, { showHeader: show });
         }
+    },
+
+    /**
+     * Toggle focus mode — only show the leader's selected section
+     */
+    toggleFocusMode(enabled) {
+        this.focusMode = enabled;
+
+        // If disabling, show all sections again
+        if (!enabled) {
+            document.querySelectorAll('.song-section-block').forEach(block => {
+                block.style.display = '';
+            });
+        }
+
+        // Auto-save preference
+        this.saveLiveModePreferences();
     },
 
     /**
@@ -5327,13 +5351,25 @@ const liveMode = {
      */
     highlightSection(sectionId) {
         // Remove previous highlights and animations
-        document.querySelectorAll('.song-section-block').forEach(block => {
+        const allBlocks = document.querySelectorAll('.song-section-block');
+        allBlocks.forEach(block => {
             block.classList.remove('section-selected');
             block.classList.remove('section-selected-static');
             block.style.removeProperty('border');
             block.style.removeProperty('background');
             block.style.removeProperty('box-shadow');
         });
+
+        // Focus mode: hide all sections except the selected one
+        if (this.focusMode) {
+            allBlocks.forEach(block => {
+                if (sectionId && block.dataset.sectionId === sectionId) {
+                    block.style.display = '';
+                } else {
+                    block.style.display = sectionId ? 'none' : '';
+                }
+            });
+        }
 
         // Add highlight to selected section
         if (sectionId) {
