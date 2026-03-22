@@ -5484,6 +5484,59 @@ const liveMode = {
                 selectedBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
+
+        // Sync badge highlight with selected section
+        const badges = document.querySelectorAll('.section-badges-row .section-badge');
+        if (badges.length > 0) {
+            // Reset all badges
+            badges.forEach(b => {
+                b.style.opacity = '0.4';
+                b.style.transform = '';
+                b.style.transition = 'opacity 0.3s, transform 0.3s';
+            });
+            if (sectionId) {
+                const selectedBlock = document.querySelector(`[data-section-id="${sectionId}"]`);
+                if (selectedBlock) {
+                    const sectionName = (selectedBlock.dataset.sectionName || '').trim();
+                    // Count how many sections with this same name appear before this one
+                    const allSections = [...document.querySelectorAll('.song-section-block')];
+                    const sameNameBefore = allSections.filter((b, i) =>
+                        i < allSections.indexOf(selectedBlock) &&
+                        (b.dataset.sectionName || '').trim() === sectionName
+                    ).length;
+
+                    // Find matching badges by name, pick the Nth occurrence
+                    const abbrevMap = {
+                        'intro': 'I', 'verse': 'V', 'chorus': 'C', 'bridge': 'B',
+                        'outro': 'O', 'prechorus': 'PC', 'pre-chorus': 'PC',
+                        'turn': 'TURN', 'break': 'BRK', 'tag': 'TAG', 'coda': 'CODA'
+                    };
+                    // Extract base name and number: "Verse 2" → base="verse", num="2"
+                    const nameMatch = sectionName.match(/^(\S+)\s*(\d*)$/i);
+                    const baseName = nameMatch ? nameMatch[1].toLowerCase() : sectionName.toLowerCase();
+                    const sectionNum = nameMatch ? nameMatch[2] : '';
+                    const abbrev = abbrevMap[baseName] || baseName.charAt(0).toUpperCase();
+                    const badgeLabel = sectionNum ? `${abbrev}${sectionNum}` : abbrev;
+
+                    // Find all badges matching this label, highlight the right occurrence
+                    let matchCount = 0;
+                    for (const badge of badges) {
+                        const bText = badge.textContent.replace(/\d+x$/, '').trim(); // Remove repeat suffix
+                        if (bText === badgeLabel) {
+                            if (matchCount === sameNameBefore) {
+                                badge.style.opacity = '1';
+                                badge.style.transform = 'scale(1.3)';
+                                break;
+                            }
+                            matchCount++;
+                        }
+                    }
+                }
+            } else {
+                // No section selected — restore all badges
+                badges.forEach(b => b.style.opacity = '');
+            }
+        }
     },
 
     /**
