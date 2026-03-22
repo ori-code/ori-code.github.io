@@ -1,7 +1,7 @@
 {
   "name": "chordsapp-claude-api",
   "version": "3.0.0",
-  "description": "AI-powered chord chart OCR backend for aChordim using Claude - Released 2026-01-24",
+  "description": "AI-powered chord chart OCR backend for Achordim using Claude - Released 2026-01-24",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

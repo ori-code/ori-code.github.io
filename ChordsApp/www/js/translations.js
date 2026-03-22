@@ -180,7 +180,7 @@ const translations = {
 
         // Auth
         "auth.welcome": "Welcome Back",
-        "auth.signin_desc": "Sign in to continue to aChordim",
+        "auth.signin_desc": "Sign in to continue to Achordim",
         "auth.email_label": "Email Address",
         "auth.password_label": "Password",
         "auth.email_placeholder": "you@example.com",
@@ -191,7 +191,7 @@ const translations = {
         "auth.link_signup": "Sign up",
         "auth.link_forgot": "Forgot password?",
         "auth.create_account": "Create Account",
-        "auth.join_community": "Join aChordim community",
+        "auth.join_community": "Join Achordim community",
         "auth.fullname": "Full Name",
         "auth.name_placeholder": "John Doe",
         "auth.password_min": "At least 6 characters",
@@ -257,7 +257,7 @@ const translations = {
 
         // Pricing / Support
         "pricing.title": "Support",
-        "pricing.subtitle": "Join thousands of worship leaders using aChordim to transform their music ministry",
+        "pricing.subtitle": "Join thousands of worship leaders using Achordim to transform their music ministry",
         "pricing.feat.scans": "More Scans",
         "pricing.feat.priority": "Priority Processing",
         "pricing.feat.cloud": "Cloud Sync",
@@ -307,7 +307,7 @@ const translations = {
 
         // Features Modal
         "features.modal.title": "✨ Everything You Need to Lead Worship",
-        "features.intro": "aChordim transforms any chord sheet image into a beautiful, editable, print-ready format in seconds.<br><strong>No more manual typing. No more messy printouts.</strong>",
+        "features.intro": "Achordim transforms any chord sheet image into a beautiful, editable, print-ready format in seconds.<br><strong>No more manual typing. No more messy printouts.</strong>",
         "features.analysis.title": "🎵 Instant Chord Recognition",
         "features.analysis.desc": "Simply snap a photo or upload any chord sheet image. We instantly recognize chords, lyrics, and song structure - even from blurry photos or handwritten notes!",
         "features.analysis.list1": "✓ <strong>Works with any image</strong> - photos, screenshots, PDFs, scanned sheets",
@@ -541,7 +541,7 @@ const translations = {
         "auth.link_signup": "הרשמה",
         "auth.link_forgot": "שכחת סיסמה?",
         "auth.create_account": "צור חשבון חדש",
-        "auth.join_community": "הצטרף לקהילת aChordim",
+        "auth.join_community": "הצטרף לקהילת Achordim",
         "auth.fullname": "שם מלא",
         "auth.name_placeholder": "ישראל ישראלי",
         "auth.password_min": "לפחות 6 תווים",
@@ -607,7 +607,7 @@ const translations = {
 
         // Pricing / Support
         "pricing.title": "תמכו ב-",
-        "pricing.subtitle": "הצטרפו לאלפי מובילי הלל שמשדרגים את השירות שלהם בעזרת aChordim",
+        "pricing.subtitle": "הצטרפו לאלפי מובילי הלל שמשדרגים את השירות שלהם בעזרת Achordim",
         "pricing.feat.scans": "מכסת סריקות מוגדלת",
         "pricing.feat.priority": "עיבוד בעדיפות",
         "pricing.feat.cloud": "גיבוי וסנכרון לענן",
@@ -660,7 +660,7 @@ const translations = {
 
         // Features Modal
         "features.modal.title": "✨ הכל כדי להוביל בביטחון",
-        "features.intro": "aChordim הופך כל דף אקורדים לתרשים מקצועי, נקי ומוכן להדפסה בשניות.<br><strong>בלי הקלדות ידניות. בלי דפים מבולגנים.</strong>",
+        "features.intro": "Achordim הופך כל דף אקורדים לתרשים מקצועי, נקי ומוכן להדפסה בשניות.<br><strong>בלי הקלדות ידניות. בלי דפים מבולגנים.</strong>",
         "features.analysis.title": "🎵 זיהוי אקורדים מיידי",
         "features.analysis.desc": "פשוט צלם או העלה תמונה. המערכת תזהה מיד את האקורדים, המילים והמבנה - גם מכתב יד או צילום מטושטש!",
         "features.analysis.list1": "✓ <strong>עובד עם כל תמונה</strong> - צילומים, צילומי מסך, PDF וסריקות",

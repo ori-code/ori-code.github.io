@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 6. Replace entire page with printable view
-            document.title = `${sessionTitle} — aChordim Playlist`;
+            document.title = `${sessionTitle} — Achordim Playlist`;
             document.documentElement.setAttribute('data-theme', 'light');
 
             // Inject print-optimised styles
@@ -1043,7 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <html data-theme="light">
                 <head>
                     <meta charset="UTF-8">
-                    <title>Print — aChordim</title>
+                    <title>Print — Achordim</title>
                     <link rel="stylesheet" href="styles-bw.css">
                     <style>
                         @page { margin: 0; size: A4; }
@@ -1138,10 +1138,10 @@ document.addEventListener('DOMContentLoaded', () => {
             themeBtn.textContent = isNowLight ? 'Black' : 'White';
         });
 
-        // aChordim link
+        // Achordim link
         const homeLink = document.createElement('a');
         homeLink.href = window.location.pathname;
-        homeLink.textContent = 'aChordim →';
+        homeLink.textContent = 'Achordim →';
         homeLink.style.cssText = 'color: rgba(255,255,255,0.6); text-decoration: underline; font-size: 0.75rem; margin-left: 4px;';
 
         toolbar.appendChild(transposeDown);
@@ -5856,7 +5856,7 @@ Our [Em7]hearts will cry, these bones will [D]sing
                 <html data-theme="light">
                 <head>
                     <meta charset="UTF-8">
-                    <title>Print — aChordim</title>
+                    <title>Print — Achordim</title>
                     <link rel="stylesheet" href="styles-bw.css">
                     <style>
                         @page { margin: 0; size: A4; }

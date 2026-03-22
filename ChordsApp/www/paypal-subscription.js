@@ -1,5 +1,5 @@
 /**
- * PayPal Subscription Integration for aChordim
+ * PayPal Subscription Integration for Achordim
  * Handles PayPal subscription buttons and payment processing
  */
 
@@ -220,7 +220,7 @@ class PayPalSubscriptionManager {
     showSubscriptionSuccess(planType) {
         const tierName = planType === 'BASIC' ? 'Basic' : 'Pro';
         if (window.showAlert) {
-            showAlert(`Welcome to aChordim ${tierName}!\n\nYour subscription is now active. Enjoy unlimited access to all features!`);
+            showAlert(`Welcome to Achordim ${tierName}!\n\nYour subscription is now active. Enjoy unlimited access to all features!`);
         }
     }
 
@@ -318,7 +318,7 @@ class PayPalSubscriptionManager {
             createOrder: (data, actions) => {
                 return actions.order.create({
                     purchase_units: [{
-                        description: 'aChordim Book - Lifetime Access',
+                        description: 'Achordim Book - Lifetime Access',
                         amount: {
                             value: PAYPAL_ONE_TIME_PRICES.BOOK.toFixed(2)
                         },
@@ -391,7 +391,7 @@ class PayPalSubscriptionManager {
             createOrder: (data, actions) => {
                 return actions.order.create({
                     purchase_units: [{
-                        description: `aChordim ${scans} Scans`,
+                        description: `Achordim ${scans} Scans`,
                         amount: {
                             value: price.toFixed(2)
                         },
@@ -469,7 +469,7 @@ class PayPalSubscriptionManager {
      */
     showPurchaseSuccess(itemName) {
         if (window.showAlert) {
-            showAlert(`Purchase Complete!\n\nYour ${itemName} purchase was successful. Enjoy aChordim!`);
+            showAlert(`Purchase Complete!\n\nYour ${itemName} purchase was successful. Enjoy Achordim!`);
         }
     }
 

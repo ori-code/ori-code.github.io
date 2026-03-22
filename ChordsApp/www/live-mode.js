@@ -1,4 +1,4 @@
-// aChordim Live Mode - Full-screen performance view
+// Achordim Live Mode - Full-screen performance view
 // Allows both leaders and players to view songs in distraction-free mode
 
 const liveMode = {
@@ -2807,7 +2807,7 @@ const liveMode = {
 
         // Try Web Share API (HTTPS only), fallback to clipboard
         if (navigator.share && location.protocol === 'https:') {
-            navigator.share({ title: 'Playlist — aChordim', url: shareUrl })
+            navigator.share({ title: 'Playlist — Achordim', url: shareUrl })
                 .catch(() => copyToClipboard(shareUrl));
         } else {
             copyToClipboard(shareUrl);

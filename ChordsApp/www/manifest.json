@@ -1,6 +1,6 @@
 {
-  "name": "aChordim",
-  "short_name": "aChordim",
+  "name": "Achordim",
+  "short_name": "Achordim",
   "description": "Turn any chord sheet into a clean, printable chart",
   "start_url": "./index.html",
   "scope": "./",

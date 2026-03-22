@@ -1,5 +1,17 @@
 {
   "appId": "com.thefaithsound.achordim",
-  "appName": "aChordim",
-  "webDir": "www"
+  "appName": "Achordim",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#000000",
+      "showSpinner": false
+    },
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": ["google.com"]
+    }
+  }
 }

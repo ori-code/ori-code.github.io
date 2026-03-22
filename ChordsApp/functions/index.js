@@ -917,7 +917,7 @@ exports.deleteOrphanUser = functions
  */
 exports.analyzeText = functions
     .runWith({
-        secrets: ['ANTHROPIC_API_KEY'],
+        secrets: ['GOOGLE_AI_API_KEY'],
         timeoutSeconds: 120,
         memory: '512MB'
     })
@@ -928,12 +928,14 @@ exports.analyzeText = functions
         }
 
         try {
-            const apiKey = process.env.ANTHROPIC_API_KEY;
+            const apiKey = process.env.GOOGLE_AI_API_KEY;
             if (!apiKey) {
-                throw new Error('ANTHROPIC_API_KEY not configured');
+                throw new Error('GOOGLE_AI_API_KEY not configured');
             }
 
-            const anthropic = new Anthropic({ apiKey });
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
             const { text } = req.body;
 
             if (!text || !text.trim()) {
@@ -958,20 +960,16 @@ Here is the raw text to convert:
 
 ${text}`;
 
-            const response = await anthropic.messages.create({
-                model: CLAUDE_MODEL,
-                max_tokens: 4096,
-                messages: [{ role: 'user', content: textPrompt }]
-            });
-
-            const transcription = response.content?.[0]?.text || '';
-            console.log('Text analysis successful, length:', transcription.length);
+            const result = await model.generateContent(textPrompt);
+            const response = await result.response;
+            const transcription = response.text() || '';
+            console.log('Text analysis successful (Gemini), length:', transcription.length);
 
             return res.status(200).json({
                 success: true,
                 transcription: transcription,
                 metadata: {
-                    model: CLAUDE_MODEL,
+                    model: 'gemini-2.0-flash',
                     source: 'text'
                 }
             });
