@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const admin = require('firebase-admin');
 require('dotenv').config();
@@ -54,10 +55,25 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
-// Middleware
-app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Increase limit for base64 image data
+// Middleware — CORS whitelist
+app.use(cors({
+    origin: [
+        'https://chordsapp-e10e7.web.app',
+        'https://www.thefaithsound.com',
+        'https://chords.thefaithsound.com',
+        'http://localhost:3002'
+    ]
+}));
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Security headers
+app.use((req, res, next) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+});
 
 // Serve static files from the current directory
 app.use(express.static(__dirname));
@@ -326,8 +342,15 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'aChordimClaude API is running' });
 });
 
+// Rate limit for analyze endpoint
+const analyzeLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    message: { error: 'Too many analysis requests, please try again later' }
+});
+
 // Main OCR endpoint - Using Google Gemini
-app.post('/api/analyze-chart', async (req, res) => {
+app.post('/api/analyze-chart', analyzeLimit, async (req, res) => {
     try {
         let base64Image, mimeType;
         const feedback = typeof req.body.feedback === 'string' ? req.body.feedback.trim() : '';
